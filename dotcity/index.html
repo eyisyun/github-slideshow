@@ -107,6 +107,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .kv .m{height:6px;background:var(--panel-lo);position:relative}
 .kv .m i{position:absolute;left:0;top:0;bottom:0}
 .kv .px{font-size:10px;color:var(--ink);min-width:3ch;text-align:right}
+.ipanel .need{font-size:13px;color:var(--gold);line-height:1.35}
 .flags{display:flex;gap:6px;flex-wrap:wrap}
 .flag{font-size:12px;padding:3px 7px;background:var(--panel-lo)}
 .flag.ok{color:var(--good)}
@@ -612,17 +613,15 @@ function clearTile(x,y){const w=W,i=idx(x,y);
 function starter(){const w=W;
   const road=(x,y)=>{if(inb(x,y)&&w.terrain[idx(x,y)]!==1)placeRaw(K.ROAD,x,y);};
   const h=(y,a,b)=>{for(let x=a;x<=b;x++)road(x,y);},v=(x,a,b)=>{for(let y=a;y<=b;y++)road(x,y);};
-  h(32,19,46);h(27,23,41);h(37,22,43);v(31,21,44);v(26,23,41);v(36,24,41);v(41,26,40);
+  h(32,25,39);v(31,27,37);h(28,29,33);
   const free=(x,y)=>inb(x,y)&&w.kind[idx(x,y)]===0&&w.terrain[idx(x,y)]!==1;
-  if(free(43,33)&&free(44,33)&&free(43,34)&&free(44,34))placeRaw(K.COAL,43,33);else{placeRaw(K.WIND,20,31);placeRaw(K.WIND,21,31);placeRaw(K.WIND,20,33);}
-  [[21,31],[22,33]].forEach(([x,y])=>free(x,y)&&placeRaw(K.WIND,x,y));
-  [[30,33],[32,26]].forEach(([x,y],j)=>free(x,y)&&placeRaw(j?K.PARK:K.POLICE,x,y));
-  [[25,31],[27,38],[35,28],[32,38]].forEach(([x,y])=>free(x,y)&&placeRaw(K.PARK,x,y));
-  for(let y=20;y<=44;y++)for(let x=19;x<=46;x++){if(!free(x,y))continue;let near=false;
+  [[24,32],[24,31],[24,33]].forEach(([x,y])=>free(x,y)&&placeRaw(K.WIND,x,y));
+  [[30,30]].forEach(([x,y])=>free(x,y)&&placeRaw(K.PARK,x,y));
+  for(let y=26;y<=38;y++)for(let x=24;x<=40;x++){if(!free(x,y))continue;let near=false;
     for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(inb(x+dx,y+dy)&&w.kind[idx(x+dx,y+dy)]===K.ROAD)near=true;if(!near)continue;
-    const k=(x>=37&&y>=29)?K.IND:(x>=28&&x<=35&&y>=29&&y<=35)?K.COM:(y>=38&&x>=32)?K.COM:K.RES;placeRaw(k,x,y);}
-  recompute();for(let d=0;d<30*16;d++)simDay(true);
-  w.month=0;w.day=0;w.funds=20000;w.lastNet=0;w.adv={};const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
+    const k=x>=36?K.IND:(x>=32&&y>=31&&y<=33)?K.COM:K.RES;placeRaw(k,x,y);}
+  recompute();for(let d=0;d<30*5;d++)simDay(true);
+  w.month=0;w.day=0;w.funds=15000;w.lastNet=0;w.adv={};const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 
 /* ---------------- simulation ---------------- */
 const MS=[[500,'마을'],[1500,'소도시'],[4000,'도시'],[10000,'대도시'],[25000,'메트로폴리스']];
@@ -668,15 +667,25 @@ function recompute(){const w=W,S=w.st,NN=N*N;
   S.dR=clamp((jobs*1.7+100-pop)/Math.max(60,pop*.25)-tf,-1,1);
   S.dC=clamp((pop*.32-jc+10)/Math.max(40,pop*.12)-tf,-1,1);
   S.dI=clamp((pop*.36-ji+30)/Math.max(40,pop*.12)-tf,-1,1);}
-function levelCap(k,i){const v=W.lv[i],p=W.st.pop;let c;
-  if(k===K.RES){if(W.pol[i]>.55)return 1;c=v<.3?1:v<.45?2:(v<.62||p<1200)?3:4;}
-  else if(k===K.COM)c=v<.28?1:(v<.42||p<400)?2:(v<.58||p<2500)?3:4;
-  else return p<150?1:p<900?2:3;
+// [land value, population] needed for each level
+const REQ={[K.RES]:[null,[0,0],[.27,0],[.44,900],[.62,5000]],[K.COM]:[null,[0,0],[.27,250],[.45,1800],[.62,8000]],[K.IND]:[null,[0,0],[0,400],[0,2500]]};
+function levelCap(k,i){const v=W.lv[i],p=W.st.pop,R=REQ[k];let c=1;
+  for(let L=2;L<R.length;L++){if(v>=R[L][0]&&p>=R[L][1])c=L;else break;}
+  if(k===K.RES&&W.pol[i]>.55)c=1;
   if(W.crime[i]>.6)c=Math.max(1,c-1);return c;}
+function nextNeed(k,i){const w=W,L=w.level[i],R=REQ[k];
+  if(!w.powered[i])return'전기가 필요해요';if(!w.road[i])return'2칸 안에 도로가 필요해요';
+  if(w.build[i]>0)return'짓는 중이에요';
+  const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI;
+  if(L+1>=R.length)return'최고 단계예요';
+  const q=R[L+1],miss=[];if(w.lv[i]<q[0])miss.push(`땅값 ${Math.round(q[0]*100)}`);if(w.st.pop<q[1])miss.push(`인구 ${fmt(q[1])}명`);
+  if(k===K.RES&&w.pol[i]>.55)miss.push('오염 줄이기');if(w.crime[i]>.6)miss.push('범죄 줄이기');
+  if(miss.length)return'다음 단계: '+miss.join(', ')+' 필요';
+  if(d<=0)return'수요가 없어서 멈춰 있어요';return'곧 다음 단계로 자라요';}
 function growTile(i){const w=W,k=w.kind[i];if(k<K.RES||k>K.IND||w.build[i]>0)return;
   const L=w.level[i];if(!w.powered[i]||!w.road[i]){if(L>0&&Math.random()<.15)w.level[i]=L-1;return;}
   const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI,c=levelCap(k,i);
-  if(L<c&&d>0&&Math.random()<.2+d*.55){w.level[i]=L+1;w.build[i]=4+(Math.random()*6|0);w.vari[i]=Math.random()*4|0;}
+  if(L<c&&d>0&&Math.random()<.05+d*.2){w.level[i]=L+1;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*4|0;}
   else if(L>c&&Math.random()<.2)w.level[i]=L-1;
   else if(d<-.4&&L>0&&Math.random()<.08)w.level[i]=L-1;}
 function simDay(quiet){const w=W;w.day++;
@@ -684,8 +693,8 @@ function simDay(quiet){const w=W;w.day++;
   for(let i=0;i<N*N;i++)if(w.build[i]>0)w.build[i]--;
   if(w.day%10===0)recompute();
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
-function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.2);
-  const expense=Math.round(S.roads*.3+S.police*45+S.wind*5+S.coal*60+S.parks*1.5);return{income,expense,net:income-expense};}
+function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1);
+  const expense=Math.round(S.roads*.4+S.police*45+S.wind*6+S.coal*70+S.parks*2);return{income,expense,net:income-expense};}
 function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
@@ -741,8 +750,8 @@ const TOOLS=[
   {id:'com',name:'상업 구역',key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'상점과 사무실이 들어섭니다. 땅값이 높으면 초고층까지.'},
   {id:'ind',name:'공업 구역',key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일자리를 만들지만 공기를 더럽힙니다.'},
   {id:'police',name:'경찰서',key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다. 유지비 월 ₩45.'},
-  {id:'wind',name:'풍력 발전기',key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60. 유지비 월 ₩5.'},
-  {id:'coal',name:'화력 발전소',key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2, 유지비 월 ₩60.'},
+  {id:'wind',name:'풍력 발전기',key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60. 유지비 월 ₩6.'},
+  {id:'coal',name:'화력 발전소',key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2, 유지비 월 ₩70.'},
 ];
 const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.'},{id:'value',name:'땅값',key:'V',desc:'밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.'},
   {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'}];
@@ -987,9 +996,9 @@ function updateHud(force){if(!force&&now-hudT<250)return;hudT=now;const S=W.st,b
   $('#tax').textContent=W.tax+'%';$('#inc').textContent='+₩'+fmt(b.income);$('#exp').textContent='-₩'+fmt(b.expense);
   if(selected&&!$('#info').hidden)renderInfo();}
 const NAMES={[K.RES]:['빈 주거지','단독주택','연립주택','아파트','고층 아파트'],[K.COM]:['빈 상업지','동네 상점','사무 빌딩','오피스 타워','초고층 빌딩'],[K.IND]:['빈 공업지','창고','공장','중공업 단지']};
-function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='';
+function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){title=w.build[i]>0?'공사 중':NAMES[k][L];sub=['','','주거 구역','상업 구역','공업 구역'][k]+(L?` · ${L}단계`:'');
-    extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;}
+    extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
   else title={[K.ROAD]:'도로',[K.PARK]:'공원',[K.POLICE]:'경찰서',[K.WIND]:'풍력 발전기',[K.COAL]:'화력 발전소'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
   if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra='전력 1,600 공급';
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
@@ -997,6 +1006,7 @@ function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i
   const zone=k>=K.RES&&k<=K.IND;
   $('#info').innerHTML=`<h3><span>${title}</span><button class="x" id="infoX" aria-label="닫기">X</button></h3><div class="sub">${sub||`${x}, ${y}`}${extra?' · '+extra:''}</div>
     ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}
+    ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],'전기 들어옴','전기 끊김')}${zone?fl(w.road[i],'도로 가까움','도로 없음'):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};}
 
