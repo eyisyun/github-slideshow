@@ -211,7 +211,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <dt>휠 / + -</dt><dd>확대·축소</dd>
       <dt>WASD</dt><dd>지도 이동</dd>
       <dt>SPACE</dt><dd>일시정지</dd>
-      <dt>Q X R 1-7</dt><dd>도구 선택 · P V O C 데이터 보기</dd>
+      <dt>Q X R U 1-7</dt><dd>도구 선택 · P V O C T 데이터 보기</dd>
     </dl>
   </div>
 </div>
@@ -331,18 +331,20 @@ function buildSprites(){
     const edge=((m&1)&&u>.7)||((m&2)&&v>.7)||((m&4)&&u<.3)||((m&8)&&v<.3);
     const h=hash(x>>1,y,f*7+3);if(h<.035)return col(PAL.w3);if(h<.11)return col(PAL.w2);
     return col(edge?PAL.w1:PAL.w1,edge?.06:(hash(x,y,5)<.3?-.08:0));});}
-  SP.road=[];for(let m=0;m<16;m++){const W=.3,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);
+  SP.road=[];SP.ave=[];for(const av of[0,1])for(let m=0;m<16;m++){const W=av?.4:.3,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);
     const inBand=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
       return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
-    SP.road[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
+    (av?SP.ave:SP.road)[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
       if(!inBand(u,v,W)){if(inBand(u,v,W+.07))return col(PAL.curb);return col(PAL.side,hash(x,y,3)<.12?-.07:(((Math.floor(u*8)+Math.floor(v*8))&1)?.04:0));}
       const sx=(m&5)&&!(m&10),sy=(m&10)&&!(m&5);
-      if(sx&&dv<.04&&Math.floor(u*5)%2===0)return col(PAL.line);
-      if(sy&&du<.04&&Math.floor(v*5)%2===0)return col(PAL.line);
+      if(av){if(sx&&(dv<.055&&dv>.012))return col(PAL.line);if(sy&&(du<.055&&du>.012))return col(PAL.line);
+        if(sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return col(PAL.white,-.12);if(sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return col(PAL.white,-.12);}
+      else{if(sx&&dv<.04&&Math.floor(u*5)%2===0)return col(PAL.line);
+      if(sy&&du<.04&&Math.floor(v*5)%2===0)return col(PAL.line);}
       if(cnt>=3){const z=col(PAL.white,-.06);
         if((m&1)&&u>.8&&u<.93&&Math.floor(v*16)%2===0)return z;if((m&4)&&u<.2&&u>.07&&Math.floor(v*16)%2===0)return z;
         if((m&2)&&v>.8&&v<.93&&Math.floor(u*16)%2===0)return z;if((m&8)&&v<.2&&v>.07&&Math.floor(u*16)%2===0)return z;}
-      return col(PAL.asph,hash(x,y,9)<.1?.07:0);});}
+      return col(av?'#3f4350':PAL.asph,hash(x,y,9)<.1?.07:0);});}
   const zoneG=hex=>G((u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
     const h=hash(x,y,17);if(h<.05)return col(mixHex(PAL.g2,hex,.2));return col(mixHex(PAL.g1,hex,.16),.04);});
@@ -375,8 +377,9 @@ function buildSprites(){
   hl('park','#8fe07a',110);hl('build','#ffe07a',110);hl('pow','#ffd84a',95);hl('nopow','#ff4a4a',120);
   SP.outline=G((u,v)=>Math.min(u,v,1-u,1-v)<.06?col('#ffffff',0,220):null);
   SP.sel=G((u,v)=>Math.min(u,v,1-u,1-v)<.07?col('#ffcc4d'):null);
-  const ramp=(stops)=>{const out=[];for(let i=0;i<8;i++){const t=i/7*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t));out.push(G(()=>col(mixHex(stops[k],stops[k+1],t-k),0,150)));}return out;};
-  SP.ramp={value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
+  const ramp=(stops,al=150)=>{const out=[];for(let i=0;i<8;i++){const t=i/7*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t));out.push(G(()=>col(mixHex(stops[k],stops[k+1],t-k),0,al)));}return out;};
+  SP.dim=G(()=>col('#0e1226',0,150));
+  SP.ramp={traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
   const gl=new PB(30,15);for(let y=0;y<15;y++)for(let x=0;x<30;x++){const d=Math.hypot((x+.5-15)/15,(y+.5-7.5)/7.5);if(d<1)gl.put(x,y,col('#ffb45c',0,d<.3?110:d<.6?60:24));}
   SP.glow=mk(gl,-15,1,false);
 
@@ -576,8 +579,8 @@ const CAP_W=60,CAP_C=1600;
 const POP=[0,6,18,45,110],JC=[0,4,12,32,80],JI=[0,8,20,40];
 function blankWorld(seed){const NN=N*N;return{seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
   terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
-  powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
-  st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0}};}
+  powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
+  st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
   return(x,y)=>{const fx=x/cell,fy=y/cell,ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy,sx=tx*tx*(3-2*tx),sy=ty*ty*(3-2*ty);
     const a=g[iy*gs+ix],b=g[iy*gs+ix+1],c=g[(iy+1)*gs+ix],d=g[(iy+1)*gs+ix+1];return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};}
@@ -636,16 +639,36 @@ function power(){const w=W,NN=N*N,vis=new Uint8Array(NN),q=new Int32Array(NN);w.
   w.st.cap=cap;w.st.use=use;}
 function stamp(arr,cx,cy,r,s){const x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(N-1,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(N-1,Math.ceil(cy+r));
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<r)arr[y*N+x]+=s*(1-d/r);}}
+// Commuter traffic: every developed zone sends trips onto roads within 3 tiles (nearer roads take more),
+// then the load spreads along the network. Load / capacity = congestion (1 = full).
+const CAP_ROAD=30,CAP_AVE=90;
+const tmpE=new Float32Array(N*N),tmpF=new Float32Array(N*N);
+function traffic(){const w=W,NN=N*N;tmpE.fill(0);
+  const js=[],ws=[];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,k=w.kind[i],L=w.level[i];if(k<K.RES||k>K.IND||!L)continue;
+    const trips=k===K.RES?POP[L]*.8:k===K.COM?JC[L]*.9:JI[L]*.7;js.length=0;ws.length=0;let sw=0;
+    for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const xx=x+dx,yy=y+dy;if(!inb(xx,yy))continue;const j=yy*N+xx;if(w.kind[j]!==K.ROAD)continue;
+      const wt=1/(1+Math.abs(dx)+Math.abs(dy))**2;js.push(j);ws.push(wt);sw+=wt;}
+    for(let n=0;n<js.length;n++)tmpE[js[n]]+=trips*ws[n]/sw;}
+  for(let it=0;it<3;it++){for(let i=0;i<NN;i++){if(w.kind[i]!==K.ROAD){tmpF[i]=0;continue;}const x=i%N,y=i/N|0;let s=0,n=0;
+      if(x+1<N&&w.kind[i+1]===K.ROAD){s+=tmpE[i+1];n++;}if(x>0&&w.kind[i-1]===K.ROAD){s+=tmpE[i-1];n++;}
+      if(y+1<N&&w.kind[i+N]===K.ROAD){s+=tmpE[i+N];n++;}if(y>0&&w.kind[i-N]===K.ROAD){s+=tmpE[i-N];n++;}
+      tmpF[i]=n?tmpE[i]*.55+s/n*.45:tmpE[i];}tmpE.set(tmpF);}
+  let jammed=0,sum=0,cnt=0;
+  for(let i=0;i<NN;i++){if(w.kind[i]!==K.ROAD){w.traf[i]=0;continue;}const t=tmpE[i]/(w.level[i]?CAP_AVE:CAP_ROAD);w.traf[i]=t;if(t>1)jammed++;sum+=t;cnt++;}
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,k=w.kind[i];w.jam[i]=0;if(k<K.RES||k>K.IND)continue;let s=0,n=0;
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&w.kind[yy*N+xx]===K.ROAD){s+=w.traf[yy*N+xx];n++;}}w.jam[i]=n?s/n:0;}
+  w.st.jammed=jammed;w.st.avgTraf=cnt?sum/cnt:0;}
 const tmpA=new Float32Array(N*N),tmpB=new Float32Array(N*N),tmpC=new Float32Array(N*N),tmpD=new Float32Array(N*N);
 function recompute(){const w=W,S=w.st,NN=N*N;
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,k=w.kind[i];w.road[i]=0;if(k<K.RES||k>K.IND)continue;
     let f=0;for(let dy=-2;dy<=2&&!f;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&w.kind[yy*N+xx]===K.ROAD){f=1;break;}}w.road[i]=f;}
-  power();
-  let pop=0,jc=0,ji=0,roads=0,police=0,wind=0,coal=0,parks=0,unp=0,nor=0,eR=0,eC=0,eI=0,zones=0,polR=0,nR=0;
+  power();traffic();
+  let pop=0,jc=0,ji=0,roads=0,aves=0,police=0,wind=0,coal=0,parks=0,unp=0,nor=0,eR=0,eC=0,eI=0,zones=0,polR=0,nR=0;
   w.pol.fill(0);tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
   for(let i=0;i<NN;i++){const k=w.kind[i],L=w.level[i],x=i%N,y=i/N|0,cx=x+.5,cy=y+.5;
     switch(k){
-      case K.ROAD:roads++;break;
+      case K.ROAD:roads++;if(L)aves++;if(w.traf[i]>.5)stamp(w.pol,cx,cy,2.5,.07*Math.min(1.6,w.traf[i]));break;
       case K.RES:pop+=POP[L];zones++;if(!L)eR++;if(L)stamp(tmpA,cx,cy,4,.03*L);break;
       case K.COM:jc+=JC[L];zones++;if(!L)eC++;if(L){stamp(tmpA,cx,cy,4,.04*L);stamp(tmpD,cx,cy,6,.02*L);if(L===4)stamp(w.pol,cx,cy,3,.05);}break;
       case K.IND:ji+=JI[L];zones++;if(!L)eI++;if(L)stamp(w.pol,cx,cy,5,.16*L);break;
@@ -660,9 +683,9 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     w.pol[i]=clamp(w.pol[i]-w.trees[i]*.05-tr*.004,0,1);
     w.crime[i]=clamp(tmpA[i]*Math.max(0,1-tmpB[i])*cf*1.6,0,1);
     let v=.3;if(w.wd[i]<6)v+=(1-w.wd[i]/6)*.22;v+=Math.min(.32,tmpC[i])+Math.min(.08,tr*.008)+Math.min(.12,tmpD[i])+Math.min(.06,tmpB[i]*.05);
-    v-=w.pol[i]*.6+w.crime[i]*.4;w.lv[i]=clamp(v,0,1);
+    v-=w.pol[i]*.6+w.crime[i]*.4+Math.max(0,w.jam[i]-.7)*.25;w.lv[i]=clamp(v,0,1);
     if(w.kind[i]===K.RES&&w.level[i]){polR+=w.pol[i];nR++;}}
-  Object.assign(S,{pop,jobsC:jc,jobsI:ji,roads,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
+  Object.assign(S,{pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
   const jobs=jc+ji,tf=(w.tax-9)*.06;
   S.dR=clamp((jobs*1.7+100-pop)/Math.max(60,pop*.25)-tf,-1,1);
   S.dC=clamp((pop*.32-jc+10)/Math.max(40,pop*.12)-tf,-1,1);
@@ -680,10 +703,12 @@ function nextNeed(k,i){const w=W,L=w.level[i],R=REQ[k];
   if(L+1>=R.length)return'최고 단계예요';
   const q=R[L+1],miss=[];if(w.lv[i]<q[0])miss.push(`땅값 ${Math.round(q[0]*100)}`);if(w.st.pop<q[1])miss.push(`인구 ${fmt(q[1])}명`);
   if(k===K.RES&&w.pol[i]>.55)miss.push('오염 줄이기');if(w.crime[i]>.6)miss.push('범죄 줄이기');
+  if(w.jam[i]>1)miss.push('교통 체증 해소');
   if(miss.length)return'다음 단계: '+miss.join(', ')+' 필요';
   if(d<=0)return'수요가 없어서 멈춰 있어요';return'곧 다음 단계로 자라요';}
 function growTile(i){const w=W,k=w.kind[i];if(k<K.RES||k>K.IND||w.build[i]>0)return;
   const L=w.level[i];if(!w.powered[i]||!w.road[i]){if(L>0&&Math.random()<.15)w.level[i]=L-1;return;}
+  if(w.jam[i]>1){if(L>1&&w.jam[i]>1.6&&Math.random()<.05)w.level[i]=L-1;return;}
   const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI,c=levelCap(k,i);
   if(L<c&&d>0&&Math.random()<.05+d*.2){w.level[i]=L+1;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*4|0;}
   else if(L>c&&Math.random()<.2)w.level[i]=L-1;
@@ -694,7 +719,7 @@ function simDay(quiet){const w=W;w.day++;
   if(w.day%10===0)recompute();
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1);
-  const expense=Math.round(S.roads*.4+S.police*45+S.wind*6+S.coal*70+S.parks*2);return{income,expense,net:income-expense};}
+  const expense=Math.round(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2);return{income,expense,net:income-expense};}
 function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
@@ -705,6 +730,7 @@ function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.a
   if(S.dR>.6&&S.emptyR<4&&say('needR','주거 수요가 높아요. 주거 구역을 더 칠해 주세요.','info',6))return;
   if(S.dC>.6&&S.emptyC<3&&say('needC','상점을 열 땅이 부족해요. 상업 구역을 늘려 주세요.','info',6))return;
   if(S.dI>.6&&S.emptyI<3&&say('needI','공장을 지을 땅이 필요해요. 공업 구역을 늘려 주세요.','info',6))return;
+  if(S.jammed>5&&say('jam',`도로 ${S.jammed}칸이 꽉 막혔어요. 옆에 길을 더 내거나 대로(U)로 넓히세요.`,'warn',6))return;
   if(S.pop>600&&S.police===0&&say('police','범죄가 늘고 있어요. 경찰서를 지으세요.','warn',8))return;
   if(S.avgPolR>.35&&say('pol','주거지 공기가 탁해요. 공장과 떨어뜨리고 공원과 숲을 늘리세요.','warn',10))return;}
 function milestone(){while(W.ms<MS.length&&W.st.pop>=MS[W.ms][0]){const[p,n]=MS[W.ms];W.ms++;toast(`인구 ${fmt(p)}명 돌파! 이제 ${n}입니다.`,'good');sfx('win');fireworks();}}
@@ -745,6 +771,7 @@ const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
   {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'도로·건물·나무를 없앱니다.'},
   {id:'road',name:'도로',key:'R',cost:10,drag:'line',hl:'road',desc:'드래그해서 도로를 깝니다. 전기도 도로를 따라 흐릅니다.'},
+  {id:'avenue',name:'대로',key:'U',cost:40,drag:'line',hl:'road',desc:'4차선 도로. 일반 도로보다 차가 3배 많이 다닙니다. 기존 도로를 넓히면 ₩30/칸, 유지비 3배.'},
   {id:'park',name:'공원',key:'4',cost:60,kind:K.PARK,drag:'rect',hl:'park',desc:'주변 땅값을 올려 고급 주택을 부릅니다.'},
   {id:'res',name:'주거 구역',key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 이사 와서 집을 짓습니다.'},
   {id:'com',name:'상업 구역',key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'상점과 사무실이 들어섭니다. 땅값이 높으면 초고층까지.'},
@@ -754,16 +781,17 @@ const TOOLS=[
   {id:'coal',name:'화력 발전소',key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2, 유지비 월 ₩70.'},
 ];
 const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.'},{id:'value',name:'땅값',key:'V',desc:'밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.'},
-  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'}];
+  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'}];
 const T=id=>TOOLS.find(t=>t.id===id);
 
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
   switch(t.id){
     case'bulldoze':return k!==0||W.trees[i]>0;
     case'road':return ter!==1&&(k===0||k===K.ROAD);
+    case'avenue':return ter!==1&&(k===0||(k===K.ROAD&&!W.level[i]));
     case'coal':for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;
     default:return ter!==1&&k===0;}}
-function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;return t.cost;}
+function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return 30;return t.cost;}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   if(t.drag==='line'){const dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]);let x=a[0],y=a[1];out.push([x,y]);
     const xFirst=Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1]);
@@ -780,6 +808,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){sfx('err');retur
   for(const[x,y]of tiles){if(!validAt(t,x,y))continue;
     if(t.id==='bulldoze'){clearTile(x,y);if(puffs++<24)dust(x,y,'#9a8a74');}
     else if(t.id==='road'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);}
+    else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(puffs++<12&&!t.drag)dust(x+(t.size?.5:0),y+(t.size?.5:0),'#d8cfc0');}}
   recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 
@@ -805,12 +834,12 @@ function sfx(type){if(muted)return;try{AC=AC||new(window.AudioContext||window.we
 const DIRS=[[1,0],[0,1],[-1,0],[0,-1]];
 function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
 function roadMask(x,y,extra){let m=0;DIRS.forEach(([dx,dy],b)=>{if(isRoad(x+dx,y+dy)||(extra&&extra.has(idx(x+dx,y+dy))))m|=1<<b;});return m;}
-function spawnCar(){for(let t=0;t<20;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD)continue;const x=i%N,y=i/N|0;
+function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD||Math.random()>.12+W.traf[i])continue;const x=i%N,y=i/N|0;
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
   cars.push({x,y,d:opts[(Math.random()*opts.length)|0],t:Math.random(),c:(Math.random()*SP.car.length)|0,sp:.9+Math.random()*.6});return;}}
-function stepCars(dt){const S=W.st,target=Math.min(170,Math.floor(S.roads*.45),4+Math.floor(S.pop/28));
+function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24));
   if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target)cars.pop();
-  for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}c.t+=dt*c.sp;
+  for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}c.t+=dt*c.sp/(1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
@@ -819,11 +848,12 @@ function stepCars(dt){const S=W.st,target=Math.min(170,Math.floor(S.roads*.45),4
 let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 function drawSpr(c,sp,x,y){c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
 function groundOf(i,x,y){const w=W,k=w.kind[i];
-  if(k===K.ROAD)return SP.road[roadMask(x,y)];
+  if(k===K.ROAD)return(w.level[i]?SP.ave:SP.road)[roadMask(x,y)];
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];return SP.lot[k][w.vari[i]&1];}
   if(k===K.PARK)return SP.parkG;if(k===K.POLICE)return SP.plaza;if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
 function heatSpr(i){const w=W;if(overlay==='power'){const k=w.kind[i];if(!k||k===K.ROAD&&!w.powered[i]&&true)return k===K.ROAD&&w.powered[i]?SP.hl.pow:null;return w.powered[i]||powNeed(i)===0?SP.hl.pow:SP.hl.nopow;}
+  if(overlay==='traffic'){if(w.kind[i]!==K.ROAD)return w.terrain[i]===1?null:SP.dim;return SP.ramp.traffic[Math.min(7,Math.floor(w.traf[i]/1.25*8))];}
   if(w.terrain[i]===1)return null;const v=overlay==='value'?w.lv[i]:overlay==='pollution'?w.pol[i]:w.crime[i];if((overlay!=='value')&&v<.04)return null;return SP.ramp[overlay][Math.min(7,Math.floor(v*8))];}
 function render(){
   const c=wctx,s=cam.s,lw=Math.ceil(view.width/s)+2,lh=Math.ceil(view.height/s)+2;
@@ -848,8 +878,8 @@ function render(){
   const tl=T(tool);let ghost=null;
   const tileSp=(sp,x,y)=>c.drawImage(sp.c,(x-y)*16-X0-16,(x+y)*8-Y0);
   if(tl.id!=='inspect'){const tiles=drag&&drag.mode==='build'?tilesFor(tl,drag.a,drag.b):(hover?(tl.size?[hover]:[hover]):[]);
-    if(tl.id==='road'&&drag&&drag.mode==='build'){const set=new Set(tiles.filter(([x,y])=>validAt(tl,x,y)).map(([x,y])=>idx(x,y)));c.globalAlpha=.85;
-      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp(SP.road[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
+    if((tl.id==='road'||tl.id==='avenue')&&drag&&drag.mode==='build'){const set=new Set(tiles.filter(([x,y])=>validAt(tl,x,y)).map(([x,y])=>idx(x,y)));c.globalAlpha=.85;
+      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?SP.ave:SP.road)[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
     else for(const[x,y]of tiles){const ok=validAt(tl,x,y);
       if(tl.size===2){for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)if(inb(x+dx,y+dy))tileSp(ok?SP.hl.build:SP.hl.bad,x+dx,y+dy);}
       else tileSp(ok?SP.hl[tl.hl]:(tl.id==='bulldoze'?SP.outline:SP.hl.bad),x,y);
@@ -919,6 +949,7 @@ const IC={
   power:["...yyy","..yyy.",".yyy..","yyyyyy","..yyy.",".yyy..",".yy...","y....."],
   value:["..yyyy..",".yyooyy.","yyoyyyyy","yyyooyyy","yyyyyoyy","yyoooyyy",".yyyyyy.","..yyyy.."],
   pollution:["....ggg....","..gggggg...",".gggggggg..","ggggggggggg","gggggggdddg",".ddddddddd."],
+  traffic:["..rrrr...",".rwwwwr..","rrrrrrrrr","rrrrrrrrr",".kk...kk."],
   crime:["....r....","...rrr...","..rrwrr..",".rrrwrrr.","rrrrwrrrr",".rrrrrrr.","..rrwrr..","...rrr...","....r...."],
   pause:["##.##","##.##","##.##","##.##","##.##","##.##","##.##"],
   play:["#.....","###...","#####.","######","#####.","###...","#....."],
@@ -942,7 +973,7 @@ function spriteIcon(sp,maxPx=36){const c=sp.c,g=c.getContext('2d'),d=g.getImageD
   const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);
   const k=Math.min(1.5,maxPx/Math.max(w,h));o.style.width=Math.round(w*k)+'px';o.style.height=Math.round(h*k)+'px';return o;}
 function buildUI(){
-  const tools=$('#tools');const iconFor={road:()=>spriteIcon(SP.road[5],30),park:()=>spriteIcon(SP.park[1]),res:()=>spriteIcon(SP.bld[K.RES][1][0]),com:()=>spriteIcon(SP.bld[K.COM][1][0]),
+  const tools=$('#tools');const iconFor={road:()=>spriteIcon(SP.road[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(SP.park[1]),res:()=>spriteIcon(SP.bld[K.RES][1][0]),com:()=>spriteIcon(SP.bld[K.COM][1][0]),
     ind:()=>spriteIcon(SP.bld[K.IND][2][0]),police:()=>spriteIcon(SP.police),wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(SP.coal,38)};
   const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',o.name);
     if(iconFor[o.id])b.appendChild(iconFor[o.id]());else b.insertAdjacentHTML('beforeend',svg(o.id,2));
@@ -999,13 +1030,13 @@ const NAMES={[K.RES]:['빈 주거지','단독주택','연립주택','아파트',
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){title=w.build[i]>0?'공사 중':NAMES[k][L];sub=['','','주거 구역','상업 구역','공업 구역'][k]+(L?` · ${L}단계`:'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
-  else title={[K.ROAD]:'도로',[K.PARK]:'공원',[K.POLICE]:'경찰서',[K.WIND]:'풍력 발전기',[K.COAL]:'화력 발전소'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
-  if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra='전력 1,600 공급';
+  else title={[K.ROAD]:L?'대로':'도로',[K.PARK]:'공원',[K.POLICE]:'경찰서',[K.WIND]:'풍력 발전기',[K.COAL]:'화력 발전소'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
+  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra='전력 1,600 공급';
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
   const fl=(ok,a,b)=>`<span class="flag ${ok?'ok':'no'}">${ok?a:b}</span>`;
   const zone=k>=K.RES&&k<=K.IND;
   $('#info').innerHTML=`<h3><span>${title}</span><button class="x" id="infoX" aria-label="닫기">X</button></h3><div class="sub">${sub||`${x}, ${y}`}${extra?' · '+extra:''}</div>
-    ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}
+    ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}${k===K.ROAD?m('혼잡',Math.min(1,w.traf[i]),'#f2b33d'):zone?m('교통',Math.min(1,w.jam[i]),'#f2b33d'):''}
     ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],'전기 들어옴','전기 끊김')}${zone?fl(w.road[i],'도로 가까움','도로 없음'):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};}
