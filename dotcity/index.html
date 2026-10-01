@@ -138,6 +138,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .kv .m i{position:absolute;left:0;top:0;bottom:0}
 .kv .px{font-size:10px;color:var(--ink);min-width:3ch;text-align:right}
 .ipanel .need{font-size:13px;color:var(--gold);line-height:1.35}
+.goal{display:grid;grid-template-columns:16px 1fr auto auto;gap:8px;align-items:center;font-size:14px;color:var(--ink);padding:3px 0}
+.goal .gk{color:var(--good);font-size:13px}
+.goal.ok .gt{color:var(--ink-dim);text-decoration:line-through}
+.goal .px{font-size:10px;color:var(--ink-dim)}
+.goal .gb{border:0;background:var(--panel-lo);color:var(--gold);font:12px var(--f-ui);padding:3px 7px;cursor:pointer;box-shadow:inset 0 0 0 1px var(--gold-dk)}
 .flags{display:flex;gap:6px;flex-wrap:wrap}
 .flag{font-size:12px;padding:3px 7px;background:var(--panel-lo)}
 .flag.ok{color:var(--good)}
@@ -280,22 +285,42 @@ const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOU
 const LANDMARK={[K.HALL]:1500,[K.STADIUM]:4000,[K.TOWER]:10000};
 // The city evolves through five eras. Each era caps building levels, swaps art, and ends with a wonder.
 const ERAS=[
-  {name:'석기시대',short:'석기',year:-8000,cur:'조개',costMul:.15,next:250,trip:.35,maxL:{2:2,3:1,4:1},
+  {name:'석기시대',short:'석기',year:-8000,cur:'조개',costMul:.15,next:800,grow:.045,build:2,trip:.35,maxL:{2:2,3:1,4:1},
    story:'사람들이 모닥불 곁에 모여 살기 시작했어요. 흙길을 내고 움집 터를 정해 부족을 키우세요.',
-   unlock:['모닥불: 반경 5칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요','움집 터 · 교역터 · 채집터','선돌: 주변 땅값을 올려요'],goal:'인구 250명을 모으고 고인돌을 세우면 청동기시대로!'},
-  {name:'청동기시대',short:'청동기',year:-2000,cur:'청동',costMul:.3,next:800,trip:.45,maxL:{2:2,3:2,4:2},
+   unlock:['모닥불: 반경 5칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요','움집 터 · 교역터 · 채집터','선돌: 주변 땅값을 올려요'],goal:'목표를 모두 채우고 고인돌을 세우면 청동기시대로!'},
+  {name:'청동기시대',short:'청동기',year:-2000,cur:'청동',costMul:.3,next:2500,grow:.015,build:6,trip:.45,maxL:{2:2,3:2,4:2},
    story:'청동을 다루고 농사를 짓기 시작했어요. 초가집과 장터, 논밭이 생겨요.',
-   unlock:['우물: 반경 7칸에 물을 대줘요','초가집 · 장터 · 논밭 · 청동 공방','당산나무','옛 움집은 조금씩 새 시대 양식으로 다시 지어져요'],goal:'인구 800명을 모으고 고분을 쌓으면 왕조시대로!'},
-  {name:'왕조시대',short:'왕조',year:918,cur:'엽전',costMul:.5,next:2000,trip:.6,maxL:{2:3,3:3,4:2},
+   unlock:['우물: 반경 7칸에 물을 대줘요','초가집 · 장터 · 논밭 · 청동 공방','당산나무','옛 움집은 조금씩 새 시대 양식으로 다시 지어져요'],goal:'목표를 모두 채우고 고분을 쌓으면 왕조시대로!'},
+  {name:'왕조시대',short:'왕조',year:918,cur:'엽전',costMul:.5,next:6000,grow:.015,build:12,trip:.6,maxL:{2:3,3:3,4:2},
    story:'왕이 다스리는 나라가 섰어요. 기와지붕 한옥과 저잣거리가 들어서요.',
-   unlock:['한옥 · 대갓집 (3단계까지)','주막 · 상점 · 객주, 대장간 · 도자기 가마','서당(교육) · 포도청(치안) · 정자','돌길'],goal:'인구 2,000명을 모으고 궁궐 정문을 세우면 근대로!'},
-  {name:'근대',short:'근대',year:1900,cur:'원',costMul:.75,next:4000,trip:.8,maxL:{2:3,3:3,4:3},
+   unlock:['한옥 · 대갓집 (3단계까지)','주막 · 상점 · 객주, 대장간 · 도자기 가마','서당(교육) · 포도청(치안) · 정자','돌길'],goal:'목표를 모두 채우고 궁궐 정문을 세우면 근대로!'},
+  {name:'근대',short:'근대',year:1900,cur:'원',costMul:.75,next:8000,grow:.015,build:24,trip:.8,maxL:{2:3,3:3,4:3},
    story:'증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.',
-   unlock:['증기 발전소: 이제 3단계 건물은 전기가 있어야 해요','양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장','대로 · 소방서 · 학교','이제 화재가 일어날 수 있어요'],goal:'인구 4,000명을 모으고 기차역을 세우면 현대로!'},
-  {name:'현대',short:'현대',year:1990,cur:'₩',costMul:1,next:0,trip:1,maxL:{2:4,3:4,4:3},
+   unlock:['증기 발전소: 이제 3단계 건물은 전기가 있어야 해요','양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장','대로 · 소방서 · 학교','이제 화재가 일어날 수 있어요'],goal:'목표를 모두 채우고 기차역을 세우면 현대로!'},
+  {name:'현대',short:'현대',year:1990,cur:'₩',costMul:1,next:25000,grow:.2,build:0,trip:1,maxL:{2:4,3:4,4:3},
    story:'자동차와 고층 빌딩의 시대가 왔어요.',
-   unlock:['고층 아파트 · 초고층 빌딩 (4단계)','풍력 발전기','시청 · 경기장 · 전파탑 랜드마크','2×2 대형 건물'],goal:'랜드마크를 모두 세우고 메트로폴리스를 완성하세요.'},
+   unlock:['고층 아파트 · 초고층 빌딩 (4단계)','풍력 발전기','시청 · 경기장 · 전파탑 랜드마크','2×2 대형 건물'],goal:'마지막 목표를 모두 채워 메트로폴리스를 완성하세요.'},
 ];
+// Each era asks for several goals before its wonder can be built.
+const lvAtLeast=(S,k,L)=>{const a=S.lvc&&S.lvc[k];if(!a)return 0;let n=0;for(let l=L;l<a.length;l++)n+=a[l];return n;};
+const cntOf=(S,...ks)=>ks.reduce((n,k)=>n+((S.cnt&&S.cnt[k])||0),0);
+const GOALS=[
+  [{t:'인구 800명',v:S=>S.pop,n:800},{t:'모닥불 4개',v:S=>cntOf(S,K.FIREPIT),n:4,tool:'firepit'},{t:'선돌 3곳',v:S=>cntOf(S,K.PARK),n:3,tool:'park'},
+   {t:'큰 움집 24채',v:S=>lvAtLeast(S,K.RES,2),n:24},{t:'교역터 12곳',v:S=>lvAtLeast(S,K.COM,1),n:12}],
+  [{t:'인구 2,500명',v:S=>S.pop,n:2500},{t:'우물 6개',v:S=>cntOf(S,K.WELL),n:6,tool:'well'},{t:'큰 장터 20곳',v:S=>lvAtLeast(S,K.COM,2),n:20},
+   {t:'청동 공방 30곳',v:S=>lvAtLeast(S,K.IND,2),n:30},{t:'당산나무·선돌 8곳',v:S=>cntOf(S,K.PARK),n:8,tool:'park'}],
+  [{t:'인구 6,000명',v:S=>S.pop,n:6000},{t:'대갓집 40채',v:S=>lvAtLeast(S,K.RES,3),n:40},{t:'객주 15곳',v:S=>lvAtLeast(S,K.COM,3),n:15},
+   {t:'서당 2곳',v:S=>cntOf(S,K.SCHOOL),n:2,tool:'school'},{t:'포도청 2곳',v:S=>cntOf(S,K.POLICE),n:2,tool:'police'}],
+  [{t:'인구 8,000명',v:S=>S.pop,n:8000},{t:'증기 발전소 3곳',v:S=>cntOf(S,K.COAL),n:3,tool:'coal'},{t:'근대 빌딩 15채',v:S=>lvAtLeast(S,K.COM,3),n:15},
+   {t:'방직 공장 15곳',v:S=>lvAtLeast(S,K.IND,3),n:15},{t:'소방서 2곳',v:S=>cntOf(S,K.FIRE),n:2,tool:'fire'},{t:'학교 3곳',v:S=>cntOf(S,K.SCHOOL),n:3,tool:'school'}],
+  [{t:'인구 25,000명',v:S=>S.pop,n:25000},{t:'고층 아파트 40채',v:S=>lvAtLeast(S,K.RES,4),n:40},{t:'초고층 빌딩 20채',v:S=>lvAtLeast(S,K.COM,4),n:20},
+   {t:'랜드마크 3곳',v:S=>cntOf(S,K.HALL,K.STADIUM,K.TOWER),n:3,tool:'hall'}],
+];
+const goalList=()=>GOALS[W.era].map(g=>{const v=Math.min(g.n,g.v(W.st)|0);return{...g,cur:v,done:v>=g.n};});
+const goalsDone=()=>goalList().every(g=>g.done);
+const wbLeft=()=>W.wb?Math.max(0,W.wb.start+W.wb.dur-Date.now()):0;
+const wbFrac=()=>W.wb?Math.min(1,1-wbLeft()/W.wb.dur):0;
+const fmtDur=ms=>{const m=Math.ceil(ms/60000);if(m<=1)return'곧';const h=Math.floor(m/60);return h?`${h}시간${m%60?' '+m%60+'분':''}`:`${m}분`;};
 const yearStr=y=>y<0?`기원전 ${-y}년`:`${y}년`;
 const money=n=>!W||W.era>=4?'₩'+fmt(n):fmt(n)+' '+ERAS[W.era].cur;
 const $=s=>document.querySelector(s);
@@ -917,7 +942,7 @@ function buildSprites(){
 let W=null;
 const CAP_W=60,CAP_C=1600;
 const POP=[0,6,18,45,110],JC=[0,4,12,32,80],JI=[0,8,20,40];
-function blankWorld(seed){const NN=N*N;return{seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
+function blankWorld(seed){const NN=N*N;return{wb:null,savedAt:0,seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
   era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
   powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
   st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
@@ -950,7 +975,7 @@ function placeRaw(k,x,y){const w=W;
   const sz=sizeOf(k);if(sz>1){const a=idx(x,y);for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(x+dx,y+dy);w.kind[j]=k;w.anchor[j]=a;w.trees[j]=0;w.level[j]=0;w.fire[j]=0;w.te[j]=w.era;}return;}
   const i=idx(x,y);w.kind[i]=k;w.trees[i]=0;w.level[i]=0;w.build[i]=0;w.anchor[i]=-1;w.te[i]=w.era;w.vari[i]=(Math.random()*256)|0;}
 function clearTile(x,y){const w=W,i=idx(x,y);
-  const sz=sizeOf(w.kind[i]);if(sz>1&&w.anchor[i]>=0){const a=w.anchor[i],ax=a%N,ay=a/N|0;for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(ax+dx,ay+dy);w.kind[j]=0;w.anchor[j]=-1;}return;}
+  const sz=sizeOf(w.kind[i]);if(w.wb&&w.anchor[i]===w.wb.a)w.wb=null;if(sz>1&&w.anchor[i]>=0){const a=w.anchor[i],ax=a%N,ay=a/N|0;for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(ax+dx,ay+dy);w.kind[j]=0;w.anchor[j]=-1;}return;}
   w.fire[i]=0;w.kind[i]=0;w.level[i]=0;w.build[i]=0;w.trees[i]=0;}
 
 function starterStone(){const w=W;w.era=0;w.eraStart=0;
@@ -1018,7 +1043,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     let f=0;for(let dy=-2;dy<=2&&!f;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&w.kind[yy*N+xx]===K.ROAD){f=1;break;}}w.road[i]=f;}
   power();traffic();
   let pop=0,jc=0,ji=0,roads=0,aves=0,police=0,wind=0,coal=0,parks=0,unp=0,nor=0,eR=0,eC=0,eI=0,zones=0,polR=0,nR=0;
-  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;const cnt={};tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
+  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;const cnt={},lvc={[K.RES]:[0,0,0,0,0],[K.COM]:[0,0,0,0,0],[K.IND]:[0,0,0,0]};tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
   for(let i=0;i<NN;i++){const k=w.kind[i],L=w.level[i],x=i%N,y=i/N|0,cx=x+.5,cy=y+.5;
     switch(k){
       case K.ROAD:roads++;if(L)aves++;if(w.traf[i]>.5)stamp(w.pol,cx,cy,2.5,.07*Math.min(1.6,w.traf[i]));break;
@@ -1035,7 +1060,8 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.STADIUM:if(w.anchor[i]===i){stadiums++;stamp(tmpG,x+1.5,y+1.5,12,.18);}break;
       case K.TOWER:towers++;stamp(tmpG,cx,cy,15,.14);break;
       case K.DOLMEN:case K.MOUND:case K.PALACE:case K.STATION:if(w.anchor[i]===i)stamp(tmpG,x+1,y+1,10,.2);break;}
-    if(k&&(sizeOf(k)===1||w.anchor[i]===i))cnt[k]=(cnt[k]||0)+1;
+    if(k&&(sizeOf(k)===1||w.anchor[i]===i)&&!(w.wb&&w.wb.a===i))cnt[k]=(cnt[k]||0)+1;
+    if(k>=K.RES&&k<=K.IND&&!w.build[i])lvc[k][L]++;
     if(w.fire[i])burning++;
     if(k>=K.RES&&k<=K.IND){if(!w.powered[i])unp++;else if(!w.road[i])nor++;}}
   const cf=Math.min(1,pop/500)*[.25,.35,.6,.8,1][w.era];
@@ -1047,7 +1073,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     let v=.3;if(w.wd[i]<6)v+=(1-w.wd[i]/6)*.22;v+=Math.min(.32,tmpC[i])+Math.min(.08,tr*.008)+Math.min(.12,tmpD[i])+Math.min(.06,tmpB[i]*.05)+Math.min(.1,w.edu[i]*.1)+Math.min(.22,tmpG[i]);
     v-=w.pol[i]*.6+w.crime[i]*.4+Math.max(0,w.jam[i]-.7)*.25;w.lv[i]=clamp(v,0,1);
     if(w.kind[i]===K.RES&&w.level[i]){polR+=w.pol[i];nR++;}}
-  Object.assign(S,{cnt,fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
+  Object.assign(S,{cnt,lvc,fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
   const jobs=jc+ji,tf=(w.tax-9)*.06;
   const lb=towers*.05;
   S.dR=clamp((jobs*1.7+100-pop)/Math.max(60,pop*.25)-tf+halls*.05+lb,-1,1);
@@ -1055,11 +1081,11 @@ function recompute(){const w=W,S=w.st,NN=N*N;
   S.dI=clamp((pop*.36-ji+30)/Math.max(40,pop*.12)-tf+lb,-1,1);}
 // [land value, population] needed for each level
 const REQ={[K.RES]:[null,[0,0],[.27,0],[.44,900],[.62,5000,.5]],[K.COM]:[null,[0,0],[.27,250],[.45,1800],[.62,8000,.5]],[K.IND]:[null,[0,0],[0,400],[0,2500]]};
-function levelCap(k,i){const v=W.lv[i],p=W.st.pop,R=REQ[k];let c=1;
+function levelCap(k,i,keep){const v=W.lv[i]+(keep?.12:0),p=W.st.pop*(keep?1.5:1),R=REQ[k];let c=1;
   for(let L=2;L<R.length;L++){if(v>=R[L][0]&&p>=R[L][1]&&W.edu[i]>=(R[L][2]||0))c=L;else break;}
-  if(k===K.RES&&W.pol[i]>.55)c=1;
+  if(k===K.RES&&W.pol[i]>(keep?.72:.55))c=1;
   if(W.crime[i]>.6)c=Math.max(1,c-1);
-  c=Math.min(c,ERAS[Math.min(4,W.te[i])].maxL[k]);if(W.era>=3&&!W.grid[i])c=Math.min(c,2);return c;}
+  c=Math.min(c,ERAS[Math.min(4,W.te[i])].maxL[k]);if(W.era>=3&&!W.grid[i]&&!keep)c=Math.min(c,2);return c;}
 function nextNeed(k,i){const w=W,L=w.level[i],R=REQ[k];
   if(!w.powered[i])return W.era<3?'모닥불이나 우물이 가까이 있어야 해요':'전기가 필요해요';if(!w.road[i])return'2칸 안에 도로가 필요해요';
   if(w.fire[i])return'불타고 있어요!';if(w.build[i]>0)return'짓는 중이에요';
@@ -1076,8 +1102,8 @@ function growTile(i){const w=W,k=w.kind[i];if(k<K.RES||k>K.IND||w.build[i]>0||w.
   const L=w.level[i];if(!w.powered[i]||!w.road[i]){if(L>0&&Math.random()<.15)w.level[i]=L-1;return;}
   if(w.jam[i]>1){if(L>1&&w.jam[i]>1.6&&Math.random()<.05)w.level[i]=L-1;return;}
   const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI,c=levelCap(k,i);
-  if(L<c&&d>0&&Math.random()<.05+d*.2){w.level[i]=L+1;w.te[i]=w.era;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*256|0;}
-  else if(L>c&&Math.random()<.2)w.level[i]=L-1;
+  if(L<c&&d>0&&Math.random()<(.05+d*.2)*(L?ERAS[w.era].grow:1)){w.level[i]=L+1;w.te[i]=w.era;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*256|0;}
+  else if(L>c&&L>levelCap(k,i,true)&&Math.random()<.2)w.level[i]=L-1;
   else if(d<-.4&&L>0&&Math.random()<.08)w.level[i]=L-1;}
 const isBld=i=>{const k=W.kind[i];return k>=K.RES&&k<=K.IND&&W.level[i]>0&&!W.build[i];};
 function ignite(i,quiet){const w=W;if(w.fire[i]||!isBld(i))return;w.fire[i]=12;
@@ -1098,12 +1124,14 @@ function simDay(quiet){const w=W;w.day++;
     w.te[i]=w.era;if(kd>=K.RES&&kd<=K.IND&&w.level[i]&&!w.build[i]&&!w.fire[i])w.build[i]=5+(Math.random()*5|0);}
   if(w.day%10===0)recompute();
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
-function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1);
+function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1][W.era]);
   const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
-function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(quiet)return;advisor();milestone();save();}
+function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;
+  if(!quiet&&W.era===4&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 메트로폴리스가 완성됐어요.','good');fireworks();sfx('win');}
+  if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
-  if(W.era<4){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(S.pop>=e.next&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
+  if(W.era<4){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(!W.wb&&goalsDone()&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
   if(W.era<3){if(S.unpowered>3&&say('cover',W.era===0?'불씨가 닿지 않는 움집 터가 있어요. 모닥불(6)을 가까이 피워주세요.':'우물이 먼 집이 있어요. 우물(6)을 가까이 파주세요.','warn',5))return;}
   else if(S.zones>0&&S.cap===0&&say('nopow',W.era===3?'증기 발전소(7)를 지어야 3단계 건물이 올라가요.':'발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.','warn',3))return;
   if(W.era>=3&&S.cap>0&&S.use<5&&S.zones>0&&say('nolink','발전소가 도시와 이어져 있지 않아요. 길이나 건물로 발전소와 마을을 이어주세요.','warn',4))return;
@@ -1126,14 +1154,20 @@ function rankName(){return ERAS[W.era].short;}
 const KEY='dotcity.save.v1';
 function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
 function unb64(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
-function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
+function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,wb:w.wb,savedAt:Date.now(),lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
   a:{terrain:b64(w.terrain),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
 function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('bad save');const w=blankWorld(o.seed);
-  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart'])if(o[k]!=null)w[k]=o[k];
+  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt'])if(o[k]!=null)w[k]=o[k];
   for(const k of['terrain','trees','kind','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
   if(o.era==null){w.era=4;w.te.fill(4);}
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
-function save(){try{localStorage.setItem(KEY,serialize());}catch(e){}}
+function save(){W.savedAt=Date.now();try{localStorage.setItem(KEY,serialize());}catch(e){}}
+// While the game is closed the city keeps growing slowly: one in-game day per real minute, up to two years.
+function checkWonder(){if(W.wb&&wbLeft()<=0){advanceEra();return true;}return false;}
+function catchUp(since){if(!since)return;const days=Math.min(720,Math.floor((Date.now()-since)/60000));if(days<3)return;
+  const p0=W.st.pop,f0=W.funds,e0=W.era,m0=W.month;for(let d=0;d<days;d++)simDay(true);recompute();
+  const dm=W.month-m0;toast(`자리를 비운 사이 ${dm>0?dm+'개월':days+'일'}이 흘렀어요 · 인구 ${W.st.pop-p0>=0?'+':''}${fmt(W.st.pop-p0)} · 자금 ${W.funds-f0>=0?'+':'-'}${money(Math.abs(W.funds-f0))}`,'good');
+  save();updateHud(true);}
 
 /* ---------------- camera / canvas ---------------- */
 const view=$('#view'),vctx=view.getContext('2d');
@@ -1174,10 +1208,10 @@ const TOOLS=[
   {id:'hall',name:'시청',era:4,key:'H',cost:4000,kind:K.HALL,size:2,hl:'build',landmark:1500,desc:'도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. 2×2.'},
   {id:'stadium',name:'경기장',era:4,key:'J',cost:12000,kind:K.STADIUM,size:3,hl:'build',landmark:4000,desc:'도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. 3×3.'},
   {id:'tower',name:'전파탑',era:4,key:'K',cost:20000,kind:K.TOWER,hl:'build',landmark:10000,desc:'대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.'},
-  {id:'w0',name:'고인돌',wonder:0,era:0,until:0,key:'Y',fixed:600,kind:K.DOLMEN,size:2,hl:'build',desc:'부족의 힘을 모아 거대한 돌을 세웁니다. 완성하면 청동기시대가 열려요. 2×2.'},
-  {id:'w1',name:'고분',wonder:1,era:1,until:1,key:'Y',fixed:2500,kind:K.MOUND,size:2,hl:'build',desc:'왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 완성하면 왕조시대가 열려요. 2×2.'},
-  {id:'w2',name:'궁궐 정문',wonder:2,era:2,until:2,key:'Y',fixed:8000,kind:K.PALACE,size:2,hl:'build',desc:'웅장한 성문을 세웁니다. 완성하면 근대가 열려요. 2×2.'},
-  {id:'w3',name:'기차역',wonder:3,era:3,until:3,key:'Y',fixed:16000,kind:K.STATION,size:2,hl:'build',desc:'철도가 들어옵니다. 완성하면 현대가 열려요. 2×2.'},
+  {id:'w0',name:'고인돌',wonder:0,era:0,until:0,key:'Y',fixed:3000,kind:K.DOLMEN,size:2,hl:'build',desc:'부족의 힘을 모아 거대한 돌을 세웁니다. 공사는 현실 시간 2시간(꺼 둬도 진행)이고, 완공되면 청동기시대가 열려요. 2×2.'},
+  {id:'w1',name:'고분',wonder:1,era:1,until:1,key:'Y',fixed:8000,kind:K.MOUND,size:2,hl:'build',desc:'왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 공사는 현실 시간 6시간(꺼 둬도 진행)이고, 완공되면 왕조시대가 열려요. 2×2.'},
+  {id:'w2',name:'궁궐 정문',wonder:2,era:2,until:2,key:'Y',fixed:18000,kind:K.PALACE,size:2,hl:'build',desc:'웅장한 성문을 세웁니다. 공사는 현실 시간 12시간(꺼 둬도 진행)이고, 완공되면 근대가 열려요. 2×2.'},
+  {id:'w3',name:'기차역',wonder:3,era:3,until:3,key:'Y',fixed:30000,kind:K.STATION,size:2,hl:'build',desc:'철도가 들어옵니다. 공사는 현실 시간 24시간(꺼 둬도 진행)이고, 완공되면 현대가 열려요. 2×2.'},
 ];
 const toolOn=t=>(t.era??0)<=W.era&&(t.until==null||W.era<=t.until);
 const tn=t=>t.names?t.names[W.era]:t.name;
@@ -1191,10 +1225,10 @@ function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],t
     case'bulldoze':return k!==0||W.trees[i]>0;
     case'road':return ter!==1&&(k===0||k===K.ROAD);
     case'avenue':return ter!==1&&(k===0||(k===K.ROAD&&!W.level[i]));
-    default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(W.st.pop<ERAS[t.wonder].next||builtCount(t.kind)))return false;const sz=t.size||1;
+    default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(!goalsDone()||W.wb||builtCount(t.kind)))return false;const sz=t.size||1;
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;}}}
 function builtCount(k){return W.st.cnt[k]||0;}
-function whyNot(t){if(t.wonder!=null&&W.st.pop<ERAS[t.wonder].next)return`${tn(t)}은(는) 인구 ${fmt(ERAS[t.wonder].next)}명이 되면 세울 수 있어요.`;if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
+function whyNot(t){if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
 function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*ERAS[W.era].costMul);return costOf(t);}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   if(t.drag==='line'){const dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]);let x=a[0],y=a[1];out.push([x,y]);
@@ -1216,11 +1250,12 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
     else if(t.id==='road'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);}
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
-  recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);if(t.wonder!=null&&builtCount(t.kind))setTimeout(advanceEra,600);}
+  if(t.wonder!=null){const tt=tiles.find(([x,y])=>W.kind[idx(x,y)]===t.kind)||tiles[0];W.wb={a:W.anchor[idx(tt[0],tt[1])],k:t.kind,start:Date.now(),dur:ERAS[W.era].build*3600000};toast(`${tn(t)} 공사를 시작했어요. ${ERAS[W.era].build}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.`,'good');save();setTool('inspect');}
+  recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 let prevSpeed=1;
-function advanceEra(){if(W.era>=4)return;W.era++;W.eraStart=W.month;cars=[];selected=null;$('#info').hidden=true;recompute();buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
+function advanceEra(quiet){if(W.era>=4)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
 function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
-  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal;$('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);$('#emGo').focus();}
+  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · ');$('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);$('#emGo').focus();}
 function closeEra(){$('#eraModal').hidden=true;setSpeed(prevSpeed);}
 
 /* ---------------- particles ---------------- */
@@ -1320,7 +1355,7 @@ function render(){
     else if(k===K.POLICE||k===K.FIRE){const sp=k===K.FIRE?SP.fire:civSprite(K.POLICE,w.te[i]);drawSpr(c,sp,sx,sy);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){drawSpr(c,SP.tower,sx,sy);extras(c,SP.tower,sx,sy,blinkOn);}
-    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}
+    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;
@@ -1425,7 +1460,7 @@ function buildTools(){
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
   const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed',String(isOv?overlay===o.id:tool===o.id));b.setAttribute('aria-label',isOv?o.name:tn(o));
     if(iconFor[o.id])b.appendChild(iconFor[o.id]());else b.insertAdjacentHTML('beforeend',svg(o.id,isOv?1.5:2));
-    const lk=o.landmark||(o.wonder!=null?ERAS[o.wonder].next:0);if(lk)b.insertAdjacentHTML('beforeend',`<span class="lk">${lk>=1000?lk/1000+'K':lk}</span>`);
+    const lk=o.landmark?(o.landmark>=1000?o.landmark/1000+'K':o.landmark):o.wonder!=null?'목표':'';if(lk)b.insertAdjacentHTML('beforeend',`<span class="lk">${lk}</span>`);
     b.insertAdjacentHTML('beforeend',`<span class="k">${o.key}</span>`);if(o.sw)b.insertAdjacentHTML('beforeend',`<i class="sw" style="background:${o.sw}"></i>`);
     b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(b,o,isOv);});b.addEventListener('pointerleave',hideTip);(isOv?og:tg).appendChild(b);};
@@ -1449,13 +1484,13 @@ function buildUI(){
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
   arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));arm($('#mSandbox'),()=>newGame('modern'));
   $('#emGo').addEventListener('click',closeEra);
-  $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&W.st.pop>=ERAS[W.era].next){setTool(wt.id);sfx('click');}else if(wt)toast(whyNot(wt)||ERAS[W.era].goal,'info');});
+  $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&goalsDone()&&!W.wb){setTool(wt.id);sfx('click');}else{goalsOpen=true;selected=null;$('#info').hidden=false;renderGoals();sfx('click');}});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
   paintDayBtn();paintSnd();}
 function paintDayBtn(){$('#dayBtn').innerHTML=svg(dayMode==='auto'?'auto':dayMode==='day'?'sun':'moon',2);$('#dayBtn').title=dayMode==='auto'?'시간: 자동':dayMode==='day'?'시간: 낮 고정':'시간: 밤 고정';$('#dayBtn').setAttribute('aria-pressed',dayMode!=='auto');}
 function paintSnd(){$('#sndBtn').innerHTML=svg(muted?'sndOff':'sndOn',2);$('#sndBtn').title=muted?'소리 켜기':'소리 끄기';}
 function setBrush(v){brush=v;try{localStorage.setItem('dotcity.brush',v);}catch(e){}document.querySelectorAll('#brush button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.b===v));}
-function setTool(id){tool=id;{const br=$('#brush');if(br){br.hidden=!T(id).drag;br.classList.toggle('line',T(id).drag==='line');}}document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
+function setTool(id){tool=id;if(id!=='inspect')goalsOpen=false;{const br=$('#brush');if(br){br.hidden=!T(id).drag;br.classList.toggle('line',T(id).drag==='line');}}document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
   view.classList.toggle('pan',id==='inspect');if(id!=='inspect'){selected=null;$('#info').hidden=true;}}
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
@@ -1473,28 +1508,39 @@ function openMenu(){$('#menu').hidden=false;$('#mResume').focus();}
 function closeMenu(){$('#menu').hidden=true;}
 
 let hudT=0,lastRank='';
-function updateHud(force){if(!force&&now-hudT<250)return;hudT=now;const S=W.st,b=budget();
+function updateHud(force){if(!force&&now-hudT<250)return;hudT=now;if(checkWonder())return;const S=W.st,b=budget();
   $('#pop').textContent=fmt(S.pop);const f=$('#funds');f.textContent=money(W.funds);f.classList.toggle('neg',W.funds<0);
   const d=$('#delta');d.textContent=W.month?(W.lastNet>=0?'+':'')+fmt(W.lastNet):'';d.classList.toggle('neg',W.lastNet<0);
   $('#date').textContent=`${yearStr(ERAS[W.era].year+Math.floor((W.month-W.eraStart)/12))} ${W.month%12+1}월`;
   {const e=ERAS[W.era];$('#eraName').textContent=e.name;
-   if(W.era<4){const nx=ERAS[W.era+1],wt=TOOLS.find(t=>t.wonder===W.era),ready=S.pop>=e.next;$('#eraNext').textContent='다음: '+nx.name;$('#eraBar').style.width=Math.min(100,S.pop/e.next*100)+'%';
-     $('#eraTask').textContent=ready?`${tn(wt)}을(를) 세우면 ${nx.name}! 여기를 누르세요 (${money(wt.fixed)})`:`인구 ${fmt(S.pop)} / ${fmt(e.next)}명 · 그다음 ${tn(wt)} 세우기`;$('#eraCard').classList.toggle('ready',ready);}
-   else{$('#eraNext').textContent='마지막 시대';$('#eraBar').style.width='100%';$('#eraTask').textContent='랜드마크를 세우고 메트로폴리스를 완성하세요';$('#eraCard').classList.remove('ready');}}
+   const gl=goalList(),gd=gl.filter(g=>g.done).length,nextG=gl.find(g=>!g.done),frac=gl.reduce((a,g)=>a+g.cur/g.n,0)/gl.length;
+   if(W.era<4){const nx=ERAS[W.era+1],wt=TOOLS.find(t=>t.wonder===W.era),ready=gd===gl.length&&!W.wb;$('#eraNext').textContent='다음: '+nx.name;
+     if(W.wb){$('#eraBar').style.width=wbFrac()*100+'%';$('#eraTask').textContent=`${tn(wt)} 공사 중 · ${fmtDur(wbLeft())} 남음 (꺼 둬도 진행돼요)`;}
+     else{$('#eraBar').style.width=frac*100+'%';$('#eraTask').textContent=ready?`목표 완료! ${tn(wt)}을(를) 세우세요 (${money(wt.fixed)})`:`목표 ${gd}/${gl.length} · ${nextG.t} (${fmt(nextG.cur)}/${fmt(nextG.n)}) · 눌러서 보기`;}
+     $('#eraCard').classList.toggle('ready',ready);}
+   else{$('#eraNext').textContent='마지막 시대';$('#eraBar').style.width=frac*100+'%';$('#eraTask').textContent=gd===gl.length?'메트로폴리스 완성!':`목표 ${gd}/${gl.length} · ${nextG.t} (${fmt(nextG.cur)}/${fmt(nextG.n)})`;$('#eraCard').classList.remove('ready');}}
   const r=rankName();if(r!==lastRank){$('#rank').textContent=r;lastRank=r;}
-  for(const t of TOOLS)if(t.landmark||t.wonder!=null){const b=document.querySelector(`#tools .tb[data-id="${t.id}"]`);if(b){b.classList.toggle('locked',S.pop<(t.landmark||ERAS[t.wonder].next));b.classList.toggle('built',!!builtCount(t.kind));}}
+  for(const t of TOOLS)if(t.landmark||t.wonder!=null){const b=document.querySelector(`#tools .tb[data-id="${t.id}"]`);if(b){b.classList.toggle('locked',t.wonder!=null?(!goalsDone()||!!W.wb):S.pop<t.landmark);b.classList.toggle('built',!!builtCount(t.kind));}}
   if(W.era<3){$('#pwrLbl').textContent=W.era===0?'불씨':'우물';$('#pwr').textContent=`${Math.round(S.covPct*100)}%`;$('#pwrBar').style.width=S.covPct*100+'%';$('#pwrMeter').classList.toggle('hot',S.covPct<.85);}
   else{$('#pwrLbl').textContent='전력';$('#pwr').textContent=`${fmt(S.use)}/${fmt(S.cap)}`;$('#pwrBar').style.width=(S.cap?Math.min(100,S.use/S.cap*100):0)+'%';$('#pwrMeter').classList.toggle('hot',S.cap===0||S.use/S.cap>.9||S.unpowered>3);}
   const bar=(el,v,colr)=>{const e=$(el),hpx=e.parentElement.clientHeight/2-1,hh=Math.round(Math.abs(v)*hpx);e.style.height=hh+'px';e.style.top=v>=0?(hpx+1-hh)+'px':(hpx+1)+'px';e.style.background=v>=0?colr:'#b0434f';};
   bar('#dR',S.dR,'var(--res)');bar('#dC',S.dC,'var(--com)');bar('#dI',S.dI,'var(--ind)');
   $('#tax').textContent=W.tax+'%';$('#inc').textContent='+'+money(b.income);$('#exp').textContent='-'+money(b.expense);
-  if(selected&&!$('#info').hidden)renderInfo();}
+  if(goalsOpen&&!$('#info').hidden)renderGoals();else if(selected&&!$('#info').hidden)renderInfo();}
 const NAMES_E=[
   {[K.RES]:['빈 터','움집','큰 움집'],[K.COM]:['빈 터','교역터'],[K.IND]:['빈 터','채집터']},
   {[K.RES]:['빈 터','초가집','큰 초가집'],[K.COM]:['빈 터','노점','장터'],[K.IND]:['빈 터','논밭','청동 공방']},
   {[K.RES]:['빈 터','초가집','한옥','대갓집'],[K.COM]:['빈 터','주막','상점','객주'],[K.IND]:['빈 터','대장간','도자기 가마']},
   {[K.RES]:['빈 터','양옥','적산가옥','벽돌 연립'],[K.COM]:['빈 터','근대 상점','은행','근대 빌딩'],[K.IND]:['빈 터','벽돌 창고','벽돌 공장','방직 공장']}];
 const NAMES={[K.RES]:['빈 주거지','단독주택','연립주택','아파트','고층 아파트'],[K.COM]:['빈 상업지','동네 상점','사무 빌딩','오피스 타워','초고층 빌딩'],[K.IND]:['빈 공업지','창고','공장','중공업 단지']};
+let goalsOpen=false;
+function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);
+  const row=g=>`<div class="goal ${g.done?'ok':''}"><span class="gk">${g.done?'✓':''}</span><span class="gt">${g.t}</span><span class="px">${fmt(g.cur)}/${fmt(g.n)}</span>${!g.done&&g.tool&&toolOn(T(g.tool))?`<button class="gb" data-tool="${g.tool}">짓기</button>`:''}</div>`;
+  const tail=W.era>=4?'':W.wb?`<div class="need">${tn(wt)} 공사 중 · ${fmtDur(wbLeft())} 남음. 게임을 꺼 둬도 공사는 계속돼요.</div>`:gl.every(g=>g.done)?`<button class="btn primary" id="goWonder">${tn(wt)} 세우기 <small>${money(wt.fixed)}</small></button>`:`<div class="sub">목표를 모두 채우면 ${tn(wt)}을(를) 세울 수 있어요. 공사는 현실 시간으로 ${e.build}시간 걸려요.</div>`;
+  $('#info').innerHTML=`<h3><span>${e.name} 목표</span><button class="x" id="infoX" aria-label="닫기">X</button></h3>${gl.map(row).join('')}${tail}`;
+  $('#infoX').onclick=()=>{goalsOpen=false;$('#info').hidden=true;};
+  $('#info').querySelectorAll('.gb').forEach(b=>b.onclick=()=>{setTool(b.dataset.tool);sfx('click');});
+  const gw=$('#goWonder');if(gw)gw.onclick=()=>{setTool(wt.id);goalsOpen=false;$('#info').hidden=true;sfx('click');};}
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:(Math.min(4,w.te[i])<4?NAMES_E[w.te[i]][k][Math.min(L,NAMES_E[w.te[i]][k].length-1)]:NAMES[k][L]);sub=tn(T(['','','res','com','ind'][k]))+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
@@ -1528,7 +1574,7 @@ view.addEventListener('pointermove',e=>{if(pointers.has(e.pointerId))pointers.se
   updateCost(e);});
 function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panning');if(pinch){if(pointers.size<2)pinch=null;drag=null;return;}if(!drag)return;
   const d=drag;drag=null;
-  if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
+  if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;goalsOpen=false;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
   else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);applyTool(t,tilesFor(t,d.a,d.a));}
   updateCost(e);}
@@ -1551,7 +1597,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
 window.addEventListener('resize',resize);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(W)catchUp(W.savedAt);});
 
 /* ---------------- main loop ---------------- */
 let last=0,miniT=0;
@@ -1578,7 +1624,7 @@ function start(data){resize();buildSprites();
   if(data&&data.cam)Object.assign(cam,data.cam);
   for(let k=0;k<40;k++)spawnCar();
   updateHud(true);drawMini();
-  if(loaded)toast(`${W.name}에 다시 오신 걸 환영해요.`,'info');else showEra(false);
+  if(loaded){toast(`${W.name}에 다시 오신 걸 환영해요.`,'info');catchUp(W.savedAt);}else showEra(false);
   try{window.claude?.hot?.snapshot?.(()=>({save:serialize(),cam:{...cam}}));}catch(e){}
   requestAnimationFrame(frame);}
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
