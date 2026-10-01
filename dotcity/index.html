@@ -1033,6 +1033,25 @@ function buildSprites(){
       for(const yy of[cy-110,cy-170])pb.box({cx,cy:yy,hw:3,h:4,L:()=>col(SH),R:()=>col(SH,-.25),T:()=>neon(PINK)});},
       (cx,cy)=>({lights:[[cx,cy-6],[cx,cy-40],[cx,cy-112]],blink:[[cx,2,'#ff4a6a'],[cx,cy-172,'#ffffff']]}));
     SP.elev=elevSp(230);SP.elevIco=elevSp(84);
+    // civic buildings, future style
+    const BLUE='#4a8cff',RED='#ff4a3a';
+    SP.policeF=mk1(56,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f6f9fc',t);if(b>=8&&b<9)return band(t,BLUE);if(b<6&&a>1&&a<hw-1)return(a|0)%3===0?col(SH,t-.05):winC(a|0,0,5101,.9,'#4a6fbf');return col(SH,t);};
+      pb.box({cx,cy:cy-1,hw:12,h:12,L:f(0),R:f(-.24),T:(u,w,x,y)=>{const d=Math.hypot(u-.5,w-.5);if(d<.26&&d>.19)return neon(BLUE);if(d<.12&&(Math.abs(u-w)<.05||Math.abs(u+w-1)<.05))return neon('#ffffff');return Math.min(u,w,1-u,1-w)<.08?col('#f6f9fc'):col('#b9c4d2');}});
+      pb.box({cx:cx-6,cy:cy-13,hw:3,h:5,L:ftw(0,5102,'#4a6fbf',3,BLUE),R:ftw(-.24,5102,'#4a6fbf',3,BLUE),T:()=>col('#e6ecf2')});
+      for(const[x,y]of[[cx+3,cy-21],[cx+7,cy-19]]){pb.put(x,y,col('#2b3348'));pb.put(x-1,y,col('#9aa6b8'));pb.put(x+1,y,col('#9aa6b8'));pb.put(x,y+1,neon(BLUE));}},
+      (cx,cy)=>({siren:[cx-7,cy-19]}));
+    SP.fireF=mk1(62,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f6f9fc',t);if(b>=9&&b<10)return band(t,RED);return col(SH,t);};
+      pb.cyl(cx+6,cy-6,3,26,(dx,b)=>b%5<1?band(dx>.2?-.25:0,RED):col(SH,dx<-.4?.1:dx<.2?0:-.26),()=>neon(RED));
+      pb.box({cx:cx-1,cy:cy-1,hw:12,h:12,L:(a,b,hw,h)=>{if(b<7&&a>2&&a<hw-2)return(a|0)%3===0?col(SH,-.05):winC(a|0,0,5201,.8,'#4a6fbf');return f(0)(a,b,hw,h);},
+        R:(a,b,hw,h)=>{if(((a>=1.5&&a<5.5)||(a>=6.5&&a<10.5))&&b<7.5)return[col('#ff6a4a',(b|0)%2?-.1:-.2),col('#ffb070')];return f(-.24)(a,b,hw,h);},T:fRoof});
+      pb.box({cx:cx-5,cy:cy-14,hw:2,h:1,L:()=>neon(RED),R:()=>neon(RED,-.2),T:()=>neon('#ffd25f')});},
+      (cx,cy)=>({siren:[cx-7,cy-16]}));
+    SP.schoolF=mk2(84,(pb,cx,cy)=>{pb.box({cx:cx+7,cy:cy-9,hw:21,h:12,L:ftw(0,5301,'#3f6a96',6,'#ffd25f'),R:ftw(-.24,5301,'#3f6a96',6,'#ffd25f'),T:fGarden});
+      for(let k=0;k<4;k++)treeInto(pb,cx-2+k*6,cy-22+k*3,0,2,5310+k);
+      pb.box({cx:cx+7,cy:cy-22,hw:4,h:1,L:()=>col('#2b3b66'),R:()=>col('#2b3b66',-.2),T:(u)=>col('#3b5aa0',Math.floor(u*4)%2?.25:0)});
+      dome(pb,cx-8,cy-4,8,9,'#9fe0e8',true);ring(pb,cx-8,cy-5,8.5,'#ffd25f');
+      for(let i=0;i<14;i++)pb.put(cx-22,cy+4-i,col('#d6dde3'));for(let i=0;i<3;i++)for(let j=0;j<5;j++)pb.put(cx-21+j,cy-9+i+(j>>1),neon(i===1?'#ffd25f':NEON));},
+      (cx,cy)=>({lights:[[cx-8,cy-6]]}));
   }
   SP.icoPow=mk(bitmapPB(["..##",".##.","####",".##.","##..","#..."],{'#':'#ffd23f'},'#2a1d05'),-3,0,false);
   SP.icoRoad=mk(bitmapPB(["##","##","##","..","##"],{'#':'#ff8a4a'},'#2a1005'),-2,0,false);
@@ -1453,7 +1472,7 @@ function render(){
     else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
     else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
-    else if(k===K.POLICE||k===K.FIRE){const sp=k===K.FIRE?SP.fire:civSprite(K.POLICE,w.te[i]);drawSpr(c,sp,sx,sy);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
+    else if(k===K.POLICE||k===K.FIRE){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){drawSpr(c,SP.tower,sx,sy);extras(c,SP.tower,sx,sy,blinkOn);}
     else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
@@ -1473,7 +1492,7 @@ function render(){
   vctx.imageSmoothingEnabled=false;vctx.clearRect(0,0,view.width,view.height);vctx.drawImage(wc,Math.round(-fx*s),Math.round(-fy*s),lw*s,lh*s);}
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
 function civSprite(k,e){e=Math.min(5,e);if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
-  if(k===K.POLICE)return e<=2?SP.police2:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:SP.school;
+  if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
 function bldSprite(i){const e=Math.min(5,W.te[i]),k=W.kind[i],set=SP.E[e][k];const arr=set[Math.min(W.level[i],set.length-1)];return arr[W.vari[i]%arr.length];}
@@ -1556,7 +1575,7 @@ function buildTools(){
   const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
-    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(SP.fire),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
+    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
     w0:()=>spriteIcon(SP.dolmen,40),w1:()=>spriteIcon(SP.mound,40),w2:()=>spriteIcon(SP.palace,40),w3:()=>spriteIcon(SP.station,40),w4:()=>spriteIcon(SP.elevIco,40)};
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
   const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed',String(isOv?overlay===o.id:tool===o.id));b.setAttribute('aria-label',isOv?o.name:tn(o));
