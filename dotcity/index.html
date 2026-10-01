@@ -280,20 +280,20 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
    DOT CITY — pixel isometric city builder
    ================================================================ */
 const N=64, SLAB=12;
-const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19,ELEV:20};
+const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19,ELEV:20,HOSP:21};
 const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2,[K.ELEV]:2};const sizeOf=k=>SIZE[k]||1;
 const LANDMARK={[K.HALL]:1500,[K.STADIUM]:4000,[K.TOWER]:10000};
 // The city evolves through six eras. Each era caps building levels, swaps art, and ends with a wonder.
 const ERAS=[
   {name:'석기시대',short:'석기',year:-8000,cur:'조개',costMul:.15,next:800,grow:.045,build:2,trip:.35,maxL:{2:2,3:1,4:1},
    story:'사람들이 모닥불 곁에 모여 살기 시작했어요. 흙길을 내고 움집 터를 정해 부족을 키우세요.',
-   unlock:['모닥불: 반경 5칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요','움집 터 · 교역터 · 채집터','선돌: 주변 땅값을 올려요'],goal:'목표를 모두 채우고 고인돌을 세우면 청동기시대로!'},
+   unlock:['모닥불: 반경 5칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요','움집 터 · 교역터 · 채집터','선돌: 주변 땅값을 올려요','약초 움막: 주민의 건강을 돌봐요 (G)'],goal:'목표를 모두 채우고 고인돌을 세우면 청동기시대로!'},
   {name:'청동기시대',short:'청동기',year:-2000,cur:'청동',costMul:.3,next:2500,grow:.015,build:6,trip:.45,maxL:{2:2,3:2,4:2},
    story:'청동을 다루고 농사를 짓기 시작했어요. 초가집과 장터, 논밭이 생겨요.',
    unlock:['우물: 반경 7칸에 물을 대줘요','초가집 · 장터 · 논밭 · 청동 공방','당산나무','옛 움집은 조금씩 새 시대 양식으로 다시 지어져요'],goal:'목표를 모두 채우고 고분을 쌓으면 왕조시대로!'},
   {name:'왕조시대',short:'왕조',year:918,cur:'엽전',costMul:.5,next:6000,grow:.015,build:12,trip:.6,maxL:{2:3,3:3,4:2},
    story:'왕이 다스리는 나라가 섰어요. 기와지붕 한옥과 저잣거리가 들어서요.',
-   unlock:['한옥 · 대갓집 (3단계까지)','주막 · 상점 · 객주, 대장간 · 도자기 가마','서당(교육) · 포도청(치안) · 정자','돌길'],goal:'목표를 모두 채우고 궁궐 정문을 세우면 근대로!'},
+   unlock:['한옥 · 대갓집 (3단계까지)','주막 · 상점 · 객주, 대장간 · 도자기 가마','서당(교육) · 포도청(치안) · 정자','혜민서: 대갓집(3단계)부터는 병원이 가까워야 해요','돌길'],goal:'목표를 모두 채우고 궁궐 정문을 세우면 근대로!'},
   {name:'근대',short:'근대',year:1900,cur:'원',costMul:.75,next:7000,grow:.015,build:24,trip:.8,maxL:{2:3,3:3,4:3},
    story:'증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.',
    unlock:['증기 발전소: 이제 3단계 건물은 전기가 있어야 해요','양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장','대로 · 소방서 · 학교','이제 화재가 일어날 수 있어요'],goal:'목표를 모두 채우고 기차역을 세우면 현대로!'},
@@ -309,17 +309,17 @@ const lvAtLeast=(S,k,L)=>{const a=S.lvc&&S.lvc[k];if(!a)return 0;let n=0;for(let
 const cntOf=(S,...ks)=>ks.reduce((n,k)=>n+((S.cnt&&S.cnt[k])||0),0);
 const GOALS=[
   [{t:'인구 800명',v:S=>S.pop,n:800},{t:'모닥불 4개',v:S=>cntOf(S,K.FIREPIT),n:4,tool:'firepit'},{t:'선돌 3곳',v:S=>cntOf(S,K.PARK),n:3,tool:'park'},
-   {t:'큰 움집 24채',v:S=>lvAtLeast(S,K.RES,2),n:24},{t:'교역터 12곳',v:S=>lvAtLeast(S,K.COM,1),n:12}],
+   {t:'큰 움집 24채',v:S=>lvAtLeast(S,K.RES,2),n:24},{t:'교역터 12곳',v:S=>lvAtLeast(S,K.COM,1),n:12},{t:'약초 움막 1곳',v:S=>cntOf(S,K.HOSP),n:1,tool:'hosp'}],
   [{t:'인구 2,500명',v:S=>S.pop,n:2500},{t:'우물 6개',v:S=>cntOf(S,K.WELL),n:6,tool:'well'},{t:'큰 장터 20곳',v:S=>lvAtLeast(S,K.COM,2),n:20},
-   {t:'청동 공방 30곳',v:S=>lvAtLeast(S,K.IND,2),n:30},{t:'당산나무·선돌 8곳',v:S=>cntOf(S,K.PARK),n:8,tool:'park'}],
+   {t:'청동 공방 30곳',v:S=>lvAtLeast(S,K.IND,2),n:30},{t:'당산나무·선돌 8곳',v:S=>cntOf(S,K.PARK),n:8,tool:'park'},{t:'약초방 2곳',v:S=>cntOf(S,K.HOSP),n:2,tool:'hosp'}],
   [{t:'인구 6,000명',v:S=>S.pop,n:6000},{t:'대갓집 40채',v:S=>lvAtLeast(S,K.RES,3),n:40},{t:'객주 15곳',v:S=>lvAtLeast(S,K.COM,3),n:15},
-   {t:'서당 2곳',v:S=>cntOf(S,K.SCHOOL),n:2,tool:'school'},{t:'포도청 2곳',v:S=>cntOf(S,K.POLICE),n:2,tool:'police'}],
+   {t:'서당 2곳',v:S=>cntOf(S,K.SCHOOL),n:2,tool:'school'},{t:'포도청 2곳',v:S=>cntOf(S,K.POLICE),n:2,tool:'police'},{t:'혜민서 2곳',v:S=>cntOf(S,K.HOSP),n:2,tool:'hosp'}],
   [{t:'인구 7,000명',v:S=>S.pop,n:7000},{t:'증기 발전소 3곳',v:S=>cntOf(S,K.COAL),n:3,tool:'coal'},{t:'근대 빌딩 15채',v:S=>lvAtLeast(S,K.COM,3),n:15},
-   {t:'방직 공장 15곳',v:S=>lvAtLeast(S,K.IND,3),n:15},{t:'소방서 2곳',v:S=>cntOf(S,K.FIRE),n:2,tool:'fire'},{t:'학교 3곳',v:S=>cntOf(S,K.SCHOOL),n:3,tool:'school'}],
+   {t:'방직 공장 15곳',v:S=>lvAtLeast(S,K.IND,3),n:15},{t:'소방서 2곳',v:S=>cntOf(S,K.FIRE),n:2,tool:'fire'},{t:'학교 3곳',v:S=>cntOf(S,K.SCHOOL),n:3,tool:'school'},{t:'적십자 병원 2곳',v:S=>cntOf(S,K.HOSP),n:2,tool:'hosp'}],
   [{t:'인구 20,000명',v:S=>S.pop,n:20000},{t:'고층 아파트 40채',v:S=>lvAtLeast(S,K.RES,4),n:40},{t:'초고층 빌딩 20채',v:S=>lvAtLeast(S,K.COM,4),n:20},
-   {t:'랜드마크 3곳',v:S=>cntOf(S,K.HALL,K.STADIUM,K.TOWER),n:3,tool:'hall'}],
+   {t:'랜드마크 3곳',v:S=>cntOf(S,K.HALL,K.STADIUM,K.TOWER),n:3,tool:'hall'},{t:'종합병원 3곳',v:S=>cntOf(S,K.HOSP),n:3,tool:'hosp'}],
   [{t:'인구 40,000명',v:S=>S.pop,n:40000},{t:'핵융합 발전소 2곳',v:S=>S.fusion||0,n:2,tool:'coal'},{t:'아콜로지 40채',v:S=>lvAtLeast(S,K.RES,5),n:40},
-   {t:'공중 타워 20채',v:S=>lvAtLeast(S,K.COM,5),n:20},{t:'자동화 공장 30곳',v:S=>lvAtLeast(S,K.IND,4),n:30}],
+   {t:'공중 타워 20채',v:S=>lvAtLeast(S,K.COM,5),n:20},{t:'자동화 공장 30곳',v:S=>lvAtLeast(S,K.IND,4),n:30},{t:'메디컬 센터 3곳',v:S=>cntOf(S,K.HOSP),n:3,tool:'hosp'}],
 ];
 const goalList=()=>GOALS[W.era].map(g=>{const v=Math.min(g.n,g.v(W.st)|0);return{...g,cur:v,done:v>=g.n};});
 const goalsDone=()=>goalList().every(g=>g.done);
@@ -484,7 +484,7 @@ function buildSprites(){
   SP.sel=G((u,v)=>Math.min(u,v,1-u,1-v)<.07?col('#ffcc4d'):null);
   const ramp=(stops,al=150)=>{const out=[];for(let i=0;i<8;i++){const t=i/7*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t));out.push(G(()=>col(mixHex(stops[k],stops[k+1],t-k),0,al)));}return out;};
   SP.dim=G(()=>col('#0e1226',0,150));
-  SP.ramp={education:ramp(['#3a4c9a','#4f8fd8','#6fd0e8','#e8f6ff']),traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
+  SP.ramp={health:ramp(['#6a3a4a','#c05a6a','#ff9aa8','#ffe8ec']),education:ramp(['#3a4c9a','#4f8fd8','#6fd0e8','#e8f6ff']),traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
   const gl=new PB(30,15);for(let y=0;y<15;y++)for(let x=0;x<30;x++){const d=Math.hypot((x+.5-15)/15,(y+.5-7.5)/7.5);if(d<1)gl.put(x,y,col('#ffb45c',0,d<.3?110:d<.6?60:24));}
   SP.glow=mk(gl,-15,1,false);
 
@@ -1052,6 +1052,33 @@ function buildSprites(){
       dome(pb,cx-8,cy-4,8,9,'#9fe0e8',true);ring(pb,cx-8,cy-5,8.5,'#ffd25f');
       for(let i=0;i<14;i++)pb.put(cx-22,cy+4-i,col('#d6dde3'));for(let i=0;i<3;i++)for(let j=0;j<5;j++)pb.put(cx-21+j,cy-9+i+(j>>1),neon(i===1?'#ffd25f':NEON));},
       (cx,cy)=>({lights:[[cx-8,cy-6]]}));
+
+    // hospitals, one look per era
+    const plaque=(pb,x,y,red=[col('#e0302a'),col('#ff5a4a')],bg=col('#ffffff'))=>{for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const edge=Math.abs(dx)===3||Math.abs(dy)===3;pb.put(x+dx,y+dy,edge?col('#c9d2dc'):(Math.abs(dx)<=0||Math.abs(dy)<=0)&&Math.abs(dx)<=2&&Math.abs(dy)<=2?red:bg);}};
+    SP.hosp=[
+      mk1(44,(pb,cx,cy)=>{pb.ell(cx,cy+2,11,(dx,dy,x,y)=>col('#8a6a44',hash(x,y,4)<.15?-.12:0));cone(pb,cx-3,cy+1,8,12,STRAW[2]);door(pb,cx-6,cy+2,2,4);
+        posts(pb,[[cx+6,cy+4],[cx+12,cy+1]],8,WOOD);pb.line(cx+6,cy-3,cx+12,cy-6,col(WOOD,-.1));
+        for(let k=0;k<5;k++){const x=cx+7+k,y=cy-3-(k>>1)+1;pb.put(x,y,col('#5f9a3e'));pb.put(x,y+1,col('#7ab84a'));if(k&1)pb.put(x,y+2,col('#a0c060'));}
+        pots(pb,cx+2,cy+6,2,'#7a4a2a');}),
+      mk1(48,(pb,cx,cy)=>{const wall='#e2d3b0';pb.box({cx,cy:cy-1,hw:9,h:6,L:(a,b)=>(a|0)%4===0?col(WOOD):a>=5&&a<7&&b<4?col('#2a1d14'):col(wall),R:(a,b)=>(a|0)%4===0?col(WOOD,-.25):(b>=2&&b<4&&(a|0)%4>=2)?col('#6aa84a',-.1):col(wall,-.25)});
+        pb.roof(cx,cy-7,11,7,'#c9a45a');pots(pb,cx+4,cy+5,3,'#6a3e28');pb.box({cx:cx-9,cy:cy+3,hw:2,h:3,L:()=>col('#f2ede0'),R:()=>col('#f2ede0',-.25),T:()=>col('#5f9a3e')});}),
+      mk1(52,(pb,cx,cy)=>{pb.box({cx,cy:cy,hw:12,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});
+        pb.box({cx,cy:cy-2,hw:9,h:7,L:(a,b)=>(a|0)%4===0||b<1?col(WOOD):b>=2&&b<5&&(a|0)%4>=1?col('#c9b38a',(((a*2)|0)+((b*2)|0))%2?0:-.12):col(HW),
+          R:(a,b)=>(a|0)%4===0||b<1?col(WOOD,-.25):a>=3&&a<7&&b>=5&&b<6.5?col('#2a4a6a'):col(HW,-.25)});
+        giwa(pb,cx,cy-10,12,7);pots(pb,cx-8,cy+5,2,'#5a3a28');},(cx,cy)=>({lights:[[cx,cy-2]]})),
+      mk1(60,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1.5)return col('#efe8d8',t);if(((b>=2&&b<4.5)||(b>=7.5&&b<10))&&(a|0)%4>=1&&(a|0)%4<3&&a>1&&a<hw-1)return winC(Math.floor(a/4)+(t?40:0),b<6?0:1,5401,.6,'#4f6f8f');return brick('#c9bfae',t)(a,b);};
+        pb.box({cx,cy:cy-1,hw:11,h:14,L:f(0),R:f(-.24),T:()=>col('#6a6a70')});pb.roof(cx,cy-15,12,6,'#4a4a55');
+        pb.box({cx:cx+5,cy:cy-21,hw:2,h:2,L:()=>col('#ffffff'),R:()=>col('#e0302a'),T:()=>col('#ffffff')});plaque(pb,cx-6,cy-8);},(cx,cy)=>({lights:[[cx-5,cy+2],[cx+5,cy+2]]})),
+      mk1(80,(pb,cx,cy)=>{pb.box({cx,cy:cy,hw:12,h:4,L:(a,b)=>b<3&&(a|0)%3?winC(a|0,0,5501,.95,'#5a9ab8'):col('#e8eef2'),R:(a,b)=>b<3&&(a|0)%3?winC((a|0)+20,0,5501,.95,'#5a9ab8'):col('#e8eef2',-.25),T:()=>col('#cfd6dc')});
+        const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f2f5f8',t);if((b%4)>=1&&(a|0)%3!==0&&a>.8&&a<hw-.8)return winC(Math.floor(a/3)+(t?40:0),Math.floor(b/4),5502,.5,'#5a9ab8');return col('#e8eef2',t);};
+        pb.box({cx:cx-1,cy:cy-4,hw:10,h:30,L:f(0),R:f(-.24),T:(u,w)=>{const d=Math.hypot(u-.5,w-.5);if(d<.3&&d>.23)return col('#ffd25f');if(d<.16&&(Math.abs(u-.5)<.04||Math.abs(w-.5)<.04))return col('#ffffff');return Math.min(u,w,1-u,1-w)<.07?col('#f2f5f8'):col('#7a8088');}});plaque(pb,cx-6,cy-25);},
+        (cx,cy)=>({blink:[[cx-1,cy-40,'#ff4a4a']],lights:[[cx,cy+2]]})),
+      mk1(100,(pb,cx,cy)=>{const MINT='#5ff2b0';pb.box({cx,cy:cy+1,hw:12,h:1,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:fGarden});
+        const f=t=>ftw(t,5601,'#3f8a96',6,MINT);
+        pb.box({cx,cy:cy-1,hw:9,h:46,L:f(0),R:f(-.24),T:fGarden});plaque(pb,cx-5,cy-36,neon('#ff4a6a'),col('#f6f9fc'));dome(pb,cx,cy-47,5,5,'#bff6e8',true);ring(pb,cx,cy-48,5.5,MINT);
+        pb.box({cx:cx+9,cy:cy+1,hw:4,h:9,L:ftw(0,5602,'#3f8a96',3,MINT),R:ftw(-.24,5602,'#3f8a96',3,MINT),T:fRoof});
+        for(const[x,y]of[[cx-8,cy-40],[cx+11,cy-28]]){pb.put(x,y,col('#f6f9fc'));pb.put(x-1,y,col('#9aa6b8'));pb.put(x+1,y,col('#9aa6b8'));pb.put(x,y+1,neon('#ff4a6a'));}},
+        (cx,cy)=>({blink:[[cx,cy-54,'#ff4a6a']],lights:[[cx,cy-30]]}))];
   }
   SP.icoPow=mk(bitmapPB(["..##",".##.","####",".##.","##..","#..."],{'#':'#ffd23f'},'#2a1d05'),-3,0,false);
   SP.icoRoad=mk(bitmapPB(["##","##","##","..","##"],{'#':'#ff8a4a'},'#2a1005'),-2,0,false);
@@ -1063,7 +1090,7 @@ const CAP_W=60,CAP_C=1600,CAP_F=8000;
 const POP=[0,6,18,45,110,260],JC=[0,4,12,32,80,190],JI=[0,8,20,40,70];
 function blankWorld(seed){const NN=N*N;return{wb:null,savedAt:0,seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
   era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
-  powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
+  powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),health:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
   st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
   return(x,y)=>{const fx=x/cell,fy=y/cell,ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy,sx=tx*tx*(3-2*tx),sy=ty*ty*(3-2*ty);
@@ -1162,7 +1189,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     let f=0;for(let dy=-2;dy<=2&&!f;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&w.kind[yy*N+xx]===K.ROAD){f=1;break;}}w.road[i]=f;}
   power();traffic();
   let pop=0,jc=0,ji=0,roads=0,aves=0,police=0,wind=0,coal=0,parks=0,unp=0,nor=0,eR=0,eC=0,eI=0,zones=0,polR=0,nR=0;
-  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;const cnt={},lvc={[K.RES]:[0,0,0,0,0,0],[K.COM]:[0,0,0,0,0,0],[K.IND]:[0,0,0,0,0]};let fusion=0;tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
+  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);w.health.fill(0);let hosp=0;tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;const cnt={},lvc={[K.RES]:[0,0,0,0,0,0],[K.COM]:[0,0,0,0,0,0],[K.IND]:[0,0,0,0,0]};let fusion=0;tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
   for(let i=0;i<NN;i++){const k=w.kind[i],L=w.level[i],x=i%N,y=i/N|0,cx=x+.5,cy=y+.5;
     switch(k){
       case K.ROAD:roads++;if(L)aves++;if(w.traf[i]>.5)stamp(w.pol,cx,cy,2.5,.07*Math.min(1.6,w.traf[i]));break;
@@ -1173,6 +1200,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.POLICE:police++;stamp(tmpB,cx,cy,12,1.3);break;
       case K.WIND:wind++;break;
       case K.COAL:if(w.anchor[i]===i){coal++;if(w.te[i]>=5)fusion++;else stamp(w.pol,x+1,y+1,10,1.0);}break;
+      case K.HOSP:hosp++;stamp(w.health,cx,cy,10,1.4);break;
       case K.FIRE:fires++;stamp(w.fcov,cx,cy,12,1.4);break;
       case K.SCHOOL:if(w.anchor[i]===i){schools++;stamp(w.edu,x+1,y+1,14,1.4);}break;
       case K.HALL:if(w.anchor[i]===i){halls++;stamp(tmpG,x+1,y+1,9,.2);}break;
@@ -1187,12 +1215,12 @@ function recompute(){const w=W,S=w.st,NN=N*N;
   for(let i=0;i<NN;i++){const x=i%N,y=i/N|0;
     let tr=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(inb(x+dx,y+dy))tr+=w.trees[(y+dy)*N+x+dx];
     w.pol[i]=clamp(w.pol[i]-w.trees[i]*.05-tr*.004,0,1);
-    w.edu[i]=Math.min(1,w.edu[i]);w.fcov[i]=Math.min(1,w.fcov[i]);
+    w.edu[i]=Math.min(1,w.edu[i]);w.fcov[i]=Math.min(1,w.fcov[i]);w.health[i]=clamp(w.health[i]-w.pol[i]*.5,0,1);
     w.crime[i]=clamp(tmpA[i]*Math.max(0,1-tmpB[i])*(1-.3*w.edu[i])*cf*1.6,0,1);
     let v=.3;if(w.wd[i]<6)v+=(1-w.wd[i]/6)*.22;v+=Math.min(.32,tmpC[i])+Math.min(.08,tr*.008)+Math.min(.12,tmpD[i])+Math.min(.06,tmpB[i]*.05)+Math.min(.1,w.edu[i]*.1)+Math.min(.22,tmpG[i]);
     v-=w.pol[i]*.6+w.crime[i]*.4+Math.max(0,w.jam[i]-.7)*.25;w.lv[i]=clamp(v,0,1);
     if(w.kind[i]===K.RES&&w.level[i]){polR+=w.pol[i];nR++;}}
-  Object.assign(S,{fusion,cnt,lvc,fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
+  Object.assign(S,{hosp,fusion,cnt,lvc,fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
   const jobs=jc+ji,tf=(w.tax-9)*.06;
   const lb=towers*.05;
   S.dR=clamp((jobs*1.7+100-pop)/Math.max(60,pop*.25)-tf+halls*.05+lb,-1,1);
@@ -1201,7 +1229,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
 // [land value, population] needed for each level
 const REQ={[K.RES]:[null,[0,0],[.27,0],[.44,900],[.62,5000,.5],[.7,18000,.6]],[K.COM]:[null,[0,0],[.27,250],[.45,1800],[.62,8000,.5],[.7,20000,.6]],[K.IND]:[null,[0,0],[0,400],[0,2500],[0,12000]]};
 function levelCap(k,i,keep){const v=W.lv[i]+(keep?.12:0),p=W.st.pop*(keep?1.5:1),R=REQ[k];let c=1;
-  for(let L=2;L<R.length;L++){if(v>=R[L][0]&&p>=R[L][1]&&W.edu[i]>=(R[L][2]||0))c=L;else break;}
+  for(let L=2;L<R.length;L++){if(v>=R[L][0]&&p>=R[L][1]&&W.edu[i]>=(R[L][2]||0)&&(k!==K.RES||L<3||keep||W.health[i]>=.35))c=L;else break;}
   if(k===K.RES&&W.pol[i]>(keep?.72:.55))c=1;
   if(W.crime[i]>.6)c=Math.max(1,c-1);
   c=Math.min(c,ERAS[Math.min(5,W.te[i])].maxL[k]);if(W.era>=3&&!W.grid[i]&&!keep)c=Math.min(c,2);return c;}
@@ -1212,7 +1240,7 @@ function nextNeed(k,i){const w=W,L=w.level[i],R=REQ[k];
   if(L+1>=R.length)return'최고 단계예요';
   if(L>=ERAS[Math.min(5,w.te[i])].maxL[k])return w.te[i]<W.era?'곧 새 시대 양식으로 다시 지어요':'더 크게 자라려면 다음 시대로 가야 해요';
   if(W.era>=3&&!w.grid[i]&&L>=2)return'3단계부터는 전기가 필요해요. 발전소와 이어주세요';
-  const q=R[L+1],miss=[];if(w.lv[i]<q[0])miss.push(`땅값 ${Math.round(q[0]*100)}`);if(w.st.pop<q[1])miss.push(`인구 ${fmt(q[1])}명`);if(q[2]&&w.edu[i]<q[2])miss.push('학교(교육 50)');
+  const q=R[L+1],miss=[];if(w.lv[i]<q[0])miss.push(`땅값 ${Math.round(q[0]*100)}`);if(w.st.pop<q[1])miss.push(`인구 ${fmt(q[1])}명`);if(q[2]&&w.edu[i]<q[2])miss.push('학교(교육 50)');if(k===K.RES&&L+1>=3&&w.health[i]<.35)miss.push(`${tn(T('hosp'))}(건강 35)`);
   if(k===K.RES&&w.pol[i]>.55)miss.push('오염 줄이기');if(w.crime[i]>.6)miss.push('범죄 줄이기');
   if(w.jam[i]>1)miss.push('교통 체증 해소');
   if(miss.length)return'다음 단계: '+miss.join(', ')+' 필요';
@@ -1244,7 +1272,7 @@ function simDay(quiet){const w=W;w.day++;
   if(w.day%10===0)recompute();
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]);
-  const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
+  const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
 function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;
   if(!quiet&&W.era===5&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 미래 도시가 완성됐어요.','good');fireworks();sfx('win');}
   if(quiet)return;advisor();milestone();save();}
@@ -1263,6 +1291,7 @@ function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.a
   if(S.jammed>5&&say('jam',`도로 ${S.jammed}칸이 꽉 막혔어요. 옆에 길을 더 내거나 대로(U)로 넓히세요.`,'warn',6))return;
   if(W.era>=3&&S.pop>800&&S.fires===0&&say('nofire','소방서가 없어서 불이 나면 옆 건물로 번져요.','warn',10))return;
   if(W.era>=4&&S.pop>2000&&S.schools===0&&say('noschool','학교가 없어요. 고층 아파트와 초고층 빌딩은 교육받은 주민이 있어야 올라갑니다.','info',10))return;
+  if(W.era>=2&&S.pop>1200&&!S.hosp&&say('hosp',`큰 집은 건강해야 올라가요. ${tn(T('hosp'))}(G)을(를) 지으세요.`,'info',8))return;
   if(W.era>=2&&S.pop>600&&S.police===0&&say('police',`범죄가 늘고 있어요. ${tn(T('police'))}을(를) 지으세요.`,'warn',8))return;
   if(S.avgPolR>.35&&say('pol','주거지 공기가 탁해요. 공장과 떨어뜨리고 공원과 숲을 늘리세요.','warn',10))return;}
 function unlocks(){for(const t of TOOLS){if(!t.landmark||!toolOn(t)||W.unl[t.id]||W.st.pop<t.landmark)continue;W.unl[t.id]=1;toast(`새 랜드마크: ${t.name}을(를) 지을 수 있어요!`,'good');sfx('win');}}
@@ -1320,6 +1349,7 @@ const TOOLS=[
   {id:'firepit',name:'모닥불',era:0,until:0,key:'6',cost:300,kind:K.FIREPIT,hl:'build',desc:'반경 5칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.'},
   {id:'well',name:'우물',era:1,until:2,key:'6',cost:400,kind:K.WELL,hl:'build',desc:'반경 7칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.'},
   {id:'police',names:['','','포도청','경찰서','경찰서','치안 센터'],era:2,key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다.'},
+  {id:'hosp',names:['약초 움막','약초방','혜민서','적십자 병원','종합병원','메디컬 센터'],key:'G',cost:400,kind:K.HOSP,hl:'build',desc:'반경 10칸 주민의 건강을 돌봐요. 3단계 이상 큰 집은 건강해야 올라가요. 오염이 심하면 건강이 나빠져요.'},
   {id:'fire',name:'소방서',era:3,key:'8',cost:600,kind:K.FIRE,hl:'build',desc:'반경 12칸의 불을 금방 끄고 번지지 않게 막습니다.'},
   {id:'school',names:['','','서당','학교','학교','미래 학교'],era:2,key:'9',cost:1500,kind:K.SCHOOL,size:2,hl:'build',desc:'반경 14칸 주민을 가르쳐 땅값을 올리고 범죄를 줄입니다. 현대의 고층 건물엔 꼭 필요해요. 2×2.'},
   {id:'wind',name:'풍력 발전기',era:4,key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60.'},
@@ -1337,7 +1367,7 @@ const toolOn=t=>(t.era??0)<=W.era&&(t.until==null||W.era<=t.until);
 const tn=t=>t.names?t.names[W.era]:t.name;
 const costOf=t=>t.fixed??Math.max(t.cost?1:0,Math.round(t.cost*ERAS[W.era].costMul));
 const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.'},{id:'value',name:'땅값',key:'V',desc:'밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.'},
-  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'}];
+  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'},{id:'health',name:'건강',key:'L',desc:'병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.'}];
 const T=id=>TOOLS.find(t=>t.id===id);
 
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
@@ -1418,12 +1448,13 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
-  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
+  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
   if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(k===K.SCHOOL){const a=w.anchor[i];return SP.field[((i/N|0)-(a/N|0))*2+(i%N-a%N)]||SP.plaza;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
 function heatSpr(i){const w=W;if(overlay==='power'){const k=w.kind[i];if(!k||k===K.ROAD&&!w.powered[i]&&true)return k===K.ROAD&&w.powered[i]?SP.hl.pow:null;return w.powered[i]||powNeed(i)===0?SP.hl.pow:SP.hl.nopow;}
   if(overlay==='traffic'){if(w.kind[i]!==K.ROAD)return w.terrain[i]===1?null:SP.dim;return SP.ramp.traffic[Math.min(7,Math.floor(w.traf[i]/1.25*8))];}
+  if(overlay==='health'){if(w.terrain[i]===1)return null;return w.health[i]<.04?null:SP.ramp.health[Math.min(7,Math.floor(w.health[i]*8))];}
   if(overlay==='education'){if(w.terrain[i]===1)return null;return w.edu[i]<.04?null:SP.ramp.education[Math.min(7,Math.floor(w.edu[i]*8))];}
   if(w.terrain[i]===1)return null;const v=overlay==='value'?w.lv[i]:overlay==='pollution'?w.pol[i]:w.crime[i];if((overlay!=='value')&&v<.04)return null;return SP.ramp[overlay][Math.min(7,Math.floor(v*8))];}
 function render(){
@@ -1472,7 +1503,7 @@ function render(){
     else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
     else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
-    else if(k===K.POLICE||k===K.FIRE){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
+    else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){drawSpr(c,SP.tower,sx,sy);extras(c,SP.tower,sx,sy,blinkOn);}
     else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
@@ -1491,7 +1522,7 @@ function render(){
   if(duskF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(255,128,70,${.16*duskF})`;c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';}
   vctx.imageSmoothingEnabled=false;vctx.clearRect(0,0,view.width,view.height);vctx.drawImage(wc,Math.round(-fx*s),Math.round(-fy*s),lw*s,lh*s);}
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
-function civSprite(k,e){e=Math.min(5,e);if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
+function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
@@ -1546,6 +1577,7 @@ const IC={
   value:["..yyyy..",".yyooyy.","yyoyyyyy","yyyooyyy","yyyyyoyy","yyoooyyy",".yyyyyy.","..yyyy.."],
   pollution:["....ggg....","..gggggg...",".gggggggg..","ggggggggggg","gggggggdddg",".ddddddddd."],
   traffic:["..rrrr...",".rwwwwr..","rrrrrrrrr","rrrrrrrrr",".kk...kk."],
+  health:["...rrr...","...rrr...","rrrrrrrrr","rrrrrrrrr","...rrr...","...rrr..."],
   education:["....k....","..kkkkk..","kkkkkkkkk","..kkkkk.y","..kkkkk.y","...kkk..y"],
   crime:["....r....","...rrr...","..rrwrr..",".rrrwrrr.","rrrrwrrrr",".rrrrrrr.","..rrwrr..","...rrr...","....r...."],
   pause:["##.##","##.##","##.##","##.##","##.##","##.##","##.##"],
@@ -1575,7 +1607,7 @@ function buildTools(){
   const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
-    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
+    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
     w0:()=>spriteIcon(SP.dolmen,40),w1:()=>spriteIcon(SP.mound,40),w2:()=>spriteIcon(SP.palace,40),w3:()=>spriteIcon(SP.station,40),w4:()=>spriteIcon(SP.elevIco,40)};
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
   const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed',String(isOv?overlay===o.id:tool===o.id));b.setAttribute('aria-label',isOv?o.name:tn(o));
@@ -1665,13 +1697,13 @@ function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wond
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:(w.te[i]>=5?NAMES_F[k][L]:w.te[i]<4?NAMES_E[w.te[i]][k][Math.min(L,NAMES_E[w.te[i]][k].length-1)]:NAMES[k][L]);sub=tn(T(['','','res','com','ind'][k]))+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
-  else title={[K.ROAD]:L?'대로':T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
-  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra=w.te[w.anchor[i]]>=5?'전력 8,000 공급 · 오염 없음':'전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
+  else title={[K.ROAD]:L?'대로':T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.HOSP]:T('hosp').names[Math.min(5,w.te[i])],[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
+  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra=w.te[w.anchor[i]]>=5?'전력 8,000 공급 · 오염 없음':'전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.HOSP)extra='반경 10칸 건강';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
   const fl=(ok,a,b)=>`<span class="flag ${ok?'ok':'no'}">${ok?a:b}</span>`;
   const zone=k>=K.RES&&k<=K.IND;
   $('#info').innerHTML=`<h3><span>${title}</span><button class="x" id="infoX" aria-label="닫기">X</button></h3><div class="sub">${sub||`${x}, ${y}`}${extra?' · '+extra:''}</div>
-    ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}${k===K.ROAD?m('혼잡',Math.min(1,w.traf[i]),'#f2b33d'):zone?m('교통',Math.min(1,w.jam[i]),'#f2b33d')+m('교육',w.edu[i],'#6fd0e8'):''}
+    ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}${k===K.ROAD?m('혼잡',Math.min(1,w.traf[i]),'#f2b33d'):zone?m('교통',Math.min(1,w.jam[i]),'#f2b33d')+m('교육',w.edu[i],'#6fd0e8')+m('건강',w.health[i],'#ff8a9a'):''}
     ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],W.era<3?'불씨·우물 가까움':'전기 들어옴',W.era<3?'불씨·우물 멀어요':'전기 끊김')}${zone?fl(w.road[i],'길 가까움','길 없음')+(W.era>=3?fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};}
