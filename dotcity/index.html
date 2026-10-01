@@ -79,6 +79,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .brush kbd{font:9px var(--f-px);border:1px solid var(--ink-faint);padding:0 3px}
 .brush button{flex:1;height:28px;border:0;background:var(--panel-lo);color:var(--ink-dim);cursor:pointer;font:13px var(--f-ui);box-shadow:inset 0 -2px 0 rgba(0,0,0,.4);padding:0 6px;white-space:nowrap}
 .brush button:hover{color:var(--ink)}
+.brush.line button[data-b="three"]{display:none}
 .brush button[aria-pressed="true"]{color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold-dk)}
 .tools .sep{font-size:11px;color:var(--ink-faint);letter-spacing:.12em;padding:2px 2px 0;text-align:center}
 .tb.locked canvas{filter:grayscale(1) brightness(.55)}
@@ -257,8 +258,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <button class="btn" id="mSandbox">샌드박스: 현대 도시 <small>시대 진화 없이</small></button>
     </div>
     <dl class="keys">
-      <dt>탭 · 클릭</dt><dd>1칸 짓기. 범위(B)로 3×3이나 드래그 칠하기로 바꿀 수 있어요</dd>
-      <dt>드래그</dt><dd>지도 이동 (길 도구는 길 깔기)</dd>
+      <dt>탭 · 클릭</dt><dd>1칸 짓기 (길도 한 칸씩). 범위(B)로 3×3이나 드래그 칠하기로 바꿀 수 있어요</dd>
+      <dt>드래그</dt><dd>지도 이동 (범위가 '드래그'면 길 깔기·구역 칠하기)</dd>
       <dt>우클릭 드래그</dt><dd>지도 이동 · 휴대폰은 두 손가락</dd>
       <dt>휠 / + -</dt><dd>확대·축소</dd>
       <dt>WASD</dt><dd>지도 이동</dd>
@@ -1157,8 +1158,8 @@ const keys=new Set();
 const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
   {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'길·건물·나무를 없앱니다.'},
-  {id:'road',names:['흙길','흙길','돌길','신작로','도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'드래그해서 길을 냅니다. 집은 길에서 2칸 안에 있어야 자라요.'},
-  {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 넓힐 수도 있습니다.'},
+  {id:'road',names:['흙길','흙길','돌길','신작로','도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'탭할 때마다 한 칸씩 깔려요. 범위를 "드래그"로 바꾸면 끌어서 길게 깔 수 있어요. 집은 길에서 2칸 안에 있어야 자라요.'},
+  {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 탭하면 넓어집니다.'},
   {id:'res',names:['움집 터','초가 마을','한옥 마을','주거 구역','주거 구역'],key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 모여 살 집을 짓습니다.'},
   {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
   {id:'ind',names:['채집터','논밭','공방','공업 구역','공업 구역'],key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일거리를 만듭니다. 근대부터는 공기를 더럽혀요.'},
@@ -1431,7 +1432,7 @@ function buildTools(){
   TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);
   const br=document.createElement('div');br.className='brush';br.id='brush';br.setAttribute('role','group');br.setAttribute('aria-label','짓는 범위');
   br.innerHTML='<span>범위 <kbd>B</kbd></span>'+[['one','1칸'],['three','3×3'],['rect','드래그']].map(([v,l])=>`<button data-b="${v}" aria-pressed="${brush===v}">${l}</button>`).join('');
-  br.addEventListener('click',e=>{const b=e.target.closest('button');if(b){setBrush(b.dataset.b);sfx('click');}});br.hidden=T(tool).drag!=='rect';tools.append(br);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
+  br.addEventListener('click',e=>{const b=e.target.closest('button');if(b){setBrush(b.dataset.b);sfx('click');}});br.hidden=!T(tool).drag;br.classList.toggle('line',T(tool).drag==='line');tools.append(br);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
 function buildUI(){
   buildTools();
   const sp=$('#speed');[['pause','일시정지'],['play','보통'],['ff','빠르게'],['fff','아주 빠르게']].forEach(([ic,lab],n)=>{const b=document.createElement('button');b.className='ib';b.innerHTML=svg(ic,2);b.setAttribute('aria-label',lab);b.title=lab;
@@ -1454,7 +1455,7 @@ function buildUI(){
 function paintDayBtn(){$('#dayBtn').innerHTML=svg(dayMode==='auto'?'auto':dayMode==='day'?'sun':'moon',2);$('#dayBtn').title=dayMode==='auto'?'시간: 자동':dayMode==='day'?'시간: 낮 고정':'시간: 밤 고정';$('#dayBtn').setAttribute('aria-pressed',dayMode!=='auto');}
 function paintSnd(){$('#sndBtn').innerHTML=svg(muted?'sndOff':'sndOn',2);$('#sndBtn').title=muted?'소리 켜기':'소리 끄기';}
 function setBrush(v){brush=v;try{localStorage.setItem('dotcity.brush',v);}catch(e){}document.querySelectorAll('#brush button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.b===v));}
-function setTool(id){tool=id;{const br=$('#brush');if(br)br.hidden=T(id).drag!=='rect';}document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
+function setTool(id){tool=id;{const br=$('#brush');if(br){br.hidden=!T(id).drag;br.classList.toggle('line',T(id).drag==='line');}}document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
   view.classList.toggle('pan',id==='inspect');if(id!=='inspect'){selected=null;$('#info').hidden=true;}}
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
@@ -1515,7 +1516,7 @@ view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);poin
   if(pointers.size===2){drag=null;const[p,q]=[...pointers.values()];pinch={d:Math.hypot(p.x-q.x,p.y-q.y),mx:(p.x+q.x)/2,my:(p.y+q.y)/2,cx:cam.x,cy:cam.y};return;}
   if(pointers.size>2)return;const g=toGrid(e.clientX,e.clientY);
   if(e.button===1||e.button===2||tool==='inspect'||keys.has(' ')){drag={mode:'pan',sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y,moved:false,btn:e.button,g};view.classList.add('panning');}
-  else{const t=T(tool);drag=t.drag==='line'||(t.drag==='rect'&&brush==='rect')?{mode:'build',a:g,b:g}:{mode:'tap',a:g,sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};}});
+  else{const t=T(tool);drag=t.drag&&brush==='rect'?{mode:'build',a:g,b:g}:{mode:'tap',a:g,sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};}});
 view.addEventListener('pointermove',e=>{if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   const g=toGrid(e.clientX,e.clientY);hover=inb(g[0],g[1])?g:null;
   if(pinch&&pointers.size===2){const[p,q]=[...pointers.values()],d=Math.hypot(p.x-q.x,p.y-q.y),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
