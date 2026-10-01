@@ -74,6 +74,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .ogrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .ogrid .tb{width:auto;height:34px}
 .ogrid .tb .k{display:none}
+.brush{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--ink-dim)}
+.brush span{margin-right:2px;white-space:nowrap}
+.brush kbd{font:9px var(--f-px);border:1px solid var(--ink-faint);padding:0 3px}
+.brush button{flex:1;height:28px;border:0;background:var(--panel-lo);color:var(--ink-dim);cursor:pointer;font:13px var(--f-ui);box-shadow:inset 0 -2px 0 rgba(0,0,0,.4);padding:0 6px;white-space:nowrap}
+.brush button:hover{color:var(--ink)}
+.brush button[aria-pressed="true"]{color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold-dk)}
 .tools .sep{font-size:11px;color:var(--ink-faint);letter-spacing:.12em;padding:2px 2px 0;text-align:center}
 .tb.locked canvas{filter:grayscale(1) brightness(.55)}
 .tb.built canvas{opacity:.4}
@@ -167,6 +173,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   .tools::-webkit-scrollbar{display:none}
   .tools .sep{display:none}
   .tgrid,.ogrid{display:contents}
+  .brush{order:-1;flex:none;gap:2px}
+  .brush span{display:none}
+  .brush button{flex:none;height:46px;font-size:12px;width:42px;padding:0}
   .tb,.ogrid .tb{flex:none;width:46px;height:46px}
   .rci{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);padding:8px 10px;gap:10px}
   .bar .tube{height:44px}
@@ -248,7 +257,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <button class="btn" id="mSandbox">샌드박스: 현대 도시 <small>시대 진화 없이</small></button>
     </div>
     <dl class="keys">
-      <dt>드래그</dt><dd>도로·구역 칠하기 (살펴보기 도구에선 지도 이동)</dd>
+      <dt>탭 · 클릭</dt><dd>1칸 짓기. 범위(B)로 3×3이나 드래그 칠하기로 바꿀 수 있어요</dd>
+      <dt>드래그</dt><dd>지도 이동 (길 도구는 길 깔기)</dd>
       <dt>우클릭 드래그</dt><dd>지도 이동 · 휴대폰은 두 손가락</dd>
       <dt>휠 / + -</dt><dd>확대·축소</dd>
       <dt>WASD</dt><dd>지도 이동</dd>
@@ -1136,6 +1146,7 @@ function zoomTo(s,px=innerWidth/2,py=innerHeight/2){s=clamp(Math.round(s),1,8);i
   cam.x=wx-(px*DPR-view.width/2)/s;cam.y=wy-(py*DPR-view.height/2)/s;clampCam();$('#miniZoom').textContent='x'+(s/DPR).toFixed(s%DPR?1:0);}
 
 /* ---------------- runtime state ---------------- */
+let brush=(()=>{try{return localStorage.getItem('dotcity.brush')||'one';}catch(e){return'one';}})();
 let tool='inspect',overlay=null,speed=1,dayMode='auto',muted=false;
 const SPEEDS=[0,1,2.5,6],DAY=0.16;
 let hover=null,drag=null,selected=null,now=0,frameDt=0,nightF=0,duskF=0,simAcc=0;
@@ -1189,6 +1200,8 @@ function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
     const xFirst=Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1]);
     if(xFirst){while(x!==b[0]){x+=dx;out.push([x,y]);}while(y!==b[1]){y+=dy;out.push([x,y]);}}
     else{while(y!==b[1]){y+=dy;out.push([x,y]);}while(x!==b[0]){x+=dx;out.push([x,y]);}}}
+  else if(t.drag==='rect'&&brush==='one')out.push(a);
+  else if(t.drag==='rect'&&brush==='three'){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)out.push([a[0]+dx,a[1]+dy]);}
   else if(t.drag==='rect'){const x0=Math.min(a[0],b[0]),x1=Math.max(a[0],b[0]),y0=Math.min(a[1],b[1]),y1=Math.max(a[1],b[1]);
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)out.push([x,y]);}
   else out.push(a);
@@ -1279,7 +1292,7 @@ function render(){
   // cursor & previews
   const tl=T(tool);let ghost=null;
   const tileSp=(sp,x,y)=>c.drawImage(sp.c,(x-y)*16-X0-16,(x+y)*8-Y0);
-  if(tl.id!=='inspect'){const tiles=drag&&drag.mode==='build'?tilesFor(tl,drag.a,drag.b):(hover?(tl.size?[hover]:[hover]):[]);
+  if(tl.id!=='inspect'){const tiles=drag&&drag.mode==='build'?tilesFor(tl,drag.a,drag.b):(hover?(tl.drag==='rect'?tilesFor(tl,hover,hover):[hover]):[]);
     if((tl.id==='road'||tl.id==='avenue')&&drag&&drag.mode==='build'){const set=new Set(tiles.filter(([x,y])=>validAt(tl,x,y)).map(([x,y])=>idx(x,y)));c.globalAlpha=.85;
       for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?SP.ave:W.era>=4?SP.road:SP.roadE[W.era])[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
     else for(const[x,y]of tiles){const ok=validAt(tl,x,y);
@@ -1415,7 +1428,10 @@ function buildTools(){
     b.insertAdjacentHTML('beforeend',`<span class="k">${o.key}</span>`);if(o.sw)b.insertAdjacentHTML('beforeend',`<i class="sw" style="background:${o.sw}"></i>`);
     b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(b,o,isOv);});b.addEventListener('pointerleave',hideTip);(isOv?og:tg).appendChild(b);};
-  TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
+  TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);
+  const br=document.createElement('div');br.className='brush';br.id='brush';br.setAttribute('role','group');br.setAttribute('aria-label','짓는 범위');
+  br.innerHTML='<span>범위 <kbd>B</kbd></span>'+[['one','1칸'],['three','3×3'],['rect','드래그']].map(([v,l])=>`<button data-b="${v}" aria-pressed="${brush===v}">${l}</button>`).join('');
+  br.addEventListener('click',e=>{const b=e.target.closest('button');if(b){setBrush(b.dataset.b);sfx('click');}});br.hidden=T(tool).drag!=='rect';tools.append(br);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
 function buildUI(){
   buildTools();
   const sp=$('#speed');[['pause','일시정지'],['play','보통'],['ff','빠르게'],['fff','아주 빠르게']].forEach(([ic,lab],n)=>{const b=document.createElement('button');b.className='ib';b.innerHTML=svg(ic,2);b.setAttribute('aria-label',lab);b.title=lab;
@@ -1437,7 +1453,8 @@ function buildUI(){
   paintDayBtn();paintSnd();}
 function paintDayBtn(){$('#dayBtn').innerHTML=svg(dayMode==='auto'?'auto':dayMode==='day'?'sun':'moon',2);$('#dayBtn').title=dayMode==='auto'?'시간: 자동':dayMode==='day'?'시간: 낮 고정':'시간: 밤 고정';$('#dayBtn').setAttribute('aria-pressed',dayMode!=='auto');}
 function paintSnd(){$('#sndBtn').innerHTML=svg(muted?'sndOff':'sndOn',2);$('#sndBtn').title=muted?'소리 켜기':'소리 끄기';}
-function setTool(id){tool=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
+function setBrush(v){brush=v;try{localStorage.setItem('dotcity.brush',v);}catch(e){}document.querySelectorAll('#brush button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.b===v));}
+function setTool(id){tool=id;{const br=$('#brush');if(br)br.hidden=T(id).drag!=='rect';}document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
   view.classList.toggle('pan',id==='inspect');if(id!=='inspect'){selected=null;$('#info').hidden=true;}}
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
@@ -1498,12 +1515,13 @@ view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);poin
   if(pointers.size===2){drag=null;const[p,q]=[...pointers.values()];pinch={d:Math.hypot(p.x-q.x,p.y-q.y),mx:(p.x+q.x)/2,my:(p.y+q.y)/2,cx:cam.x,cy:cam.y};return;}
   if(pointers.size>2)return;const g=toGrid(e.clientX,e.clientY);
   if(e.button===1||e.button===2||tool==='inspect'||keys.has(' ')){drag={mode:'pan',sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y,moved:false,btn:e.button,g};view.classList.add('panning');}
-  else{const t=T(tool);drag=t.drag?{mode:'build',a:g,b:g}:{mode:'click',a:g};}});
+  else{const t=T(tool);drag=t.drag==='line'||(t.drag==='rect'&&brush==='rect')?{mode:'build',a:g,b:g}:{mode:'tap',a:g,sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};}});
 view.addEventListener('pointermove',e=>{if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   const g=toGrid(e.clientX,e.clientY);hover=inb(g[0],g[1])?g:null;
   if(pinch&&pointers.size===2){const[p,q]=[...pointers.values()],d=Math.hypot(p.x-q.x,p.y-q.y),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
     cam.x=pinch.cx-(mx-pinch.mx)*DPR/cam.s;cam.y=pinch.cy-(my-pinch.my)*DPR/cam.s;clampCam();
     if(d/pinch.d>1.3||d/pinch.d<.77){zoomTo(cam.s+(d>pinch.d?1:-1),mx,my);pinch={d,mx,my,cx:cam.x,cy:cam.y};}return;}
+  if(drag&&drag.mode==='tap'&&Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>8){drag={mode:'pan',sx:drag.sx,sy:drag.sy,cx:drag.cx,cy:drag.cy,moved:true,btn:0,g:drag.a};view.classList.add('panning');}
   if(drag&&drag.mode==='pan'){const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;cam.x=drag.cx-dx*DPR/cam.s;cam.y=drag.cy-dy*DPR/cam.s;clampCam();}
   else if(drag&&drag.mode==='build')drag.b=g;
   updateCost(e);});
@@ -1511,12 +1529,12 @@ function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panni
   const d=drag;drag=null;
   if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
-  else if(d.mode==='click'&&e.type==='pointerup'&&inb(d.a[0],d.a[1]))applyTool(T(tool),[d.a]);
+  else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);applyTool(t,tilesFor(t,d.a,d.a));}
   updateCost(e);}
 view.addEventListener('pointerup',endPointer);view.addEventListener('pointercancel',endPointer);
 view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;$('#cost').hidden=true;}});
 function updateCost(e){const el=$('#cost'),t=T(tool);if(!costOf(t)||!hover&&!drag){el.hidden=true;return;}
-  const tiles=drag&&drag.mode==='build'?tilesFor(t,drag.a,drag.b):hover?[hover]:[];const{c,n}=planCost(t,tiles);if(!n){el.hidden=true;return;}
+  const tiles=drag&&drag.mode==='build'?tilesFor(t,drag.a,drag.b):hover?(t.drag==='rect'?tilesFor(t,hover,hover):[hover]):[];const{c,n}=planCost(t,tiles);if(!n){el.hidden=true;return;}
   el.hidden=false;el.textContent=`${money(c)}${n>1?` · ${n}칸`:''}`;el.classList.toggle('bad',c>W.funds);el.style.left=(e.clientX+16)+'px';el.style.top=(e.clientY+18)+'px';}
 view.addEventListener('wheel',e=>{e.preventDefault();wheelAcc+=e.deltaY;if(Math.abs(wheelAcc)>=50){zoomTo(cam.s+(wheelAcc<0?1:-1),e.clientX,e.clientY);wheelAcc=0;}},{passive:false});
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
@@ -1525,6 +1543,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
   if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){keys.add(k);e.preventDefault();return;}
   if(k===' '){e.preventDefault();setSpeed(speed?0:1);return;}
   if(k==='escape'){drag=null;setTool('inspect');selected=null;$('#info').hidden=true;return;}
+  if(k==='b'){const o=['one','three','rect'];setBrush(o[(o.indexOf(brush)+1)%3]);toast(`짓는 범위: ${{one:'1칸',three:'3×3',rect:'드래그한 사각형'}[brush]}`,'info');return;}
   if(k==='+'||k==='='){zoomTo(cam.s+1);return;}if(k==='-'||k==='_'){zoomTo(cam.s-1);return;}
   const t=TOOLS.find(t=>t.key.toLowerCase()===k&&toolOn(t));if(t){setTool(t.id);return;}
   const o=OVERLAYS.find(o=>o.key.toLowerCase()===k);if(o)setOverlay(overlay===o.id?null:o.id);});
