@@ -297,7 +297,7 @@ const ERAS=[
   {name:'근대',short:'근대',year:1900,cur:'원',costMul:.75,next:7000,grow:.015,build:24,trip:.8,maxL:{2:3,3:3,4:3},
    story:'증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.',
    unlock:['증기 발전소: 이제 3단계 건물은 전기가 있어야 해요','양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장','대로 · 소방서 · 학교','이제 화재가 일어날 수 있어요'],goal:'목표를 모두 채우고 기차역을 세우면 현대로!'},
-  {name:'현대',short:'현대',year:1990,cur:'₩',costMul:1,next:25000,grow:.2,build:0,trip:1,maxL:{2:4,3:4,4:3},
+  {name:'현대',short:'현대',year:1990,cur:'₩',costMul:1,next:20000,grow:.2,build:0,trip:1,maxL:{2:4,3:4,4:3},
    story:'자동차와 고층 빌딩의 시대가 왔어요.',
    unlock:['고층 아파트 · 초고층 빌딩 (4단계)','풍력 발전기','시청 · 경기장 · 전파탑 랜드마크','2×2 대형 건물'],goal:'마지막 목표를 모두 채워 메트로폴리스를 완성하세요.'},
 ];
@@ -313,7 +313,7 @@ const GOALS=[
    {t:'서당 2곳',v:S=>cntOf(S,K.SCHOOL),n:2,tool:'school'},{t:'포도청 2곳',v:S=>cntOf(S,K.POLICE),n:2,tool:'police'}],
   [{t:'인구 7,000명',v:S=>S.pop,n:7000},{t:'증기 발전소 3곳',v:S=>cntOf(S,K.COAL),n:3,tool:'coal'},{t:'근대 빌딩 15채',v:S=>lvAtLeast(S,K.COM,3),n:15},
    {t:'방직 공장 15곳',v:S=>lvAtLeast(S,K.IND,3),n:15},{t:'소방서 2곳',v:S=>cntOf(S,K.FIRE),n:2,tool:'fire'},{t:'학교 3곳',v:S=>cntOf(S,K.SCHOOL),n:3,tool:'school'}],
-  [{t:'인구 25,000명',v:S=>S.pop,n:25000},{t:'고층 아파트 40채',v:S=>lvAtLeast(S,K.RES,4),n:40},{t:'초고층 빌딩 20채',v:S=>lvAtLeast(S,K.COM,4),n:20},
+  [{t:'인구 20,000명',v:S=>S.pop,n:20000},{t:'고층 아파트 40채',v:S=>lvAtLeast(S,K.RES,4),n:40},{t:'초고층 빌딩 20채',v:S=>lvAtLeast(S,K.COM,4),n:20},
    {t:'랜드마크 3곳',v:S=>cntOf(S,K.HALL,K.STADIUM,K.TOWER),n:3,tool:'hall'}],
 ];
 const goalList=()=>GOALS[W.era].map(g=>{const v=Math.min(g.n,g.v(W.st)|0);return{...g,cur:v,done:v>=g.n};});
