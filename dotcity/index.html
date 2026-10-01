@@ -46,6 +46,21 @@ button{font:inherit;color:inherit}
 .meter.hot i{background:var(--bad)}
 .pwr-row{display:flex;align-items:center;gap:8px}
 .pwr-row span{font-size:10px;color:var(--ink-dim)}
+.eracard{padding:8px 14px;display:grid;gap:5px;min-width:230px;cursor:pointer;align-content:center}
+.eracard .eh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.eracard .eh b{font-weight:400;font-size:18px;color:var(--gold)}
+.eracard .eh span{font-size:12px;color:var(--ink-dim)}
+.eracard .meter{width:100%}
+.eracard .et{font-size:12px;color:var(--ink-dim);line-height:1.3}
+.eracard.ready{box-shadow:inset 2px 2px 0 var(--panel-hi),inset -2px -2px 0 var(--edge),inset 0 0 0 4px var(--gold-dk)}
+.eracard.ready .et{color:var(--gold)}
+.era-sheet{text-align:left}
+.era-sheet h2{font-size:38px;margin-top:-6px}
+.em-eye{font-size:13px;color:var(--ink-dim);letter-spacing:.12em}
+.em-year{color:var(--ink-dim);margin-top:-10px;font-size:15px}
+.em-list{margin:0;padding-left:18px;color:var(--ink);line-height:1.65;font-size:15px}
+.em-goal{color:var(--gold)!important}
+.date{font-size:12px;color:var(--ink-dim)}
 .ctrl{margin-left:auto;display:flex;gap:6px;align-items:center;padding:6px}
 .seg{display:flex;gap:2px;background:var(--edge);padding:2px}
 .ib{width:38px;height:38px;display:grid;place-items:center;background:var(--panel-lo);border:0;cursor:pointer;color:var(--ink-dim);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
@@ -144,6 +159,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   .city{flex:0 1 auto}
   .name{width:5em}
   .stats{gap:12px;padding:6px 12px;flex:1 1 0;justify-content:space-around}
+  .eracard{order:4;flex:1 1 100%;min-width:0;padding:6px 12px}
   .ctrl{padding:4px;gap:4px;order:3;flex:1 1 100%;margin-left:0;justify-content:space-between}
   .ib{width:32px;height:32px}
   .meter{width:56px}
@@ -169,12 +185,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   <section class="card city">
     <div class="rank" id="rank">개척지</div>
     <input id="cityName" class="name" maxlength="12" value="새벽시" aria-label="도시 이름" spellcheck="false">
-    <div class="date px" id="date">2026.01</div>
+    <div class="date" id="date">기원전 8000년 1월</div>
   </section>
   <section class="card stats">
     <div class="stat"><span class="lbl">인구</span><b class="px" id="pop">0</b></div>
     <div class="stat"><span class="lbl">자금</span><div class="row"><b class="px gold" id="funds">0</b><i class="px delta" id="delta"></i></div></div>
-    <div class="stat pwr"><span class="lbl">전력</span><div class="pwr-row"><div class="meter" id="pwrMeter"><i id="pwrBar"></i></div><span class="px" id="pwr">0/0</span></div></div>
+    <div class="stat pwr"><span class="lbl" id="pwrLbl">전력</span><div class="pwr-row"><div class="meter" id="pwrMeter"><i id="pwrBar"></i></div><span class="px" id="pwr">0/0</span></div></div>
+  </section>
+  <section class="card eracard" id="eraCard" title="다음 시대로 가는 조건">
+    <div class="eh"><b id="eraName">석기시대</b><span id="eraNext"></span></div>
+    <div class="meter wide"><i id="eraBar"></i></div>
+    <div class="et" id="eraTask"></div>
   </section>
   <section class="card ctrl">
     <div class="seg" id="speed" role="group" aria-label="게임 속도"></div>
@@ -200,6 +221,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 </section>
 
 <div class="card mini" id="miniWrap"><div class="cap"><span>지도</span><span class="px" id="miniZoom">x2</span></div><canvas id="mini" width="192" height="96" aria-label="미니맵"></canvas></div>
+<div class="modal" id="eraModal" hidden>
+  <div class="card sheet era-sheet" role="dialog" aria-labelledby="emTitle">
+    <div class="em-eye" id="emEye"></div>
+    <h2 id="emTitle"></h2>
+    <div class="em-year" id="emYear"></div>
+    <p id="emDesc"></p>
+    <ul class="em-list" id="emList"></ul>
+    <p class="em-goal" id="emGoal"></p>
+    <button class="btn primary" id="emGo">시작하기 <small>Enter</small></button>
+  </div>
+</div>
 <div class="tip" id="tip" hidden></div>
 <div class="cost" id="cost" hidden></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -208,11 +240,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <div class="modal" id="menu" hidden>
   <div class="card sheet" role="dialog" aria-labelledby="menuTitle">
     <h2 id="menuTitle">도트시티</h2>
-    <p>도로를 깔고 구역을 칠하면 사람들이 들어와 건물을 올립니다. 발전소 전기가 도로와 건물을 타고 흘러야 도시가 자랍니다. 땅값이 높은 곳에만 고층 빌딩이 섭니다.</p>
+    <p>석기시대 움집 마을에서 시작해 청동기, 왕조, 근대를 거쳐 현대 도시까지 키우세요. 시대마다 인구를 모으고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.</p>
     <div class="btns">
       <button class="btn primary" id="mResume">계속하기 <small>Esc</small></button>
-      <button class="btn" id="mNewTown">새 도시: 작은 마을에서 <small>기본 도시</small></button>
-      <button class="btn" id="mNewEmpty">새 도시: 빈 땅에서 <small>₩30,000</small></button>
+      <button class="btn" id="mNewTown">새 부족: 석기시대부터 <small>기본</small></button>
+      <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
+      <button class="btn" id="mSandbox">샌드박스: 현대 도시 <small>시대 진화 없이</small></button>
     </div>
     <dl class="keys">
       <dt>드래그</dt><dd>도로·구역 칠하기 (살펴보기 도구에선 지도 이동)</dd>
@@ -231,9 +264,29 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
    DOT CITY — pixel isometric city builder
    ================================================================ */
 const N=64, SLAB=12;
-const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13};
-const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3};const sizeOf=k=>SIZE[k]||1;
+const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19};
+const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2};const sizeOf=k=>SIZE[k]||1;
 const LANDMARK={[K.HALL]:1500,[K.STADIUM]:4000,[K.TOWER]:10000};
+// The city evolves through five eras. Each era caps building levels, swaps art, and ends with a wonder.
+const ERAS=[
+  {name:'석기시대',short:'석기',year:-8000,cur:'조개',costMul:.15,next:250,trip:.35,maxL:{2:2,3:1,4:1},
+   story:'사람들이 모닥불 곁에 모여 살기 시작했어요. 흙길을 내고 움집 터를 정해 부족을 키우세요.',
+   unlock:['모닥불: 반경 5칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요','움집 터 · 교역터 · 채집터','선돌: 주변 땅값을 올려요'],goal:'인구 250명을 모으고 고인돌을 세우면 청동기시대로!'},
+  {name:'청동기시대',short:'청동기',year:-2000,cur:'청동',costMul:.3,next:800,trip:.45,maxL:{2:2,3:2,4:2},
+   story:'청동을 다루고 농사를 짓기 시작했어요. 초가집과 장터, 논밭이 생겨요.',
+   unlock:['우물: 반경 7칸에 물을 대줘요','초가집 · 장터 · 논밭 · 청동 공방','당산나무','옛 움집은 조금씩 새 시대 양식으로 다시 지어져요'],goal:'인구 800명을 모으고 고분을 쌓으면 왕조시대로!'},
+  {name:'왕조시대',short:'왕조',year:918,cur:'엽전',costMul:.5,next:2000,trip:.6,maxL:{2:3,3:3,4:2},
+   story:'왕이 다스리는 나라가 섰어요. 기와지붕 한옥과 저잣거리가 들어서요.',
+   unlock:['한옥 · 대갓집 (3단계까지)','주막 · 상점 · 객주, 대장간 · 도자기 가마','서당(교육) · 포도청(치안) · 정자','돌길'],goal:'인구 2,000명을 모으고 궁궐 정문을 세우면 근대로!'},
+  {name:'근대',short:'근대',year:1900,cur:'원',costMul:.75,next:4000,trip:.8,maxL:{2:3,3:3,4:3},
+   story:'증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.',
+   unlock:['증기 발전소: 이제 3단계 건물은 전기가 있어야 해요','양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장','대로 · 소방서 · 학교','이제 화재가 일어날 수 있어요'],goal:'인구 4,000명을 모으고 기차역을 세우면 현대로!'},
+  {name:'현대',short:'현대',year:1990,cur:'₩',costMul:1,next:0,trip:1,maxL:{2:4,3:4,4:3},
+   story:'자동차와 고층 빌딩의 시대가 왔어요.',
+   unlock:['고층 아파트 · 초고층 빌딩 (4단계)','풍력 발전기','시청 · 경기장 · 전파탑 랜드마크','2×2 대형 건물'],goal:'랜드마크를 모두 세우고 메트로폴리스를 완성하세요.'},
+];
+const yearStr=y=>y<0?`기원전 ${-y}년`:`${y}년`;
+const money=n=>!W||W.era>=4?'₩'+fmt(n):fmt(n)+' '+ERAS[W.era].cur;
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const fmt=n=>Math.round(n).toLocaleString('ko-KR');
@@ -707,6 +760,144 @@ function buildSprites(){
     map.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}
       const v=k==='l'?col(c,.12):k==='d'?col(c,-.3):k==='w'?col('#9fc4e0',-.2):k==='h'?[col('#fff6d0'),col('#fff2a0')]:[col(c,-.45),col('#ff3a3a')];pb.put(x,y,v);}));
     return mk(pb,-3,-3);}));
+  /* ================= era art: stone age → bronze age → dynasty → early modern ================= */
+  { const R=K.RES,C=K.COM,I=K.IND;
+    SP.E=[{},{},{},{},SP.bld];for(const e of[0,1,2,3])SP.E[e]={[R]:[null],[C]:[null],[I]:[null]};
+    const add=(e,k,L,sp)=>{(SP.E[e][k][L]=SP.E[e][k][L]||[]).push(sp);};
+    const STRAW=['#c9a45a','#b8944e','#d1b06a','#a98a4a'],WOOD='#7a5233',HW='#f2ede0',TILE='#4e535e',STONE='#a9a49a';
+    const mk1=(H,fn,meta)=>{const pb=new PB(32,H),cx=16,cy=H-8;fn(pb,cx,cy);return mk(pb,-16,16-H,true,meta&&meta(cx,cy));};
+    const mk2=(H,fn,meta)=>{const pb=new PB(64,H),cx=32,cy=H-16;fn(pb,cx,cy);return mk(pb,-32,32-H,true,meta&&meta(cx,cy));};
+    const cone=(pb,cx,cy,r,h,hex)=>{for(let b=0;b<=h;b++){const rb=r*(1-b/h);if(rb<.5)break;pb.ell(cx,cy-b,rb,(dx,dy,x,y)=>col(hex,(dx<-.4?.12:dx<.25?0:-.26)+(b%3===0?-.06:0)+(hash(x,y,7)<.12?-.1:0)));}};
+    const door=(pb,x,y,w,h)=>{for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)pb.put(x+xx,y-yy,[col('#2a1d14'),col(yy<h-1?'#ffb04a':'#d88a3a')]);};
+    const pots=(pb,x,y,n,c='#6a3e28')=>{for(let k=0;k<n;k++)pb.cyl(x+k*3,y+(k&1),1.4,2+(k%2),side(c),()=>col('#2a1a12'));};
+    const posts=(pb,pts,h,c='#6a4428')=>{for(const[x,y]of pts)for(let i=0;i<h;i++)pb.put(x,y-i,col(c,i%3?0:-.1));};
+    const goods=(pb,x,y,n,s)=>{for(let k=0;k<n;k++)pb.put(x+(k%3)*2,y+(k/3|0),col(['#e04a3a','#f2c140','#8a5a38','#e8e0c8','#7aa84a'][(k+s)%5]));};
+    const rough=(hex,t)=>(a,b)=>col(hex,t+(hash(a|0,b|0,9)<.2?-.1:hash(a|0,b|0,8)<.15?.08:0));
+    const dome=(pb,cx,cy,r,h,hex,top)=>{for(let b=0;b<=h;b++){const rb=r*Math.sqrt(Math.max(0,1-(b/(h+.5))**2));pb.ell(cx,cy-b,Math.max(.8,rb),(dx,dy,x,y)=>col(hex,(dx<-.4?.14:dx<.2?0:-.22)+(top&&hash(x,y,3)<.12?.1:0)));}};
+
+    /* ---- stone age ---- */
+    for(let v=0;v<4;v++)add(0,R,1,mk1(40,(pb,cx,cy)=>{pb.ell(cx,cy,10,()=>col('#6a5236',0,190));cone(pb,cx,cy-1,7+(v&1)*1.5,11+(v>>1)*2,STRAW[v]);door(pb,cx-4,cy,2,4);
+      if(v%2)pots(pb,cx+6,cy+3,2);else posts(pb,[[cx+8,cy+1],[cx+10,cy]],5);if(v===2)treeInto(pb,cx+11,cy-4,1,3,v+80);}));
+    for(let v=0;v<4;v++)add(0,R,2,mk1(46,(pb,cx,cy)=>{pb.ell(cx,cy,12,()=>col('#6a5236',0,190));pb.box({cx,cy:cy-1,hw:9,h:2,L:()=>col('#8a6a44'),R:()=>col('#8a6a44',-.25)});
+      pb.roof(cx,cy-3,11,10+(v&1)*2,STRAW[(v+1)%4]);door(pb,cx-6,cy-1,2,4);if(v>1)pots(pb,cx+6,cy+3,3);else posts(pb,[[cx+10,cy+1]],6);}));
+    for(let v=0;v<3;v++)add(0,C,1,mk1(42,(pb,cx,cy)=>{pb.diamond(cx-2,cy+1,8,(u,w)=>col(['#b5543a','#c9a45a','#7a8a5a'][v],((Math.floor(u*4)+Math.floor(w*4))%2)?-.15:0));
+      posts(pb,[[cx-1,cy-5],[cx+9,cy-1]],8);pb.roof(cx+4,cy-11,7,3,STRAW[v]);pots(pb,cx-9,cy+2,2,'#8a5a38');goods(pb,cx-4,cy-1,6,v);}));
+    for(let v=0;v<3;v++)add(0,I,1,mk1(40,(pb,cx,cy)=>{cone(pb,cx+6,cy-2,4,8,['#7a5a3a','#8a6a48','#6a4a30'][v]);posts(pb,[[cx-8,cy+1],[cx-1,cy-3]],8,'#5a3a22');pb.line(cx-8,cy-7,cx-1,cy-10,col('#5a3a22'));
+      for(let k=0;k<3;k++){const x=cx-7+k*2,y=cy-7-k;for(let j=1;j<4;j++)pb.put(x,y+j,col(['#9a6a40','#c9a070','#7a4a2a'][(k+v)%3]));}
+      pb.ell(cx-2,cy+4,2.5,dx=>col('#9a958c',dx>0?-.2:0));pb.ell(cx-2,cy+3,1.5,()=>col('#b0aba0'));}));
+    SP.firepit=mk1(36,(pb,cx,cy)=>{for(let k=0;k<12;k++){const a=k/12*6.283,x=Math.round(cx+Math.cos(a)*5),y=Math.round(cy+Math.sin(a)*2.5);pb.put(x,y,col('#8f8a80',Math.sin(a)>0?-.15:.1));}
+      pb.ell(cx,cy,3.5,()=>col('#2a2420'));[[cx-10,cy+1],[cx+9,cy-1],[cx-1,cy+6]].forEach(([x,y])=>{for(let i=-2;i<=2;i++)pb.put(x+i,y,col('#7a5233',i&1?-.15:0));});},(cx,cy)=>({em:[[cx,cy-6,'smoke']]}));
+    SP.parkE=[[],[],[]];
+    for(let v=0;v<2;v++)SP.parkE[0].push(mk1(42,(pb,cx,cy)=>{const st=[];for(let k=0;k<7;k++){const a=k/7*6.283+v;st.push([cx+Math.cos(a)*9,cy+Math.sin(a)*4.5,5+hash(k,v,3)*5]);}
+      st.sort((p,q)=>p[1]-q[1]);for(const[x,y,h]of st)pb.box({cx:Math.round(x),cy:Math.round(y),hw:1.5,h:Math.round(h),L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});}));
+    SP.dolmen=mk2(72,(pb,cx,cy)=>{pb.box({cx,cy:cy-6,hw:4,h:9,L:rough(STONE,0),R:rough(STONE,-.25),T:rough(STONE,.1)});
+      pb.box({cx:cx-10,cy:cy-1,hw:4,h:9,L:rough(STONE,0),R:rough(STONE,-.25),T:rough(STONE,.1)});pb.box({cx:cx+10,cy:cy-1,hw:4,h:9,L:rough(STONE,0),R:rough(STONE,-.25),T:rough(STONE,.1)});
+      pb.box({cx,cy:cy-10,hw:17,h:4,L:rough('#9a958a',-.05),R:rough('#9a958a',-.3),T:(u,w,x,y)=>col('#9a958a',.12+(hash(x,y,4)<.15?-.1:0)+(hash(x,y,5)<.08?.1:0))});
+      treeInto(pb,cx-21,cy+2,1,4,901);treeInto(pb,cx+22,cy-3,0,4,902);});
+
+    /* ---- bronze age ---- */
+    const choga=(pb,cx,cy,hw,h,wall='#c9a77a')=>pb.box({cx,cy,hw,h,
+      L:(a,b)=>{if((a|0)%5===0)return col('#6a4428');if(a>=hw*.3&&a<hw*.3+2.4&&b<4.6)return col('#5a3a22');if(a>=hw*.65&&a<hw*.65+2&&b>=2&&b<4)return[col('#efe6c8',-.05),col('#ffcf7a')];return col(wall,b<1?-.15:0);},
+      R:(a,b)=>{if((a|0)%5===0)return col('#6a4428',-.2);if(a>=hw*.5&&a<hw*.5+2&&b>=2&&b<4)return[col('#efe6c8',-.25),col('#ffcf7a')];return col(wall,-.24);}});
+    for(let v=0;v<4;v++)add(1,R,1,mk1(42,(pb,cx,cy)=>{choga(pb,cx,cy-1,9,6);pb.roof(cx,cy-7,11,6,STRAW[v]);
+      if(v===0)pots(pb,cx+7,cy+3,3,'#5a3a2a');if(v===1)posts(pb,[[cx-12,cy+1],[cx-10,cy+2],[cx-8,cy+3],[cx-6,cy+4]],3);if(v===2)treeInto(pb,cx+11,cy-3,0,3,v+90);if(v===3)pots(pb,cx-10,cy+3,2,'#5a3a2a');}));
+    for(let v=0;v<4;v++)add(1,R,2,mk1(46,(pb,cx,cy)=>{choga(pb,cx+3,cy-3,8,6);pb.roof(cx+3,cy-9,10,6,STRAW[v]);choga(pb,cx-6,cy+1,5,5,'#c2a070');pb.roof(cx-6,cy-4,7,5,STRAW[(v+2)%4]);
+      if(v&1)pots(pb,cx+8,cy+4,2,'#5a3a2a');}));
+    const stall=(pb,x,y,cloth,s)=>{posts(pb,[[x-4,y-1],[x+4,y-1]],8);pb.box({cx:x,cy:y,hw:4,h:3,L:()=>col('#8a5a34'),R:()=>col('#8a5a34',-.3),T:(u,w,px,py)=>col(['#e04a3a','#f2c140','#7aa84a','#e8e0c8'][(px+py+s)%4])});pb.roof(x,y-8,6,2,cloth);};
+    const CLOTH=['#c0503a','#3a6fa0','#d9a43a','#5a8a4a'];
+    for(let v=0;v<3;v++)add(1,C,1,mk1(42,(pb,cx,cy)=>{stall(pb,cx+1,cy-1,CLOTH[v],v);pots(pb,cx-10,cy+2,2,'#8a5a38');}));
+    for(let v=0;v<3;v++)add(1,C,2,mk1(44,(pb,cx,cy)=>{stall(pb,cx+5,cy-3,CLOTH[v],v);stall(pb,cx-5,cy+1,CLOTH[(v+1)%4],v+1);goods(pb,cx+7,cy+4,3,v);}));
+    for(let v=0;v<3;v++)add(1,I,1,mk1(40,(pb,cx,cy)=>{cone(pb,cx+5,cy-2,3.5,6,'#d9b45a');cone(pb,cx-6,cy+2,3,5,'#cfa84e');if(v!==1)cone(pb,cx+9,cy+2,2.5,4,'#d9b45a');
+      posts(pb,[[cx-1,cy-1]],9,'#6a4428');pb.line(cx-4,cy-6,cx+2,cy-6,col('#6a4428'));pb.put(cx-1,cy-10,col('#c0503a'));pb.put(cx,cy-10,col('#c0503a'));}));
+    for(let v=0;v<3;v++)add(1,I,2,mk1(48,(pb,cx,cy)=>{choga(pb,cx+3,cy-3,7,5,'#b89a70');pb.roof(cx+3,cy-8,9,5,STRAW[v]);
+      pb.cyl(cx-6,cy+1,3,7,side('#a0623a'),()=>[col('#3a2a20'),col('#ff9a3a')]);pb.box({cx:cx-1,cy:cy+5,hw:1.5,h:2,L:()=>col('#555'),R:()=>col('#444'),T:()=>col('#777')});},(cx,cy)=>({em:[[cx-6,cy-7,'smoke']]})));
+    SP.well=mk1(42,(pb,cx,cy)=>{pb.cyl(cx,cy-1,4.5,3,side(STONE),(dx,dy)=>dx*dx+dy*dy>.55?col('#c9c4ba'):col(PAL.w1,-.2));posts(pb,[[cx-5,cy-1],[cx+5,cy-1]],9);
+      pb.line(cx-5,cy-9,cx+5,cy-9,col('#6a4428'));pb.roof(cx,cy-11,7,4,STRAW[0]);for(let i=0;i<3;i++)pb.put(cx+1,cy-8+i,col('#8a7a6a'));pb.put(cx+1,cy-5,col('#6a4428'));});
+    SP.parkE[1].push(mk1(52,(pb,cx,cy)=>{treeInto(pb,cx,cy+1,0,7,77);pb.box({cx:cx-6,cy:cy+3,hw:3,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});
+      [['#e04a3a',-1],['#3a6fd0',0],['#f2c140',1]].forEach(([c2,dx])=>{pb.put(cx+dx,cy-3,col(c2));pb.put(cx+dx,cy-2,col(c2,-.2));});}));
+    SP.parkE[1].push(mk1(48,(pb,cx,cy)=>{treeInto(pb,cx+5,cy-1,0,6,78);for(let k=0;k<4;k++)pb.ell(cx-6,cy+2-k*2,3.4-k*.7,dx=>col(STONE,dx>.2?-.25:.05));}));
+    SP.mound=mk2(64,(pb,cx,cy)=>{dome(pb,cx,cy-2,24,14,PAL.g1,true);
+      pb.box({cx:cx-10,cy:cy+5,hw:3,h:5,L:(a,b)=>a>1&&a<3.5&&b<3.6?col('#2a2420'):col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});
+      [[cx-19,cy+6],[cx-3,cy+12]].forEach(([x,y])=>pb.box({cx:x,cy:y,hw:1.5,h:5,L:()=>col('#b9b4aa'),R:()=>col('#b9b4aa',-.3),T:()=>col('#d9d4ca')}));treeInto(pb,cx+23,cy-2,1,4,911);});
+
+    /* ---- dynasty: hanok ---- */
+    const hanok=(pb,cx,cy,hw,h,s,open)=>{pb.box({cx,cy:cy+1,hw:hw+1.5,h:2,L:()=>col('#b9b3a6'),R:()=>col('#b9b3a6',-.28),T:()=>col('#cfc9bc')});
+      pb.box({cx,cy:cy-1,hw,h,L:(a,b)=>{if((a|0)%5===0||b<1||b>=h-1)return col(WOOD);if(open&&a>2&&a<hw-2&&b<h-1.5)return hash(a|0,b|0,s)<.35?col(['#e04a3a','#f2c140','#7aa84a','#3a6fd0'][(a|0)%4]):col('#3a2a20');
+          if(b>=1.5&&b<h-1.5&&(a|0)%5>=1&&(a|0)%5<4)return[col('#efe2c0',-.05),col('#ffcf7a')];return col(HW);},
+        R:(a,b)=>{if((a|0)%5===0||b<1||b>=h-1)return col(WOOD,-.25);if(b>=1.5&&b<h-1.5&&(a|0)%5>=2&&(a|0)%5<4)return[col('#efe2c0',-.3),col('#ffcf7a')];return col(HW,-.22);}});};
+    const giwa=(pb,cx,cy,hw,rh,hex=TILE)=>{pb.roof(cx,cy,hw,rh,hex);pb.put(cx-hw,cy-1,col(hex,.12));pb.put(cx-hw+1,cy-1,col(hex,.05));pb.put(cx+hw-1,cy-1,col(hex,-.15));pb.put(cx+hw-2,cy-1,col(hex,-.15));};
+    SP.E[2][R][1]=SP.E[1][R][1];
+    for(let v=0;v<4;v++)add(2,R,2,mk1(48,(pb,cx,cy)=>{hanok(pb,cx,cy-1,10,6,v*7);giwa(pb,cx,cy-8,13,7);if(v===1)pots(pb,cx+9,cy+4,3,'#4a2e22');if(v===2)treeInto(pb,cx-12,cy+2,1,3,v+120);}));
+    for(let v=0;v<3;v++)add(2,R,3,mk1(52,(pb,cx,cy)=>{hanok(pb,cx+4,cy-4,8,6,v*11);giwa(pb,cx+4,cy-11,10,6);hanok(pb,cx-6,cy+1,6,5,v*11+3);giwa(pb,cx-6,cy-5,8,6);
+      for(let k=0;k<5;k++)pb.box({cx:cx+4+k*2.4,cy:cy+5-k*1.2,hw:1.4,h:3,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(TILE)});if(v!==1)treeInto(pb,cx+12,cy-4,1,3,v+130);}));
+    for(let v=0;v<3;v++)add(2,C,1,mk1(50,(pb,cx,cy)=>{hanok(pb,cx+2,cy-3,8,5,v*13);giwa(pb,cx+2,cy-9,10,6,v===2?STRAW[0]:TILE);posts(pb,[[cx-9,cy+3]],15);
+      for(let y=0;y<5;y++)for(let x=1;x<4;x++)pb.put(cx-9+x,cy-11+y,col(y===0||y===4||x===3?'#c0392b':'#f2ede0'));pb.box({cx:cx-3,cy:cy+4,hw:3,h:2,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col(WOOD,.15)});pots(pb,cx+7,cy+4,2,'#4a2e22');}));
+    for(let v=0;v<3;v++)add(2,C,2,mk1(50,(pb,cx,cy)=>{hanok(pb,cx,cy-1,10,6,v*17,true);giwa(pb,cx,cy-8,13,6);pb.roof(cx-4,cy-3,5,2,CLOTH[v]);}));
+    for(let v=0;v<3;v++)add(2,C,3,mk1(58,(pb,cx,cy)=>{hanok(pb,cx,cy-1,11,6,v*19,true);pb.roof(cx,cy-8,13,3,TILE);
+      pb.box({cx,cy:cy-9,hw:9,h:5,L:(a,b)=>(a|0)%4===0?col(WOOD):[col('#efe2c0',-.05),col('#ffcf7a')],R:(a,b)=>(a|0)%4===0?col(WOOD,-.25):col('#efe2c0',-.3)});giwa(pb,cx,cy-15,11,6);}));
+    SP.E[2][I][1]=SP.E[1][I][2];
+    for(let v=0;v<3;v++)add(2,I,2,mk1(48,(pb,cx,cy)=>{for(let k=0;k<4;k++)dome(pb,cx-9+k*5,cy+3-k*2.5,3.6,3,'#9a5a3a');
+      pb.cyl(cx+11,cy-7,1.6,6,side('#7a4a2a'),()=>col('#2a1a12'));for(let k=0;k<3;k++)pb.box({cx:cx-8+k,cy:cy-5-k,hw:1.5,h:2,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col('#a07a50')});},(cx,cy)=>({em:[[cx+11,cy-14,'smoke']]})));
+    SP.police2=mk1(52,(pb,cx,cy)=>{hanok(pb,cx+3,cy-3,8,6,41);giwa(pb,cx+3,cy-10,10,6);posts(pb,[[cx-10,cy+1],[cx-4,cy+4]],12,'#c0392b');
+      pb.line(cx-10,cy-10,cx-4,cy-7,col('#c0392b'));for(let k=0;k<4;k++)pb.put(cx-9+k*1.6|0,cy-11+k*.8|0,col('#c0392b',.2));});
+    SP.seodang=mk2(64,(pb,cx,cy)=>{hanok(pb,cx+6,cy-6,14,7,51);giwa(pb,cx+6,cy-14,17,8);
+      for(let k=0;k<11;k++)pb.box({cx:cx-29+k*2.7,cy:cy+1+k*1.35,hw:1.5,h:3,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(TILE)});treeInto(pb,cx-14,cy-2,1,4,520);});
+    SP.parkE[2].push(mk1(48,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:7,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col('#cfc9bc')});posts(pb,[[cx-5,cy-3],[cx+5,cy-3],[cx,cy-.5],[cx,cy-5.5]],7,WOOD);giwa(pb,cx,cy-10,9,6);treeInto(pb,cx-11,cy+3,1,3,540);}));
+    SP.parkE[2].push(mk1(46,(pb,cx,cy)=>{pb.ell(cx+2,cy,8,(dx,dy)=>col(PAL.w2,hash(dx*9|0,dy*9|0,2)<.12?.3:0));treeInto(pb,cx-9,cy+1,1,4,541);for(let k=0;k<3;k++)pb.put(cx+k*2,cy-1+k,col('#f2a0b0'));}));
+    SP.palace=mk2(100,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:24,h:12,L:(a,b)=>{const m=a-12;if(Math.abs(m)<3.5&&b<7+Math.sqrt(Math.max(0,12.25-m*m))*.6)return col('#2a2622');return col('#c9c2b0',((a|0)+((b/3)|0))%4===0?-.1:0);},
+        R:(a,b)=>col('#c9c2b0',-.25+(((a|0)+((b/3)|0))%4===0?-.08:0)),T:()=>col('#b0a998')});
+      pb.box({cx,cy:cy-13,hw:17,h:6,L:(a,b)=>b>=4.5?col('#3f8a6a'):(a|0)%4===0?col('#a8382e'):[col('#efe2c0',-.1),col('#ffcf7a')],R:(a,b)=>b>=4.5?col('#3f8a6a',-.2):(a|0)%4===0?col('#a8382e',-.25):col('#efe2c0',-.3),T:()=>col('#a8382e')});
+      giwa(pb,cx,cy-19,21,6);pb.box({cx,cy:cy-22,hw:12,h:4,L:(a,b)=>b>=3?col('#3f8a6a'):(a|0)%4===0?col('#a8382e'):col('#efe2c0',-.1),R:(a,b)=>b>=3?col('#3f8a6a',-.2):col('#a8382e',-.25),T:()=>col('#a8382e')});giwa(pb,cx,cy-26,16,8);},
+      (cx,cy)=>({lights:[[cx-14,cy-6],[cx+14,cy-6]]}));
+
+    /* ---- early modern ---- */
+    const brick=(hex,t)=>(a,b)=>col(hex,t+((((b|0)%2===0)&&(((a|0)+(((b|0)%4)?0:2))%4===0))?-.15:0));
+    const BR=['#a8553d','#8a4a3a','#b8664a','#9a5a48'];
+    for(let v=0;v<4;v++)add(3,R,1,mk1(48,(pb,cx,cy)=>{const wall=v===3?'#e8dcc0':BR[v];const win=(a,b,f)=>b>=2.5&&b<5.5&&(a|0)%4>=1&&(a|0)%4<3&&a>1?winC((a>>2)+f*9,0,v*23+300,.55,'#4f6f8f'):null;
+      pb.box({cx,cy:cy-1,hw:9,h:8,L:(a,b)=>win(a,b,0)??(a>=6&&a<8&&b<5?col('#4a3020'):brick(wall,0)(a,b)),R:(a,b)=>win(a,b,1)??brick(wall,-.24)(a,b)});pb.roof(cx,cy-9,11,7,['#4a4a55','#5a3a3a','#3f4a5a','#6a4a3a'][v]);
+      pb.box({cx:cx+5,cy:cy-12,hw:1.5,h:5,L:()=>col('#8a4a3a'),R:()=>col('#8a4a3a',-.3),T:()=>col('#3a2420')});}));
+    for(let v=0;v<4;v++)add(3,R,2,mk1(54,(pb,cx,cy)=>{const wd=['#8a6a4a','#6a5a4a','#9a7a5a','#7a6a5a'][v];const sid=t=>(a,b,hw,h)=>{if(b>=1.5&&((b>=3&&b<6)||(b>=9&&b<12))&&(a|0)%4>=1&&(a|0)%4<3&&a>1&&a<hw-1)return winC(a>>2,(b/6)|0,v*29+320+(t?7:0),.5,'#5f7f9f');return col(wd,t+((b|0)%2?0:-.08));};
+      pb.box({cx,cy:cy-1,hw:10,h:13,L:sid(0),R:sid(-.24),T:()=>col(wd)});pb.roof(cx,cy-14,12,6,'#3a3f48');}));
+    for(let v=0;v<3;v++)add(3,R,3,mk1(62,(pb,cx,cy)=>{const wall=BR[v];const f=t=>(a,b,hw,h)=>{if(b>=h-1.5)return col('#e8e2d2',t);const j=Math.floor((b-2)/5),y=(b-2)-j*5;if(b>2&&y>=1&&y<3.5&&(a|0)%4>=1&&(a|0)%4<3&&a>1&&a<hw-1)return winC(Math.floor(a/4)+(t?40:0),j,v*31+340,.5,'#4f6f8f');return brick(wall,t)(a,b);};
+      pb.box({cx,cy:cy-1,hw:12,h:18,L:f(0),R:f(-.24),T:()=>col('#6a6a70')});for(const x of[cx-4,cx+5])pb.box({cx:x,cy:cy-19,hw:1.5,h:4,L:()=>col('#8a4a3a'),R:()=>col('#8a4a3a',-.3),T:()=>col('#3a2420')});}));
+    for(let v=0;v<4;v++)add(3,C,1,mk1(54,(pb,cx,cy)=>{const wall=['#efe4c8','#e2d6c0','#d8e0d0','#ecd8c8'][v],sign=['#2f5f8f','#8f2f3f','#2f6f4f','#5a3a7a'][v];
+      const f=t=>(a,b,hw,h)=>{if(b<5&&a>1&&a<hw-1)return(a|0)%4===0?col(wall,t-.1):winC(a>>2,0,v*37+400,.95,'#5a7ea3');if(b>=6.5&&b<8.5&&a>1&&a<hw-1)return(!t&&(a|0)%2&&hash(a|0,1,v)<.7)?[col('#ffffff'),col('#fff6c0')]:col(sign,t);
+        if(b>=9.5&&b<11&&(a|0)%4>=1&&(a|0)%4<3)return winC(a>>2,1,v*37+400,.5,'#5a7ea3');return col(wall,t);};
+      pb.box({cx,cy:cy-1,hw:11,h:12,L:f(0),R:f(-.24),T:()=>col(wall,.1)});pb.box({cx,cy:cy-13,hw:11,h:1,L:()=>col(wall,-.1),R:()=>col(wall,-.3),T:()=>col(wall,.15)});}));
+    for(let v=0;v<3;v++)add(3,C,2,mk1(60,(pb,cx,cy)=>{const st=['#e8e2d2','#dcd4c0','#e0dcd8'][v];pb.box({cx,cy,hw:13,h:2,L:()=>col(st,-.1),R:()=>col(st,-.32),T:()=>col(st,.1)});
+      const f=t=>(a,b,hw,h)=>{if(b>=h-2)return col(st,t+.1);if((a|0)%3===0)return col('#ffffff',t);return b>1.5&&b<h-3?winC(Math.floor(a/3),0,v*41+420,.6,'#5f6f86'):col(st,t-.3);};
+      pb.box({cx,cy:cy-2,hw:11,h:12,L:f(0),R:f(-.22),T:()=>col(st,.1)});pb.roof(cx,cy-14,12,4,'#cfc8b6');}));
+    for(let v=0;v<3;v++)add(3,C,3,mk1(78,(pb,cx,cy)=>{const wall=BR[(v+1)%4];const f=t=>(a,b,hw,h)=>{if((b|0)%6===0)return col('#efe8d8',t);if(b<5)return(a|0)%3===0?col('#efe8d8',t):winC(a|0,0,v*43+440,.9,'#5a7ea3');
+        if((a|0)%4>=1&&(a|0)%4<3&&(b%6)>=1.5&&(b%6)<4.5)return winC(Math.floor(a/4)+(t?40:0),Math.floor(b/6),v*43+440,.55,'#4f6f8f');return brick(wall,t)(a,b);};
+      pb.box({cx,cy:cy-1,hw:12,h:24,L:f(0),R:f(-.24),T:()=>col('#6a6a70')});pb.box({cx,cy:cy-25,hw:3,h:7,L:(a,b)=>b>2&&b<5&&a>.8&&a<2.4?[col('#ffffff'),col('#fff6c0')]:col('#efe8d8'),R:()=>col('#efe8d8',-.25)});pb.roof(cx,cy-32,4,4,'#3f4a5a');}));
+    SP.E[3][I]=SP.bld[I];
+    SP.station=mk2(92,(pb,cx,cy)=>{const fac=t=>(a,b,hw,h)=>{if(b>=h-1.5||(b|0)===5)return col('#efe8d8',t);if(b>=1.5&&b<4.5&&(a|0)%4>=1&&(a|0)%4<3)return winC(a>>2,0,4001,.85,'#4f6f8f');
+        if(b>=7&&b<h-3&&(a|0)%4>=1&&(a|0)%4<3)return winC(a>>2,1,4001,.7,'#4f6f8f');return brick('#a8553d',t)(a,b);};
+      pb.box({cx,cy:cy-1,hw:26,h:12,L:fac(0),R:fac(-.24),T:()=>col('#5a5f66')});pb.box({cx:cx-2,cy:cy-11,hw:9,h:7,L:(a,b)=>b>2&&b<5&&a>3.5&&a<5.5?[col('#ffffff'),col('#fff6c0')]:fac(0)(a,b,9,7),R:fac(-.24),T:()=>col('#5a5f66')});
+      pb.cyl(cx-2,cy-19,6,3,side('#efe8d8'),()=>col('#4f8f7a'));dome(pb,cx-2,cy-22,6,7,'#4f8f7a');for(let i=0;i<5;i++)pb.put(cx-2,cy-30-i,col('#d0d4da'));},
+      (cx,cy)=>({lights:[[cx-18,cy+4],[cx+18,cy+4],[cx-2,cy-6]]}));
+
+    /* ---- shared: old-style lots, roads, scaffolding, vehicles, icons ---- */
+    SP.lotOld={[R]:[0,1].map(v=>G((u,w,x,y)=>{const h=hash(x,y,v+70);return h<.08?col('#8a6a44'):col(PAL.g2,h>.9?-.1:.03);})),
+      [C]:[0,1].map(v=>G((u,w,x,y)=>col('#b0905e',hash(x,y,v+71)<.12?-.15:hash(x,y,v+72)<.06?.1:0))),
+      farm:[0,1].map(v=>G((u,w,x,y)=>{const r2=Math.floor((v?u:w)*7)%2;return r2?col('#7aa84a',hash(x,y,73)<.15?.15:0):col('#8a6a44',hash(x,y,74)<.1?-.1:0);})),
+      dirt:[0,1].map(v=>G((u,w,x,y)=>col('#9a7a50',hash(x,y,v+75)<.12?-.15:0)))};
+    const roadSet=fn=>{const out=[];for(let m=0;m<16;m++){const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};out.push(G((u,v,x,y)=>fn(inB,u,v,x,y)));}return out;};
+    const dirtRoad=(base,edge,w0)=>roadSet((inB,u,v,x,y)=>{if(inB(u,v,w0))return col(base,hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0);if(inB(u,v,w0+.08))return col(edge,hash(x,y,83)<.4?0:-.1);return col(PAL.g1,hash(x,y,84)<.06?.1:0);});
+    SP.roadE=[dirtRoad('#a8865a','#7a8a44',.2),dirtRoad('#b0905e','#8a8a4a',.24),
+      roadSet((inB,u,v,x,y)=>{if(inB(u,v,.27))return col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04);if(inB(u,v,.33))return col('#8a8478');return col(PAL.g1,hash(x,y,85)<.06?.1:0);}),
+      roadSet((inB,u,v,x,y)=>{if(inB(u,v,.3))return col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04);if(inB(u,v,.37))return col('#a9a49a',hash(x,y,86)<.1?-.1:0);return col(PAL.side,hash(x,y,87)<.1?-.06:0);})];
+    SP.consOld=mk1(44,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#7a5233'):null,R:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#5a3a22'):null});for(let k=0;k<5;k++)pb.put(cx+6+(k%2),cy+3-(k>>1),col('#c9a45a'));});
+    const vehSet=pal=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}if(pal[k]!=null)pb.put(x,y,pal[k]);}));return mk(pb,-3,-3);});
+    const walker=body=>{const pb=new PB(3,5);pb.put(1,0,col('#2a1d14'));pb.put(1,1,col('#e0b088'));pb.put(0,2,col(body,-.1));pb.put(1,2,col(body));pb.put(2,2,col(body,-.2));pb.put(1,3,col(body,-.1));pb.put(0,4,col('#3a2a20'));pb.put(2,4,col('#3a2a20'));const sp=mk(pb,-1,-5);return[sp,sp,sp,sp];};
+    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(walker),
+      [...['#e8e0c8','#c9b896'].map(walker),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
+      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(walker),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
+      [vehSet({t:[col('#3a3a3a'),col('#ffd27a')],l:col('#2a2a2e'),d:col('#1a1a1e'),w:col('#9fc4e0',-.2),h:col('#7a5233')}),vehSet({t:[col('#5a2a2a'),col('#ff3a3a')],l:col('#3a2a2a',.1),d:col('#1a1a1e'),w:col('#9fc4e0',-.2),h:[col('#d8d4c8'),col('#fff2a0')]}),...['#3a3a4a','#6a4a3a'].map(walker)],
+      SP.car];
+    SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
+    SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
+  }
   SP.icoPow=mk(bitmapPB(["..##",".##.","####",".##.","##..","#..."],{'#':'#ffd23f'},'#2a1d05'),-3,0,false);
   SP.icoRoad=mk(bitmapPB(["##","##","##","..","##"],{'#':'#ff8a4a'},'#2a1005'),-2,0,false);
 }
@@ -716,9 +907,9 @@ let W=null;
 const CAP_W=60,CAP_C=1600;
 const POP=[0,6,18,45,110],JC=[0,4,12,32,80],JI=[0,8,20,40];
 function blankWorld(seed){const NN=N*N;return{seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
-  terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
+  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
   powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
-  st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0}};}
+  st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
   return(x,y)=>{const fx=x/cell,fy=y/cell,ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy,sx=tx*tx*(3-2*tx),sy=ty*ty*(3-2*ty);
     const a=g[iy*gs+ix],b=g[iy*gs+ix+1],c=g[(iy+1)*gs+ix],d=g[(iy+1)*gs+ix+1];return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};}
@@ -745,13 +936,23 @@ const inb=(x,y)=>x>=0&&y>=0&&x<N&&y<N;
 const idx=(x,y)=>y*N+x;
 
 function placeRaw(k,x,y){const w=W;
-  const sz=sizeOf(k);if(sz>1){const a=idx(x,y);for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(x+dx,y+dy);w.kind[j]=k;w.anchor[j]=a;w.trees[j]=0;w.level[j]=0;w.fire[j]=0;}return;}
-  const i=idx(x,y);w.kind[i]=k;w.trees[i]=0;w.level[i]=0;w.build[i]=0;w.anchor[i]=-1;w.vari[i]=(Math.random()*256)|0;}
+  const sz=sizeOf(k);if(sz>1){const a=idx(x,y);for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(x+dx,y+dy);w.kind[j]=k;w.anchor[j]=a;w.trees[j]=0;w.level[j]=0;w.fire[j]=0;w.te[j]=w.era;}return;}
+  const i=idx(x,y);w.kind[i]=k;w.trees[i]=0;w.level[i]=0;w.build[i]=0;w.anchor[i]=-1;w.te[i]=w.era;w.vari[i]=(Math.random()*256)|0;}
 function clearTile(x,y){const w=W,i=idx(x,y);
   const sz=sizeOf(w.kind[i]);if(sz>1&&w.anchor[i]>=0){const a=w.anchor[i],ax=a%N,ay=a/N|0;for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(ax+dx,ay+dy);w.kind[j]=0;w.anchor[j]=-1;}return;}
   w.fire[i]=0;w.kind[i]=0;w.level[i]=0;w.build[i]=0;w.trees[i]=0;}
 
-function starter(){const w=W;
+function starterStone(){const w=W;w.era=0;w.eraStart=0;
+  const road=(x,y)=>{if(inb(x,y)&&w.terrain[idx(x,y)]!==1)placeRaw(K.ROAD,x,y);};
+  for(let x=27;x<=37;x++)road(x,32);for(let y=28;y<=36;y++)road(32,y);
+  const free=(x,y)=>inb(x,y)&&w.kind[idx(x,y)]===0&&w.terrain[idx(x,y)]!==1;
+  [[31,31],[33,33]].forEach(([x,y])=>free(x,y)&&placeRaw(K.FIREPIT,x,y));
+  for(let y=27;y<=37;y++)for(let x=26;x<=38;x++){if(!free(x,y)||Math.hypot(x-32,y-32)>3.6)continue;let near=false;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(inb(x+dx,y+dy)&&w.kind[idx(x+dx,y+dy)]===K.ROAD)near=true;if(!near)continue;
+    placeRaw(x>=34&&y>=33?K.IND:x>=33&&y<=31?K.COM:K.RES,x,y);}
+  recompute();for(let d=0;d<30*2;d++)simDay(true);
+  w.month=0;w.day=0;w.funds=1500;w.lastNet=0;w.adv={};w.ms=MS.filter(m=>w.st.pop>=m[0]).length;}
+function starter(){const w=W;w.era=4;
   const road=(x,y)=>{if(inb(x,y)&&w.terrain[idx(x,y)]!==1)placeRaw(K.ROAD,x,y);};
   const h=(y,a,b)=>{for(let x=a;x<=b;x++)road(x,y);},v=(x,a,b)=>{for(let y=a;y<=b;y++)road(x,y);};
   h(32,25,39);v(31,27,37);h(28,29,33);
@@ -766,15 +967,17 @@ function starter(){const w=W;
 
 /* ---------------- simulation ---------------- */
 const MS=[[500,'마을'],[1500,'소도시'],[4000,'도시'],[10000,'대도시'],[25000,'메트로폴리스']];
-function powNeed(i){const k=W.kind[i];if(k>=K.RES&&k<=K.IND)return 1+W.level[i]*W.level[i]*1.5;if(k===K.POLICE||k===K.FIRE)return 6;if(k>=K.SCHOOL&&W.anchor[i]!==i)return 0;if(k===K.SCHOOL)return 14;if(k===K.HALL)return 10;if(k===K.STADIUM)return 30;if(k===K.TOWER)return 16;return 0;}
-function power(){const w=W,NN=N*N,vis=new Uint8Array(NN),q=new Int32Array(NN);w.powered.fill(0);let cap=0,use=0;
+function powNeed(i){const k=W.kind[i];if(k>=K.RES&&k<=K.IND)return 1+W.level[i]*W.level[i]*1.5;if(k===K.POLICE||k===K.FIRE)return 6;if(sizeOf(k)>1&&W.anchor[i]!==i)return 0;if(k>=K.FIREPIT)return 0;if(k===K.SCHOOL)return 14;if(k===K.HALL)return 10;if(k===K.STADIUM)return 30;if(k===K.TOWER)return 16;return 0;}
+function power(){const w=W,NN=N*N,vis=new Uint8Array(NN),q=new Int32Array(NN);w.powered.fill(0);w.grid.fill(0);w.cov.fill(0);let cap=0,use=0;
   for(let s=0;s<NN;s++){const k=w.kind[s];if(vis[s]||!(k===K.WIND||k===K.COAL))continue;
     let qh=0,qt=0,c=0;q[qt++]=s;vis[s]=1;
     while(qh<qt){const j=q[qh++];const kj=w.kind[j];if(kj===K.WIND)c+=CAP_W;if(kj===K.COAL&&w.anchor[j]===j)c+=CAP_C;
       const x=j%N,y=j/N|0;if(x+1<N)tryP(j+1);if(x>0)tryP(j-1);if(y+1<N)tryP(j+N);if(y>0)tryP(j-N);}
     function tryP(n){if(!vis[n]&&w.kind[n]!==0){vis[n]=1;q[qt++]=n;}}
-    cap+=c;let rem=c;for(let h=0;h<qt;h++){const j=q[h],need=powNeed(j);if(need<=rem){rem-=need;use+=need;w.powered[j]=1;}}}
-  w.st.cap=cap;w.st.use=use;}
+    cap+=c;let rem=c;for(let h=0;h<qt;h++){const j=q[h],need=powNeed(j);if(need<=rem){rem-=need;use+=need;w.grid[j]=1;}}}
+  for(let i=0;i<NN;i++){const k=w.kind[i];if(k===K.FIREPIT)stamp(w.cov,i%N+.5,(i/N|0)+.5,5.6,1);else if(k===K.WELL)stamp(w.cov,i%N+.5,(i/N|0)+.5,7.6,1);}
+  let cz=0,zt=0;for(let i=0;i<NN;i++){w.powered[i]=w.grid[i]||w.cov[i]>0?1:0;const k=w.kind[i];if(k>=K.RES&&k<=K.IND){zt++;if(w.powered[i])cz++;}}
+  w.st.cap=cap;w.st.use=use;w.st.covPct=zt?cz/zt:0;}
 function stamp(arr,cx,cy,r,s){const x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(N-1,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(N-1,Math.ceil(cy+r));
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<r)arr[y*N+x]+=s*(1-d/r);}}
 // Commuter traffic: every developed zone sends trips onto roads within 3 tiles (nearer roads take more),
@@ -784,7 +987,7 @@ const tmpE=new Float32Array(N*N),tmpF=new Float32Array(N*N);
 function traffic(){const w=W,NN=N*N;tmpE.fill(0);
   const js=[],ws=[];
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,k=w.kind[i],L=w.level[i];if(k<K.RES||k>K.IND||!L)continue;
-    const trips=k===K.RES?POP[L]*.8:k===K.COM?JC[L]*.9:JI[L]*.7;js.length=0;ws.length=0;let sw=0;
+    const trips=(k===K.RES?POP[L]*.8:k===K.COM?JC[L]*.9:JI[L]*.7)*ERAS[w.era].trip;js.length=0;ws.length=0;let sw=0;
     for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const xx=x+dx,yy=y+dy;if(!inb(xx,yy))continue;const j=yy*N+xx;if(w.kind[j]!==K.ROAD)continue;
       const wt=1/(1+Math.abs(dx)+Math.abs(dy))**2;js.push(j);ws.push(wt);sw+=wt;}
     for(let n=0;n<js.length;n++)tmpE[js[n]]+=trips*ws[n]/sw;}
@@ -804,13 +1007,13 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     let f=0;for(let dy=-2;dy<=2&&!f;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&w.kind[yy*N+xx]===K.ROAD){f=1;break;}}w.road[i]=f;}
   power();traffic();
   let pop=0,jc=0,ji=0,roads=0,aves=0,police=0,wind=0,coal=0,parks=0,unp=0,nor=0,eR=0,eC=0,eI=0,zones=0,polR=0,nR=0;
-  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
+  w.pol.fill(0);w.edu.fill(0);w.fcov.fill(0);tmpG.fill(0);let fires=0,schools=0,halls=0,stadiums=0,towers=0,burning=0;const cnt={};tmpA.fill(0);tmpB.fill(0);tmpC.fill(0);tmpD.fill(0);
   for(let i=0;i<NN;i++){const k=w.kind[i],L=w.level[i],x=i%N,y=i/N|0,cx=x+.5,cy=y+.5;
     switch(k){
       case K.ROAD:roads++;if(L)aves++;if(w.traf[i]>.5)stamp(w.pol,cx,cy,2.5,.07*Math.min(1.6,w.traf[i]));break;
       case K.RES:pop+=POP[L];zones++;if(!L)eR++;if(L)stamp(tmpA,cx,cy,4,.03*L);break;
       case K.COM:jc+=JC[L];zones++;if(!L)eC++;if(L){stamp(tmpA,cx,cy,4,.04*L);stamp(tmpD,cx,cy,6,.02*L);if(L===4)stamp(w.pol,cx,cy,3,.05);}break;
-      case K.IND:ji+=JI[L];zones++;if(!L)eI++;if(L)stamp(w.pol,cx,cy,5,.16*L);break;
+      case K.IND:ji+=JI[L];zones++;if(!L)eI++;if(L)stamp(w.pol,cx,cy,5,.16*L*[.05,.15,.3,.6,1][w.era]);break;
       case K.PARK:parks++;stamp(tmpC,cx,cy,5,.16);break;
       case K.POLICE:police++;stamp(tmpB,cx,cy,12,1.3);break;
       case K.WIND:wind++;break;
@@ -819,10 +1022,12 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.SCHOOL:if(w.anchor[i]===i){schools++;stamp(w.edu,x+1,y+1,14,1.4);}break;
       case K.HALL:if(w.anchor[i]===i){halls++;stamp(tmpG,x+1,y+1,9,.2);}break;
       case K.STADIUM:if(w.anchor[i]===i){stadiums++;stamp(tmpG,x+1.5,y+1.5,12,.18);}break;
-      case K.TOWER:towers++;stamp(tmpG,cx,cy,15,.14);break;}
+      case K.TOWER:towers++;stamp(tmpG,cx,cy,15,.14);break;
+      case K.DOLMEN:case K.MOUND:case K.PALACE:case K.STATION:if(w.anchor[i]===i)stamp(tmpG,x+1,y+1,10,.2);break;}
+    if(k&&(sizeOf(k)===1||w.anchor[i]===i))cnt[k]=(cnt[k]||0)+1;
     if(w.fire[i])burning++;
     if(k>=K.RES&&k<=K.IND){if(!w.powered[i])unp++;else if(!w.road[i])nor++;}}
-  const cf=Math.min(1,pop/500);
+  const cf=Math.min(1,pop/500)*[.25,.35,.6,.8,1][w.era];
   for(let i=0;i<NN;i++){const x=i%N,y=i/N|0;
     let tr=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(inb(x+dx,y+dy))tr+=w.trees[(y+dy)*N+x+dx];
     w.pol[i]=clamp(w.pol[i]-w.trees[i]*.05-tr*.004,0,1);
@@ -831,7 +1036,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
     let v=.3;if(w.wd[i]<6)v+=(1-w.wd[i]/6)*.22;v+=Math.min(.32,tmpC[i])+Math.min(.08,tr*.008)+Math.min(.12,tmpD[i])+Math.min(.06,tmpB[i]*.05)+Math.min(.1,w.edu[i]*.1)+Math.min(.22,tmpG[i]);
     v-=w.pol[i]*.6+w.crime[i]*.4+Math.max(0,w.jam[i]-.7)*.25;w.lv[i]=clamp(v,0,1);
     if(w.kind[i]===K.RES&&w.level[i]){polR+=w.pol[i];nR++;}}
-  Object.assign(S,{fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
+  Object.assign(S,{cnt,fires,schools,halls,stadiums,towers,burning,pop,jobsC:jc,jobsI:ji,roads,avenues:aves,police,wind,coal,parks,unpowered:unp,noroad:nor,emptyR:eR,emptyC:eC,emptyI:eI,zones,avgPolR:nR?polR/nR:0});
   const jobs=jc+ji,tf=(w.tax-9)*.06;
   const lb=towers*.05;
   S.dR=clamp((jobs*1.7+100-pop)/Math.max(60,pop*.25)-tf+halls*.05+lb,-1,1);
@@ -842,12 +1047,15 @@ const REQ={[K.RES]:[null,[0,0],[.27,0],[.44,900],[.62,5000,.5]],[K.COM]:[null,[0
 function levelCap(k,i){const v=W.lv[i],p=W.st.pop,R=REQ[k];let c=1;
   for(let L=2;L<R.length;L++){if(v>=R[L][0]&&p>=R[L][1]&&W.edu[i]>=(R[L][2]||0))c=L;else break;}
   if(k===K.RES&&W.pol[i]>.55)c=1;
-  if(W.crime[i]>.6)c=Math.max(1,c-1);return c;}
+  if(W.crime[i]>.6)c=Math.max(1,c-1);
+  c=Math.min(c,ERAS[Math.min(4,W.te[i])].maxL[k]);if(W.era>=3&&!W.grid[i])c=Math.min(c,2);return c;}
 function nextNeed(k,i){const w=W,L=w.level[i],R=REQ[k];
-  if(!w.powered[i])return'전기가 필요해요';if(!w.road[i])return'2칸 안에 도로가 필요해요';
+  if(!w.powered[i])return W.era<3?'모닥불이나 우물이 가까이 있어야 해요':'전기가 필요해요';if(!w.road[i])return'2칸 안에 도로가 필요해요';
   if(w.fire[i])return'불타고 있어요!';if(w.build[i]>0)return'짓는 중이에요';
   const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI;
   if(L+1>=R.length)return'최고 단계예요';
+  if(L>=ERAS[Math.min(4,w.te[i])].maxL[k])return w.te[i]<W.era?'곧 새 시대 양식으로 다시 지어요':'더 크게 자라려면 다음 시대로 가야 해요';
+  if(W.era>=3&&!w.grid[i]&&L>=2)return'3단계부터는 전기가 필요해요. 발전소와 이어주세요';
   const q=R[L+1],miss=[];if(w.lv[i]<q[0])miss.push(`땅값 ${Math.round(q[0]*100)}`);if(w.st.pop<q[1])miss.push(`인구 ${fmt(q[1])}명`);if(q[2]&&w.edu[i]<q[2])miss.push('학교(교육 50)');
   if(k===K.RES&&w.pol[i]>.55)miss.push('오염 줄이기');if(w.crime[i]>.6)miss.push('범죄 줄이기');
   if(w.jam[i]>1)miss.push('교통 체증 해소');
@@ -857,7 +1065,7 @@ function growTile(i){const w=W,k=w.kind[i];if(k<K.RES||k>K.IND||w.build[i]>0||w.
   const L=w.level[i];if(!w.powered[i]||!w.road[i]){if(L>0&&Math.random()<.15)w.level[i]=L-1;return;}
   if(w.jam[i]>1){if(L>1&&w.jam[i]>1.6&&Math.random()<.05)w.level[i]=L-1;return;}
   const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI,c=levelCap(k,i);
-  if(L<c&&d>0&&Math.random()<.05+d*.2){w.level[i]=L+1;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*256|0;}
+  if(L<c&&d>0&&Math.random()<.05+d*.2){w.level[i]=L+1;w.te[i]=w.era;w.build[i]=8+(Math.random()*10|0);w.vari[i]=Math.random()*256|0;}
   else if(L>c&&Math.random()<.2)w.level[i]=L-1;
   else if(d<-.4&&L>0&&Math.random()<.08)w.level[i]=L-1;}
 const isBld=i=>{const k=W.kind[i];return k>=K.RES&&k<=K.IND&&W.level[i]>0&&!W.build[i];};
@@ -865,7 +1073,7 @@ function ignite(i,quiet){const w=W;if(w.fire[i]||!isBld(i))return;w.fire[i]=12;
   if(!quiet){const x=i%N,y=i/N|0;const covered=w.fcov[i]>.25;
     if((w.adv.fireMsg??-99)+2<=w.month||!covered){w.adv.fireMsg=w.month;toast(covered?`불이 났지만 소방서가 출동했어요. (${x}, ${y})`:`화재 발생! (${x}, ${y}) 소방서가 없으면 옆 건물로 번집니다.`,'warn');sfx('err');}}}
 function fireDay(quiet){const w=W;
-  if(w.st.pop>300)for(let k=0;k<6;k++){const i=(Math.random()*N*N)|0;if(!isBld(i)||w.fire[i])continue;
+  if(w.st.pop>300&&w.era>=3)for(let k=0;k<6;k++){const i=(Math.random()*N*N)|0;if(!isBld(i)||w.fire[i])continue;
     if(Math.random()<.008*w.level[i]*(w.kind[i]===K.IND?2:1)*(1-Math.min(.92,w.fcov[i])))ignite(i,quiet);}
   for(let i=0;i<N*N;i++){if(!w.fire[i])continue;const cov=w.fcov[i]>.25;w.fire[i]=Math.max(0,w.fire[i]-(cov?3:1));
     if(!cov&&Math.random()<.09){const d=DIRS[(Math.random()*4)|0],x=i%N+d[0],y=(i/N|0)+d[1];if(inb(x,y))ignite(idx(x,y),quiet);}
@@ -874,38 +1082,45 @@ function simDay(quiet){const w=W;w.day++;
   for(let k=0;k<170;k++)growTile((Math.random()*N*N)|0);
   for(let i=0;i<N*N;i++)if(w.build[i]>0)w.build[i]--;
   fireDay(quiet);
+  if(w.era>0)for(let k=0;k<30;k++){const i=(Math.random()*N*N)|0,kd=w.kind[i];if(!kd||w.te[i]>=w.era)continue;
+    if(sizeOf(kd)>1&&w.anchor[i]>=0){const a=w.anchor[i];for(let dy=0;dy<sizeOf(kd);dy++)for(let dx=0;dx<sizeOf(kd);dx++)w.te[a+dy*N+dx]=w.era;continue;}
+    w.te[i]=w.era;if(kd>=K.RES&&kd<=K.IND&&w.level[i]&&!w.build[i]&&!w.fire[i])w.build[i]=5+(Math.random()*5|0);}
   if(w.day%10===0)recompute();
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1);
-  const expense=Math.round(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20);return{income,expense,net:income-expense};}
+  const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
 function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
-  if(S.zones>0&&S.cap===0&&say('nopow','발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.','warn',3))return;
-  if(S.unpowered>3&&S.use>S.cap*.9&&say('lowpow','전력이 모자랍니다. 발전소를 더 지으세요.','warn',5))return;
-  if(S.unpowered>3&&say('disc','전기가 닿지 않는 구역이 있어요. 도로로 발전소와 이어주세요.','warn',6))return;
+  if(W.era<4){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(S.pop>=e.next&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
+  if(W.era<3){if(S.unpowered>3&&say('cover',W.era===0?'불씨가 닿지 않는 움집 터가 있어요. 모닥불(6)을 가까이 피워주세요.':'우물이 먼 집이 있어요. 우물(6)을 가까이 파주세요.','warn',5))return;}
+  else if(S.zones>0&&S.cap===0&&say('nopow',W.era===3?'증기 발전소(7)를 지어야 3단계 건물이 올라가요.':'발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.','warn',3))return;
+  if(W.era>=3&&S.cap>0&&S.use<5&&S.zones>0&&say('nolink','발전소가 도시와 이어져 있지 않아요. 길이나 건물로 발전소와 마을을 이어주세요.','warn',4))return;
+  if(W.era>=3&&S.unpowered>3&&S.use>S.cap*.9&&say('lowpow','전력이 모자랍니다. 발전소를 더 지으세요.','warn',5))return;
+  if(W.era>=4&&S.unpowered>3&&say('disc','전기가 닿지 않는 구역이 있어요. 도로로 발전소와 이어주세요.','warn',6))return;
   if(S.noroad>3&&say('noroad','도로에서 2칸 넘게 떨어진 구역은 자라지 않아요.','warn',8))return;
-  if(S.dR>.6&&S.emptyR<4&&say('needR','주거 수요가 높아요. 주거 구역을 더 칠해 주세요.','info',6))return;
-  if(S.dC>.6&&S.emptyC<3&&say('needC','상점을 열 땅이 부족해요. 상업 구역을 늘려 주세요.','info',6))return;
-  if(S.dI>.6&&S.emptyI<3&&say('needI','공장을 지을 땅이 필요해요. 공업 구역을 늘려 주세요.','info',6))return;
+  if(S.dR>.6&&S.emptyR<4&&say('needR',`집이 더 필요해요. ${tn(T('res'))}을(를) 더 칠해 주세요.`,'info',6))return;
+  if(S.dC>.6&&S.emptyC<3&&say('needC',`사고팔 곳이 부족해요. ${tn(T('com'))}을(를) 늘려 주세요.`,'info',6))return;
+  if(S.dI>.6&&S.emptyI<3&&say('needI',`일할 곳이 필요해요. ${tn(T('ind'))}을(를) 늘려 주세요.`,'info',6))return;
   if(S.jammed>5&&say('jam',`도로 ${S.jammed}칸이 꽉 막혔어요. 옆에 길을 더 내거나 대로(U)로 넓히세요.`,'warn',6))return;
-  if(S.pop>800&&S.fires===0&&say('nofire','소방서가 없어서 불이 나면 옆 건물로 번져요.','warn',10))return;
-  if(S.pop>2000&&S.schools===0&&say('noschool','학교가 없어요. 고층 아파트와 초고층 빌딩은 교육받은 주민이 있어야 올라갑니다.','info',10))return;
-  if(S.pop>600&&S.police===0&&say('police','범죄가 늘고 있어요. 경찰서를 지으세요.','warn',8))return;
+  if(W.era>=3&&S.pop>800&&S.fires===0&&say('nofire','소방서가 없어서 불이 나면 옆 건물로 번져요.','warn',10))return;
+  if(W.era>=4&&S.pop>2000&&S.schools===0&&say('noschool','학교가 없어요. 고층 아파트와 초고층 빌딩은 교육받은 주민이 있어야 올라갑니다.','info',10))return;
+  if(W.era>=2&&S.pop>600&&S.police===0&&say('police',`범죄가 늘고 있어요. ${tn(T('police'))}을(를) 지으세요.`,'warn',8))return;
   if(S.avgPolR>.35&&say('pol','주거지 공기가 탁해요. 공장과 떨어뜨리고 공원과 숲을 늘리세요.','warn',10))return;}
-function unlocks(){for(const t of TOOLS){if(!t.landmark||W.unl[t.id]||W.st.pop<t.landmark)continue;W.unl[t.id]=1;toast(`새 랜드마크: ${t.name}을(를) 지을 수 있어요!`,'good');sfx('win');}}
-function milestone(){unlocks();while(W.ms<MS.length&&W.st.pop>=MS[W.ms][0]){const[p,n]=MS[W.ms];W.ms++;toast(`인구 ${fmt(p)}명 돌파! 이제 ${n}입니다.`,'good');sfx('win');fireworks();}}
-function rankName(){return W.ms?MS[W.ms-1][1]:'개척지';}
+function unlocks(){for(const t of TOOLS){if(!t.landmark||!toolOn(t)||W.unl[t.id]||W.st.pop<t.landmark)continue;W.unl[t.id]=1;toast(`새 랜드마크: ${t.name}을(를) 지을 수 있어요!`,'good');sfx('win');}}
+function milestone(){unlocks();while(W.ms<MS.length&&W.st.pop>=MS[W.ms][0]){const[p,n]=MS[W.ms];W.ms++;toast(`인구 ${fmt(p)}명 돌파!`,'good');sfx('win');fireworks();}}
+function rankName(){return ERAS[W.era].short;}
 
 /* ---------------- save / load ---------------- */
 const KEY='dotcity.save.v1';
 function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
 function unb64(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
-function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,lastNet:w.lastNet,unl:w.unl,
-  a:{terrain:b64(w.terrain),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
+function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
+  a:{terrain:b64(w.terrain),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
 function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('bad save');const w=blankWorld(o.seed);
-  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl'])if(o[k]!=null)w[k]=o[k];
-  for(const k of['terrain','trees','kind','level','vari','build','fire'])if(o.a[k])w[k].set(unb64(o.a[k]));
+  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart'])if(o[k]!=null)w[k]=o[k];
+  for(const k of['terrain','trees','kind','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
+  if(o.era==null){w.era=4;w.te.fill(4);}
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
 function save(){try{localStorage.setItem(KEY,serialize());}catch(e){}}
 
@@ -930,22 +1145,31 @@ const keys=new Set();
 /* ---------------- tools ---------------- */
 const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
-  {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'도로·건물·나무를 없앱니다.'},
-  {id:'road',name:'도로',key:'R',cost:10,drag:'line',hl:'road',desc:'드래그해서 도로를 깝니다. 전기도 도로를 따라 흐릅니다.'},
-  {id:'avenue',name:'대로',key:'U',cost:40,drag:'line',hl:'road',desc:'4차선 도로. 일반 도로보다 차가 3배 많이 다닙니다. 기존 도로를 넓히면 ₩30/칸, 유지비 3배.'},
-  {id:'res',name:'주거 구역',key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 이사 와서 집을 짓습니다.'},
-  {id:'com',name:'상업 구역',key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'상점과 사무실이 들어섭니다. 땅값이 높으면 초고층까지.'},
-  {id:'ind',name:'공업 구역',key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일자리를 만들지만 공기를 더럽힙니다.'},
-  {id:'park',name:'공원',key:'4',cost:60,kind:K.PARK,drag:'rect',hl:'park',desc:'주변 땅값을 올려 고급 주택을 부릅니다.'},
-  {id:'police',name:'경찰서',key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다. 유지비 월 ₩45.'},
-  {id:'fire',name:'소방서',key:'8',cost:600,kind:K.FIRE,hl:'build',desc:'반경 12칸의 불을 금방 끄고 번지지 않게 막습니다. 유지비 월 ₩40.'},
-  {id:'school',name:'학교',key:'9',cost:1500,kind:K.SCHOOL,size:2,hl:'build',desc:'반경 14칸 주민을 교육해 땅값을 올리고 범죄를 줄입니다. 고층 아파트와 초고층 빌딩에 꼭 필요해요. 2×2, 유지비 월 ₩60.'},
-  {id:'wind',name:'풍력 발전기',key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60. 유지비 월 ₩6.'},
-  {id:'coal',name:'화력 발전소',key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2, 유지비 월 ₩70.'},
-  {id:'hall',name:'시청',key:'H',cost:4000,kind:K.HALL,size:2,hl:'build',landmark:1500,desc:'도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. 2×2, 유지비 월 ₩30.'},
-  {id:'stadium',name:'경기장',key:'J',cost:12000,kind:K.STADIUM,size:3,hl:'build',landmark:4000,desc:'도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. 밤엔 조명탑이 켜져요. 3×3, 유지비 월 ₩80.'},
-  {id:'tower',name:'전파탑',key:'K',cost:20000,kind:K.TOWER,hl:'build',landmark:10000,desc:'대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다. 유지비 월 ₩20.'},
+  {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'길·건물·나무를 없앱니다.'},
+  {id:'road',names:['흙길','흙길','돌길','신작로','도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'드래그해서 길을 냅니다. 집은 길에서 2칸 안에 있어야 자라요.'},
+  {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 넓힐 수도 있습니다.'},
+  {id:'res',names:['움집 터','초가 마을','한옥 마을','주거 구역','주거 구역'],key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 모여 살 집을 짓습니다.'},
+  {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
+  {id:'ind',names:['채집터','논밭','공방','공업 구역','공업 구역'],key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일거리를 만듭니다. 근대부터는 공기를 더럽혀요.'},
+  {id:'park',names:['선돌','당산나무','정자','공원','공원'],key:'4',cost:60,kind:K.PARK,drag:'rect',hl:'park',desc:'주변 땅값을 올려 더 좋은 집이 들어서게 합니다.'},
+  {id:'firepit',name:'모닥불',era:0,until:0,key:'6',cost:300,kind:K.FIREPIT,hl:'build',desc:'반경 5칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.'},
+  {id:'well',name:'우물',era:1,until:2,key:'6',cost:400,kind:K.WELL,hl:'build',desc:'반경 7칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.'},
+  {id:'police',names:['','','포도청','경찰서','경찰서'],era:2,key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다.'},
+  {id:'fire',name:'소방서',era:3,key:'8',cost:600,kind:K.FIRE,hl:'build',desc:'반경 12칸의 불을 금방 끄고 번지지 않게 막습니다.'},
+  {id:'school',names:['','','서당','학교','학교'],era:2,key:'9',cost:1500,kind:K.SCHOOL,size:2,hl:'build',desc:'반경 14칸 주민을 가르쳐 땅값을 올리고 범죄를 줄입니다. 현대의 고층 건물엔 꼭 필요해요. 2×2.'},
+  {id:'wind',name:'풍력 발전기',era:4,key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60.'},
+  {id:'coal',names:['','','','증기 발전소','화력 발전소'],era:3,key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2.'},
+  {id:'hall',name:'시청',era:4,key:'H',cost:4000,kind:K.HALL,size:2,hl:'build',landmark:1500,desc:'도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. 2×2.'},
+  {id:'stadium',name:'경기장',era:4,key:'J',cost:12000,kind:K.STADIUM,size:3,hl:'build',landmark:4000,desc:'도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. 3×3.'},
+  {id:'tower',name:'전파탑',era:4,key:'K',cost:20000,kind:K.TOWER,hl:'build',landmark:10000,desc:'대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.'},
+  {id:'w0',name:'고인돌',wonder:0,era:0,until:0,key:'Y',fixed:600,kind:K.DOLMEN,size:2,hl:'build',desc:'부족의 힘을 모아 거대한 돌을 세웁니다. 완성하면 청동기시대가 열려요. 2×2.'},
+  {id:'w1',name:'고분',wonder:1,era:1,until:1,key:'Y',fixed:2500,kind:K.MOUND,size:2,hl:'build',desc:'왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 완성하면 왕조시대가 열려요. 2×2.'},
+  {id:'w2',name:'궁궐 정문',wonder:2,era:2,until:2,key:'Y',fixed:8000,kind:K.PALACE,size:2,hl:'build',desc:'웅장한 성문을 세웁니다. 완성하면 근대가 열려요. 2×2.'},
+  {id:'w3',name:'기차역',wonder:3,era:3,until:3,key:'Y',fixed:16000,kind:K.STATION,size:2,hl:'build',desc:'철도가 들어옵니다. 완성하면 현대가 열려요. 2×2.'},
 ];
+const toolOn=t=>(t.era??0)<=W.era&&(t.until==null||W.era<=t.until);
+const tn=t=>t.names?t.names[W.era]:t.name;
+const costOf=t=>t.fixed??Math.max(t.cost?1:0,Math.round(t.cost*ERAS[W.era].costMul));
 const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.'},{id:'value',name:'땅값',key:'V',desc:'밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.'},
   {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'}];
 const T=id=>TOOLS.find(t=>t.id===id);
@@ -955,11 +1179,11 @@ function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],t
     case'bulldoze':return k!==0||W.trees[i]>0;
     case'road':return ter!==1&&(k===0||k===K.ROAD);
     case'avenue':return ter!==1&&(k===0||(k===K.ROAD&&!W.level[i]));
-    default:{if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;const sz=t.size||1;
+    default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(W.st.pop<ERAS[t.wonder].next||builtCount(t.kind)))return false;const sz=t.size||1;
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;}}}
-function builtCount(k){const S=W.st;return k===K.HALL?S.halls:k===K.STADIUM?S.stadiums:k===K.TOWER?S.towers:0;}
-function whyNot(t){if(t.landmark&&W.st.pop<t.landmark)return`${t.name}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if(t.landmark&&builtCount(t.kind))return`${t.name}은(는) 도시에 하나만 지을 수 있어요.`;return null;}
-function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return 30;return t.cost;}
+function builtCount(k){return W.st.cnt[k]||0;}
+function whyNot(t){if(t.wonder!=null&&W.st.pop<ERAS[t.wonder].next)return`${tn(t)}은(는) 인구 ${fmt(ERAS[t.wonder].next)}명이 되면 세울 수 있어요.`;if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
+function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*ERAS[W.era].costMul);return costOf(t);}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   if(t.drag==='line'){const dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]);let x=a[0],y=a[1];out.push([x,y]);
     const xFirst=Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1]);
@@ -971,14 +1195,19 @@ function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   return out.filter(([x,y])=>inb(x,y));}
 function planCost(t,tiles){let c=0,n=0;for(const[x,y]of tiles)if(validAt(t,x,y)){c+=costAt(t,x,y);n++;}return{c,n};}
 function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot(t);if(why)toast(why,'info');sfx('err');return;}
-  if(c>W.funds){toast(`자금이 부족합니다. ₩${fmt(c)}이 필요해요.`,'warn');sfx('err');return;}
+  if(c>W.funds){toast(`자금이 부족합니다. ${money(c)}이 필요해요.`,'warn');sfx('err');return;}
   W.funds-=c;let puffs=0;
   for(const[x,y]of tiles){if(!validAt(t,x,y))continue;
     if(t.id==='bulldoze'){clearTile(x,y);if(puffs++<24)dust(x,y,'#9a8a74');}
     else if(t.id==='road'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);}
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
-  recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
+  recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);if(t.wonder!=null&&builtCount(t.kind))setTimeout(advanceEra,600);}
+let prevSpeed=1;
+function advanceEra(){if(W.era>=4)return;W.era++;W.eraStart=W.month;cars=[];selected=null;$('#info').hidden=true;recompute();buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
+function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
+  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal;$('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);$('#emGo').focus();}
+function closeEra(){$('#eraModal').hidden=true;setSpeed(prevSpeed);}
 
 /* ---------------- particles ---------------- */
 function dust(gx,gy,colr){const wx=(gx-gy)*16,wy=(gx+gy)*8+8;for(let k=0;k<6;k++)parts.push({x:wx+(Math.random()-.5)*16,y:wy+(Math.random()-.5)*6,vx:(Math.random()-.5)*18,vy:-6-Math.random()*10,life:0,max:.6+Math.random()*.4,sz:2,kind:'dust',c:colr,g:18});}
@@ -1004,7 +1233,7 @@ function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
 function roadMask(x,y,extra){let m=0;DIRS.forEach(([dx,dy],b)=>{if(isRoad(x+dx,y+dy)||(extra&&extra.has(idx(x+dx,y+dy))))m|=1<<b;});return m;}
 function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD||Math.random()>.12+W.traf[i])continue;const x=i%N,y=i/N|0;
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
-  cars.push({x,y,d:opts[(Math.random()*opts.length)|0],t:Math.random(),c:(Math.random()*SP.car.length)|0,sp:.9+Math.random()*.6});return;}}
+  const e=W.era,set=SP.veh[e];cars.push({x,y,e,d:opts[(Math.random()*opts.length)|0],t:Math.random(),c:(Math.random()*set.length)|0,sp:(e<3?.45:.9)+Math.random()*.6});return;}}
 function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24));
   if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target)cars.pop();
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}c.t+=dt*c.sp/(1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
@@ -1015,10 +1244,13 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
 /* ---------------- render ---------------- */
 let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 function drawSpr(c,sp,x,y){c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
-function groundOf(i,x,y){const w=W,k=w.kind[i];
-  if(k===K.ROAD)return(w.level[i]?SP.ave:SP.road)[roadMask(x,y)];
-  if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];return SP.lot[k][w.vari[i]&1];}
-  if(k===K.PARK)return SP.parkG;if(k===K.POLICE)return SP.plaza;if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
+function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(4,w.te[i]),v=w.vari[i]&1;
+  if(k===K.ROAD)return(w.level[i]&&e>=3?SP.ave:e>=4?SP.road:SP.roadE[e])[roadMask(x,y)];
+  if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
+    if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
+  if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
+  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION)return SP.plaza;
+  if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(k===K.SCHOOL){const a=w.anchor[i];return SP.field[((i/N|0)-(a/N|0))*2+(i%N-a%N)]||SP.plaza;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
 function heatSpr(i){const w=W;if(overlay==='power'){const k=w.kind[i];if(!k||k===K.ROAD&&!w.powered[i]&&true)return k===K.ROAD&&w.powered[i]?SP.hl.pow:null;return w.powered[i]||powNeed(i)===0?SP.hl.pow:SP.hl.nopow;}
@@ -1041,7 +1273,7 @@ function render(){
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
-    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD)continue;const x=i%N,y=i/N|0;const m=roadMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
+    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
     c.globalAlpha=1;c.globalCompositeOperation='source-over';}
   if(overlay)for(let n=0;n<visN;n+=3){const i=visBuf[n];const sp=heatSpr(i);if(sp)c.drawImage(sp.c,visBuf[n+1]-16,visBuf[n+2]);}
   // cursor & previews
@@ -1049,7 +1281,7 @@ function render(){
   const tileSp=(sp,x,y)=>c.drawImage(sp.c,(x-y)*16-X0-16,(x+y)*8-Y0);
   if(tl.id!=='inspect'){const tiles=drag&&drag.mode==='build'?tilesFor(tl,drag.a,drag.b):(hover?(tl.size?[hover]:[hover]):[]);
     if((tl.id==='road'||tl.id==='avenue')&&drag&&drag.mode==='build'){const set=new Set(tiles.filter(([x,y])=>validAt(tl,x,y)).map(([x,y])=>idx(x,y)));c.globalAlpha=.85;
-      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?SP.ave:SP.road)[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
+      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?SP.ave:W.era>=4?SP.road:SP.roadE[W.era])[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
     else for(const[x,y]of tiles){const ok=validAt(tl,x,y);
       if(tl.size>1){for(let dy=0;dy<tl.size;dy++)for(let dx=0;dx<tl.size;dx++)if(inb(x+dx,y+dy))tileSp(ok?SP.hl.build:SP.hl.bad,x+dx,y+dy);}
       else tileSp(ok?SP.hl[tl.hl]:(tl.id==='bulldoze'?SP.outline:SP.hl.bad),x,y);
@@ -1065,18 +1297,20 @@ function render(){
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);for(const[u,v,s]of pts)drawSpr(c,SP.tree[s],sx+(u-v)*16,sy+(u+v)*8);}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=bigSprite(ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);}}
-      else if(w.build[i]>0){sp=SP.cons;drawSpr(c,sp,sx,sy);}
-      else if(L>0){const arr=SP.bld[k][L];sp=arr[w.vari[i]%arr.length];drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
-      if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;if(!w.powered[i])c.drawImage(SP.icoPow.c,sx-3,top);else if(!w.road[i])c.drawImage(SP.icoRoad.c,sx-2,top);}}
-    else if(k===K.PARK)drawSpr(c,SP.park[w.vari[i]%SP.park.length],sx,sy);
-    else if(k===K.POLICE||k===K.FIRE){const sp=k===K.FIRE?SP.fire:SP.police;drawSpr(c,sp,sx,sy);const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}
+      else if(w.build[i]>0){sp=w.te[i]<3?SP.consOld:SP.cons;drawSpr(c,sp,sx,sy);}
+      else if(L>0){sp=bldSprite(i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;if(!w.powered[i])c.drawImage((W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow).c,sx-3,top);else if(!w.road[i])c.drawImage(SP.icoRoad.c,sx-2,top);}}
+    else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
+    else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
+    else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
+    else if(k===K.POLICE||k===K.FIRE){const sp=k===K.FIRE?SP.fire:civSprite(K.POLICE,w.te[i]);drawSpr(c,sp,sx,sy);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){drawSpr(c,SP.tower,sx,sy);extras(c,SP.tower,sx,sy,blinkOn);}
-    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=SPK[k]();drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}
+    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;
-  if(ghost){const[x,y]=ghost,sp=tl.kind&&SPK[tl.kind]?SPK[tl.kind]():null;
+  if(ghost){const[x,y]=ghost,sp=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null;
     if(sp){c.globalAlpha=.72;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0);c.globalAlpha=1;}}
   // particles
   for(const p of parts){if(p.life<0)continue;const t=p.life/p.max,px=Math.round(p.x-X0),py=Math.round(p.y-Y0);
@@ -1088,18 +1322,26 @@ function render(){
   if(duskF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(255,128,70,${.16*duskF})`;c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';}
   vctx.imageSmoothingEnabled=false;vctx.clearRect(0,0,view.width,view.height);vctx.drawImage(wc,Math.round(-fx*s),Math.round(-fy*s),lw*s,lh*s);}
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
+function civSprite(k,e){e=Math.min(4,e);
+  if(k===K.POLICE)return e<=2?SP.police2:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:SP.school;
+  if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
+  return SPK[k]?SPK[k]():null;}
+function bldSprite(i){const e=Math.min(4,W.te[i]),k=W.kind[i],set=SP.E[e][k];const arr=set[Math.min(W.level[i],set.length-1)];return arr[W.vari[i]%arr.length];}
+function parkSprite(i){const e=Math.min(4,W.te[i]),arr=e<3?SP.parkE[e]:SP.park;return arr[W.vari[i]%arr.length];}
+function campfire(c,sx,sy){const f=now/110|0,ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.3+nightF*.6;c.drawImage(SP.glow.c,sx-15,sy+2);c.globalCompositeOperation='source-over';c.globalAlpha=ga;
+  for(let k=0;k<9;k++){const fx=sx-2+((hash(k,1,f)*5)|0),fy=sy+7-((hash(k,2,f)*6)|0);c.fillStyle=k%3===0?'#fff1a0':k%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,1,2);}}
 function extras(c,sp,x,y,blinkOn){if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(x+sp.ox+bx,y+sp.oy+by,1,1);}
   if(sp.lights&&nightF>.05){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.9;for(const[lx,ly]of sp.lights)c.drawImage(SP.glow.c,x+sp.ox+lx-15,y+sp.oy+ly-4);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}
-function flames(c,i,sx,sy){const k=W.kind[i],L=W.level[i],arr=SP.bld[k]&&SP.bld[k][L],sp=arr?arr[W.vari[i]%arr.length]:null,top=sp?sy+sp.top+4:sy-6,span=Math.max(6,sy+10-top),f=now/90|0;
+function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?bldSprite(i):null,top=sp?sy+sp.top+4:sy-6,span=Math.max(6,sy+10-top),f=now/90|0;
   const ga=c.globalAlpha;c.globalAlpha=1;c.globalCompositeOperation='lighter';c.globalAlpha=.55+nightF*.4;c.drawImage(SP.glow.c,sx-15,sy-4);c.globalCompositeOperation='source-over';c.globalAlpha=1;
   for(let k2=0;k2<26;k2++){const fx=sx-9+((hash(i,k2,f)*18)|0),fy=top-3+((hash(k2,i,f+3)*span)|0);c.fillStyle=k2%3===0?'#fff1a0':k2%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,2,3+(k2%3===2?1:0));}
   c.globalAlpha=ga;if(SPEEDS[speed]&&Math.random()<frameDt*5&&parts.length<700)parts.push({x:sx+X0+(Math.random()-.5)*8,y:top+Y0,vx:3,vy:-12,life:0,max:2.4,sz:2,kind:'soot',g:0});}
 // four same-zone tiles on an even 2x2 grid cell, all developed high enough, render as one big building
 function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)return-1;const a=ax+ay*N,k=W.kind[a];if(k<K.RES||k>K.IND)return-1;
-  const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
+  const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.te[j]<4||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
-  const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0),sy=Math.round((lx+ly)*8-Y0);drawSpr(c,SP.car[car.c][car.d],sx,sy);}
+  const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0),sy=Math.round((lx+ly)*8-Y0);drawSpr(c,(SP.veh[car.e]||SP.car)[car.c][car.d],sx,sy);}
 function emit(sp,sx,sy){if(!sp.em||!SPEEDS[speed])return;const r=frameDt*Math.min(2.2,SPEEDS[speed]);
   for(const[ex,ey,kind]of sp.em)if(Math.random()<r*(kind==='steam'?5:3.2)&&parts.length<700)
     parts.push({x:sx+sp.ox+ex+X0+(Math.random()-.5)*2,y:sy+sp.oy+ey+Y0,vx:3+Math.random()*4,vy:-7-Math.random()*5,life:0,max:2.2+Math.random()*1.6,sz:kind==='steam'?2:1,kind,g:0});}
@@ -1158,16 +1400,24 @@ function spriteIcon(sp,maxPx=36){const c=sp.c,g=c.getContext('2d'),d=g.getImageD
   for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>40){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
   const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);
   const k=Math.min(1.5,maxPx/Math.max(w,h));o.style.width=Math.round(w*k)+'px';o.style.height=Math.round(h*k)+'px';return o;}
-function buildUI(){
-  const tools=$('#tools');const iconFor={road:()=>spriteIcon(SP.road[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(SP.park[1]),res:()=>spriteIcon(SP.bld[K.RES][1][0]),com:()=>spriteIcon(SP.bld[K.COM][1][0]),
-    ind:()=>spriteIcon(SP.bld[K.IND][2][0]),police:()=>spriteIcon(SP.police),wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(SP.coal,38),fire:()=>spriteIcon(SP.fire),school:()=>spriteIcon(SP.school,40),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38)};
+function buildTools(){
+  const tools=$('#tools');tools.innerHTML='';const E=W.era;
+  OVERLAYS[0].name=['불씨','우물','우물','전력망','전력망'][E];OVERLAYS[0].desc=E<3?'불씨와 우물이 닿는 곳(노란색)과 닿지 않는 곳(빨간색).':'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.';
+  const iconFor={road:()=>spriteIcon((E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:SP.park[1]),
+    res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
+    police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
+    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(SP.coal,38),fire:()=>spriteIcon(SP.fire),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
+    w0:()=>spriteIcon(SP.dolmen,40),w1:()=>spriteIcon(SP.mound,40),w2:()=>spriteIcon(SP.palace,40),w3:()=>spriteIcon(SP.station,40)};
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
-  const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',o.name);
-    if(iconFor[o.id])b.appendChild(iconFor[o.id]());else b.insertAdjacentHTML('beforeend',svg(o.id,isOv?1.5:2));if(o.landmark)b.insertAdjacentHTML('beforeend',`<span class="lk">${o.landmark>=1000?o.landmark/1000+'K':o.landmark}</span>`);
+  const mkBtn=(o,isOv)=>{const b=document.createElement('button');b.className='tb';b.dataset.id=o.id;b.setAttribute('aria-pressed',String(isOv?overlay===o.id:tool===o.id));b.setAttribute('aria-label',isOv?o.name:tn(o));
+    if(iconFor[o.id])b.appendChild(iconFor[o.id]());else b.insertAdjacentHTML('beforeend',svg(o.id,isOv?1.5:2));
+    const lk=o.landmark||(o.wonder!=null?ERAS[o.wonder].next:0);if(lk)b.insertAdjacentHTML('beforeend',`<span class="lk">${lk>=1000?lk/1000+'K':lk}</span>`);
     b.insertAdjacentHTML('beforeend',`<span class="k">${o.key}</span>`);if(o.sw)b.insertAdjacentHTML('beforeend',`<i class="sw" style="background:${o.sw}"></i>`);
     b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(b,o,isOv);});b.addEventListener('pointerleave',hideTip);(isOv?og:tg).appendChild(b);};
-  TOOLS.forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);
+  TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
+function buildUI(){
+  buildTools();
   const sp=$('#speed');[['pause','일시정지'],['play','보통'],['ff','빠르게'],['fff','아주 빠르게']].forEach(([ic,lab],n)=>{const b=document.createElement('button');b.className='ib';b.innerHTML=svg(ic,2);b.setAttribute('aria-label',lab);b.title=lab;
     b.addEventListener('click',()=>{setSpeed(n);sfx('click');});sp.appendChild(b);});
   $('#dayBtn').addEventListener('click',()=>{dayMode=dayMode==='auto'?'day':dayMode==='day'?'night':'auto';if(dayMode==='day')W.tod=11;if(dayMode==='night')W.tod=22;paintDayBtn();sfx('click');toast(dayMode==='auto'?'시간이 흐릅니다.':dayMode==='day'?'한낮으로 고정했어요.':'밤으로 고정했어요.','info');});
@@ -1180,7 +1430,9 @@ function buildUI(){
   $('#mResume').addEventListener('click',closeMenu);
   let armed=null;const arm=(btn,fn)=>btn.addEventListener('click',()=>{if(armed!==btn){if(armed){armed.classList.remove('danger');armed.firstChild.textContent=armed.dataset.t;}armed=btn;btn.dataset.t=btn.firstChild.textContent;btn.classList.add('danger');btn.firstChild.textContent='한 번 더 누르면 지금 도시를 지웁니다 ';return;}
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
-  arm($('#mNewTown'),()=>newGame(true));arm($('#mNewEmpty'),()=>newGame(false));
+  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));arm($('#mSandbox'),()=>newGame('modern'));
+  $('#emGo').addEventListener('click',closeEra);
+  $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&W.st.pop>=ERAS[W.era].next){setTool(wt.id);sfx('click');}else if(wt)toast(whyNot(wt)||ERAS[W.era].goal,'info');});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
   paintDayBtn();paintSnd();}
 function paintDayBtn(){$('#dayBtn').innerHTML=svg(dayMode==='auto'?'auto':dayMode==='day'?'sun':'moon',2);$('#dayBtn').title=dayMode==='auto'?'시간: 자동':dayMode==='day'?'시간: 낮 고정':'시간: 밤 고정';$('#dayBtn').setAttribute('aria-pressed',dayMode!=='auto');}
@@ -1190,7 +1442,7 @@ function setTool(id){tool=id;document.querySelectorAll('#tools .tb').forEach(b=>
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
 let tipTimer=0;
-function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&whyNot(o);tip.innerHTML=`<div class="h"><span>${o.name}<kbd>${o.key}</kbd></span>${o.cost?`<span class="c">₩${fmt(o.cost)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${o.desc}</div>${why?`<div class="d" style="color:var(--gold)">${why}</div>`:''}`;
+function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&whyNot(o),cst=isOv?0:costOf(o);tip.innerHTML=`<div class="h"><span>${isOv?o.name:tn(o)}<kbd>${o.key}</kbd></span>${cst?`<span class="c">${money(cst)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${o.desc}</div>${why?`<div class="d" style="color:var(--gold)">${why}</div>`:''}`;
   tip.hidden=false;const r=btn.getBoundingClientRect(),tr=tip.getBoundingClientRect();
   if(matchMedia('(max-width:760px)').matches){tip.style.left=clamp(r.left+r.width/2-tr.width/2,12,innerWidth-tr.width-12)+'px';tip.style.top=(r.top-tr.height-12)+'px';}
   else{tip.style.left=(r.right+14)+'px';tip.style.top=clamp(r.top+r.height/2-tr.height/2,8,innerHeight-tr.height-8)+'px';}
@@ -1204,29 +1456,39 @@ function closeMenu(){$('#menu').hidden=true;}
 
 let hudT=0,lastRank='';
 function updateHud(force){if(!force&&now-hudT<250)return;hudT=now;const S=W.st,b=budget();
-  $('#pop').textContent=fmt(S.pop);const f=$('#funds');f.textContent='₩'+fmt(W.funds);f.classList.toggle('neg',W.funds<0);
+  $('#pop').textContent=fmt(S.pop);const f=$('#funds');f.textContent=money(W.funds);f.classList.toggle('neg',W.funds<0);
   const d=$('#delta');d.textContent=W.month?(W.lastNet>=0?'+':'')+fmt(W.lastNet):'';d.classList.toggle('neg',W.lastNet<0);
-  $('#date').textContent=`${2026+Math.floor(W.month/12)}.${String(W.month%12+1).padStart(2,'0')} · ${String(Math.floor(W.tod)).padStart(2,'0')}:${String(Math.floor(W.tod%1*6)*10).padStart(2,'0')}`;
+  $('#date').textContent=`${yearStr(ERAS[W.era].year+Math.floor((W.month-W.eraStart)/12))} ${W.month%12+1}월`;
+  {const e=ERAS[W.era];$('#eraName').textContent=e.name;
+   if(W.era<4){const nx=ERAS[W.era+1],wt=TOOLS.find(t=>t.wonder===W.era),ready=S.pop>=e.next;$('#eraNext').textContent='다음: '+nx.name;$('#eraBar').style.width=Math.min(100,S.pop/e.next*100)+'%';
+     $('#eraTask').textContent=ready?`${tn(wt)}을(를) 세우면 ${nx.name}! 여기를 누르세요 (${money(wt.fixed)})`:`인구 ${fmt(S.pop)} / ${fmt(e.next)}명 · 그다음 ${tn(wt)} 세우기`;$('#eraCard').classList.toggle('ready',ready);}
+   else{$('#eraNext').textContent='마지막 시대';$('#eraBar').style.width='100%';$('#eraTask').textContent='랜드마크를 세우고 메트로폴리스를 완성하세요';$('#eraCard').classList.remove('ready');}}
   const r=rankName();if(r!==lastRank){$('#rank').textContent=r;lastRank=r;}
-  for(const t of TOOLS)if(t.landmark){const b=document.querySelector(`#tools .tb[data-id="${t.id}"]`);if(b){b.classList.toggle('locked',S.pop<t.landmark);b.classList.toggle('built',!!builtCount(t.kind));}}
-  $('#pwr').textContent=`${fmt(S.use)}/${fmt(S.cap)}`;$('#pwrBar').style.width=(S.cap?Math.min(100,S.use/S.cap*100):0)+'%';$('#pwrMeter').classList.toggle('hot',S.cap===0||S.use/S.cap>.9||S.unpowered>3);
+  for(const t of TOOLS)if(t.landmark||t.wonder!=null){const b=document.querySelector(`#tools .tb[data-id="${t.id}"]`);if(b){b.classList.toggle('locked',S.pop<(t.landmark||ERAS[t.wonder].next));b.classList.toggle('built',!!builtCount(t.kind));}}
+  if(W.era<3){$('#pwrLbl').textContent=W.era===0?'불씨':'우물';$('#pwr').textContent=`${Math.round(S.covPct*100)}%`;$('#pwrBar').style.width=S.covPct*100+'%';$('#pwrMeter').classList.toggle('hot',S.covPct<.85);}
+  else{$('#pwrLbl').textContent='전력';$('#pwr').textContent=`${fmt(S.use)}/${fmt(S.cap)}`;$('#pwrBar').style.width=(S.cap?Math.min(100,S.use/S.cap*100):0)+'%';$('#pwrMeter').classList.toggle('hot',S.cap===0||S.use/S.cap>.9||S.unpowered>3);}
   const bar=(el,v,colr)=>{const e=$(el),hpx=e.parentElement.clientHeight/2-1,hh=Math.round(Math.abs(v)*hpx);e.style.height=hh+'px';e.style.top=v>=0?(hpx+1-hh)+'px':(hpx+1)+'px';e.style.background=v>=0?colr:'#b0434f';};
   bar('#dR',S.dR,'var(--res)');bar('#dC',S.dC,'var(--com)');bar('#dI',S.dI,'var(--ind)');
-  $('#tax').textContent=W.tax+'%';$('#inc').textContent='+₩'+fmt(b.income);$('#exp').textContent='-₩'+fmt(b.expense);
+  $('#tax').textContent=W.tax+'%';$('#inc').textContent='+'+money(b.income);$('#exp').textContent='-'+money(b.expense);
   if(selected&&!$('#info').hidden)renderInfo();}
+const NAMES_E=[
+  {[K.RES]:['빈 터','움집','큰 움집'],[K.COM]:['빈 터','교역터'],[K.IND]:['빈 터','채집터']},
+  {[K.RES]:['빈 터','초가집','큰 초가집'],[K.COM]:['빈 터','노점','장터'],[K.IND]:['빈 터','논밭','청동 공방']},
+  {[K.RES]:['빈 터','초가집','한옥','대갓집'],[K.COM]:['빈 터','주막','상점','객주'],[K.IND]:['빈 터','대장간','도자기 가마']},
+  {[K.RES]:['빈 터','양옥','적산가옥','벽돌 연립'],[K.COM]:['빈 터','근대 상점','은행','근대 빌딩'],[K.IND]:['빈 터','벽돌 창고','벽돌 공장','방직 공장']}];
 const NAMES={[K.RES]:['빈 주거지','단독주택','연립주택','아파트','고층 아파트'],[K.COM]:['빈 상업지','동네 상점','사무 빌딩','오피스 타워','초고층 빌딩'],[K.IND]:['빈 공업지','창고','공장','중공업 단지']};
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
-  if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:NAMES[k][L];sub=['','','주거 구역','상업 구역','공업 구역'][k]+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
+  if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:(Math.min(4,w.te[i])<4?NAMES_E[w.te[i]][k][Math.min(L,NAMES_E[w.te[i]][k].length-1)]:NAMES[k][L]);sub=tn(T(['','','res','com','ind'][k]))+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
-  else title={[K.ROAD]:L?'대로':'도로',[K.PARK]:'공원',[K.POLICE]:'경찰서',[K.WIND]:'풍력 발전기',[K.COAL]:'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
-  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra='전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL)extra='랜드마크';if(w.fire[i])title='불타는 '+title;
+  else title={[K.ROAD]:L?'대로':T('road').names[Math.min(4,w.te[i])],[K.PARK]:T('park').names[Math.min(4,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(4,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.WIND]:'풍력 발전기',[K.COAL]:'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
+  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra='전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
   const fl=(ok,a,b)=>`<span class="flag ${ok?'ok':'no'}">${ok?a:b}</span>`;
   const zone=k>=K.RES&&k<=K.IND;
   $('#info').innerHTML=`<h3><span>${title}</span><button class="x" id="infoX" aria-label="닫기">X</button></h3><div class="sub">${sub||`${x}, ${y}`}${extra?' · '+extra:''}</div>
     ${m('땅값',w.lv[i],'#8fd05a')}${m('오염',w.pol[i],'#c79a5a')}${m('범죄',w.crime[i],'#e8663d')}${k===K.ROAD?m('혼잡',Math.min(1,w.traf[i]),'#f2b33d'):zone?m('교통',Math.min(1,w.jam[i]),'#f2b33d')+m('교육',w.edu[i],'#6fd0e8'):''}
     ${need?`<div class="need">${need}</div>`:''}
-    ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],'전기 들어옴','전기 끊김')}${zone?fl(w.road[i],'도로 가까움','도로 없음')+fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''}</div>`:''}`;
+    ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],W.era<3?'불씨·우물 가까움':'전기 들어옴',W.era<3?'불씨·우물 멀어요':'전기 끊김')}${zone?fl(w.road[i],'길 가까움','길 없음')+(W.era>=3?fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};}
 
 /* ---------------- input ---------------- */
@@ -1253,17 +1515,18 @@ function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panni
   updateCost(e);}
 view.addEventListener('pointerup',endPointer);view.addEventListener('pointercancel',endPointer);
 view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;$('#cost').hidden=true;}});
-function updateCost(e){const el=$('#cost'),t=T(tool);if(!t.cost||!hover&&!drag){el.hidden=true;return;}
+function updateCost(e){const el=$('#cost'),t=T(tool);if(!costOf(t)||!hover&&!drag){el.hidden=true;return;}
   const tiles=drag&&drag.mode==='build'?tilesFor(t,drag.a,drag.b):hover?[hover]:[];const{c,n}=planCost(t,tiles);if(!n){el.hidden=true;return;}
-  el.hidden=false;el.textContent=`₩${fmt(c)}${n>1?` · ${n}칸`:''}`;el.classList.toggle('bad',c>W.funds);el.style.left=(e.clientX+16)+'px';el.style.top=(e.clientY+18)+'px';}
+  el.hidden=false;el.textContent=`${money(c)}${n>1?` · ${n}칸`:''}`;el.classList.toggle('bad',c>W.funds);el.style.left=(e.clientX+16)+'px';el.style.top=(e.clientY+18)+'px';}
 view.addEventListener('wheel',e=>{e.preventDefault();wheelAcc+=e.deltaY;if(Math.abs(wheelAcc)>=50){zoomTo(cam.s+(wheelAcc<0?1:-1),e.clientX,e.clientY);wheelAcc=0;}},{passive:false});
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
+  if(!$('#eraModal').hidden){if(k==='enter'||k==='escape'||k===' '){e.preventDefault();closeEra();}return;}
   if(!$('#menu').hidden){if(k==='escape')closeMenu();return;}
   if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){keys.add(k);e.preventDefault();return;}
   if(k===' '){e.preventDefault();setSpeed(speed?0:1);return;}
   if(k==='escape'){drag=null;setTool('inspect');selected=null;$('#info').hidden=true;return;}
   if(k==='+'||k==='='){zoomTo(cam.s+1);return;}if(k==='-'||k==='_'){zoomTo(cam.s-1);return;}
-  const t=TOOLS.find(t=>t.key.toLowerCase()===k);if(t){setTool(t.id);return;}
+  const t=TOOLS.find(t=>t.key.toLowerCase()===k&&toolOn(t));if(t){setTool(t.id);return;}
   const o=OVERLAYS.find(o=>o.key.toLowerCase()===k);if(o)setOverlay(overlay===o.id?null:o.id);});
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
@@ -1283,19 +1546,19 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
   requestAnimationFrame(frame);}
 
 function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(2*DPR));if(innerWidth>1500)cam.s=Math.round(2.5*DPR);zoomTo(cam.s);$('#miniZoom').textContent='x'+(cam.s/DPR).toFixed(cam.s%DPR?1:0);}
-function newGame(withTown){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
-  if(withTown)starter();else{W.funds=30000;recompute();}
-  $('#cityName').value=W.name;centerCam();save();updateHud(true);
-  toast(withTown?'작은 마을에서 시작합니다. 도로를 깔고 구역을 칠해 도시를 키우세요.':'빈 땅입니다. 도로, 발전소, 주거 구역부터 시작하세요.','info');}
+function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
+  if(mode==='stone')starterStone();else if(mode==='modern')starter();else{W.funds=1500;recompute();}
+  buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
+  if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);}
 function start(data){resize();buildSprites();
   let loaded=false;
   try{const s=data&&data.save||localStorage.getItem(KEY);if(s){W=deserialize(s);recompute();loaded=true;}}catch(e){W=null;}
-  if(!loaded){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);starter();save();}
+  if(!loaded){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);starterStone();save();}
   buildUI();setTool('inspect');setSpeed(1);$('#cityName').value=W.name;centerCam();
   if(data&&data.cam)Object.assign(cam,data.cam);
   for(let k=0;k<40;k++)spawnCar();
   updateHud(true);drawMini();
-  toast(loaded?`${W.name}에 다시 오신 걸 환영해요.`:'도로를 깔고 구역을 칠하세요. 전기가 닿으면 건물이 자랍니다.','info');
+  if(loaded)toast(`${W.name}에 다시 오신 걸 환영해요.`,'info');else showEra(false);
   try{window.claude?.hot?.snapshot?.(()=>({save:serialize(),cam:{...cam}}));}catch(e){}
   requestAnimationFrame(frame);}
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
