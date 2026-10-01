@@ -484,7 +484,7 @@ function buildSprites(){
   SP.sel=G((u,v)=>Math.min(u,v,1-u,1-v)<.07?col('#ffcc4d'):null);
   const ramp=(stops,al=150)=>{const out=[];for(let i=0;i<8;i++){const t=i/7*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t));out.push(G(()=>col(mixHex(stops[k],stops[k+1],t-k),0,al)));}return out;};
   SP.dim=G(()=>col('#0e1226',0,150));
-  SP.ramp={health:ramp(['#6a3a4a','#c05a6a','#ff9aa8','#ffe8ec']),education:ramp(['#3a4c9a','#4f8fd8','#6fd0e8','#e8f6ff']),traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
+  SP.ramp={firecov:ramp(['#2a3a6a','#3f7fd0','#7fc8ff','#e8f6ff']),health:ramp(['#6a3a4a','#c05a6a','#ff9aa8','#ffe8ec']),education:ramp(['#3a4c9a','#4f8fd8','#6fd0e8','#e8f6ff']),traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
   const gl=new PB(30,15);for(let y=0;y<15;y++)for(let x=0;x<30;x++){const d=Math.hypot((x+.5-15)/15,(y+.5-7.5)/7.5);if(d<1)gl.put(x,y,col('#ffb45c',0,d<.3?110:d<.6?60:24));}
   SP.glow=mk(gl,-15,1,false);
 
@@ -1367,7 +1367,7 @@ const toolOn=t=>(t.era??0)<=W.era&&(t.until==null||W.era<=t.until);
 const tn=t=>t.names?t.names[W.era]:t.name;
 const costOf=t=>t.fixed??Math.max(t.cost?1:0,Math.round(t.cost*ERAS[W.era].costMul));
 const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.'},{id:'value',name:'땅값',key:'V',desc:'밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.'},
-  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'},{id:'health',name:'건강',key:'L',desc:'병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.'}];
+  {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'},{id:'firecov',name:'화재',key:'F',era:3,desc:'소방서가 지키는 범위(파란색). 빨간 건물은 불이 나면 옆으로 번질 수 있는 곳, 깜빡이는 곳은 지금 불타는 곳이에요.'},{id:'health',name:'건강',key:'L',desc:'병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.'}];
 const T=id=>TOOLS.find(t=>t.id===id);
 
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
@@ -1454,6 +1454,7 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
 function heatSpr(i){const w=W;if(overlay==='power'){const k=w.kind[i];if(!k||k===K.ROAD&&!w.powered[i]&&true)return k===K.ROAD&&w.powered[i]?SP.hl.pow:null;return w.powered[i]||powNeed(i)===0?SP.hl.pow:SP.hl.nopow;}
   if(overlay==='traffic'){if(w.kind[i]!==K.ROAD)return w.terrain[i]===1?null:SP.dim;return SP.ramp.traffic[Math.min(7,Math.floor(w.traf[i]/1.25*8))];}
+  if(overlay==='firecov'){if(w.terrain[i]===1)return null;if(w.fire[i])return SP.hl.bad;const k=w.kind[i];if(k>=K.RES&&k<=K.IND&&w.level[i]&&w.fcov[i]<.25)return SP.hl.nopow;return w.fcov[i]<.04?null:SP.ramp.firecov[Math.min(7,Math.floor(w.fcov[i]*8))];}
   if(overlay==='health'){if(w.terrain[i]===1)return null;return w.health[i]<.04?null:SP.ramp.health[Math.min(7,Math.floor(w.health[i]*8))];}
   if(overlay==='education'){if(w.terrain[i]===1)return null;return w.edu[i]<.04?null:SP.ramp.education[Math.min(7,Math.floor(w.edu[i]*8))];}
   if(w.terrain[i]===1)return null;const v=overlay==='value'?w.lv[i]:overlay==='pollution'?w.pol[i]:w.crime[i];if((overlay!=='value')&&v<.04)return null;return SP.ramp[overlay][Math.min(7,Math.floor(v*8))];}
@@ -1577,6 +1578,7 @@ const IC={
   value:["..yyyy..",".yyooyy.","yyoyyyyy","yyyooyyy","yyyyyoyy","yyoooyyy",".yyyyyy.","..yyyy.."],
   pollution:["....ggg....","..gggggg...",".gggggggg..","ggggggggggg","gggggggdddg",".ddddddddd."],
   traffic:["..rrrr...",".rwwwwr..","rrrrrrrrr","rrrrrrrrr",".kk...kk."],
+  firecov:["....r....","...rr....","..rryr...",".rryyrr..",".ryyyyr..","..ryyr..."],
   health:["...rrr...","...rrr...","rrrrrrrrr","rrrrrrrrr","...rrr...","...rrr..."],
   education:["....k....","..kkkkk..","kkkkkkkkk","..kkkkk.y","..kkkkk.y","...kkk..y"],
   crime:["....r....","...rrr...","..rrwrr..",".rrrwrrr.","rrrrwrrrr",".rrrrrrr.","..rrwrr..","...rrr...","....r...."],
@@ -1616,7 +1618,7 @@ function buildTools(){
     b.insertAdjacentHTML('beforeend',`<span class="k">${o.key}</span>`);if(o.sw)b.insertAdjacentHTML('beforeend',`<i class="sw" style="background:${o.sw}"></i>`);
     b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(b,o,isOv);});b.addEventListener('pointerleave',hideTip);(isOv?og:tg).appendChild(b);};
-  TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.forEach(o=>mkBtn(o,true));tools.append(tg);
+  TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.filter(o=>!o.era||W.era>=o.era).forEach(o=>mkBtn(o,true));tools.append(tg);
   const br=document.createElement('div');br.className='brush';br.id='brush';br.setAttribute('role','group');br.setAttribute('aria-label','짓는 범위');
   br.innerHTML='<span>범위 <kbd>B</kbd></span>'+[['one','1칸'],['three','3×3'],['rect','드래그']].map(([v,l])=>`<button data-b="${v}" aria-pressed="${brush===v}">${l}</button>`).join('');
   br.addEventListener('click',e=>{const b=e.target.closest('button');if(b){setBrush(b.dataset.b);sfx('click');}});br.hidden=!T(tool).drag;br.classList.toggle('line',T(tool).drag==='line');tools.append(br);tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
@@ -1746,7 +1748,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
   if(k==='b'){const o=['one','three','rect'];setBrush(o[(o.indexOf(brush)+1)%3]);toast(`짓는 범위: ${{one:'1칸',three:'3×3',rect:'드래그한 사각형'}[brush]}`,'info');return;}
   if(k==='+'||k==='='){zoomTo(cam.s+1);return;}if(k==='-'||k==='_'){zoomTo(cam.s-1);return;}
   const t=TOOLS.find(t=>t.key.toLowerCase()===k&&toolOn(t));if(t){setTool(t.id);return;}
-  const o=OVERLAYS.find(o=>o.key.toLowerCase()===k);if(o)setOverlay(overlay===o.id?null:o.id);});
+  const o=OVERLAYS.find(o=>o.key.toLowerCase()===k&&(!o.era||W.era>=o.era));if(o)setOverlay(overlay===o.id?null:o.id);});
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
 window.addEventListener('resize',resize);
