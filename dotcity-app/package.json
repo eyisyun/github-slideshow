@@ -1,0 +1,27 @@
+{
+  "name": "dotcity-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "도트시티 — 석기시대부터 현대까지, 픽셀 도시 키우기 (iOS / Android 앱)",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "sync": "npm run build && cap sync",
+    "assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#141a30' --iconBackgroundColorDark '#141a30' --splashBackgroundColor '#141a30' --splashBackgroundColorDark '#141a30'",
+    "android": "npm run sync && cap open android",
+    "ios": "npm run sync && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  }
+}
