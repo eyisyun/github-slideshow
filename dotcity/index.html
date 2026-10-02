@@ -1299,7 +1299,9 @@ function simDay(quiet){const w=W;w.day++;
   if(w.era>0)for(let k=0;k<30;k++){const i=(Math.random()*N*N)|0,kd=w.kind[i];if(!kd||w.te[i]>=w.era||(kd===K.COAL&&w.era>=5&&w.te[i]<5))continue;
     if(sizeOf(kd)>1&&w.anchor[i]>=0){const a=w.anchor[i];if(kd===K.COAL&&w.era>=5)continue;for(let dy=0;dy<sizeOf(kd);dy++)for(let dx=0;dx<sizeOf(kd);dx++)w.te[a+dy*N+dx]=w.era;continue;}
     w.te[i]=w.era;if(kd>=K.RES&&kd<=K.IND&&w.level[i]&&!w.build[i]&&!w.fire[i])w.build[i]=5+(Math.random()*5|0);}
-  if(w.day%10===0)recompute();
+  if(w.day%10===0){recompute(); // empty lots whose conditions are met start building within a few days
+    for(let i=0;i<N*N;i++){const k=w.kind[i];if(k<K.RES||k>K.IND||w.level[i]||w.build[i]||w.fire[i]||!w.powered[i]||!w.road[i])continue;
+      const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI;if(d>0&&Math.random()<.35+d*.4){w.level[i]=1;w.te[i]=w.era;w.build[i]=5+(Math.random()*5|0);w.vari[i]=Math.random()*256|0;}}}
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]);
   const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
