@@ -170,6 +170,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .sheet h2{margin:0;font-weight:400;font-size:28px;color:var(--gold);letter-spacing:.02em}
 .sheet p{margin:0;color:var(--ink-dim);line-height:1.5;font-size:15px}
 .btns{display:grid;gap:8px}
+.msub{margin:6px 0 0;font-size:15px;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.msub small{font-size:12px;color:var(--ink-dim);font-weight:normal}
+.eras{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.eras .btn{justify-content:center;text-align:center;padding:12px 6px;font-size:15px}
 .btn{border:0;cursor:pointer;background:var(--panel-lo);padding:12px 14px;text-align:left;font-size:16px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.4);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .btn:hover{background:#1c2546}
 .btn small{color:var(--ink-dim);font-size:13px}
@@ -275,13 +279,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <div class="modal" id="menu" hidden>
   <div class="card sheet" role="dialog" aria-labelledby="menuTitle">
     <h2 id="menuTitle">도트시티</h2>
-    <p>석기시대 움집 마을에서 시작해 청동기, 왕조, 근대를 거쳐 현대 도시까지 키우세요. 시대마다 인구를 모으고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.</p>
+    <p>석기시대 움집 마을에서 시작해 청동기, 왕조, 근대, 현대를 거쳐 미래 도시까지 키우세요. 시대마다 목표를 채우고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.</p>
     <div class="btns">
       <button class="btn primary" id="mResume">계속하기 <small>Esc</small></button>
       <button class="btn" id="mNewTown">새 부족: 석기시대부터 <small>기본</small></button>
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
-      <button class="btn" id="mSandbox">샌드박스: 현대 도시 <small>시대 진화 없이</small></button>
     </div>
+    <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
+    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button></div>
     <dl class="keys">
       <dt>휴대폰 터치</dt><dd>고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요</dd>
       <dt>마우스 클릭</dt><dd>표시된 칸에 바로 1칸 짓기</dd>
@@ -290,7 +295,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
       <dt>휠 / + -</dt><dd>확대·축소</dd>
       <dt>WASD</dt><dd>지도 이동</dd>
       <dt>SPACE</dt><dd>일시정지</dd>
-      <dt>Q X R U 1-9 H J K</dt><dd>도구 선택 · P V O C T E 데이터 보기</dd>
+      <dt>Q X R U 1-9 G H J K</dt><dd>도구 선택 · P V O C T E F L 데이터 보기</dd>
     </dl>
   </div>
 </div>
@@ -1688,9 +1693,9 @@ function buildUI(){
   $('#cityName').addEventListener('change',e=>{W.name=e.target.value.trim()||'새벽시';e.target.value=W.name;save();});
   $('#cityName').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();e.stopPropagation();});
   $('#mResume').addEventListener('click',closeMenu);
-  let armed=null;const arm=(btn,fn)=>btn.addEventListener('click',()=>{if(armed!==btn){if(armed){armed.classList.remove('danger');armed.firstChild.textContent=armed.dataset.t;}armed=btn;btn.dataset.t=btn.firstChild.textContent;btn.classList.add('danger');btn.firstChild.textContent='한 번 더 누르면 지금 도시를 지웁니다 ';return;}
+  let armed=null;const arm=(btn,fn)=>btn.addEventListener('click',()=>{if(armed!==btn){if(armed){armed.classList.remove('danger');armed.firstChild.textContent=armed.dataset.t;}armed=btn;btn.dataset.t=btn.firstChild.textContent;btn.classList.add('danger');btn.firstChild.textContent=btn.dataset.warn||'한 번 더 누르면 지금 도시를 지웁니다 ';return;}
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
-  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));arm($('#mSandbox'),()=>newGame('modern'));
+  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>newGame('era'+b.dataset.era)));
   $('#emGo').addEventListener('click',closeEra);
   $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&goalsDone()&&!W.wb){setTool(wt.id);sfx('click');}else{goalsOpen=true;selected=null;$('#info').hidden=false;renderGoals();sfx('click');}});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
@@ -1835,8 +1840,15 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
   requestAnimationFrame(frame);}
 
 function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(2*DPR));if(innerWidth>1500)cam.s=Math.round(2.5*DPR);zoomTo(cam.s);$('#miniZoom').textContent='x'+(cam.s/DPR).toFixed(cam.s%DPR?1:0);}
+function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
+  for(let i=0;i<N*N;i++){const k=w.kind[i];if(!k)continue;if(k===K.WIND&&e<4){w.kind[i]=0;w.level[i]=0;continue;}w.te[i]=e;
+    if(k>=K.RES&&k<=K.IND)w.level[i]=Math.min(w.level[i],ERAS[e].maxL[k]);}
+  if(e<3){const kd=e===0?K.FIREPIT:K.WELL;for(const[x,y]of[[27,29],[27,35],[33,29],[33,35],[38,29],[38,35]]){const i=idx(x,y);if(!inb(x,y)||w.terrain[i]===1||w.kind[i]===K.ROAD)continue;clearTile(x,y);placeRaw(kd,x,y);}}
+  else{let ok=true;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){const i=idx(23+dx,31+dy);if(w.terrain[i]===1||w.kind[i]===K.ROAD)ok=false;}if(ok){for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])clearTile(23+dx,31+dy);placeRaw(K.COAL,23,31);}}
+  recompute();for(let d=0;d<30*4;d++)simDay(true);
+  w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
-  if(mode==='stone')starterStone();else if(mode==='modern')starter();else{W.funds=300;recompute();}
+  if(mode==='stone'||mode==='era0')starterStone();else if(mode==='modern')starter();else if(mode.startsWith('era'))starterEra(+mode.slice(3));else{W.funds=300;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
   if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);
   if(mode==='empty')toast('빈 땅이에요. 먼저 모닥불(6)을 피우고, 그 5칸 안에 흙길(R)과 움집 터(1)를 놓으세요.','info');}
