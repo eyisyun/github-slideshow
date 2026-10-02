@@ -126,7 +126,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .tconf::after{content:'';position:absolute;left:var(--tail,50%);bottom:-10px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top:10px solid var(--gold)}
 .tconf.bad::after{border-top-color:var(--bad)}
 .tconf.bad{box-shadow:0 0 0 2px var(--bad),0 6px 0 rgba(0,0,0,.35)}
-.tconf #tcMsg{padding:0 6px;color:var(--bad)}
+.tconf{flex-wrap:wrap;max-width:min(300px,calc(100vw - 16px))}
+.tconf #tcMsg{flex-basis:100%;padding:2px 4px 4px;color:var(--bad);white-space:normal;font-size:13px;line-height:1.35}
+.tconf #tcOk{flex:1}
+.tconf #tcMsg.warn{color:var(--gold)}
 .tconf button{font:inherit;border:0;cursor:pointer;min-height:40px;padding:0 14px}
 .tconf #tcOk{background:var(--gold);color:#1a1404}
 .tconf #tcOk small{opacity:.75;margin-left:4px}
@@ -1422,6 +1425,10 @@ function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   else out.push(a);
   return out.filter(([x,y])=>inb(x,y));}
 function planCost(t,tiles){let c=0,n=0;for(const[x,y]of tiles)if(validAt(t,x,y)){c+=costAt(t,x,y);n++;}return{c,n};}
+function zoneBlock(k,x,y){const i=idx(x,y);let road=false;for(let dy=-2;dy<=2&&!road;dy++)for(let dx=-2;dx<=2;dx++)if(inb(x+dx,y+dy)&&W.kind[idx(x+dx,y+dy)]===K.ROAD){road=true;break;}
+  if(W.era<3&&!(W.cov[i]>0))return W.era===0?'fire':'water';if(W.era>=3&&W.kind[i]===k&&!W.powered[i])return'power';if(!road)return'road';
+  const d=k===K.RES?W.st.dR:k===K.COM?W.st.dC:W.st.dI;return d<=0?'demand':'';}
+const ZONE_MSG={fire:'모닥불에서 5칸 안이어야 집이 생겨요. 모닥불(6)을 가까이 피워 주세요.',water:'우물에서 7칸 안이어야 집이 생겨요. 우물(6)을 가까이 파 주세요.',power:'전기가 닿지 않아요. 발전소와 길로 이어 주세요.',road:'길에서 2칸 안이어야 집이 생겨요. 길(R)을 가까이 깔아 주세요.',demand:'지금은 이 구역을 원하는 사람이 없어요. 왼쪽 아래 주·상·공 막대가 위로 올라간 구역을 지어 보세요.'};
 function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot(t);if(why)toast(why,'info');sfx('err');return;}
   if(c>W.funds){toast(`자금이 부족합니다. ${money(c)}이 필요해요.`,'warn');sfx('err');return;}
   W.funds-=c;let puffs=0;
@@ -1431,7 +1438,11 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
   if(t.wonder!=null){const tt=tiles.find(([x,y])=>W.kind[idx(x,y)]===t.kind)||tiles[0];W.wb={a:W.anchor[idx(tt[0],tt[1])],k:t.kind,start:Date.now(),dur:ERAS[W.era].build*3600000};toast(`${tn(t)} 공사를 시작했어요. ${ERAS[W.era].build}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.`,'good');save();setTool('inspect');}
-  recompute();sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
+  recompute();
+  if(t.kind>=K.RES&&t.kind<=K.IND){let why='';for(const[x,y]of tiles){const i=idx(x,y);if(W.kind[i]!==t.kind||W.level[i])continue;const b=zoneBlock(t.kind,x,y);
+      if(!b){W.level[i]=1;W.te[i]=W.era;W.build[i]=5+(Math.random()*4|0);W.vari[i]=Math.random()*256|0;}else why=why||b;} // a lot that can grow starts building right away
+    if(why)toast(ZONE_MSG[why],'warn');recompute();}
+  sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 let prevSpeed=1;
 function advanceEra(quiet){if(W.era>=5)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
 function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
@@ -1534,7 +1545,7 @@ function render(){
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=bigSprite(ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOld:SP.cons;drawSpr(c,sp,sx,sy);}
       else if(L>0){sp=bldSprite(i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
-      if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;if(!w.powered[i])c.drawImage((W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow).c,sx-3,top);else if(!w.road[i])c.drawImage(SP.icoRoad.c,sx-2,top);}}
+      if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
     else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
@@ -1782,7 +1793,8 @@ function clearTarget(){target=null;const el=$('#tconf');if(el)el.hidden=true;}
 function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}const t=T(tool),[x,y]=target.g,ok=validAt(t,x,y),c=ok?costAt(t,x,y):0,rich=c<=W.funds;
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
   $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
-  $('#tcMsg').textContent=!ok?(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':'';$('#tcMsg').hidden=ok&&rich;}
+  const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
+  $('#tcMsg').textContent=!ok?(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
 function commitTarget(){if(!target)return;const t=T(tool),g=target.g;target=null;$('#tconf').hidden=true;applyTool(t,tilesFor(t,g,g));}
 function placeTarget(){const el=$('#tconf');if(!target||el.hidden)return;const[x,y]=target.g,s=cam.s,ox=cam.x-view.width/s/2,oy=cam.y-view.height/s/2,sz=T(tool).size||1;
   const px=(((x-y)*16+(sz-1)*0-ox)*s)/DPR,py=(((x+y)*8-oy)*s)/DPR,w=el.offsetWidth,h=el.offsetHeight;
