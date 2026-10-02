@@ -14,6 +14,7 @@ let game = await readFile(src, 'utf8');
 const title = (game.match(/<title>([^<]*)<\/title>/) || [, '도트시티'])[1];
 game = game
   .replace(/<title>[^<]*<\/title>\s*/, '')
+  .replace(/<meta name="viewport"[^>]*>\s*/, '')
   .replace(/<link rel="preconnect"[^>]*>\s*/g, '')
   .replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>\s*/g, '');
 
