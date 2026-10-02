@@ -1010,6 +1010,15 @@ function buildSprites(){
         treeInto(pb,cx-9,cy+1,0,3,903);treeInto(pb,cx+9,cy+2,0,3,904);})];
     // smart road: dark composite with glowing guide lines
     SP.roadF=roadSet((inB,u,v,x,y)=>{if(inB(u,v,.035))return neon(NEON,-.1);if(inB(u,v,.3))return col('#363c52',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02);if(inB(u,v,.35))return col('#e6ecf2');return col('#c8d0da',hash(x,y,88)<.08?-.06:0);});
+    // smart avenue: wide dark deck, twin glowing centre lines, pink lane dashes, light-strip kerbs
+    SP.aveF=[];for(let m=0;m<16;m++){const Wd=.4,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),sx=(m&5)&&!(m&10),sy=(m&10)&&!(m&5);
+      const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
+      SP.aveF[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
+        if(!inB(u,v,Wd)){if(inB(u,v,Wd+.06))return[col('#9fdce4'),col(NEON,.35)];return col('#c8d0da',hash(x,y,89)<.08?-.06:0);}
+        if(sx&&dv<.055&&dv>.015)return neon(NEON);if(sy&&du<.055&&du>.015)return neon(NEON);
+        if(sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return neon(PINK,-.1);if(sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return neon(PINK,-.1);
+        if(cnt>=3&&du<Wd&&dv<Wd&&(du>Wd-.07||dv>Wd-.07))return Math.floor((u+v)*16)%2?neon(NEON,-.2):col('#2c3246');
+        return col('#2c3246',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02);});}
     // flying cars: hover a few pixels up with a soft shadow and underglow
     const hover=(c,glow)=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,10);
       for(let x=1;x<5;x++)pb.put(x,9-(d%2?(x>2?1:0):(x<3?1:0)),col('#0e1630',0,60));
@@ -1444,7 +1453,7 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
 let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 function drawSpr(c,sp,x,y){c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
 function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
-  if(k===K.ROAD)return(w.level[i]&&e>=3?SP.ave:e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadMask(x,y)];
+  if(k===K.ROAD)return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadMask(x,y)];
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
@@ -1482,7 +1491,7 @@ function render(){
   const tileSp=(sp,x,y)=>c.drawImage(sp.c,(x-y)*16-X0-16,(x+y)*8-Y0);
   if(tl.id!=='inspect'){const tiles=drag&&drag.mode==='build'?tilesFor(tl,drag.a,drag.b):(hover?(tl.drag==='rect'?tilesFor(tl,hover,hover):[hover]):[]);
     if((tl.id==='road'||tl.id==='avenue')&&drag&&drag.mode==='build'){const set=new Set(tiles.filter(([x,y])=>validAt(tl,x,y)).map(([x,y])=>idx(x,y)));c.globalAlpha=.85;
-      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?SP.ave:W.era>=5?SP.roadF:W.era>=4?SP.road:SP.roadE[W.era])[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
+      for(const[x,y]of tiles){if(!set.has(idx(x,y))){tileSp(SP.hl.bad,x,y);continue;}tileSp((tl.id==='avenue'||W.level[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD?(W.era>=5?SP.aveF:SP.ave):W.era>=5?SP.roadF:W.era>=4?SP.road:SP.roadE[W.era])[roadMask(x,y,set)],x,y);tileSp(SP.hl.road,x,y);}c.globalAlpha=1;}
     else for(const[x,y]of tiles){const ok=validAt(tl,x,y);
       if(tl.size>1){for(let dy=0;dy<tl.size;dy++)for(let dx=0;dx<tl.size;dx++)if(inb(x+dx,y+dy))tileSp(ok?SP.hl.build:SP.hl.bad,x+dx,y+dy);}
       else tileSp(ok?SP.hl[tl.hl]:(tl.id==='bulldoze'?SP.outline:SP.hl.bad),x,y);
@@ -1606,7 +1615,7 @@ function spriteIcon(sp,maxPx=36){const c=sp.c,g=c.getContext('2d'),d=g.getImageD
 function buildTools(){
   const tools=$('#tools');tools.innerHTML='';const E=W.era;
   OVERLAYS[0].name=['불씨','우물','우물','전력망','전력망','전력망'][E];T('coal').desc=E>=5?'전력 8,000을 오염 없이 만듭니다. 옛 화력 발전소는 저절로 바뀌지 않으니 새로 지어야 해요. 2×2.':'전력 1,600을 만들지만 오염이 심합니다. 2×2.';OVERLAYS[0].desc=E<3?'불씨와 우물이 닿는 곳(노란색)과 닿지 않는 곳(빨간색).':'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.';
-  const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon(SP.ave[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
+  const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon((E>=5?SP.aveF:SP.ave)[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
     wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
