@@ -1309,6 +1309,7 @@ function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;
   if(!quiet&&W.era===5&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 미래 도시가 완성됐어요.','good');fireworks();sfx('win');}
   if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
+  if(W.era===0&&!cntOf(S,K.FIREPIT)&&say('nofirepit','먼저 모닥불(6)을 피우세요. 모닥불 5칸 안, 길 2칸 안에 놓은 움집 터에만 집이 생겨요.','warn',3))return;
   if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
   if(W.era<5){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(!W.wb&&goalsDone()&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
   if(W.era<3){if(S.unpowered>3&&say('cover',W.era===0?'불씨가 닿지 않는 움집 터가 있어요. 모닥불(6)을 가까이 피워주세요.':'우물이 먼 집이 있어요. 우물(6)을 가까이 파주세요.','warn',5))return;}
@@ -1379,7 +1380,7 @@ const TOOLS=[
   {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역','미래 상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
   {id:'ind',names:['채집터','논밭','공방','공업 구역','공업 구역','스마트 공업 구역'],key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일거리를 만듭니다. 근대부터는 공기를 더럽혀요.'},
   {id:'park',names:['선돌','당산나무','정자','공원','공원','하늘 정원'],key:'4',cost:60,kind:K.PARK,drag:'rect',hl:'park',desc:'주변 땅값을 올려 더 좋은 집이 들어서게 합니다.'},
-  {id:'firepit',name:'모닥불',era:0,until:0,key:'6',cost:300,kind:K.FIREPIT,hl:'build',desc:'반경 5칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.'},
+  {id:'firepit',name:'모닥불',era:0,until:0,key:'6',cost:100,kind:K.FIREPIT,hl:'build',desc:'반경 5칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.'},
   {id:'well',name:'우물',era:1,until:2,key:'6',cost:400,kind:K.WELL,hl:'build',desc:'반경 7칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.'},
   {id:'police',names:['','','포도청','경찰서','경찰서','치안 센터'],era:2,key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다.'},
   {id:'hosp',names:['약초 움막','약초방','혜민서','적십자 병원','종합병원','메디컬 센터'],key:'G',cost:400,kind:K.HOSP,hl:'build',desc:'반경 10칸 주민의 건강을 돌봐요. 3단계 이상 큰 집은 건강해야 올라가요. 오염이 심하면 건강이 나빠져요.'},
@@ -1837,7 +1838,8 @@ function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(2*DPR));if(in
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
   if(mode==='stone')starterStone();else if(mode==='modern')starter();else{W.funds=300;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
-  if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);}
+  if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);
+  if(mode==='empty')toast('빈 땅이에요. 먼저 모닥불(6)을 피우고, 그 5칸 안에 흙길(R)과 움집 터(1)를 놓으세요.','info');}
 function start(data){resize();buildSprites();
   let loaded=false;
   try{const s=data&&data.save||localStorage.getItem(KEY);if(s){W=deserialize(s);recompute();loaded=true;}}catch(e){W=null;}
