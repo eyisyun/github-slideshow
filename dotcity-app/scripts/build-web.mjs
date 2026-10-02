@@ -1,5 +1,5 @@
 // Builds www/ for Capacitor from the single game source (../dotcity/index.html).
-// The game file is authored as a page body; this wraps it in a full HTML document,
+// The game file is a full HTML page; this strips its document shell, rewraps it,
 // swaps Google Fonts for the bundled copies, and adds the native-app glue.
 import { readFile, writeFile, mkdir, rm, cp } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -13,6 +13,7 @@ const www = join(root, 'www');
 let game = await readFile(src, 'utf8');
 const title = (game.match(/<title>([^<]*)<\/title>/) || [, '도트시티'])[1];
 game = game
+  .replace(/<!doctype html>\s*|<\/?html[^>]*>\s*|<\/?head>\s*|<\/?body>\s*|<meta charset="[^"]*">\s*/gi, '')
   .replace(/<title>[^<]*<\/title>\s*/, '')
   .replace(/<meta name="viewport"[^>]*>\s*/, '')
   .replace(/<link rel="preconnect"[^>]*>\s*/g, '')
