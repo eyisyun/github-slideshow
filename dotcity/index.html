@@ -1154,7 +1154,7 @@ function starterStone(){const w=W;w.era=0;w.eraStart=0;
     for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(inb(x+dx,y+dy)&&w.kind[idx(x+dx,y+dy)]===K.ROAD)near=true;if(!near)continue;
     placeRaw(x>=34&&y>=33?K.IND:x>=33&&y<=31?K.COM:K.RES,x,y);}
   recompute();for(let d=0;d<30*2;d++)simDay(true);
-  w.month=0;w.day=0;w.funds=1500;w.lastNet=0;w.adv={};w.ms=MS.filter(m=>w.st.pop>=m[0]).length;}
+  w.month=0;w.day=0;w.funds=250;w.lastNet=0;w.adv={};w.ms=MS.filter(m=>w.st.pop>=m[0]).length;}
 function starter(){const w=W;w.era=4;
   const road=(x,y)=>{if(inb(x,y)&&w.terrain[idx(x,y)]!==1)placeRaw(K.ROAD,x,y);};
   const h=(y,a,b)=>{for(let x=a;x<=b;x++)road(x,y);},v=(x,a,b)=>{for(let y=a;y<=b;y++)road(x,y);};
@@ -1813,7 +1813,7 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
 
 function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(2*DPR));if(innerWidth>1500)cam.s=Math.round(2.5*DPR);zoomTo(cam.s);$('#miniZoom').textContent='x'+(cam.s/DPR).toFixed(cam.s%DPR?1:0);}
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
-  if(mode==='stone')starterStone();else if(mode==='modern')starter();else{W.funds=1500;recompute();}
+  if(mode==='stone')starterStone();else if(mode==='modern')starter();else{W.funds=400;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
   if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);}
 function start(data){resize();buildSprites();
