@@ -1,5 +1,7 @@
 # 도트시티 앱 (iOS · Android)
 
+> **iOS 먼저 출시합니다.** 순서대로 따라 하는 체크리스트와 App Store Connect에 붙여 넣을 문구는 [`IOS_RELEASE.md`](IOS_RELEASE.md)에 있습니다.
+
 웹 게임 `../dotcity/index.html`을 [Capacitor](https://capacitorjs.com) 8로 감싼 네이티브 앱 프로젝트입니다.
 게임 코드는 한 곳(`dotcity/index.html`)에만 있고, 앱 빌드는 그 파일을 가져와 앱용으로 포장합니다.
 

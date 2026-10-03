@@ -3,16 +3,16 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path');
 const out = path.join(__dirname, '..', 'store', 'screenshots');
 const scenes = [
-  ['1-stone', 0, false], ['2-dynasty', 2, false], ['3-modern-night', 4, true],
+  ['1-stone', 0, false], ['2-dynasty', 2, false], ['3-modern-night', 4, true], ['4-future', 5, false], ['5-shop', 1, false, true],
 ];
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   for (const [dev, vp, dpr] of [['ios', { width: 430, height: 932 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
-    for (const [name, era, night] of scenes) {
+    for (const [name, era, night, shop] of scenes) {
       const p = await b.newPage({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true });
       await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForTimeout(900);
-      await p.evaluate(([era, night]) => {
+      await p.evaluate(([era, night, shop]) => {
         closeEra(); try { localStorage.clear(); } catch (e) {}
         W = blankWorld(77); genTerrain(W); W.era = era;
         for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < 13) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
@@ -30,7 +30,12 @@ const scenes = [
         cars = []; for (let k = 0; k < 140; k++) spawnCar(); buildTools(); setTool('inspect'); updateHud(true);
         W.powered.fill(1); W.grid.fill(1); W.road.fill(1);
         cam.x = 0; cam.y = 32 * 16 + 20; if (night) { dayMode = 'night'; W.tod = 22; paintDayBtn(); } setSpeed(0); document.querySelectorAll('.toast').forEach(t => t.remove());
-      }, [era, night]);
+        if (shop) { // the top-up screen with store-style prices (the real app shows the App Store's own prices)
+          window.DotIAP = { products: () => Promise.resolve([['dotcity.coins.small', 2200], ['dotcity.coins.medium', 5500], ['dotcity.coins.large', 13000]]
+            .map(([identifier, price]) => ({ identifier, price, priceString: '₩' + price.toLocaleString('ko-KR') }))), buy: () => new Promise(() => {}) };
+          window.DotAds = { show: () => new Promise(() => {}) }; openShop();
+        }
+      }, [era, night, shop]);
       await p.waitForTimeout(1500);
       await p.screenshot({ path: path.join(out, `${dev}-${name}.png`) });
       await p.close();

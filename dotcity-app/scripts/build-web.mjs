@@ -19,6 +19,14 @@ game = game
   .replace(/<link rel="preconnect"[^>]*>\s*/g, '')
   .replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>\s*/g, '');
 
+// "시대 골라 시작" is a testing aid (it hands out late-era funds), so store builds leave it out.
+// Keep it for device testing with: DOT_TEST=1 npm run sync
+if (!process.env.DOT_TEST) {
+  const before = game.length;
+  game = game.replace(/\s*<h3 class="msub">[\s\S]*?<\/h3>\s*<div class="eras" id="mEras">[\s\S]*?<\/div>/, '');
+  if (game.length === before) throw new Error('era picker markup not found; update build-web.mjs');
+}
+
 if (!existsSync(join(root, 'assets', 'fonts', 'fonts.css'))) {
   throw new Error('assets/fonts is missing. Run `npm run fonts` once with network access.');
 }
@@ -160,4 +168,4 @@ await mkdir(www, { recursive: true });
 await cp(join(root, 'assets', 'fonts'), join(www, 'fonts'), { recursive: true });
 await cp(join(root, 'assets', 'fonts', 'fonts.css'), join(www, 'fonts.css'));
 await writeFile(join(www, 'index.html'), head + game + native + '</body>\n</html>\n');
-console.log('Built www/index.html from dotcity/index.html');
+console.log('Built www/index.html from dotcity/index.html' + (process.env.DOT_TEST ? ' (test build: era picker kept)' : ''));
