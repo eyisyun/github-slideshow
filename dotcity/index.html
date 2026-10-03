@@ -1497,6 +1497,13 @@ function sfx(type){if(muted)return;try{AC=AC||new(window.AudioContext||window.we
 /* ---------------- cars ---------------- */
 const DIRS=[[1,0],[0,1],[-1,0],[0,-1]];
 function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
+// Mask used for drawing: two roads laid side by side are parallel lanes, not a row of junctions,
+// so a link to a neighbour that runs the same way is dropped (keeps the centre line and kerbs).
+function roadDrawMask(x,y){let m=roadMask(x,y);
+  const run=(dx,dy)=>{let n=1;for(let k=1;k<=6&&isRoad(x+dx*k,y+dy*k);k++)n++;for(let k=1;k<=6&&isRoad(x-dx*k,y-dy*k);k++)n++;return n;};
+  const lx=run(1,0),ly=run(0,1); // how far the road runs through this tile along each axis
+  if(ly<=3&&lx>=ly+2)m&=~10;else if(lx<=3&&ly>=lx+2)m&=~5; // a short side link of a long road is a parallel lane
+  return m;}
 function roadMask(x,y,extra){let m=0;DIRS.forEach(([dx,dy],b)=>{if(isRoad(x+dx,y+dy)||(extra&&extra.has(idx(x+dx,y+dy))))m|=1<<b;});return m;}
 function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD||Math.random()>.12+W.traf[i])continue;const x=i%N,y=i/N|0;
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
@@ -1512,7 +1519,7 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
 let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 function drawSpr(c,sp,x,y){c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
 function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
-  if(k===K.ROAD)return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadMask(x,y)];
+  if(k===K.ROAD)return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
@@ -1542,7 +1549,7 @@ function render(){
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
-    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
+    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
     c.globalAlpha=1;c.globalCompositeOperation='source-over';}
   if(overlay)for(let n=0;n<visN;n+=3){const i=visBuf[n];const sp=heatSpr(i);if(sp)c.drawImage(sp.c,visBuf[n+1]-16,visBuf[n+2]);}
   // cursor & previews
