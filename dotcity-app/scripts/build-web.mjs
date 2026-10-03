@@ -42,7 +42,7 @@ const head = `<!doctype html>
 <body>
 `;
 
-// Native glue: Android back button, auto-save when the app goes to the background, status bar.
+// Native glue: Android back button, auto-save when the app goes to the background, status bar, in-app purchases.
 const native = `
 <script>
 (function () {
@@ -65,6 +65,46 @@ const native = `
     App.addListener('appStateChange', function (s) { if (!s.isActive) persist(); });
   }
   window.addEventListener('pagehide', persist);
+
+  // In-app purchase (consumable fund packs) through @capgo/native-purchases (StoreKit 2 / Play Billing).
+  // Every transaction id is recorded on the device so a pack is never granted twice.
+  var NP = P.NativePurchases;
+  if (NP) {
+    var IDS = ['dotcity.coins.small', 'dotcity.coins.medium', 'dotcity.coins.large'];
+    var KEY = 'dotcity.iap.done', done = [];
+    try { done = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
+    var android = C.getPlatform() === 'android';
+    var grant = function (t) {
+      if (!t || IDS.indexOf(t.productIdentifier) < 0) return false;
+      if (android && t.purchaseState && t.purchaseState !== '1') return false; // pending, not paid yet
+      var id = t.transactionId || t.purchaseToken;
+      if (!id || done.indexOf(id) >= 0) return false;
+      done.push(id); if (done.length > 200) done = done.slice(-200);
+      try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {}
+      try { window.dotGrantPack(t.productIdentifier); } catch (e) {}
+      return true;
+    };
+    window.DotIAP = {
+      products: function () {
+        return NP.getProducts({ productIdentifiers: IDS, productType: 'inapp' }).then(function (r) { return r.products || []; });
+      },
+      buy: function (id) {
+        return NP.purchaseProduct({ productIdentifier: id, productType: 'inapp', quantity: 1, isConsumable: true })
+          .then(function (t) { grant(t); return t; });
+      }
+    };
+    // Purchases finished outside the buy() call: Ask to Buy approvals, interrupted payments, app killed mid-purchase.
+    try { NP.addListener('transactionUpdated', function (t) { grant(t); }); } catch (e) {}
+    if (android) {
+      NP.getPurchases({ productType: 'inapp' }).then(function (r) {
+        (r.purchases || []).forEach(function (t) {
+          if (IDS.indexOf(t.productIdentifier) < 0 || t.purchaseState !== '1') return;
+          grant(t);
+          if (t.purchaseToken) NP.consumePurchase({ purchaseToken: t.purchaseToken }).catch(function () {});
+        });
+      }).catch(function () {});
+    }
+  }
 })();
 </script>
 `;

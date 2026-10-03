@@ -170,6 +170,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .sheet h2{margin:0;font-weight:400;font-size:28px;color:var(--gold);letter-spacing:.02em}
 .sheet p{margin:0;color:var(--ink-dim);line-height:1.5;font-size:15px}
 .btns{display:grid;gap:8px}
+.shopbtn{border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:0}
+.shopbtn .plus{font-style:normal;display:inline-grid;place-items:center;width:15px;height:15px;margin-left:4px;background:var(--gold);color:#1a1404;font-size:12px;line-height:1;vertical-align:1px}
+.pack{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.pack .ico{font-size:24px;line-height:1}
+.pack .nm{display:grid;gap:2px;justify-self:start;text-align:left}.pack .nm small{color:var(--gold);font-size:14px}
+.pack .pr{font-size:15px;color:var(--ink);background:var(--panel-hi);padding:6px 10px;min-width:72px;text-align:center}
+.pack[disabled]{opacity:.55;cursor:default}
 .msub{margin:6px 0 0;font-size:15px;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .msub small{font-size:12px;color:var(--ink-dim);font-weight:normal}
 .eras{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -227,7 +234,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
   </section>
   <section class="card stats">
     <div class="stat"><span class="lbl">인구</span><b class="px" id="pop">0</b></div>
-    <div class="stat"><span class="lbl">자금</span><div class="row"><b class="px gold" id="funds">0</b><i class="px delta" id="delta"></i></div></div>
+    <button class="stat shopbtn" id="fundsBtn" aria-label="자금 충전"><span class="lbl">자금 <i class="plus">+</i></span><div class="row"><b class="px gold" id="funds">0</b><i class="px delta" id="delta"></i></div></button>
     <div class="stat pwr"><span class="lbl" id="pwrLbl">전력</span><div class="pwr-row"><div class="meter" id="pwrMeter"><i id="pwrBar"></i></div><span class="px" id="pwr">0/0</span></div></div>
   </section>
   <section class="card eracard" id="eraCard" title="다음 시대로 가는 조건">
@@ -276,6 +283,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <section class="card ipanel" id="info" hidden></section>
 
+<div class="modal" id="shop" hidden>
+  <div class="card sheet" role="dialog" aria-labelledby="shopTitle">
+    <h2 id="shopTitle">자금 충전</h2>
+    <p id="shopNote">지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.</p>
+    <div class="btns" id="shopList"></div>
+    <button class="btn" id="shopClose">닫기 <small>Esc</small></button>
+  </div>
+</div>
 <div class="modal" id="menu" hidden>
   <div class="card sheet" role="dialog" aria-labelledby="menuTitle">
     <h2 id="menuTitle">도트시티</h2>
@@ -1438,7 +1453,7 @@ function zoneBlock(k,x,y){const i=idx(x,y);let road=false;for(let dy=-2;dy<=2&&!
   const d=k===K.RES?W.st.dR:k===K.COM?W.st.dC:W.st.dI;return d<=0?'demand':'';}
 const ZONE_MSG={fire:'모닥불에서 5칸 안이어야 집이 생겨요. 모닥불(6)을 가까이 피워 주세요.',water:'우물에서 7칸 안이어야 집이 생겨요. 우물(6)을 가까이 파 주세요.',power:'전기가 닿지 않아요. 발전소와 길로 이어 주세요.',road:'길에서 2칸 안이어야 집이 생겨요. 길(R)을 가까이 깔아 주세요.',demand:'지금은 이 구역을 원하는 사람이 없어요. 왼쪽 아래 주·상·공 막대가 위로 올라간 구역을 지어 보세요.'};
 function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot(t);if(why)toast(why,'info');sfx('err');return;}
-  if(c>W.funds){toast(`자금이 부족합니다. ${money(c)}이 필요해요.`,'warn');sfx('err');return;}
+  if(c>W.funds){toast(`자금이 부족합니다. ${money(c)}이 필요해요.${window.DotIAP?' 자금 칸을 누르면 충전할 수 있어요.':''}`,'warn');sfx('err');return;}
   W.funds-=c;let puffs=0;
   for(const[x,y]of tiles){if(!validAt(t,x,y))continue;
     if(t.id==='bulldoze'){clearTile(x,y);if(puffs++<24)dust(x,y,'#9a8a74');}
@@ -1814,6 +1829,7 @@ view.addEventListener('wheel',e=>{e.preventDefault();wheelAcc+=e.deltaY;if(Math.
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(!$('#eraModal').hidden){if(k==='enter'||k==='escape'||k===' '){e.preventDefault();closeEra();}return;}
   if(!$('#menu').hidden){if(k==='escape')closeMenu();return;}
+  if(!$('#shop').hidden){if(k==='escape')closeShop();return;}
   if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){keys.add(k);e.preventDefault();return;}
   if(k===' '){e.preventDefault();setSpeed(speed?0:1);return;}
   if(k==='escape'){drag=null;clearTarget();setTool('inspect');selected=null;$('#info').hidden=true;return;}
@@ -1825,6 +1841,7 @@ window.addEventListener('blur',()=>keys.clear());
 window.addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(W)catchUp(W.savedAt);});
 
+$('#fundsBtn').addEventListener('click',()=>{openShop();sfx('click');});$('#shopClose').addEventListener('click',closeShop);$('#shop').addEventListener('click',e=>{if(e.target.id==='shop')closeShop();});
 $('#tcOk').addEventListener('click',()=>commitTarget());$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
 ['pointerdown','pointerup'].forEach(ev=>$('#tconf').addEventListener(ev,e=>e.stopPropagation()));
 /* ---------------- main loop ---------------- */
@@ -1847,6 +1864,22 @@ function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
   else{let ok=true;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){const i=idx(23+dx,31+dy);if(w.terrain[i]===1||w.kind[i]===K.ROAD)ok=false;}if(ok){for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])clearTile(23+dx,31+dy);placeRaw(K.COAL,23,31);}}
   recompute();for(let d=0;d<30*4;d++)simDay(true);
   w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
+/* ---------------- fund packs (in-app purchase; the native app provides window.DotIAP) ---------------- */
+const PACKS=[{id:'dotcity.coins.small',name:'작은 주머니',ico:'👛',mul:1},{id:'dotcity.coins.medium',name:'큰 주머니',ico:'💰',mul:4},{id:'dotcity.coins.large',name:'보물 상자',ico:'🪙',mul:12}];
+const PACK_BASE=[300,3000,8000,20000,40000,80000];
+const packAmount=p=>p.mul*PACK_BASE[W.era];
+let shopBusy=false,shopPrices={};
+function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`${p.name} 충전 완료! +${money(a)}`,'good');sfx('win');renderShop();}
+window.dotGrantPack=grantPack;
+function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
+  $('#shopNote').textContent=iap?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'충전은 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
+  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico">${p.ico}</span><span class="nm">${p.name}<small>+${money(packAmount(p))}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
+  $('#shopList').querySelectorAll('.pack').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));}
+function openShop(){$('#shop').hidden=false;renderShop();const iap=window.DotIAP;
+  if(iap)iap.products().then(list=>{for(const pr of list||[])shopPrices[pr.identifier||pr.productIdentifier]=pr.priceString;renderShop();}).catch(()=>{});}
+function closeShop(){$('#shop').hidden=true;}
+function buyPack(id){const iap=window.DotIAP;if(!iap||shopBusy)return;shopBusy=id;renderShop();
+  iap.buy(id).then(()=>{shopBusy=false;renderShop();}).catch(e=>{shopBusy=false;renderShop();const m=String(e&&(e.message||e.code)||'');if(!/cancel/i.test(m))toast('결제를 마치지 못했어요. 잠시 뒤 다시 해 주세요.','warn');});}
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];selected=null;$('#info').hidden=true;
   if(mode==='stone'||mode==='era0')starterStone();else if(mode==='modern')starter();else if(mode.startsWith('era'))starterEra(+mode.slice(3));else{W.funds=300;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);

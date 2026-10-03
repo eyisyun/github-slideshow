@@ -1,0 +1,47 @@
+{
+  "identifier" : "6A3F1C2E",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6743000001",
+      "localizations" : [
+        { "description" : "지금 시대 돈을 조금 충전해요.", "displayName" : "작은 주머니", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.small",
+      "referenceName" : "작은 주머니",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "6743000002",
+      "localizations" : [
+        { "description" : "지금 시대 돈을 넉넉히 충전해요.", "displayName" : "큰 주머니", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.medium",
+      "referenceName" : "큰 주머니",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "6743000003",
+      "localizations" : [
+        { "description" : "지금 시대 돈을 아주 많이 충전해요.", "displayName" : "보물 상자", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.large",
+      "referenceName" : "보물 상자",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6743000000",
+    "_developerTeamID" : "",
+    "_locale" : "ko",
+    "_storefront" : "KOR"
+  },
+  "subscriptionGroups" : [ ],
+  "version" : { "major" : 3, "minor" : 0 }
+}
