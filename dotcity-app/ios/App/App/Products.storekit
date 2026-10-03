@@ -3,7 +3,7 @@
   "nonRenewingSubscriptions" : [ ],
   "products" : [
     {
-      "displayPrice" : "1100",
+      "displayPrice" : "2200",
       "familyShareable" : false,
       "internalID" : "6743000001",
       "localizations" : [
@@ -14,7 +14,7 @@
       "type" : "Consumable"
     },
     {
-      "displayPrice" : "2200",
+      "displayPrice" : "5500",
       "familyShareable" : false,
       "internalID" : "6743000002",
       "localizations" : [
@@ -25,14 +25,14 @@
       "type" : "Consumable"
     },
     {
-      "displayPrice" : "4400",
+      "displayPrice" : "13000",
       "familyShareable" : false,
       "internalID" : "6743000003",
       "localizations" : [
-        { "description" : "지금 시대 게임머니를 7배 충전해요.", "displayName" : "게임머니 충전 7배", "locale" : "ko" }
+        { "description" : "지금 시대 게임머니를 8배 충전해요.", "displayName" : "게임머니 충전 8배", "locale" : "ko" }
       ],
       "productID" : "dotcity.coins.large",
-      "referenceName" : "게임머니 충전 7배",
+      "referenceName" : "게임머니 충전 8배",
       "type" : "Consumable"
     }
   ],

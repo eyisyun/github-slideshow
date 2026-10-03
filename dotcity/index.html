@@ -1865,18 +1865,20 @@ function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
   recompute();for(let d=0;d<30*4;d++)simDay(true);
   w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 /* ---------------- fund packs (in-app purchase; the native app provides window.DotIAP) ---------------- */
-const PACKS=[{id:'dotcity.coins.small',mul:1},{id:'dotcity.coins.medium',mul:3,tag:'+50% 더'},{id:'dotcity.coins.large',mul:7,tag:'+75% 더'}];
+const PACKS=[{id:'dotcity.coins.small',mul:1},{id:'dotcity.coins.medium',mul:3},{id:'dotcity.coins.large',mul:8}];
 const PACK_BASE=[100,800,2000,5000,10000,20000]; // per era: a small top-up, not a skip (stone: 100 shells ≈ 8 hut lots)
 const packAmount=p=>p.mul*PACK_BASE[W.era];
-let shopBusy=false,shopPrices={};
+let shopBusy=false,shopPrices={},shopPriceNum={};
+// how much more game money per won than the basic pack, from the live store prices
+const packBonus=p=>{const a=shopPriceNum[PACKS[0].id],b=shopPriceNum[p.id];if(!a||!b||p===PACKS[0])return'';const r=Math.round((p.mul/b)/(PACKS[0].mul/a)*100-100);return r>0?`+${r}% 더`:'';};
 function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`게임머니 +${money(a)} 충전 완료!`,'good');sfx('win');renderShop();}
 window.dotGrantPack=grantPack;
 function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
   $('#shopNote').textContent=iap?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'충전은 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
-  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p.tag||'기본'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
+  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p===PACKS[0]?'기본':packBonus(p)||'&nbsp;'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
   $('#shopList').querySelectorAll('.pack').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));}
 function openShop(){$('#shop').hidden=false;renderShop();const iap=window.DotIAP;
-  if(iap)iap.products().then(list=>{for(const pr of list||[])shopPrices[pr.identifier||pr.productIdentifier]=pr.priceString;renderShop();}).catch(()=>{});}
+  if(iap)iap.products().then(list=>{for(const pr of list||[]){const id=pr.identifier||pr.productIdentifier;shopPrices[id]=pr.priceString;shopPriceNum[id]=+pr.price||0;}renderShop();}).catch(()=>{});}
 function closeShop(){$('#shop').hidden=true;}
 function buyPack(id){const iap=window.DotIAP;if(!iap||shopBusy)return;shopBusy=id;renderShop();
   iap.buy(id).then(()=>{shopBusy=false;renderShop();}).catch(e=>{shopBusy=false;renderShop();const m=String(e&&(e.message||e.code)||'');if(!/cancel/i.test(m))toast('결제를 마치지 못했어요. 잠시 뒤 다시 해 주세요.','warn');});}
