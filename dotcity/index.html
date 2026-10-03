@@ -973,6 +973,13 @@ function buildSprites(){
     SP.roadE=[dirtRoad('#a8865a','#7a8a44',.2),dirtRoad('#b0905e','#8a8a4a',.24),
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.27))return col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04);if(inB(u,v,.33))return col('#8a8478');return col(PAL.g1,hash(x,y,85)<.06?.1:0);}),
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.3))return col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04);if(inB(u,v,.37))return col('#a9a49a',hash(x,y,86)<.1?-.1:0);return col(PAL.side,hash(x,y,87)<.1?-.06:0);})];
+    const lotSet=(base,kerb)=>{const out=[];for(let m=0;m<16;m++)out.push(G((u,v,x,y)=>{
+        if((!(m&1)&&u>.92)||(!(m&4)&&u<.08)||(!(m&2)&&v>.92)||(!(m&8)&&v<.08))return kerb(x,y);return base(u,v,x,y);}));return out;};
+    SP.lotR=[lotSet((u,v,x,y)=>col('#a8865a',hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0),(x,y)=>col('#7a8a44',hash(x,y,83)<.4?0:-.1)),
+      lotSet((u,v,x,y)=>col('#b0905e',hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0),(x,y)=>col('#8a8a4a',hash(x,y,83)<.4?0:-.1)),
+      lotSet((u,v,x,y)=>col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04),()=>col('#8a8478')),
+      lotSet((u,v,x,y)=>col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04),(x,y)=>col('#a9a49a',hash(x,y,86)<.1?-.1:0)),
+      lotSet((u,v,x,y)=>col(PAL.asph,hash(x,y,9)<.1?.07:0),()=>col(PAL.curb))];
     SP.consOld=mk1(44,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#7a5233'):null,R:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#5a3a22'):null});for(let k=0;k<5;k++)pb.put(cx+6+(k%2),cy+3-(k>>1),col('#c9a45a'));});
     const vehSet=pal=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}if(pal[k]!=null)pb.put(x,y,pal[k]);}));return mk(pb,-3,-3);});
     const walker=body=>{const pb=new PB(3,5);pb.put(1,0,col('#2a1d14'));pb.put(1,1,col('#e0b088'));pb.put(0,2,col(body,-.1));pb.put(1,2,col(body));pb.put(2,2,col(body,-.2));pb.put(1,3,col(body,-.1));pb.put(0,4,col('#3a2a20'));pb.put(2,4,col('#3a2a20'));const sp=mk(pb,-1,-5);return[sp,sp,sp,sp];};
@@ -1053,6 +1060,7 @@ function buildSprites(){
       mk1(46,(pb,cx,cy)=>{pb.cyl(cx,cy-1,7,2,side('#d6dde3'),(dx,dy)=>dx*dx+dy*dy>.6?col('#f6f9fc'):col(PAL.w2,.2));
         for(let i=0;i<16;i++){pb.put(cx,cy-4-i,[col('#bff6ff',0,200),col('#bff6ff',0,230)]);if(i%4===0){pb.put(cx-1,cy-4-i,neon(NEON));pb.put(cx+1,cy-4-i,neon(NEON));}}
         treeInto(pb,cx-9,cy+1,0,3,903);treeInto(pb,cx+9,cy+2,0,3,904);})];
+    SP.lotR[5]=lotSet((u,v,x,y)=>col('#363c52',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02),()=>[col('#9fdce4'),col(NEON,.35)]);
     // smart road: dark composite with glowing guide lines
     SP.roadF=roadSet((inB,u,v,x,y)=>{if(inB(u,v,.035))return neon(NEON,-.1);if(inB(u,v,.3))return col('#363c52',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02);if(inB(u,v,.35))return col('#e6ecf2');return col('#c8d0da',hash(x,y,88)<.08?-.06:0);});
     // smart avenue: wide dark deck, twin glowing centre lines, pink lane dashes, light-strip kerbs
@@ -1499,6 +1507,10 @@ const DIRS=[[1,0],[0,1],[-1,0],[0,-1]];
 function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
 // Mask used for drawing: two roads laid side by side are parallel lanes, not a row of junctions,
 // so a link to a neighbour that runs the same way is dropped (keeps the centre line and kerbs).
+// A tile inside a solid patch of road (part of any 3x3 block that is all road) is a paved square,
+// not a grid of junctions: it is drawn as plain paving with a kerb only where the patch ends.
+function roadArea(x,y){for(let oy=-2;oy<=0;oy++)for(let ox=-2;ox<=0;ox++){let ok=true;
+    for(let j=0;j<3&&ok;j++)for(let i=0;i<3;i++)if(!isRoad(x+ox+i,y+oy+j)){ok=false;break;}if(ok)return true;}return false;}
 function roadDrawMask(x,y){let m=roadMask(x,y);
   const run=(x,y,dx,dy)=>{let n=1;for(let k=1;k<=6&&isRoad(x+dx*k,y+dy*k);k++)n++;for(let k=1;k<=6&&isRoad(x-dx*k,y-dy*k);k++)n++;return n;};
   const lx=run(x,y,1,0),ly=run(x,y,0,1);let dx=0,dy=0;
@@ -1521,7 +1533,7 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
 let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 function drawSpr(c,sp,x,y){c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
 function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
-  if(k===K.ROAD)return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];
+  if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
