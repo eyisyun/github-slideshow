@@ -42,7 +42,7 @@ const head = `<!doctype html>
 <body>
 `;
 
-// Native glue: Android back button, auto-save when the app goes to the background, status bar, in-app purchases.
+// Native glue: Android back button, auto-save when the app goes to the background, status bar, in-app purchases, rewarded ads.
 const native = `
 <script>
 (function () {
@@ -104,6 +104,52 @@ const native = `
         });
       }).catch(function () {});
     }
+  }
+
+  // Rewarded ads (AdMob). These are Google's public TEST unit ids: replace them with your own before release.
+  var AM = P.AdMob;
+  if (AM) {
+    var IOS = C.getPlatform() === 'ios';
+    var UNIT = IOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    var adReady = false, adLoading = null;
+    var adInit = AM.initialize({})
+      .then(function () { // iOS 14.5+: ask once for tracking; ads still work when declined (non-personalised)
+        if (!IOS) return;
+        return AM.trackingAuthorizationStatus().then(function (r) { if (r.status === 'notDetermined') return AM.requestTrackingAuthorization(); });
+      }).catch(function () {})
+      .then(function () { // GDPR/US-state consent form when Google says one is required for this user
+        return AM.requestConsentInfo().then(function (ci) { if (ci.isConsentFormAvailable && ci.status === 'REQUIRED') return AM.showConsentForm(); });
+      }).catch(function () {});
+    var loadAd = function () {
+      if (adReady) return Promise.resolve(true);
+      if (adLoading) return adLoading;
+      adLoading = adInit.then(function () { return AM.prepareRewardVideoAd({ adId: UNIT }); })
+        .then(function () { adReady = true; adLoading = null; return true; }, function () { adLoading = null; return false; });
+      return adLoading;
+    };
+    window.DotAds = {
+      ready: loadAd,
+      // resolves true only when the viewer watched long enough to earn the reward
+      show: function () {
+        return loadAd().then(function (ok) {
+          if (!ok) throw new Error('noad');
+          adReady = false;
+          var earned = false, hs = [];
+          var on = function (ev, fn) { return AM.addListener(ev, fn).then(function (h) { hs.push(h); }); };
+          var done = function () { hs.forEach(function (h) { try { h.remove(); } catch (e) {} }); loadAd(); };
+          return new Promise(function (resolve, reject) {
+            Promise.all([
+              on('onRewardedVideoAdReward', function () { earned = true; }),
+              on('onRewardedVideoAdDismissed', function () { done(); resolve(earned); }),
+              on('onRewardedVideoAdFailedToShow', function (e) { done(); reject(e); })
+            ]).then(function () {
+              AM.showRewardVideoAd().then(function () { earned = true; }, function (e) { done(); reject(e); });
+            });
+          });
+        });
+      }
+    };
+    loadAd();
   }
 })();
 </script>

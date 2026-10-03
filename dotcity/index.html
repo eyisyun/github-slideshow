@@ -177,6 +177,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .pack .nm{display:grid;gap:2px;justify-self:start;text-align:left;font-size:17px;color:var(--gold)}.pack .nm small{color:var(--ink-dim);font-size:13px}
 .pack .pr{font-size:15px;color:var(--ink);background:var(--panel-hi);padding:6px 10px;min-width:72px;text-align:center}
 .pack[disabled]{opacity:.55;cursor:default}
+.pack.ad{box-shadow:inset 0 -3px 0 rgba(0,0,0,.4),inset 0 0 0 2px var(--good)}
+.pack.ad .pr{background:var(--good);color:#0d2410}
+.pack .ico.tv{width:24px;height:18px;background:linear-gradient(#5fd068,#3fae52);box-shadow:0 0 0 2px #0d2410;clip-path:none;position:relative}
+.pack .ico.tv::after{content:'';position:absolute;left:9px;top:4px;border-left:8px solid #0d2410;border-top:5px solid transparent;border-bottom:5px solid transparent}
 .msub{margin:6px 0 0;font-size:15px;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .msub small{font-size:12px;color:var(--ink-dim);font-weight:normal}
 .eras{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -1873,10 +1877,20 @@ let shopBusy=false,shopPrices={},shopPriceNum={};
 const packBonus=p=>{const a=shopPriceNum[PACKS[0].id],b=shopPriceNum[p.id];if(!a||!b||p===PACKS[0])return'';const r=Math.round((p.mul/b)/(PACKS[0].mul/a)*100-100);return r>0?`+${r}% 더`:'';};
 function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`게임머니 +${money(a)} 충전 완료!`,'good');sfx('win');renderShop();}
 window.dotGrantPack=grantPack;
+// rewarded ad: half the basic pack, three times a day (counted per device, resets at local midnight)
+const AD_DAILY=3,adAmount=()=>Math.round(PACK_BASE[W.era]*.5);
+const today=()=>{const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
+function adsLeft(){try{const o=JSON.parse(localStorage.getItem('dotcity.ads')||'{}');return o.d===today()?Math.max(0,AD_DAILY-(o.n|0)):AD_DAILY;}catch(e){return AD_DAILY;}}
+function useAd(){try{const o=JSON.parse(localStorage.getItem('dotcity.ads')||'{}');const n=o.d===today()?(o.n|0)+1:1;localStorage.setItem('dotcity.ads',JSON.stringify({d:today(),n}));}catch(e){}}
+let adBusy=false;
+function watchAd(){const ads=window.DotAds;if(!ads||adBusy||!adsLeft())return;adBusy=true;renderShop();const was=speed;setSpeed(0);
+  ads.show().then(ok=>{adBusy=false;setSpeed(was);if(ok){useAd();const a=adAmount();W.funds+=a;save();updateHud(true);toast(`광고 보상 게임머니 +${money(a)}!`,'good');sfx('win');}else toast('광고를 끝까지 보면 받을 수 있어요.','info');renderShop();})
+    .catch(()=>{adBusy=false;setSpeed(was);renderShop();toast('지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.','warn');});}
 function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
-  $('#shopNote').textContent=iap?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'충전은 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
-  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p===PACKS[0]?'기본':packBonus(p)||'&nbsp;'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
-  $('#shopList').querySelectorAll('.pack').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));}
+  $('#shopNote').textContent=iap||window.DotAds?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
+  const ads=window.DotAds,left=adsLeft();
+  $('#shopList').innerHTML=`<button class="btn pack ad" id="adBtn" ${!ads||adBusy||!left?'disabled':''}><span class="ico tv"></span><span class="nm">게임머니 +${money(adAmount())}<small>광고 보고 받기 · 오늘 ${left}/${AD_DAILY}번 남음</small></span><span class="pr">${adBusy?'광고 중…':left?'무료':'내일 다시'}</span></button>`+PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p===PACKS[0]?'기본':packBonus(p)||'&nbsp;'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
+  $('#shopList').querySelectorAll('.pack[data-id]').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));$('#adBtn').onclick=watchAd;}
 function openShop(){$('#shop').hidden=false;renderShop();const iap=window.DotIAP;
   if(iap)iap.products().then(list=>{for(const pr of list||[]){const id=pr.identifier||pr.productIdentifier;shopPrices[id]=pr.priceString;shopPriceNum[id]=+pr.price||0;}renderShop();}).catch(()=>{});}
 function closeShop(){$('#shop').hidden=true;}
