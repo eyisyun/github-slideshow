@@ -1406,7 +1406,7 @@ const keys=new Set();
 const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
   {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'길·건물·나무를 없앱니다.'},
-  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요.'},
+  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수는 없어요(넓은 길은 대로).'},
   {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 탭하면 넓어집니다.'},
   {id:'res',names:['움집 터','초가 마을','한옥 마을','주거 구역','주거 구역','미래 주거 구역'],key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 모여 살 집을 짓습니다.'},
   {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역','미래 상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
@@ -1438,15 +1438,20 @@ const OVERLAYS=[{id:'power',name:'전력망',key:'P',desc:'노란색은 전기�
   {id:'pollution',name:'오염',key:'O',desc:'공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.'},{id:'crime',name:'범죄',key:'C',desc:'밀집한 동네에서 생기고 경찰서가 줄입니다.'},{id:'traffic',name:'교통',key:'T',desc:'빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.'},{id:'education',name:'교육',key:'E',desc:'학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.'},{id:'firecov',name:'화재',key:'F',era:3,desc:'소방서가 지키는 범위(파란색). 빨간 건물은 불이 나면 옆으로 번질 수 있는 곳, 깜빡이는 곳은 지금 불타는 곳이에요.'},{id:'health',name:'건강',key:'L',desc:'병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.'}];
 const T=id=>TOOLS.find(t=>t.id===id);
 
+// Roads may cross and turn but not run side by side: a new road may not complete a solid 2x2 block
+// (side-by-side roads read as a grid of junctions). Wide roads are made with the avenue tool instead.
+let roadBlocked=false;
+function roadWouldPave(x,y){for(let oy=-1;oy<=0;oy++)for(let ox=-1;ox<=0;ox++){let full=true;
+    for(let j=0;j<2&&full;j++)for(let i=0;i<2;i++){const xx=x+ox+i,yy=y+oy+j;if(!(xx===x&&yy===y)&&!isRoad(xx,yy)){full=false;break;}}if(full)return true;}return false;}
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
   switch(t.id){
     case'bulldoze':return k!==0||W.trees[i]>0;
-    case'road':return ter!==1&&(k===0||k===K.ROAD);
-    case'avenue':return ter!==1&&(k===0||(k===K.ROAD&&!W.level[i]));
+    case'road':roadBlocked=ter!==1&&k===0&&roadWouldPave(x,y);return ter!==1&&(k===K.ROAD||(k===0&&!roadBlocked));
+    case'avenue':roadBlocked=ter!==1&&k===0&&roadWouldPave(x,y);return ter!==1&&((k===0&&!roadBlocked)||(k===K.ROAD&&!W.level[i]));
     default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(!goalsDone()||W.wb||builtCount(t.kind)))return false;const sz=t.size||1;
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;}}}
 function builtCount(k){return W.st.cnt[k]||0;}
-function whyNot(t){if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
+function whyNot(t){if((t.id==='road'||t.id==='avenue')&&roadBlocked)return'도로를 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)로 기존 도로를 넓혀 주세요.';if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
 function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*PRICE[W.era]);return costOf(t);}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   if(t.drag==='line'){const dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]);let x=a[0],y=a[1];out.push([x,y]);
