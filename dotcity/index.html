@@ -172,9 +172,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .btns{display:grid;gap:8px}
 .shopbtn{border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:0}
 .shopbtn .plus{font-style:normal;display:inline-grid;place-items:center;width:15px;height:15px;margin-left:4px;background:var(--gold);color:#1a1404;font-size:12px;line-height:1;vertical-align:1px}
-.pack{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
-.pack .ico{font-size:24px;line-height:1}
-.pack .nm{display:grid;gap:2px;justify-self:start;text-align:left}.pack .nm small{color:var(--gold);font-size:14px}
+.btn.pack{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.pack .ico.coin{width:22px;height:22px;background:radial-gradient(circle at 40% 35%,#fff3b0 0 18%,var(--gold) 19% 62%,var(--gold-dk) 63%);box-shadow:0 0 0 2px #1a1404}
+.pack .nm{display:grid;gap:2px;justify-self:start;text-align:left;font-size:17px;color:var(--gold)}.pack .nm small{color:var(--ink-dim);font-size:13px}
 .pack .pr{font-size:15px;color:var(--ink);background:var(--panel-hi);padding:6px 10px;min-width:72px;text-align:center}
 .pack[disabled]{opacity:.55;cursor:default}
 .msub{margin:6px 0 0;font-size:15px;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -1865,15 +1865,15 @@ function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
   recompute();for(let d=0;d<30*4;d++)simDay(true);
   w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 /* ---------------- fund packs (in-app purchase; the native app provides window.DotIAP) ---------------- */
-const PACKS=[{id:'dotcity.coins.small',name:'작은 주머니',ico:'👛',mul:1},{id:'dotcity.coins.medium',name:'큰 주머니',ico:'💰',mul:4},{id:'dotcity.coins.large',name:'보물 상자',ico:'🪙',mul:12}];
+const PACKS=[{id:'dotcity.coins.small',mul:1},{id:'dotcity.coins.medium',mul:3,tag:'+50% 더'},{id:'dotcity.coins.large',mul:7,tag:'+75% 더'}];
 const PACK_BASE=[300,3000,8000,20000,40000,80000];
 const packAmount=p=>p.mul*PACK_BASE[W.era];
 let shopBusy=false,shopPrices={};
-function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`${p.name} 충전 완료! +${money(a)}`,'good');sfx('win');renderShop();}
+function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`게임머니 +${money(a)} 충전 완료!`,'good');sfx('win');renderShop();}
 window.dotGrantPack=grantPack;
 function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
   $('#shopNote').textContent=iap?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'충전은 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
-  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico">${p.ico}</span><span class="nm">${p.name}<small>+${money(packAmount(p))}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
+  $('#shopList').innerHTML=PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p.tag||'기본'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
   $('#shopList').querySelectorAll('.pack').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));}
 function openShop(){$('#shop').hidden=false;renderShop();const iap=window.DotIAP;
   if(iap)iap.products().then(list=>{for(const pr of list||[])shopPrices[pr.identifier||pr.productIdentifier]=pr.priceString;renderShop();}).catch(()=>{});}
