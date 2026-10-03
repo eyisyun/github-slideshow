@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>도트시티</title>
+<meta name="description" content="석기시대 움집 마을에서 미래 도시까지, 시대를 건너며 키우는 픽셀 도시 건설 게임.">
+<meta name="theme-color" content="#141a30">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap">
+<style>
+:root{--void:#141a30;--panel:#222a4a;--panel-hi:#35406c;--edge:#0b0f20;--ink:#eef0fa;--dim:#98a1c8;--gold:#ffcc4d;--good:#7be08a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--void);color:var(--ink);font:16px/1.6 "Do Hyeon",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif}
+a{color:var(--gold)}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+header{padding:56px 0 28px;text-align:center}
+.logo{display:inline-block;padding:6px 12px;border:3px solid var(--gold);color:var(--gold);font-size:14px;letter-spacing:.1em;margin-bottom:14px}
+h1{margin:0;font-weight:400;font-size:clamp(44px,9vw,72px);color:var(--gold);letter-spacing:.02em;text-shadow:0 4px 0 var(--edge)}
+.tag{margin:8px 0 0;color:var(--dim);font-size:clamp(17px,3.6vw,22px)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;font-size:18px;text-decoration:none;background:var(--panel);color:var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.4),0 0 0 2px var(--panel-hi)}
+.btn.primary{background:var(--gold);color:#1a1404;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.shots{display:flex;gap:14px;overflow-x:auto;padding:8px 2px 20px;scroll-snap-type:x mandatory}
+.shots img{height:min(560px,70vh);width:auto;flex:none;scroll-snap-align:center;box-shadow:0 0 0 3px var(--edge),0 10px 0 rgba(0,0,0,.35)}
+section{margin:36px 0}
+h2{font-weight:400;font-size:26px;color:var(--gold);margin:0 0 12px}
+.card{background:var(--panel);padding:18px 20px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.35),0 0 0 2px var(--edge)}
+.eras{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;list-style:none;padding:0;margin:0}
+.eras li{background:var(--panel);padding:12px;text-align:center;box-shadow:0 0 0 2px var(--edge)}
+.eras b{display:block;color:var(--gold);font-weight:400;font-size:19px}
+.eras span{color:var(--dim);font-size:14px}
+dl{margin:0}
+dt{color:var(--gold);margin-top:14px}
+dt:first-child{margin-top:0}
+dd{margin:2px 0 0;color:var(--ink)}
+footer{padding:28px 0 48px;color:var(--dim);font-size:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">DOT CITY</div>
+    <h1>도트시티</h1>
+    <p class="tag">석기시대 움집 마을에서 미래 도시까지, 시대를 건너며 키우는 픽셀 도시</p>
+    <div class="cta">
+      <a class="btn primary" href="play/">▶ 웹에서 바로 하기</a>
+      <a class="btn" href="#help">도움말 · 문의</a>
+    </div>
+  </header>
+
+  <div class="shots" aria-label="게임 화면">
+    <img src="img/ios-1-stone.png" alt="석기시대 움집 마을">
+    <img src="img/ios-2-dynasty.png" alt="한옥이 늘어선 왕조시대 도시">
+    <img src="img/ios-3-modern-night.png" alt="불이 켜진 현대 도시의 밤">
+    <img src="img/ios-4-future.png" alt="아콜로지가 솟은 미래 도시">
+  </div>
+
+  <section>
+    <h2>여섯 시대</h2>
+    <ul class="eras">
+      <li><b>석기</b><span>움집 · 모닥불</span></li>
+      <li><b>청동기</b><span>초가 · 우물</span></li>
+      <li><b>왕조</b><span>한옥 · 돌길</span></li>
+      <li><b>근대</b><span>벽돌 · 증기</span></li>
+      <li><b>현대</b><span>빌딩 · 발전소</span></li>
+      <li><b>미래</b><span>아콜로지 · 하늘 차</span></li>
+    </ul>
+  </section>
+
+  <section id="help">
+    <h2>도움말</h2>
+    <div class="card"><dl>
+      <dt>집이 생기지 않아요</dt>
+      <dd>집 터는 불씨(석기 모닥불 5칸, 청동기·왕조 우물 7칸, 근대부터 전기)가 닿고 길에서 2칸 안이어야 집이 생겨요.
+        빈 터를 살펴보기(돋보기)로 누르면 무엇이 부족한지 알려 줘요.</dd>
+      <dt>다음 시대로 가려면</dt>
+      <dd>위쪽 시대 카드를 눌러 목표를 확인하세요. 목표를 모두 채우고 기념물을 세우면, 현실 시간으로 공사가 끝난 뒤 다음 시대가 열려요.
+        게임을 꺼 둬도 공사와 도시는 계속 자라요.</dd>
+      <dt>게임머니 충전 · 광고</dt>
+      <dd>앱에서 '자금' 옆 ＋를 누르면 충전 화면이 열려요. 광고 보고 받기는 하루 3번까지예요.
+        결제 취소와 환불은 Apple(App Store 구입 내역) 또는 Google Play에서 처리해요.</dd>
+      <dt>저장은 어디에 되나요</dt>
+      <dd>기기 안에 자동으로 저장돼요. 앱을 지우면 진행 상황도 함께 지워져요.</dd>
+    </dl></div>
+  </section>
+
+  <section>
+    <h2>문의</h2>
+    <div class="card">
+      버그 신고나 문의는 <a href="https://github.com/eyisyun/github-slideshow/issues">GitHub 이슈</a>에 남겨 주세요.
+      <!-- To add an email contact, replace the line above, e.g. <a href="mailto:you@example.com">you@example.com</a> -->
+    </div>
+  </section>
+
+  <footer>
+    <a href="privacy/">개인정보처리방침</a> · © 2026 eyisyun
+  </footer>
+</div>
+</body>
+</html>

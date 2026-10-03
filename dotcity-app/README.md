@@ -158,7 +158,7 @@ Android에서 출시할 때는 Play Console **데이터 보안**에 "기기 또�
 
 ## 6. 개인정보처리방침
 
-[`PRIVACY.md`](PRIVACY.md)를 GitHub Pages, 노션 등 공개 주소에 올리고 그 URL을 두 스토어에 입력하세요.
+[`PRIVACY.md`](PRIVACY.md)는 GitHub Pages로 `https://eyisyun.github.io/github-slideshow/privacy/`에 올라갑니다(켜는 방법은 [`IOS_RELEASE.md`](IOS_RELEASE.md) 0-1). 이 URL을 두 스토어에 입력하세요.
 
 ## 7. 스토어 문구 예시
 

@@ -9,10 +9,29 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 
 - ☐ Mac + Xcode 최신판 (App Store에서 설치)
 - ☐ Node.js 22 이상
-- ☐ [Apple Developer Program](https://developer.apple.com/programs/) 가입 (연 $99, 승인까지 1~2일)
-- ☐ [AdMob](https://admob.google.com) 가입 (광고 보고 충전용)
-- ☐ 공개 웹 주소 두 개: **개인정보처리방침**, **지원 페이지**
-  GitHub Pages, 노션 공개 페이지 등 아무 곳이나 됩니다. 개인정보처리방침은 [`PRIVACY.md`](PRIVACY.md) 내용을 그대로 올리세요.
+- ✅ [Apple Developer Program](https://developer.apple.com/programs/) 가입
+- ✅ App Store Connect 유료 앱 계약
+- ☐ [AdMob](https://admob.google.com) 가입 (광고 보고 충전용). 테스트 ID로 TestFlight까지 먼저 시험할 수 있어서 나중에 해도 됩니다.
+- ☐ 공개 웹 주소 (GitHub Pages, 저장소에 준비됨 — 아래 0-1)
+
+### 0-1. 공개 웹페이지 켜기 (GitHub Pages)
+
+저장소의 `site/` 폴더와 `.github/workflows/dotcity-pages.yml`이 아래 세 페이지를 만듭니다.
+
+| 페이지 | 주소 | App Store Connect 칸 |
+|---|---|---|
+| 지원 페이지 (소개·도움말·문의) | `https://eyisyun.github.io/github-slideshow/` | 지원 URL, 마케팅 URL |
+| 개인정보처리방침 | `https://eyisyun.github.io/github-slideshow/privacy/` | 개인정보처리방침 URL |
+| 웹에서 바로 하기 | `https://eyisyun.github.io/github-slideshow/play/` | (선택) |
+
+1. ☐ GitHub 저장소 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 바꿉니다.
+2. ☐ 이 작업이 담긴 **PR(claude/sharp-bell-3d1c38 → master)을 머지**합니다. 배포는 `master`에 올라간 내용으로만 됩니다.
+3. ☐ **Actions** 탭에서 "dotcity pages"가 초록색으로 끝나면 위 주소가 열립니다(1~2분). 안 돌았으면 그 워크플로에서 **Run workflow**.
+
+- 문의 연락처는 지금 GitHub 이슈 링크입니다. 이메일을 공개하고 싶으면 `site/index.html`의 "문의" 칸 주석대로 바꾸세요.
+- 개인정보처리방침을 고치면 `dotcity-app/PRIVACY.md`를 수정하고 저장소 루트에서
+  `python3 dotcity-app/scripts/make-privacy-page.py`를 실행한 뒤 커밋하세요(페이지가 같이 갱신됩니다).
+- `master`의 `dotcity/index.html`이 바뀌면 `/play/` 웹 게임도 자동으로 새 버전이 됩니다.
 
 ## 1. 코드에서 바꿀 것
 
@@ -94,7 +113,7 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
   ```
   도시,시뮬레이션,픽셀,도트,시대,석기시대,한옥,건설,타이쿤,도시건설,문명,미래도시,경영,힐링
   ```
-- 지원 URL · 마케팅 URL(선택): 0단계에서 만든 지원 페이지 주소
+- 지원 URL · 마케팅 URL(선택): `https://eyisyun.github.io/github-slideshow/`
 - 저작권: `2026 eyisyun`
 - **앱 내 구입:** 4단계 상품 3개를 체크합니다.
 
@@ -113,7 +132,7 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 ## 6. 개인정보 · 연령 등급
 
 **앱 개인정보** (광고 SDK 때문에 '수집하지 않음'이 아닙니다)
-- 개인정보처리방침 URL: 0단계 주소
+- 개인정보처리방침 URL: `https://eyisyun.github.io/github-slideshow/privacy/`
 - "데이터를 수집합니까?" → **예**. 아래는 Google AdMob SDK 기준이며, 최신 내용은
   [Google 안내](https://developers.google.com/admob/ios/privacy/data-disclosure)에서 꼭 한 번 맞춰 보세요.
 
