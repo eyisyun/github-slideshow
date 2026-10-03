@@ -486,9 +486,9 @@ function buildSprites(){
       return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
     (av?SP.ave:SP.road)[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
       if(!inBand(u,v,W)){if(inBand(u,v,W+.07))return col(PAL.curb);return col(PAL.side,hash(x,y,3)<.12?-.07:(((Math.floor(u*8)+Math.floor(v*8))&1)?.04:0));}
-      const sx=(m&5)&&!(m&10),sy=(m&10)&&!(m&5);
+      const corner=cnt===2&&(m&5)&&(m&10),sx=(m&5)&&!(m&10)||corner&&((m&1)?u>.45:u<.55),sy=(m&10)&&!(m&5)||corner&&((m&2)?v>.45:v<.55);
       if(av){if(sx&&(dv<.055&&dv>.012))return col(PAL.line);if(sy&&(du<.055&&du>.012))return col(PAL.line);
-        if(sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return col(PAL.white,-.12);if(sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return col(PAL.white,-.12);}
+        if(!corner&&sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return col(PAL.white,-.12);if(!corner&&sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return col(PAL.white,-.12);}
       else{if(sx&&dv<.04&&Math.floor(u*5)%2===0)return col(PAL.line);
       if(sy&&du<.04&&Math.floor(v*5)%2===0)return col(PAL.line);}
       if(cnt>=3){const z=col(PAL.white,-.06);
@@ -1056,12 +1056,12 @@ function buildSprites(){
     // smart road: dark composite with glowing guide lines
     SP.roadF=roadSet((inB,u,v,x,y)=>{if(inB(u,v,.035))return neon(NEON,-.1);if(inB(u,v,.3))return col('#363c52',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02);if(inB(u,v,.35))return col('#e6ecf2');return col('#c8d0da',hash(x,y,88)<.08?-.06:0);});
     // smart avenue: wide dark deck, twin glowing centre lines, pink lane dashes, light-strip kerbs
-    SP.aveF=[];for(let m=0;m<16;m++){const Wd=.4,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),sx=(m&5)&&!(m&10),sy=(m&10)&&!(m&5);
+    SP.aveF=[];for(let m=0;m<16;m++){const Wd=.4,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),corner=cnt===2&&(m&5)&&(m&10);
       const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
-      SP.aveF[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
+      SP.aveF[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5),sx=(m&5)&&!(m&10)||corner&&((m&1)?u>.45:u<.55),sy=(m&10)&&!(m&5)||corner&&((m&2)?v>.45:v<.55);
         if(!inB(u,v,Wd)){if(inB(u,v,Wd+.06))return[col('#9fdce4'),col(NEON,.35)];return col('#c8d0da',hash(x,y,89)<.08?-.06:0);}
         if(sx&&dv<.055&&dv>.015)return neon(NEON);if(sy&&du<.055&&du>.015)return neon(NEON);
-        if(sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return neon(PINK,-.1);if(sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return neon(PINK,-.1);
+        if(!corner&&sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return neon(PINK,-.1);if(!corner&&sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return neon(PINK,-.1);
         if(cnt>=3&&du<Wd&&dv<Wd&&(du>Wd-.07||dv>Wd-.07))return Math.floor((u+v)*16)%2?neon(NEON,-.2):col('#2c3246');
         return col('#2c3246',((Math.floor(u*8)+Math.floor(v*8))%2)?.04:-.02);});}
     // flying cars: hover a few pixels up with a soft shadow and underglow
@@ -1500,10 +1500,12 @@ function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
 // Mask used for drawing: two roads laid side by side are parallel lanes, not a row of junctions,
 // so a link to a neighbour that runs the same way is dropped (keeps the centre line and kerbs).
 function roadDrawMask(x,y){let m=roadMask(x,y);
-  const run=(dx,dy)=>{let n=1;for(let k=1;k<=6&&isRoad(x+dx*k,y+dy*k);k++)n++;for(let k=1;k<=6&&isRoad(x-dx*k,y-dy*k);k++)n++;return n;};
-  const lx=run(1,0),ly=run(0,1); // how far the road runs through this tile along each axis
-  if(ly<=3&&lx>=ly+2)m&=~10;else if(lx<=3&&ly>=lx+2)m&=~5; // a short side link of a long road is a parallel lane
-  return m;}
+  const run=(x,y,dx,dy)=>{let n=1;for(let k=1;k<=6&&isRoad(x+dx*k,y+dy*k);k++)n++;for(let k=1;k<=6&&isRoad(x-dx*k,y-dy*k);k++)n++;return n;};
+  const lx=run(x,y,1,0),ly=run(x,y,0,1);let dx=0,dy=0;
+  // a side neighbour is a parallel lane only when both tiles are part of long roads running the same way
+  if(ly<=3&&lx>=3)for(const[b,o]of[[2,1],[8,-1]])if((m&b)&&run(x,y+o,1,0)>=3)dy|=b;
+  if(lx<=3&&ly>=3)for(const[b,o]of[[1,1],[4,-1]])if((m&b)&&run(x+o,y,0,1)>=3)dx|=b;
+  if(dy&&!dx)m&=~dy;else if(dx&&!dy)m&=~dx;return m;}
 function roadMask(x,y,extra){let m=0;DIRS.forEach(([dx,dy],b)=>{if(isRoad(x+dx,y+dy)||(extra&&extra.has(idx(x+dx,y+dy))))m|=1<<b;});return m;}
 function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD||Math.random()>.12+W.traf[i])continue;const x=i%N,y=i/N|0;
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
