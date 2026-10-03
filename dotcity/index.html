@@ -1866,7 +1866,7 @@ function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
   w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 /* ---------------- fund packs (in-app purchase; the native app provides window.DotIAP) ---------------- */
 const PACKS=[{id:'dotcity.coins.small',mul:1},{id:'dotcity.coins.medium',mul:3,tag:'+50% 더'},{id:'dotcity.coins.large',mul:7,tag:'+75% 더'}];
-const PACK_BASE=[300,3000,8000,20000,40000,80000];
+const PACK_BASE=[100,800,2000,5000,10000,20000]; // per era: a small top-up, not a skip (stone: 100 shells ≈ 8 hut lots)
 const packAmount=p=>p.mul*PACK_BASE[W.era];
 let shopBusy=false,shopPrices={};
 function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`게임머니 +${money(a)} 충전 완료!`,'good');sfx('win');renderShop();}
