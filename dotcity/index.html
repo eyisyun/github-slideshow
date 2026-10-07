@@ -1441,8 +1441,8 @@ const keys=new Set();
 const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
   {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'길·건물·나무를 없앱니다.'},
-  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수는 없어요(넓은 길은 대로). 물 위에 깔면 다리가 돼요(길의 5배 값, 곧게만).'},
-  {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 탭하면 넓어집니다. 물 위에 깔면 넓은 다리(대교)가 돼요(5배 값).'},
+  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수 없고, 대로와도 이어 붙일 수 없어요. 물 위에 깔면 다리가 돼요(길의 5배 값, 곧게만).'},
+  {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 도로와는 서로 이어 붙일 수 없어요(대로는 대로끼리). 물 위에 깔면 넓은 다리(대교)가 돼요(5배 값).'},
   {id:'res',names:['움집 터','초가 마을','한옥 마을','주거 구역','주거 구역','미래 주거 구역'],key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 모여 살 집을 짓습니다.'},
   {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역','미래 상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
   {id:'ind',names:['채집터','논밭','공방','공업 구역','공업 구역','스마트 공업 구역'],key:'3',cost:25,kind:K.IND,drag:'rect',hl:'ind',sw:PAL.zI,desc:'일거리를 만듭니다. 근대부터는 공기를 더럽혀요.'},
@@ -1475,18 +1475,23 @@ const T=id=>TOOLS.find(t=>t.id===id);
 
 // Roads may cross and turn but not run side by side: a new road may not complete a solid 2x2 block
 // (side-by-side roads read as a grid of junctions). Wide roads are made with the avenue tool instead.
-let roadBlocked=false,bridgeBlocked=false;
+let roadBlocked=false,bridgeBlocked=false,mixBlocked=false;
+// roads and avenues are separate networks: a road never touches an avenue and vice versa
+function mixBad(x,y,ave){return DIRS.some(([dx,dy])=>isRoad(x+dx,y+dy)&&!!W.level[idx(x+dx,y+dy)]!==ave);}
 function roadWouldPave(x,y){for(let oy=-1;oy<=0;oy++)for(let ox=-1;ox<=0;ox++){let full=true;
     for(let j=0;j<2&&full;j++)for(let i=0;i<2;i++){const xx=x+ox+i,yy=y+oy+j;if(!(xx===x&&yy===y)&&!isRoad(xx,yy)){full=false;break;}}if(full)return true;}return false;}
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
   switch(t.id){
     case'bulldoze':return k!==0||W.trees[i]>0;
-    case'road':roadBlocked=k===0&&roadWouldPave(x,y);bridgeBlocked=k===0&&!roadBlocked&&bridgeBad(x,y);return k===K.ROAD||(k===0&&!roadBlocked&&!bridgeBlocked);
-    case'avenue':roadBlocked=k===0&&roadWouldPave(x,y);bridgeBlocked=k===0&&!roadBlocked&&bridgeBad(x,y);return(k===0&&!roadBlocked&&!bridgeBlocked)||(k===K.ROAD&&!W.level[i]);
+    case'road':mixBlocked=k===0&&mixBad(x,y,false);roadBlocked=k===0&&!mixBlocked&&roadWouldPave(x,y);bridgeBlocked=k===0&&!mixBlocked&&!roadBlocked&&bridgeBad(x,y);return k===K.ROAD||(k===0&&!mixBlocked&&!roadBlocked&&!bridgeBlocked);
+    case'avenue':mixBlocked=(k===0||k===K.ROAD&&!W.level[i])&&mixBad(x,y,true);roadBlocked=k===0&&!mixBlocked&&roadWouldPave(x,y);bridgeBlocked=k===0&&!mixBlocked&&!roadBlocked&&bridgeBad(x,y);
+      return!mixBlocked&&((k===0&&!roadBlocked&&!bridgeBlocked)||(k===K.ROAD&&!W.level[i]));
     default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(!goalsDone()||W.wb||builtCount(t.kind)))return false;const sz=t.size||1;
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;}}}
 function builtCount(k){return W.st.cnt[k]||0;}
-function whyNot(t){if((t.id==='road'||t.id==='avenue')&&roadBlocked)return'도로를 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)로 기존 도로를 넓혀 주세요.';
+function whyNot(t){if(t.id==='road'&&mixBlocked)return'도로는 대로에 이어 붙일 수 없어요. 도로는 도로끼리, 대로는 대로끼리만 이어져요.';
+  if(t.id==='avenue'&&mixBlocked)return'대로는 도로에 이어 붙일 수 없어요. 대로는 대로끼리, 도로는 도로끼리만 이어져요.';
+  if((t.id==='road'||t.id==='avenue')&&roadBlocked)return'길을 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)를 따로 깔아 주세요.';
   if((t.id==='road'||t.id==='avenue')&&bridgeBlocked)return'다리는 물가나 놓인 다리에 이어서, 곧게만 놓을 수 있어요. 물 위에서는 길을 꺾거나 갈라지게 할 수 없어요.';if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
 function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='road'&&W.terrain[i]===1)return costOf(t)*5;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*PRICE[W.era])*(W.terrain[i]===1?5:1);if(t.id==='avenue'&&W.terrain[i]===1)return costOf(t)*5;return costOf(t);}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
