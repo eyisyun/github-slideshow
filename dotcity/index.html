@@ -486,14 +486,14 @@ function buildSprites(){
       return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
     (av?SP.ave:SP.road)[m]=G((u,v,x,y)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
       if(!inBand(u,v,W)){if(inBand(u,v,W+.07))return col(PAL.curb);return col(PAL.side,hash(x,y,3)<.12?-.07:(((Math.floor(u*8)+Math.floor(v*8))&1)?.04:0));}
-      const corner=cnt===2&&(m&5)&&(m&10),sx=(m&5)&&!(m&10)||corner&&((m&1)?u>.45:u<.55),sy=(m&10)&&!(m&5)||corner&&((m&2)?v>.45:v<.55);
+      const corner=cnt===2&&(m&5)&&(m&10),jn=cnt>=3,sx=(m&5)&&!(m&10)||corner&&((m&1)?u>.45:u<.55)||jn&&((m&1)&&u>.9||(m&4)&&u<.1),sy=(m&10)&&!(m&5)||corner&&((m&2)?v>.45:v<.55)||jn&&((m&2)&&v>.9||(m&8)&&v<.1);
       if(av){if(sx&&(dv<.055&&dv>.012))return col(PAL.line);if(sy&&(du<.055&&du>.012))return col(PAL.line);
-        if(!corner&&sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return col(PAL.white,-.12);if(!corner&&sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return col(PAL.white,-.12);}
+        if(!corner&&!jn&&sx&&Math.abs(dv-.21)<.03&&Math.floor(u*6)%2===0)return col(PAL.white,-.12);if(!corner&&!jn&&sy&&Math.abs(du-.21)<.03&&Math.floor(v*6)%2===0)return col(PAL.white,-.12);}
       else{if(sx&&dv<.04&&Math.floor(u*5)%2===0)return col(PAL.line);
       if(sy&&du<.04&&Math.floor(v*5)%2===0)return col(PAL.line);}
       if(cnt>=3){const z=col(PAL.white,-.06);
-        if((m&1)&&u>.8&&u<.93&&Math.floor(v*16)%2===0)return z;if((m&4)&&u<.2&&u>.07&&Math.floor(v*16)%2===0)return z;
-        if((m&2)&&v>.8&&v<.93&&Math.floor(u*16)%2===0)return z;if((m&8)&&v<.2&&v>.07&&Math.floor(u*16)%2===0)return z;}
+        if((m&1)&&u>.79&&u<.88&&Math.floor(v*16)%2===0)return z;if((m&4)&&u<.21&&u>.12&&Math.floor(v*16)%2===0)return z;
+        if((m&2)&&v>.79&&v<.88&&Math.floor(u*16)%2===0)return z;if((m&8)&&v<.21&&v>.12&&Math.floor(u*16)%2===0)return z;}
       return col(av?'#3f4350':PAL.asph,hash(x,y,9)<.1?.07:0);});}
   const zoneG=hex=>G((u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
