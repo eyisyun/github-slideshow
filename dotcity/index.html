@@ -495,6 +495,31 @@ function buildSprites(){
         if((m&1)&&u>.79&&u<.88&&Math.floor(v*16)%2===0)return z;if((m&4)&&u<.21&&u>.12&&Math.floor(v*16)%2===0)return z;
         if((m&2)&&v>.79&&v<.88&&Math.floor(u*16)%2===0)return z;if((m&8)&&v<.21&&v>.12&&Math.floor(u*16)%2===0)return z;}
       return col(av?'#3f4350':PAL.asph,hash(x,y,9)<.1?.07:0);});}
+  // bridges: a road tile laid on water. One sprite per era x axis x which ends meet the bank (those ends ramp down)
+  const BR=[
+    {w:.3,th:2,rh:0,piers:[.5],pier:'#5e4024',face:'#5e4024',deck:(a,c)=>col('#8a6238',(Math.floor((c+.5)*9)%2?-.16:.05))},   // logs
+    {w:.34,th:2,rh:2,piers:[.25,.75],pier:'#5a3e22',face:'#6e4e2c',deck:(a,c)=>col('#a37b4c',Math.floor(a*8)%2?-.1:.04),
+      rail:(a,k)=>k===2||(a*4)%1<.1?col('#6e4e2c',k===2?.06:-.1):null},                                                      // planks
+    {w:.36,th:3,rh:2,piers:[],arch:1,pier:'#8f897d',face:'#9a9384',deck:(a,c)=>col('#bdb6a6',((Math.floor(a*6)+Math.floor((c+.5)*4))&1)?-.07:.04),
+      rail:(a,k)=>col('#d6d0c2',k===2?.1:-.05)},                                                                              // stone arch
+    {w:.36,th:2,rh:6,piers:[.5],pier:'#7a7468',face:'#3a3a40',deck:(a,c)=>Math.abs(c)>.31?col('#8e887c'):col('#6b6258',Math.floor(a*10)%2?-.05:.03),
+      rail:(a,k)=>{const f=(a*4)%1,t=k/6;return k===6||k===1||Math.abs(f-t)<.13||Math.abs(f-(1-t))<.13?col('#a0492f',k===6?.1:-.05):null;}}, // steel truss
+    {w:.38,th:3,rh:2,piers:[.5],pierW:.08,pier:'#9c9c96',face:'#b4b4ae',deck:(a,c)=>Math.abs(c)>.32?col('#c8c8c2'):Math.abs(c)<.035&&Math.floor(a*5)%2===0?col(PAL.line):col(PAL.asph,Math.floor(a*16)%7===0?.04:0),
+      rail:(a,k)=>k===2?col('#e2e2dc'):(a*8)%1<.2?col('#cfcfc8'):null},                                                       // concrete
+    {w:.38,th:2,rh:3,piers:[.5],pierW:.03,pier:'#e6ecf2',face:'#c8d0da',deck:(a,c)=>Math.abs(c)>.34?col('#9fdce4',.2):Math.abs(c)<.04?col('#5ff0ff',.15):col('#363c52',Math.floor(a*8)%2?.04:-.02),
+      rail:(a,k)=>k===3?col('#9fdce4',.35):col('#9fdce4',0,110)}];                                                           // glass sky bridge
+  SP.bridge=BR.map((B,e)=>{const out=[];for(let ax=0;ax<2;ax++)for(let ends=0;ends<4;ends++){const lo=ends&1,hi=ends>>1&1,TOP=16,pb=new PB(32,16+TOP+2),S=120;
+      const at=(a,c,lift)=>{const u=ax?.5+c:a,v=ax?a:.5+c;return[Math.floor((u-v)*16+16),Math.floor((u+v)*8+TOP-lift)];};
+      const lf=a=>bridgeLift(e,lo,hi,a),Wd=B.w;
+      for(let i=0;i<=S;i++)for(let j=0;j<=24;j++){const a=i/S,c=-Wd+2*Wd*j/24,[px,py]=at(a,Math.min(.49,c+.1),0);pb.put(px,py+1,col('#123058',0,80));}   // shadow on the water
+      for(const p0 of B.piers){const pw=B.pierW||.05;for(let i=0;i<=24;i++)for(let j=0;j<=24;j++){const a=p0-pw+2*pw*i/24,c=-Wd+.03+(2*Wd-.06)*j/24,L=Math.round(lf(a));
+        const[px,py]=at(a,c,L);for(let d=1;d<=L+1;d++)pb.put(px,py+d,col(B.pier,c>0?-.18:0));}}
+      for(let i=0;i<=S;i++){const a=i/S,L=lf(a),[px,py]=at(a,Wd,L);let depth=B.arch?Math.round(L)+2:Math.min(B.th,Math.round(L)+1);
+        const open=B.arch&&a>.1&&a<.9?Math.max(0,(depth-2.2)*Math.sqrt(Math.sin(Math.PI*(a-.1)/.8))):0;
+        for(let d=1;d<=depth;d++){if(B.arch&&d>depth-open)continue;pb.put(px,py+d,col(B.face,d===1?-.08:-.24));}}
+      for(let i=0;i<=S;i++)for(let j=0;j<=S/2;j++){const a=i/S,c=-Wd+2*Wd*j/(S/2),[px,py]=at(a,c,lf(a));pb.put(px,py,B.deck(a,c));}
+      if(B.rh)for(const c of[-Wd,Wd])for(let i=0;i<=S;i++){const a=i/S,[px,py]=at(a,c,lf(a));for(let k=1;k<=B.rh;k++)pb.put(px,py-k,B.rail(a,k));}
+      out[ax*4+ends]=mk(pb,-16,-TOP,false);}return out;});
   const zoneG=hex=>G((u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
     const h=hash(x,y,17);if(h<.05)return col(mixHex(PAL.g2,hex,.2));return col(mixHex(PAL.g1,hex,.16),.04);});
@@ -1406,7 +1431,7 @@ const keys=new Set();
 const TOOLS=[
   {id:'inspect',name:'살펴보기',key:'Q',cost:0,desc:'건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.'},
   {id:'bulldoze',name:'철거',key:'X',cost:5,drag:'rect',hl:'bulldoze',desc:'길·건물·나무를 없앱니다.'},
-  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수는 없어요(넓은 길은 대로).'},
+  {id:'road',names:['흙길','흙길','돌길','신작로','도로','스마트 도로'],key:'R',cost:10,drag:'line',hl:'road',desc:'한 칸씩 깔려요. 집은 길에서 2칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수는 없어요(넓은 길은 대로). 물 위에 깔면 다리가 돼요(길의 5배 값, 곧게만).'},
   {id:'avenue',name:'대로',era:3,key:'U',cost:40,drag:'line',hl:'road',desc:'넓은 길. 보통 길보다 3배 많이 다닐 수 있어요. 기존 길을 탭하면 넓어집니다.'},
   {id:'res',names:['움집 터','초가 마을','한옥 마을','주거 구역','주거 구역','미래 주거 구역'],key:'1',cost:20,kind:K.RES,drag:'rect',hl:'res',sw:PAL.zR,desc:'사람들이 모여 살 집을 짓습니다.'},
   {id:'com',names:['교역터','장터','저잣거리','상업 구역','상업 구역','미래 상업 구역'],key:'2',cost:25,kind:K.COM,drag:'rect',hl:'com',sw:PAL.zC,desc:'물건을 사고파는 곳이 생깁니다.'},
@@ -1440,19 +1465,21 @@ const T=id=>TOOLS.find(t=>t.id===id);
 
 // Roads may cross and turn but not run side by side: a new road may not complete a solid 2x2 block
 // (side-by-side roads read as a grid of junctions). Wide roads are made with the avenue tool instead.
-let roadBlocked=false;
+let roadBlocked=false,bridgeBlocked=false,aveWet=false;
 function roadWouldPave(x,y){for(let oy=-1;oy<=0;oy++)for(let ox=-1;ox<=0;ox++){let full=true;
     for(let j=0;j<2&&full;j++)for(let i=0;i<2;i++){const xx=x+ox+i,yy=y+oy+j;if(!(xx===x&&yy===y)&&!isRoad(xx,yy)){full=false;break;}}if(full)return true;}return false;}
 function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],ter=W.terrain[i];
   switch(t.id){
     case'bulldoze':return k!==0||W.trees[i]>0;
-    case'road':roadBlocked=ter!==1&&k===0&&roadWouldPave(x,y);return ter!==1&&(k===K.ROAD||(k===0&&!roadBlocked));
-    case'avenue':roadBlocked=ter!==1&&k===0&&roadWouldPave(x,y);return ter!==1&&((k===0&&!roadBlocked)||(k===K.ROAD&&!W.level[i]));
+    case'road':roadBlocked=k===0&&roadWouldPave(x,y);bridgeBlocked=k===0&&!roadBlocked&&bridgeBad(x,y);return k===K.ROAD||(k===0&&!roadBlocked&&!bridgeBlocked);
+    case'avenue':aveWet=ter===1;roadBlocked=ter!==1&&k===0&&roadWouldPave(x,y);bridgeBlocked=ter!==1&&k===0&&!roadBlocked&&bridgeBad(x,y);return ter!==1&&((k===0&&!roadBlocked&&!bridgeBlocked)||(k===K.ROAD&&!W.level[i]));
     default:{if(!toolOn(t))return false;if(t.landmark&&(W.st.pop<t.landmark||builtCount(t.kind)))return false;if(t.wonder!=null&&(!goalsDone()||W.wb||builtCount(t.kind)))return false;const sz=t.size||1;
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}return true;}}}
 function builtCount(k){return W.st.cnt[k]||0;}
-function whyNot(t){if((t.id==='road'||t.id==='avenue')&&roadBlocked)return'도로를 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)로 기존 도로를 넓혀 주세요.';if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
-function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*PRICE[W.era]);return costOf(t);}
+function whyNot(t){if((t.id==='road'||t.id==='avenue')&&roadBlocked)return'도로를 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)로 기존 도로를 넓혀 주세요.';
+  if((t.id==='road'||t.id==='avenue')&&bridgeBlocked)return'다리는 물가나 놓인 다리에 이어서, 곧게만 놓을 수 있어요. 물 위에서는 길을 꺾거나 갈라지게 할 수 없어요.';
+  if(t.id==='avenue'&&aveWet)return'대로는 물 위에 놓을 수 없어요. 물을 건너려면 길(R)로 다리를 놓으세요.';if(t.wonder!=null&&W.wb)return`${tn(t)}을(를) 짓고 있어요. ${fmtDur(wbLeft())} 남았어요.`;if(t.wonder!=null&&!goalsDone()){const g=goalList();return`먼저 이 시대의 목표를 모두 채우세요 (${g.filter(x=>x.done).length}/${g.length}).`;}if(t.landmark&&W.st.pop<t.landmark)return`${tn(t)}은(는) 인구 ${fmt(t.landmark)}명이 되면 지을 수 있어요.`;if((t.landmark||t.wonder!=null)&&builtCount(t.kind))return`${tn(t)}은(는) 하나만 지을 수 있어요.`;return null;}
+function costAt(t,x,y){const i=idx(x,y);if(t.id==='road'&&W.kind[i]===K.ROAD)return 0;if(t.id==='road'&&W.terrain[i]===1)return costOf(t)*5;if(t.id==='avenue'&&W.kind[i]===K.ROAD)return Math.round(30*PRICE[W.era]);return costOf(t);}
 function tilesFor(t,a,b){const out=[];if(!a)return out;b=b||a;
   if(t.drag==='line'){const dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]);let x=a[0],y=a[1];out.push([x,y]);
     const xFirst=Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1]);
@@ -1523,6 +1550,18 @@ function roadDrawMask(x,y){let m=roadMask(x,y);
   if(ly<=3&&lx>=3)for(const[b,o]of[[2,1],[8,-1]])if((m&b)&&run(x,y+o,1,0)>=3)dy|=b;
   if(lx<=3&&ly>=3)for(const[b,o]of[[1,1],[4,-1]])if((m&b)&&run(x+o,y,0,1)>=3)dx|=b;
   if(dy&&!dx)m&=~dy;else if(dx&&!dy)m&=~dx;return m;}
+// bridges: road on water. Height above the water by era; an end that meets the bank ramps down to it.
+const BRIDGE_H=[1,2,5,2,3,4];
+function bridgeLift(e,lo,hi,a){const H=BRIDGE_H[e];return H*(lo&&hi?Math.sin(Math.PI*a):lo?Math.sin(a*Math.PI/2):hi?Math.sin((1-a)*Math.PI/2):1);}
+function isBridge(x,y){return isRoad(x,y)&&W.terrain[idx(x,y)]===1;}
+const dry=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]!==1;
+function bridgeKey(x,y){const ax=isRoad(x+1,y)||isRoad(x-1,y)?0:isRoad(x,y+1)||isRoad(x,y-1)?1:dry(x+1,y)||dry(x-1,y)?0:dry(x,y+1)||dry(x,y-1)?1:0;
+  return ax*4+(ax?dry(x,y-1)|dry(x,y+1)<<1:dry(x-1,y)|dry(x+1,y)<<1);}
+// a bridge runs straight: after laying (x,y), no water road tile around it may link both along x and along y
+function bridgeBad(x,y){const r=(xx,yy)=>(xx===x&&yy===y)||isRoad(xx,yy);
+  if(W.terrain[idx(x,y)]===1&&!DIRS.some(([dx,dy])=>isRoad(x+dx,y+dy)||dry(x+dx,y+dy)))return true;   // built out from a bank or an existing bridge
+  for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(!inb(xx,yy)||W.terrain[idx(xx,yy)]!==1||!r(xx,yy))continue;
+    if((r(xx+1,yy)||r(xx-1,yy))&&(r(xx,yy+1)||r(xx,yy-1)))return true;}return false;}
 function roadMask(x,y,extra){let m=0;DIRS.forEach(([dx,dy],b)=>{if(isRoad(x+dx,y+dy)||(extra&&extra.has(idx(x+dx,y+dy))))m|=1<<b;});return m;}
 function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kind[i]!==K.ROAD||Math.random()>.12+W.traf[i])continue;const x=i%N,y=i/N|0;
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
@@ -1566,6 +1605,7 @@ function render(){
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
     c.drawImage(groundOf(i,x,y).c,sx-16,sy);const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
+  for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.terrain[i]!==1||w.kind[i]!==K.ROAD||visBuf[n+2]>lh)continue;const sp=SP.bridge[Math.min(5,w.te[i])][bridgeKey(i%N,i/N|0)];c.drawImage(sp.c,visBuf[n+1]+sp.ox,visBuf[n+2]+sp.oy);}
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
     for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
@@ -1648,7 +1688,8 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
   const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.te[j]!==4||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
-  const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0),sy=Math.round((lx+ly)*8-Y0);drawSpr(c,(SP.veh[car.e]||SP.car)[car.c][car.d],sx,sy);}
+  const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}drawSpr(c,(SP.veh[car.e]||SP.car)[car.c][car.d],sx,sy);}
 function emit(sp,sx,sy){if(!sp.em||!SPEEDS[speed])return;const r=frameDt*Math.min(2.2,SPEEDS[speed]);
   for(const[ex,ey,kind]of sp.em)if(Math.random()<r*(kind==='steam'?5:3.2)&&parts.length<700)
     parts.push({x:sx+sp.ox+ex+X0+(Math.random()-.5)*2,y:sy+sp.oy+ey+Y0,vx:3+Math.random()*4,vy:-7-Math.random()*5,life:0,max:2.2+Math.random()*1.6,sz:kind==='steam'?2:1,kind,g:0});}
@@ -1803,7 +1844,7 @@ function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wond
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:(w.te[i]>=5?NAMES_F[k][L]:w.te[i]<4?NAMES_E[w.te[i]][k][Math.min(L,NAMES_E[w.te[i]][k].length-1)]:NAMES[k][L]);sub=tn(T(['','','res','com','ind'][k]))+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
-  else title={[K.ROAD]:L?'대로':T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.HOSP]:T('hosp').names[Math.min(5,w.te[i])],[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
+  else title={[K.ROAD]:L?'대로':w.terrain[i]===1?['통나무 다리','널다리','돌다리','철교','다리','스카이 브리지'][Math.min(5,w.te[i])]:T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.HOSP]:T('hosp').names[Math.min(5,w.te[i])],[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
   if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra=w.te[w.anchor[i]]>=5?'전력 8,000 공급 · 오염 없음':'전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.HOSP)extra='반경 10칸 건강';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
   const fl=(ok,a,b)=>`<span class="flag ${ok?'ok':'no'}">${ok?a:b}</span>`;
@@ -1845,7 +1886,7 @@ view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;
 function clearTarget(){target=null;const el=$('#tconf');if(el)el.hidden=true;}
 function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}const t=T(tool),[x,y]=target.g,ok=validAt(t,x,y),c=ok?costAt(t,x,y):0,rich=c<=W.funds;
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
-  $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
+  $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':t.id==='road'&&W.terrain[idx(x,y)]===1&&W.kind[idx(x,y)]!==K.ROAD?'다리 놓기':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
   const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
   $('#tcMsg').textContent=!ok?(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
 function commitTarget(){if(!target)return;const t=T(tool),g=target.g;target=null;$('#tconf').hidden=true;applyTool(t,tilesFor(t,g,g));}
