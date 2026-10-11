@@ -961,16 +961,37 @@ function buildSprites(){
       for(let k=-4;k<=4;k++)pb.put(x+k,y-27-(Math.abs(k)>2?0:1),col(f?'#f6f9fc':'#e8eef2'));for(let i=0;i<4;i++)pb.put(x,y-29-i,col('#9aa6b8'));
       [x,y]=at(2.3,1.55);for(let k=-2;k<=2;k++)pb.put(x+k,y-1,col('#9aa6b8'));
       return mk(pb,-48,48-H,true,{lights:[[cx-8,cy-10],[x,y-28]],blink:[[at(2.45,.55)[0],at(2.45,.55)[1]-33,'#ff4a4a']]});});
-    // planes: [style][0 heading +x | 1 heading -x]
-    SP.plane=[0,1].map(f=>[1,-1].map(sg=>{const pb=new PB(60,36),CX=30,CY=24,A=[16,8],P=[-16,8],len=1.25;
-      const put=(s,t,up,v)=>{const x=CX+A[0]*s*sg*len+P[0]*t,y=CY+A[1]*s*sg*len+P[1]*t;pb.put(Math.floor(x),Math.floor(y)-up,v);};
-      const body=f?'#f4f7fa':'#f2f4f6',tail=f?'#ff6ad5':'#2f6fc0';
-      for(let i=0;i<=80;i++)for(let j=-30;j<=30;j++){const s=-.5+i/80,t=j/30*.75*(Math.abs(s-.04)<.09?1:0);if(!t&&j)continue;put(s,t,2,col(body,t>0?-.2:0));}   // wings
-      for(let d=0;d<4;d++)for(let i=0;i<=60;i++)for(let j=-2;j<=2;j++){const s=-.5+i/60,w=.09*Math.sqrt(Math.max(0,1-((s-.02)/.53)**4)),t=j/2*w;
-        put(s,t,d,d===0?col(body,-.35):d===2&&Math.floor(s*30)%2===0&&s>-.35&&s<.38?[col('#2a3a5a'),col('#ffd27a')]:d===1&&f?ng('#5fe6f2'):col(body,t>0?-.18:0));}
-      for(let i=0;i<=8;i++)for(let d=4;d<10;d++){const s=-.5+i/8*.14;if(d-4<=(s+.5)/.14*6)put(s,0,d,col(tail,d>7?.1:0));}
-      for(let j=-12;j<=12;j++)for(const s of[-.46,-.43])put(s,j/12*.3,3,col(body,-.1));
-      return mk(pb,-CX,-CY,true,{nose:[Math.floor(CX+A[0]*.5*sg*len),Math.floor(CY+A[1]*.5*sg*len)-2]});}));}
+    // planes: [style][0 heading +x | 1 heading -x]. Modelled in 3D (s along the body, lateral y, height z) and rasterised
+    // with a depth buffer and simple lighting, so the body is round, the wings swept, with engines, tailplane and fin.
+    SP.plane=[0,1].map(f=>[1,-1].map(sg=>{const W0=76,H0=46,CX=38,CY=32,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9),L=1.35,R=.11,RZ=3.1;
+      const LG=[-.35,-.55,.76];   // light from the upper left
+      const C={body:f?'#f6f8fb':'#f3f5f7',belly:f?'#cfd8e2':'#c9ced6',fin:f?'#ff6ad5':'#2f6fc0',stripe:f?'#5fe6f2':'#2f6fc0',eng:'#8d949e',win:'#2a3a5a'};
+      const plot=(sAl,y,z,colr,shade=0)=>{const X=sAl*L*sg,sx=CX+(X-y)*16,sy=CY+(X+y)*8-z,px=Math.round(sx),py=Math.round(sy);if(px<0||py<0||px>=W0||py>=H0)return;
+        const d=(X+y)*8+z,k=py*W0+px;if(d<zb[k])return;zb[k]=d;pb.put(px,py,typeof colr==='string'?col(colr,shade):colr);};
+      const lit=(ny,nz,nx=0)=>{const v=nx*LG[0]*sg+ny*LG[1]+nz*LG[2];return Math.max(-.32,Math.min(.16,(v-.3)*.45));};
+      const rAt=s=>s>.36?Math.sqrt(Math.max(0,1-((s-.36)/.14)**2)):s<-.26?Math.max(.18,1-(-.26-s)/.24*.82):1;
+      const zcAt=s=>RZ+2+(s<-.26?(-.26-s)/.24*2.2:0);
+      // wings (swept, slight dihedral) and tailplane
+      const wing=(sLe0,sTe0,sweep,span,z0,dih)=>{for(let a=0;a<=140;a++){const t=a/70-1,ta=Math.abs(t),le=sLe0-sweep*ta,te=sTe0-sweep*.55*ta-.02*ta;
+        for(let b=0;b<=26;b++){const s=te+(le-te)*b/26;plot(s,t*span,z0+ta*dih,C.body,b<3?-.18:ta>.94?-.06:.06);}}};
+      wing(.17,-.04,.24,.82,RZ-.6,1.6);wing(-.38,-.47,.08,.3,zcAt(-.44)-.4,.5);
+      // engines under the wings
+      for(const t of[-.36,.36])for(let a=0;a<=40;a++){const s=.0+a/40*.14;for(let q=0;q<24;q++){const th=q/24*6.283,y=t*.82+Math.cos(th)*.05,z=RZ-2.6+Math.sin(th)*1.3;
+        plot(s,y,z,a>37?'#3a3f4a':C.eng,lit(Math.cos(th),Math.sin(th)));}}
+      // fuselage: a round tube with a tapered nose and an upswept tail cone
+      for(let a=0;a<=300;a++){const s=-.5+a/300,r=rAt(s),zc=zcAt(s);for(let q=0;q<48;q++){const th=q/48*6.283,ny=Math.cos(th),nz=Math.sin(th),y=ny*R*r,z=zc+nz*RZ*r;
+        let cc=nz<-.35?C.belly:C.body,sh=lit(ny,nz,s>.36?(s-.36)/.14:0);
+        if(Math.abs(nz+.12)<.13&&s>-.3&&s<.34)cc=f?[col(C.stripe),col(C.stripe,.35)]:C.stripe;
+        if(Math.abs(nz-.38)<.11&&s>-.27&&s<.3&&(a>>1)%2===0)cc=[col(C.win),col('#ffd27a')];
+        if(s>.38&&s<.44&&nz>.35&&nz<.85)cc=[col('#1e2a40'),col('#9fdcff')];
+        plot(s,y,z,cc,typeof cc==='string'?sh:0);}}
+      // fin
+      for(let a=0;a<=30;a++){const h=a/30,le=-.31-.15*h,te=-.5-.02*h;for(let b=0;b<=16;b++){const s=te+(le-te)*b/16;plot(s,0,zcAt(s)+RZ*.5+h*8,C.fin,b<2?-.2:.04);}}
+      // a thin dark outline keeps the silhouette crisp
+      const solid=k=>pb.d[k]>>>24;const out=[];for(let y=0;y<H0;y++)for(let x=0;x<W0;x++){const k=y*W0+x;if(solid(k))continue;
+        if((x>0&&solid(k-1))||(x<W0-1&&solid(k+1))||(y>0&&solid(k-W0))||(y<H0-1&&solid(k+W0)))out.push(k);}
+      for(const k of out)pb.put(k%W0,k/W0|0,col('#3c4352',0,170));
+      const nx=CX+(.5*L*sg)*16,ny=CY+(.5*L*sg)*8-zcAt(.5);return mk(pb,-CX,-CY,true,{nose:[Math.round(nx),Math.round(ny)]});}));}
   { // broadcast tower
     const H=104,pb=new PB(32,H),cx=16,cy=H-8;
     pb.box({cx,cy:cy-1,hw:6,h:3,L:()=>col('#c9ccd2'),R:()=>col('#c9ccd2',-.25),T:()=>col('#dfe2e6')});
@@ -1945,8 +1966,8 @@ function stepPlanes(dt){const list=W.st.apts||[];for(const a of[...planes.keys()
     else if(p.ph==='park'&&p.t<=0){p.ph='takeoff';p.dir=-1;p.v=.2;}
     else if(p.ph==='takeoff'){p.v=Math.min(2.4,p.v+dt*.9);p.u-=p.v*dt;p.alt=Math.max(0,(1.3-p.u)*8);if(p.u<-8){p.ph='wait';p.t=7+Math.random()*8;}}}}
 function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,gx=ax+p.u,gy=ay+2.55,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
-    const sp=SP.plane[p.e>=5?1:0][p.dir>0?0:1];c.fillStyle=`rgba(18,22,48,${(.25*(1-Math.min(1,alt/60))*(1-nightF*.6)).toFixed(3)})`;
-    const w=Math.max(6,16-alt/6);c.fillRect(sx-w/2+alt*.3,sy-1+alt*.1,w,2);c.fillRect(sx-w/4+alt*.3,sy-2+alt*.1,w/2,4);
+    const sp=SP.plane[p.e>=5?1:0][p.dir>0?0:1];    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
+    {const ga=c.globalAlpha;c.globalAlpha=.28*(1-Math.min(.8,alt/70))*(1-nightF*.7);c.drawImage(sp.sil,sx+sp.ox+Math.round(alt*.35),sy+sp.oy+3+Math.round(alt*.15));c.globalAlpha=ga;}   // its shadow on the ground
     drawSpr(c,sp,sx,sy-alt);if((now/400|0)%2){c.fillStyle='#ff4a4a';c.fillRect(sx+sp.ox+sp.nose[0],sy-alt+sp.oy+sp.nose[1],1,1);}
     if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}}}
 function drawBoat(c,b){const gx=b.x+.5+DIRS[b.d][0]*b.t,gy=b.y+.5+DIRS[b.d][1]*b.t,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0+Math.sin(now/600+b.ph)*.6),sp=SP.boat[Math.min(5,b.e)][b.d&1];
