@@ -301,7 +301,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
   <div class="pg"><button class="btn" data-wx="0">맑음</button><button class="btn" data-wx="1">비</button><button class="btn" data-wx="2">눈</button><button class="btn" data-wx="3">꽃잎</button><button class="btn" data-wx="auto">자동</button></div>
   <div class="pg"><button class="btn primary" id="phShot">사진 저장</button><button class="btn" id="phExit">끝내기</button></div>
 </div>
-<div class="modal" id="shotView" hidden><div class="card sheet"><img id="shotImg" alt="도시 사진" style="width:100%;image-rendering:pixelated"><p style="margin:8px 0">이미지를 길게 눌러 저장하거나 공유하세요.</p><button class="btn primary" id="shotClose">닫기</button></div></div>
+<div class="modal" id="shotView" hidden><div class="card sheet"><img id="shotImg" alt="도시 사진" style="width:100%;image-rendering:pixelated"><p style="margin:8px 0">이미지를 길게 누르거나(휴대폰) 오른쪽 클릭해서(컴퓨터) 저장하세요.</p><button class="btn primary" id="shotClose">닫기</button></div></div>
 <div class="cost" id="cost" hidden></div>
 <div class="tconf" id="tconf" hidden><span id="tcMsg"></span><button id="tcOk"></button><button id="tcX" aria-label="취소">✕</button></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -2223,7 +2223,7 @@ function paintPhoto(){document.querySelectorAll('#photobar [data-ph]').forEach(b
   document.querySelectorAll('#photobar [data-wx]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.wx==='auto'?W.wxAuto!==false:W.wxAuto===false&&+b.dataset.wx===(W.wx||0))));}
 function takePhoto(){sfx('place');requestAnimationFrame(()=>view.toBlob(async blob=>{if(!blob)return;const file=new File([blob],'dotcity.png',{type:'image/png'});
   try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:W.name});return;}}catch(e){if(e&&e.name==='AbortError')return;}
-  const url=URL.createObjectURL(blob);if(!window.Capacitor){const a=document.createElement('a');a.href=url;a.download=`${W.name}.png`;document.body.append(a);a.click();a.remove();toast('사진을 저장했어요.','good');return;}
+  const url=URL.createObjectURL(blob);let framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}if(!window.Capacitor&&!framed){const a=document.createElement('a');a.href=url;a.download=`${W.name}.png`;document.body.append(a);a.click();a.remove();toast('사진을 저장했어요.','good');return;}
   $('#shotImg').src=url;$('#shotView').hidden=false;},'image/png'));}
 function renderSub(){const t=T(tool),bar=$('#subbar');if(!t||!t.items){bar.hidden=true;return;}bar.hidden=false;bar.innerHTML='';
   ITEMS[t.items].forEach((it,n)=>{if(t.items==='deco'&&(it.era||0)>W.era)return;const b=document.createElement('button');b.className='it';b.setAttribute('aria-pressed',String(subSel[t.items]===n));
