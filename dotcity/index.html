@@ -493,6 +493,38 @@ function bitmapPB(rows,map,outline){const h=rows.length,w=Math.max(...rows.map(r
   if(outline)for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++){if(on(x,y))continue;if(on(x-1,y)||on(x+1,y)||on(x,y-1)||on(x,y+1))pb.put(x+1,y+1,col(outline));}
   for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(on(x,y))pb.put(x+o,y+o,col(map[rows[y][x]]));return pb;}
 
+// Vehicles are small 3D box models (s along the heading -.5..5 * L tiles, t across -1..1 * W tiles, z in px) drawn per direction
+// with a depth buffer and face lighting: a body, a glass cabin, wheels, head/tail lights - so they read as cars, not blobs.
+function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].map(d=>{const W0=24,H0=20,CX=12,CY=14,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9);
+    const hx=DIRS[d][0],hy=DIRS[d][1],lx=-hy,ly=hx;
+    const plot=(s,t,z,c,n)=>{const X=s*L*hx+t*Wd*lx,Y=s*L*hy+t*Wd*ly,px=Math.round(CX+(X-Y)*16),py=Math.round(CY+(X+Y)*8-z);if(px<0||py<0||px>=W0||py>=H0||c==null)return;
+      const dep=(X+Y)*8+z,k=py*W0+px;if(dep<zb[k])return;zb[k]=dep;if(Array.isArray(c)||typeof c==='number'){pb.put(px,py,c);return;}
+      const nX=n[0]*L*hx+n[1]*lx,nY=n[0]*L*hy+n[1]*ly,nl=Math.hypot(nX,nY,n[2])||1,v=(nX*LG[0]+nY*LG[1]+n[2]*LG[2])/nl;pb.put(px,py,col(c,Math.max(-.34,Math.min(.18,(v-.25)*.5))));};
+    for(const B of boxes){const[s0,s1,t0,t1,z0,z1]=B.b,ns=Math.max(4,Math.ceil((s1-s0)*L*22*3)),nt=Math.max(4,Math.ceil((t1-t0)*Wd*22*3)),nz=Math.max(2,Math.ceil((z1-z0)*3));
+      const C=(f,a,b)=>B.f?B.f(f,a,b):B.c;
+      for(let i=0;i<=ns;i++)for(let j=0;j<=nt;j++){const a=i/ns,b=j/nt;plot(s0+(s1-s0)*a,t0+(t1-t0)*b,z1,C('top',a,b),[0,0,1]);}
+      for(let i=0;i<=ns;i++)for(let j=0;j<=nz;j++){const a=i/ns,b=j/nz,z=z0+(z1-z0)*b;plot(s0+(s1-s0)*a,t1,z,C('+t',a,b),[0,1,0]);plot(s0+(s1-s0)*a,t0,z,C('-t',a,b),[0,-1,0]);}
+      for(let i=0;i<=nt;i++)for(let j=0;j<=nz;j++){const a=i/nt,b=j/nz,z=z0+(z1-z0)*b;plot(s1,t0+(t1-t0)*a,z,C('+s',a,b),[1,0,0]);plot(s0,t0+(t1-t0)*a,z,C('-s',a,b),[-1,0,0]);}}
+    if(opt.shadowGlow){for(let i=0;i<=20;i++)for(let j=0;j<=6;j++)plot(-.45+.9*i/20,-.8+1.6*j/6,0,col('#0e1630',0,70),[0,0,1]);}
+    return mk(pb,-CX,-CY);});}
+const GLASS='#8fb4d4',HEAD=[0,0].map((_,i)=>i?col('#fff2a0'):col('#fff6d0')),TAIL=[col('#a8322a'),col('#ff3a3a')];
+const wheels=(z1=1.4,r=.1,front=.32,back=-.3)=>[front,back].flatMap(s=>[[s-r,s+r,.62,1],[s-r,s+r,-1,-.62]].map(([a,b,c,d])=>({b:[a,b,c,d,0,z1],c:'#1e2026'})));
+function carSedan(c,extra=[]){return vehModel([...wheels(),
+  {b:[-.5,.5,-.95,.95,.7,2.3],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.28&&b>.35?HEAD:f==='-s'&&Math.abs(a-.5)>.3&&b>.3?TAIL:c},
+  {b:[-.3,.16,-.82,.82,2.3,4.0],f:(f,a,b)=>f==='top'?col(c,.06):(f==='+t'||f==='-t')?(b<.8&&a>.08&&a<.92&&Math.abs(a-.55)>.07?GLASS:c):(b<.82?GLASS:c)},...extra],.48,.072);}
+function carBus(c,stripe){return vehModel([...wheels(1.4,.1,.32,-.3),
+  {b:[-.5,.5,-.95,.95,.7,5.2],f:(f,a,b)=>f==='top'?'#e6e8ea':f==='+s'?(b>.45&&b<.85?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:c):f==='-s'?(b<.3&&Math.abs(a-.5)>.3?TAIL:c):(b>.5&&b<.82&&(a*9|0)%2===0?GLASS:b>.32&&b<.42?stripe:c)}],.8,.085);}
+function carTruck(cab,box){return vehModel([...wheels(1.4,.1,.36,-.3),
+  {b:[.16,.5,-.9,.9,.7,4.1],f:(f,a,b)=>f==='+s'?(b>.55?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:cab):(f==='+t'||f==='-t')&&b>.55&&a>.35?GLASS:cab},
+  {b:[-.5,.15,-.95,.95,.7,5.2],f:(f,a,b)=>f==='-s'&&b<.2&&Math.abs(a-.5)>.3?TAIL:col(box,f==='top'?.06:0)}],.7,.085);}
+function carVintage(c){return vehModel([...wheels(1.7,.14,.3,-.32),
+  {b:[.02,.5,-.6,.6,1,2.4],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.3&&b>.4?HEAD:c},
+  {b:[-.45,.02,-.85,.85,1,2.4],f:(f,a,b)=>f==='-s'&&Math.abs(a-.5)>.35&&b>.5?TAIL:c},
+  {b:[-.42,0,-.8,.8,2.4,4.8],f:(f,a,b)=>f==='top'?col(c,.1):b>.35&&b<.85&&!(f==='+t'||f==='-t')||(f==='+t'||f==='-t')&&b>.35&&b<.85&&a>.15&&a<.85?GLASS:c},
+  {b:[-.5,.5,.95,1.05,1.2,1.5],c:'#2a2a2e'},{b:[-.5,.5,-1.05,-.95,1.2,1.5],c:'#2a2a2e'}],.46,.07);}
+function carHover(c,glow){const g=[col(glow),col(glow,.4)];return vehModel([
+  {b:[-.5,.5,-.9,.9,2.6,3.9],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.25?[col('#ffffff'),col('#ffffff')]:f==='-s'&&Math.abs(a-.5)>.25?[col('#ff4a6a'),col('#ff6a8a')]:b<.25&&f!=='top'?g:c},
+  {b:[-.28,.26,-.7,.7,3.9,5.1],f:(f,a,b)=>f==='top'?col(GLASS,.15):GLASS}],.46,.075,{shadowGlow:1});}
 function buildSprites(){
   /* ground ---------------------------------------------------- */
   SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const h=hash(x,y,v*31+7),t=p?.035:0;
@@ -1030,10 +1062,12 @@ function buildSprites(){
   /* cars: 4 directions × 7 colours, head/tail lights glow in the night layer */
   const carX=["tl....","dwll..",".ddwll","...ddh"],carY=["....lt","..llwd","llwdd.","hdd..."];
   const CARS=['#e84f4f','#f2f2f2','#3f7fe0','#f2c140','#57b86a','#39404f','#e8884a'];
-  SP.car=CARS.map(c=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);
+  SP.carOld=CARS.map(c=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);
     map.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}
       const v=k==='l'?col(c,.12):k==='d'?col(c,-.3):k==='w'?col('#9fc4e0',-.2):k==='h'?[col('#fff6d0'),col('#fff2a0')]:[col(c,-.45),col('#ff3a3a')];pb.put(x,y,v);}));
     return mk(pb,-3,-3);}));
+  // modern traffic: sedans in many colours, a taxi, a city bus and a delivery truck
+  SP.car=[...CARS.map(c=>carSedan(c)),carSedan('#f2c140',[{b:[-.1,.04,-.3,.3,4.1,4.9],c:'#f6f2e4'}]),carBus('#2f8f5b','#f2c140'),carBus('#2f6fc0','#ffffff'),carTruck('#e0503a','#e6e8ea')];
   /* ================= era art: stone age → bronze age → dynasty → early modern ================= */
   { const R=K.RES,C=K.COM,I=K.IND;
     SP.E=[{},{},{},{},SP.bld,{}];for(const e of[0,1,2,3])SP.E[e]={[R]:[null],[C]:[null],[I]:[null]};
@@ -1174,7 +1208,7 @@ function buildSprites(){
     SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(walker),
       [...['#e8e0c8','#c9b896'].map(walker),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
       [...['#f2ede0','#e8e4dc','#3a5a8a'].map(walker),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
-      [vehSet({t:[col('#3a3a3a'),col('#ffd27a')],l:col('#2a2a2e'),d:col('#1a1a1e'),w:col('#9fc4e0',-.2),h:col('#7a5233')}),vehSet({t:[col('#5a2a2a'),col('#ff3a3a')],l:col('#3a2a2a',.1),d:col('#1a1a1e'),w:col('#9fc4e0',-.2),h:[col('#d8d4c8'),col('#fff2a0')]}),...['#3a3a4a','#6a4a3a'].map(walker)],
+      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(walker)],
       SP.car];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
     SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
@@ -1266,7 +1300,7 @@ function buildSprites(){
       map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}
         pb.put(x,y,k==='l'?col(c,.15):k==='d'?col(c,-.25):k==='w'?neon('#7fd7ff',-.1):k==='h'?[col('#ffffff'),col('#ffffff')]:[col(c,-.4),col('#ff4a6a')]);
         if(y===3)pb.put(x,4,neon(glow));}));return mk(pb,-3,-9);});
-    SP.veh[5]=[hover('#f4f7fa',NEON),hover('#f4f7fa',PINK),hover('#ff6a8a',NEON),hover('#5f8fe0',NEON),hover('#2f3448',PINK),walker('#e9eef4'),walker('#5fe6f2')];
+    SP.veh[5]=[carHover('#f4f7fa',NEON),carHover('#f4f7fa',PINK),carHover('#ff6a8a',NEON),carHover('#5f8fe0',NEON),carHover('#2f3448',PINK),walker('#e9eef4'),walker('#5fe6f2')];
     // fusion plant (2x2): a white torus around a glowing core
     SP.fusion=mk2(88,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:28,h:3,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:fRoof});
       pb.box({cx:cx+15,cy:cy-1,hw:7,h:9,L:ftw(0,950),R:ftw(-.24,950),T:fRoof});pb.cyl(cx-17,cy-3,3,8,side('#e6ecf2'),()=>neon(NEON));
