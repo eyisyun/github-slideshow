@@ -192,6 +192,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .btn.primary{background:var(--gold);color:#2a1d05;box-shadow:inset 0 -3px 0 var(--gold-dk)}
 .btn.primary small{color:#6b4a0c}
 .btn.danger{color:#ffd0c8;box-shadow:inset 0 0 0 2px var(--bad),inset 0 -3px 0 rgba(0,0,0,.4)}
+.sndrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sndrow .vol{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-dim)}.sndrow input{flex:1;accent-color:var(--gold,#ffcc4d)}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;color:var(--ink-dim);margin:0}
 .keys dt{font:10px var(--f-px);color:var(--ink);padding-top:3px}
 .keys dd{margin:0}
@@ -307,6 +308,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     </div>
     <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
     <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button></div>
+    <h3 class="msub" id="sndHead">소리 <small>위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요</small></h3>
+    <div class="sndrow"><button class="btn" id="mMusic"></button><button class="btn" id="mSfx"></button>
+      <label class="vol">음악 크기<input type="range" id="mVol" min="0" max="100" step="5"></label></div>
     <dl class="keys">
       <dt>휴대폰 터치</dt><dd>고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요</dd>
       <dt>마우스 클릭</dt><dd>표시된 칸에 바로 1칸 짓기</dd>
@@ -1660,7 +1664,7 @@ function fireworks(){const zs=[];for(let i=0;i<N*N;i++)if(W.kind[i]>=K.RES&&W.ki
 
 /* ---------------- audio ---------------- */
 let AC=null;
-function sfx(type){if(muted)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+function sfx(type){if(muted||!SND.sfx)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
   const t0=AC.currentTime,tone=(f,d,st,typ='square',vol=.045)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=typ;o.frequency.setValueAtTime(f,t0+st);g.gain.setValueAtTime(vol,t0+st);g.gain.exponentialRampToValueAtTime(.0001,t0+st+d);o.connect(g).connect(AC.destination);o.start(t0+st);o.stop(t0+st+d+.02);};
   if(type==='place'){tone(660,.06,0);tone(990,.08,.05);}
   else if(type==='err')tone(150,.14,0,'square',.05);
@@ -1668,6 +1672,78 @@ function sfx(type){if(muted)return;try{AC=AC||new(window.AudioContext||window.we
   else if(type==='boom'){const n=AC.sampleRate*.18,buf=AC.createBuffer(1,n,AC.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
     const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();f.type='lowpass';f.frequency.value=700;g.gain.value=.12;s.buffer=buf;s.connect(f).connect(g).connect(AC.destination);s.start();}
   else if(type==='win')[523,659,784,1047].forEach((f,i)=>tone(f,.16,i*.09,'square',.04));}catch(e){}}
+
+/* ---------------- background music: a small chiptune band played live with Web Audio, one tune per era ---------------- */
+const SND={music:true,sfx:true,vol:.5};try{Object.assign(SND,JSON.parse(localStorage.getItem('dotcity.sound')||'{}'));}catch(e){}
+function saveSnd(){try{localStorage.setItem('dotcity.sound',JSON.stringify(SND));}catch(e){}}
+const mtof=m=>440*2**((m-69)/12);
+function rng32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+// each era: tempo, scale (semitones), root note, steps per bar (8ths), chord degrees per bar, melody density/range, instruments
+const SONGS=[
+  {name:'석기',bpm:74,root:50,scale:[0,3,5,7,10],bar:8,prog:[0,0,3,4],dens:.38,lo:5,hi:12,lead:{w:'triangle',v:.055,a:.05,vib:.012},
+    bass:(p,c,t,d)=>{if(p===0)B(c-5,t,d*7,{w:'sine',v:.08,a:.25,r:.5});},
+    drum:(p,t,n)=>{if(p===0||p===3||p===6)tom(t,p===0?92:118,n?.05:.1);if(!n&&p%2)shk(t,.012);}},
+  {name:'청동기',bpm:84,root:55,scale:[0,2,4,7,9],bar:8,prog:[0,3,4,0],dens:.45,lo:5,hi:12,lead:{w:'triangle',v:.05,a:.02,vib:.008},echo:{w:'square',v:.012,pluck:.25},
+    bass:(p,c,t,d)=>{if(p===0)B(c-5,t,d*3,{w:'triangle',v:.07});if(p===4)B(c-2,t,d*3,{w:'triangle',v:.06});},
+    drum:(p,t,n)=>{if(p===0||p===4)tom(t,p?130:96,n?.05:.09);if(!n&&(p===2||p===6))shk(t,.016);}},
+  {name:'왕조',bpm:66,root:52,scale:[0,2,5,7,9],bar:6,prog:[0,0,3,2],dens:.5,lo:5,hi:12,lead:{w:'triangle',v:.06,pluck:.55,bend:.985},long:{w:'sawtooth',v:.018,a:.12,vib:.02,lp:1},
+    bass:(p,c,t,d)=>{if(p===0)B(c-5,t,d*5,{w:'triangle',v:.06,pluck:1.6});},
+    drum:(p,t,n)=>{if(p===0)dung(t,n?.06:.11);else if(!n&&(p===3))dung(t,.06);else if(!n&&(p===2||p===5))tak(t,.03);}},
+  {name:'근대',bpm:100,root:53,scale:[0,2,4,5,7,9,11],bar:8,prog:[0,3,4,0,5,3,4,4],dens:.5,lo:7,hi:16,lead:{w:'square',v:.03,a:.01,dbl:12},
+    bass:(p,c,t,d)=>{if(p%2===0)B(p%4?c-3:c-7,t,d*1.6,{w:'triangle',v:.075});},
+    drum:(p,t,n)=>{if(n){if(p===0)kick(t,.06);return;}if(p===0||p===4)kick(t,.09);if(p===2||p===6)snare(t,.05);if(p===7)snare(t,.025);}},
+  {name:'현대',bpm:104,root:57,scale:[0,2,4,7,9,11],bar:8,prog:[0,4,3,5],dens:.52,lo:6,hi:14,lead:{w:'sine',v:.06,pluck:.5,dbl:12,dv:.015},pad:{w:'sawtooth',v:.012,det:9},
+    bass:(p,c,t,d)=>{if(p===0||p===3||p===6)B(c-6,t,d*1.3,{w:'square',v:.035,pluck:.35});},
+    drum:(p,t,n)=>{if(p===0||p===5)kick(t,n?.05:.09);if(!n){if(p===2||p===6)snare(t,.04);hat(t,p%2?.012:.02);}}},
+  {name:'미래',bpm:86,root:48,scale:[0,2,4,6,7,9,11],bar:8,prog:[0,1,5,4],dens:.32,lo:7,hi:16,lead:{w:'sine',v:.05,a:.06,vib:.01},pad:{w:'sawtooth',v:.014,det:14,slow:1},arp:1,
+    bass:(p,c,t,d)=>{if(p===0)B(c-7,t,d*6,{w:'sine',v:.09,a:.08,r:.6});},
+    drum:(p,t,n)=>{if(!n&&p===4)kick(t,.05);if(!n&&p%2)hat(t,.008);}}];
+let mBus=null,mLP=null,mNoise=null,mSong=null,mEra=-1,mStep=0,mNext=0,mLoop=0;
+function audioCtx(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
+function deg2m(S,d){const n=S.scale.length,o=Math.floor(d/n);return S.root+S.scale[((d%n)+n)%n]+12*o;}
+function note(t,f,dur,o){const a=AC,os=a.createOscillator(),g=a.createGain(),v=o.v||.05;os.type=o.w||'triangle';os.frequency.setValueAtTime(f,t);if(o.det)os.detune.value=o.det;
+  if(o.bend)os.frequency.exponentialRampToValueAtTime(f*o.bend,t+dur);
+  if(o.vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=5;lg.gain.value=f*o.vib;l.connect(lg).connect(os.frequency);l.start(t+Math.min(.2,dur*.4));l.stop(t+dur+.4);}
+  let end;if(o.pluck){g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+o.pluck);end=t+o.pluck;}
+  else{const at=o.a??.015,r=o.r??.15;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+at);g.gain.setValueAtTime(v,t+Math.max(at,dur));g.gain.linearRampToValueAtTime(0,t+Math.max(at,dur)+r);end=t+Math.max(at,dur)+r;}
+  os.connect(g).connect(mBus);os.start(t);os.stop(end+.05);}
+function B(d,t,dur,o){note(t,mtof(deg2m(mSong,d)),dur,o);}
+function noiseHit(t,dur,v,type,freq){if(!mNoise){const n=AC.sampleRate,b=AC.createBuffer(1,n,n),c=b.getChannelData(0);for(let i=0;i<n;i++)c[i]=Math.random()*2-1;mNoise=b;}
+  const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=mNoise;f.type=type;f.frequency.value=freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f).connect(g).connect(mBus);s.start(t,Math.random()*.5);s.stop(t+dur+.02);}
+function drumTone(t,f0,f1,dur,v){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(mBus);o.start(t);o.stop(t+dur+.02);}
+const kick=(t,v)=>drumTone(t,120,42,.22,v),tom=(t,f,v)=>drumTone(t,f,f*.6,.3,v),snare=(t,v)=>{noiseHit(t,.13,v,'bandpass',1900);drumTone(t,200,150,.06,v*.6);},
+  hat=(t,v)=>noiseHit(t,.04,v,'highpass',7500),shk=(t,v)=>noiseHit(t,.07,v,'highpass',5200),dung=(t,v)=>{drumTone(t,85,55,.4,v);noiseHit(t,.08,v*.4,'lowpass',600);},tak=(t,v)=>noiseHit(t,.05,v,'bandpass',2600);
+// melody: four-bar phrases built from a seeded random walk that lands on chord tones on strong beats; tune = A A' B A
+function phrase(S,r,bar0){const ev=[],n=S.scale.length;let prev=S.lo+((S.hi-S.lo)>>1);
+  for(let b=0;b<4;b++){const c=S.prog[(bar0+b)%S.prog.length];for(let p=0;p<S.bar;p++){const strong=p%(S.bar/2)===0,last=b===3&&p===0;
+      if(!last&&r()>S.dens*(strong?1.5:.85)){ev.push(null);continue;}
+      let d=strong?c+n*Math.ceil((prev-c)/n)+[0,2,4][(r()*3)|0]%n:prev+[-2,-1,-1,1,1,2][(r()*6)|0];if(last)d=c+n*Math.round((prev-c)/n);
+      while(d<S.lo)d+=n;while(d>S.hi)d-=n;prev=d;ev.push({d,len:last?S.bar-1:1+((r()*(strong?3:2))|0)});}}
+  return ev;}
+function newTune(e,loop){const S=SONGS[e],r=rng32(e*7919+loop*104729+1),A=phrase(S,r,0),A2=A.slice(0,S.bar*3).concat(phrase(S,r,0).slice(S.bar*3)),Bp=phrase(S,r,4);
+  return Object.assign({},S,{mel:A.concat(A2,Bp,A)});}
+function musicTick(){if(!AC||!W)return;const want=SND.music&&!muted&&!document.hidden&&AC.state==='running';
+  if(!mBus){mLP=AC.createBiquadFilter();mLP.type='lowpass';mLP.frequency.value=4000;mBus=AC.createGain();mBus.gain.value=0;mBus.connect(mLP).connect(AC.destination);}
+  const tgt=want?SND.vol*.9*(1-.25*nightF):0;mBus.gain.setTargetAtTime(tgt,AC.currentTime,want?.8:.25);mLP.frequency.setTargetAtTime(1100+3200*(1-nightF),AC.currentTime,1);
+  if(!want){mNext=0;return;}
+  if(mNext<AC.currentTime)mNext=AC.currentTime+.08;
+  scheduleMusic(AC.currentTime+.35);}
+function scheduleMusic(until){while(mNext<until){const S=mSong,L=S?S.mel.length:0;
+    if(!S||mStep%(S?S.bar:8)===0&&W.era!==mEra){mEra=W.era;mStep=0;mLoop=0;mSong=newTune(mEra,0);continue;}
+    if(mStep>=L){mStep=0;mLoop++;mSong=newTune(mEra,mLoop);continue;}
+    const p=mStep%S.bar,bar=Math.floor(mStep/S.bar),c=S.prog[bar%S.prog.length],sd=60/S.bpm/2*(1+.12*nightF),t=mNext,night=nightF>.5,ev=S.mel[mStep];
+    S.drum(p,t,night);S.bass(p,c,t,sd);
+    if(S.pad&&p===0)for(const k of[0,2,4])note(t,mtof(deg2m(S,c+k)),sd*(S.bar-.5),{w:S.pad.w,v:S.pad.v,det:(k-2)*S.pad.det,a:S.pad.slow?sd*3:.2,r:.6});
+    if(S.arp&&!night)note(t,mtof(deg2m(S,c+[0,2,4,7][p%4]+S.scale.length)),sd*.8,{w:'triangle',v:.012,pluck:sd*.9});
+    if(ev&&!(night&&Math.random()<.35)){const f=mtof(deg2m(S,ev.d)),dur=sd*ev.len;note(t,f,dur,S.lead);if(S.lead.dbl)note(t,f*2,dur,Object.assign({},S.lead,{v:S.lead.dv||S.lead.v*.3}));
+      if(S.echo)note(t+sd*.5,f,sd,S.echo);if(S.long&&ev.len>=2)note(t,f,dur,S.long);}
+    mStep++;mNext+=sd;}}
+setInterval(musicTick,120);
+['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,()=>{try{const a=audioCtx();if(a.state==='suspended'&&!document.hidden)a.resume();}catch(e){}},{passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume();}catch(e){}});
+function paintSndMenu(){$('#mMusic').innerHTML=`배경 음악 <small>${SND.music?'켜짐':'꺼짐'}</small>`;$('#mSfx').innerHTML=`효과음 <small>${SND.sfx?'켜짐':'꺼짐'}</small>`;
+  $('#mMusic').classList.toggle('primary',SND.music);$('#mSfx').classList.toggle('primary',SND.sfx);$('#mVol').value=Math.round(SND.vol*100);}
 
 /* ---------------- cars ---------------- */
 const DIRS=[[1,0],[0,1],[-1,0],[0,-1]];
@@ -2000,6 +2076,9 @@ function buildUI(){
     b.addEventListener('click',()=>{setSpeed(n);sfx('click');});sp.appendChild(b);});
   $('#dayBtn').addEventListener('click',()=>{dayMode=dayMode==='auto'?'day':dayMode==='day'?'night':'auto';if(dayMode==='day')W.tod=11;if(dayMode==='night')W.tod=22;paintDayBtn();sfx('click');toast(dayMode==='auto'?'시간이 흐릅니다.':dayMode==='day'?'한낮으로 고정했어요.':'밤으로 고정했어요.','info');});
   $('#sndBtn').addEventListener('click',()=>{muted=!muted;paintSnd();sfx('click');});
+  $('#mMusic').addEventListener('click',()=>{SND.music=!SND.music;saveSnd();paintSndMenu();sfx('click');});
+  $('#mSfx').addEventListener('click',()=>{SND.sfx=!SND.sfx;saveSnd();paintSndMenu();sfx('click');});
+  $('#mVol').addEventListener('input',e=>{SND.vol=e.target.value/100;saveSnd();});paintSndMenu();
   $('#menuBtn').innerHTML=svg('menu',2);$('#menuBtn').addEventListener('click',openMenu);
   $('#taxDn').addEventListener('click',()=>{W.tax=clamp(W.tax-1,0,20);recompute();updateHud(true);sfx('click');});
   $('#taxUp').addEventListener('click',()=>{W.tax=clamp(W.tax+1,0,20);recompute();updateHud(true);sfx('click');});
