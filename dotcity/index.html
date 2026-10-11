@@ -325,7 +325,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
     </div>
     <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
-    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button></div>
+    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button></div>
     <h3 class="msub" id="sndHead">소리 <small>위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요</small></h3>
     <div class="sndrow"><button class="btn" id="mMusic"></button><button class="btn" id="mSfx"></button>
       <label class="vol">음악 크기<input type="range" id="mVol" min="0" max="100" step="5"></label></div>
@@ -2291,7 +2291,7 @@ function buildUI(){
   $('#mResume').addEventListener('click',closeMenu);
   let armed=null;const arm=(btn,fn)=>btn.addEventListener('click',()=>{if(armed!==btn){if(armed){armed.classList.remove('danger');armed.firstChild.textContent=armed.dataset.t;}armed=btn;btn.dataset.t=btn.firstChild.textContent;btn.classList.add('danger');btn.firstChild.textContent=btn.dataset.warn||'한 번 더 누르면 지금 도시를 지웁니다 ';return;}
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
-  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>newGame('era'+b.dataset.era)));
+  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>b.dataset.test?airTest(+b.dataset.test):newGame('era'+b.dataset.era)));
   $('#emGo').addEventListener('click',closeEra);
   $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&goalsDone()&&!W.wb){setTool(wt.id);sfx('click');}else{goalsOpen=true;selected=null;$('#info').hidden=false;renderGoals();sfx('click');}});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
@@ -2494,6 +2494,14 @@ function openShop(){$('#shop').hidden=false;renderShop();const iap=window.DotIAP
 function closeShop(){$('#shop').hidden=true;}
 function buyPack(id){const iap=window.DotIAP;if(!iap||shopBusy)return;shopBusy=id;renderShop();
   iap.buy(id).then(()=>{shopBusy=false;renderShop();}).catch(e=>{shopBusy=false;renderShop();const m=String(e&&(e.message||e.code)||'');if(!/cancel/i.test(m))toast('결제를 마치지 못했어요. 잠시 뒤 다시 해 주세요.','warn');});}
+// test only (the app build strips these buttons): a town of that era with an airport, a plane already on approach
+function airTest(e){newGame('era'+e);closeEra();if(typeof closeMenu==='function')closeMenu();let best=null;
+  for(let r=0;r<20&&!best;r++)for(let dy=-r;dy<=r&&!best;dy++)for(let dx=-r;dx<=r&&!best;dx++){const x=30+dx,y=30+dy;let ok=true;
+    for(let j=-1;j<=3&&ok;j++)for(let i=-1;i<=3;i++){if(!inb(x+i,y+j)){ok=false;break;}const k=W.kind[idx(x+i,y+j)];if(W.terrain[idx(x+i,y+j)]===1||(j>=0&&j<3&&i>=0&&i<3&&k)){ok=false;break;}}if(ok)best=[x,y];}
+  if(!best){toast('공항 자리를 찾지 못했어요.','warn');return;}const[x,y]=best;for(let j=0;j<3;j++)for(let i=0;i<3;i++)clearTile(x+i,y+j);
+  placeRaw(K.AIRPORT,x,y);W.funds+=50000;recompute();cam.s=Math.max(cam.s,4);cam.x=(x+1.5-(y+1.5))*16-60;cam.y=(x+y+3)*8-20;setSpeed(1);
+  planes.clear();planes.set(idx(x,y),{ph:'wait',t:.5,u:0,alt:0,dir:1,e:W.era});updateHud(true);save();
+  toast('✈ 비행기가 곧 내려와요. 착륙 → 잠깐 대기 → 이륙 → 멀리 날아갔다 다시 돌아와요.','good');}
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];boats=[];trains=[];selected=null;$('#info').hidden=true;
   if(mode==='stone'||mode==='era0')starterStone();else if(mode==='modern')starter();else if(mode.startsWith('era'))starterEra(+mode.slice(3));else{W.funds=300;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
