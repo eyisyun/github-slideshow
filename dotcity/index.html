@@ -349,7 +349,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
    ================================================================ */
 const N=64, SLAB=12;
 const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19,ELEV:20,HOSP:21,PORT:22,RAIL:23,DEPOT:24,DECO:25,AIRPORT:26};
-const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2,[K.ELEV]:2,[K.AIRPORT]:3};const sizeOf=k=>SIZE[k]||1;
+const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2,[K.ELEV]:2,[K.AIRPORT]:5};const sizeOf=k=>SIZE[k]||1;
 const LANDMARK={[K.HALL]:1500,[K.STADIUM]:4000,[K.TOWER]:10000};
 // The city evolves through six eras. Each era caps building levels, swaps art, and ends with a wonder.
 const ERAS=[
@@ -942,25 +942,29 @@ function buildSprites(){
     [[-1,0],[0,-1],[1,0],[0,1]].forEach(([ux,uy])=>{const x=cx+ux*(R0+3),y=cy+uy*(R0/2+2)+(uy?0:-2);for(let i=0;i<28;i++)pb.put(x,y-i,col('#9aa3ad',i%4?0:-.2));
       for(let k=-2;k<=2;k++){pb.put(x+k,y-28,[col('#e8eef4'),col('#fffbe0')]);pb.put(x+k,y-29,col('#6d747e'));}lights.push([x,y-28]);});
     SP.stadium=mk(pb,-48,48-H,true,{lights}); }
-  { // airports (3x3): apron + runway ground per tile, terminal and control tower on top. [0] 공항 (era 4), [1] 우주공항 (era 5)
-    const ng=(h,t=0)=>[col(h,t),col(h,.4)];
-    SP.tarmac=[0,1].map(f=>{const out=[];for(let ty=0;ty<3;ty++)for(let tx=0;tx<3;tx++)out.push(G((u,v,x,y)=>{const U=tx+u,V=ty+v;
-      if(V>2.2&&V<2.9){const edge=Math.abs(V-2.25)<.03||Math.abs(V-2.85)<.03;
-        if(edge)return f&&Math.floor(U*6)%2===0?ng('#5fe6f2'):col('#f2f2ee');
-        if(Math.abs(V-2.55)<.03&&Math.floor(U*5)%2===0)return col('#f2f2ee');
-        if((U<.3||U>2.7)&&Math.floor(V*22)%2===0)return col('#f2f2ee');
+  { // airports (5x5): terminal, tower and apron at the back, a taxiway, and a 5-tile runway along the front. [0] 공항, [1] 우주공항
+    const ng=(h,t=0)=>[col(h,t),col(h,.4)],AS=5;
+    SP.tarmac=[0,1].map(f=>{const out=[];for(let ty=0;ty<AS;ty++)for(let tx=0;tx<AS;tx++)out.push(G((u,v,x,y)=>{const U=tx+u,V=ty+v;
+      if(V>4.12&&V<4.92){const edge=Math.abs(V-4.17)<.03||Math.abs(V-4.87)<.03;
+        if(edge)return f&&Math.floor(U*4)%2===0?ng('#5fe6f2'):Math.floor(U*4)%3===0?ng('#f2f2ee'):col('#f2f2ee');
+        if(Math.abs(V-4.52)<.03&&Math.floor(U*4)%2===0)return col('#f2f2ee');
+        if((U<.32||U>4.68)&&Math.floor(V*24)%2===0)return col('#f2f2ee');
+        if((U>.8&&U<1.1||U>3.9&&U<4.2)&&Math.abs(V-4.52)>.12&&Math.abs(V-4.52)<.28)return col('#f2f2ee');   // touchdown marks
         return col(f?'#2c3246':'#3a3e48',hash(x,y,81)<.08?.05:0);}
-      if(Math.abs(V-2.05)<.025)return col(f?'#ff6ad5':'#f2c84a');
+      if(V>3.45&&V<3.95)return Math.abs(V-3.7)<.02?col(f?'#ff6ad5':'#f2c84a'):col(f?'#3a4258':'#4a4e58');                    // taxiway
+      if(Math.abs(V-3.2)<.02||(Math.abs(U-3.5)<.02&&V>1.8&&V<3.45))return col(f?'#ff6ad5':'#f2c84a');
       return col(f?'#d8dee6':'#b8bcc2',((Math.floor(U*4)+Math.floor(V*4))&1)?.03:-.02);}));return out;});
-    SP.airport=[0,1].map(f=>{const H=104,pb=new PB(96,H),cx=48,cy=H-24,at=(U,V)=>[cx+(U-V)*16,cy+(U+V-3)*8];
+    SP.airport=[0,1].map(f=>{const H=150,pb=new PB(160,H),cx=80,cy=H-40,at=(U,V)=>[cx+(U-V)*16,cy+(U+V-5)*8];
       const glass=t=>(a,b,hw,h)=>b>=h-1.2?col(f?'#f6f9fc':'#e8eef2',t):(a|0)%3===0?col(f?'#f6f9fc':'#9aa6b8',t):winC((a|0)+(t?40:0),b|0,6101+f,.7,f?'#5fa8c8':'#4f8fc0');
-      let [x,y]=at(.95,.8);pb.box({cx:x,cy:y,hw:18,h:9,L:glass(0),R:glass(-.22),T:()=>col(f?'#f6f9fc':'#d0d4d8')});
-      if(f){for(let b=0;b<=8;b++){const r=11*Math.sqrt(Math.max(0,1-(b/8.5)**2));pb.ell(x,y-9-b,Math.max(.8,r),dx=>col('#bff6e8',dx<-.4?.2:dx<.2?.05:-.15,215));}pb.ell(x,y-9,11.5,(dx,dy)=>dx*dx+dy*dy>.8?ng('#5fe6f2'):null);}
-      else pb.roof(x,y-9,19,4,'#2f6fc0');
-      [x,y]=at(2.45,.55);pb.cyl(x,y,2.2,24,side(f?'#e6ecf2':'#d8d8d4'),()=>col('#cfd6dc'));pb.cyl(x,y-24,4,3,side('#3e577c'),()=>col('#2a3a5a'));
-      for(let k=-4;k<=4;k++)pb.put(x+k,y-27-(Math.abs(k)>2?0:1),col(f?'#f6f9fc':'#e8eef2'));for(let i=0;i<4;i++)pb.put(x,y-29-i,col('#9aa6b8'));
-      [x,y]=at(2.3,1.55);for(let k=-2;k<=2;k++)pb.put(x+k,y-1,col('#9aa6b8'));
-      return mk(pb,-48,48-H,true,{lights:[[cx-8,cy-10],[x,y-28]],blink:[[at(2.45,.55)[0],at(2.45,.55)[1]-33,'#ff4a4a']]});});
+      for(const U of[1.0,2.3]){const[x,y]=at(U,1.0);pb.box({cx:x,cy:y,hw:18,h:10,L:glass(0),R:glass(-.22),T:()=>col(f?'#f6f9fc':'#d0d4d8')});
+        if(f){for(let b=0;b<=8;b++){const r=11*Math.sqrt(Math.max(0,1-(b/8.5)**2));pb.ell(x,y-10-b,Math.max(.8,r),dx=>col('#bff6e8',dx<-.4?.2:dx<.2?.05:-.15,215));}pb.ell(x,y-10,11.5,(dx,dy)=>dx*dx+dy*dy>.8?ng('#5fe6f2'):null);}
+        else pb.roof(x,y-10,19,4,'#2f6fc0');}
+      for(const U of[1.2,2.5]){const[x,y]=at(U,2.15);for(let k=0;k<9;k++){pb.put(x-1+k,y-3-(k>>1),col('#d0d4d8'));pb.put(x-1+k,y-2-(k>>1),col('#9aa6b8'));}}       // jet bridges
+      let[x,y]=at(4.3,.8);pb.cyl(x,y,2.3,30,side(f?'#e6ecf2':'#d8d8d4'),()=>col('#cfd6dc'));pb.cyl(x,y-30,4.5,3,side('#3e577c'),()=>col('#2a3a5a'));
+      for(let k=-5;k<=5;k++)pb.put(x+k,y-33-(Math.abs(k)>3?0:1),col(f?'#f6f9fc':'#e8eef2'));for(let i=0;i<5;i++)pb.put(x,y-35-i,col('#9aa6b8'));
+      const tw=[x,y-40];[x,y]=at(4.2,2.6);pb.box({cx:x,cy:y,hw:9,h:6,L:()=>col(f?'#c9d2dc':'#a9a49a'),R:()=>col(f?'#c9d2dc':'#a9a49a',-.25),T:()=>col(f?'#e6ecf2':'#8f897d')});  // hangar
+      for(let k=-6;k<=6;k++)pb.put(x+k,y-7-Math.round(Math.sqrt(Math.max(0,36-k*k))/3),col(f?'#f6f9fc':'#c9c3b5'));
+      return mk(pb,-80,80-H,true,{lights:[[at(1,1)[0],at(1,1)[1]-4],[at(2.3,1)[0],at(2.3,1)[1]-4],tw],blink:[[tw[0],tw[1],'#ff4a4a']]});});
     // planes: [style][0 heading +x | 1 heading -x]. Modelled in 3D (s along the body, lateral y, height z) and rasterised
     // with a depth buffer and simple lighting, so the body is round, the wings swept, with engines, tailplane and fin.
     SP.plane=[0,1].map(f=>[1,-1].map(sg=>{const W0=76,H0=46,CX=38,CY=32,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9),L=1.35,R=.11,RZ=3.1;
@@ -971,6 +975,21 @@ function buildSprites(){
       const lit=(ny,nz,nx=0)=>{const v=nx*LG[0]*sg+ny*LG[1]+nz*LG[2];return Math.max(-.32,Math.min(.16,(v-.3)*.45));};
       const rAt=s=>s>.36?Math.sqrt(Math.max(0,1-((s-.36)/.14)**2)):s<-.26?Math.max(.18,1-(-.26-s)/.24*.82):1;
       const zcAt=s=>RZ+2+(s<-.26?(-.26-s)/.24*2.2:0);
+      if(f){   // 우주 비행기: a shuttle-like spaceplane - black heat-shield nose and belly, a big delta wing, one tall fin, glowing engine bells
+        const zc=s=>RZ+1.6+(s<-.3?(-.3-s)/.2*.6:0),rr=s=>s>.3?Math.sqrt(Math.max(0,1-((s-.3)/.2)**2)):s<-.42?.85:1;
+        for(let a=0;a<=160;a++){const t=a/80-1,ta=Math.abs(t),le=.3-.72*ta,te=-.46;if(le<=te)continue;               // delta wing
+          for(let b=0;b<=30;b++){const s=te+(le-te)*b/30,edgeLE=b>27;plot(s,t*.62,RZ-.2+ta*.6,edgeLE?'#22262e':'#f4f7fa',edgeLE?0:ta>.92?-.1:.05);}}
+        for(let a=0;a<=300;a++){const s=-.48+a/300*.98,r=rr(s),z0=zc(s);for(let q=0;q<48;q++){const th=q/48*6.283,ny=Math.cos(th),nz=Math.sin(th),y=ny*R*1.05*r,z=z0+nz*RZ*1.05*r;
+          let cc=nz<-.2||s>.43?'#22262e':'#f4f7fa',sh=lit(ny,nz,s>.3?(s-.3)/.2:0);
+          if(Math.abs(nz+.05)<.1&&s>-.4&&s<.3){cc=null;plot(s,y,z,[col('#5fe6f2'),col('#5fe6f2',.4)]);continue;}
+          if(s>.33&&s<.4&&nz>.35&&nz<.85)cc='#1e2a40';
+          if(Math.abs(nz-.45)<.1&&s>-.25&&s<.22&&(a>>1)%3===0){plot(s,y,z,[col('#2a3a5a'),col('#9fdcff')]);continue;}
+          plot(s,y,z,cc,sh);}}
+        for(let a=0;a<=34;a++){const h=a/34,le=-.24-.2*h,te=-.48-.03*h;for(let b=0;b<=16;b++){const s=te+(le-te)*b/16;plot(s,0,zc(s)+RZ+h*9,b>13?'#22262e':'#f4f7fa',b<2?-.2:.04);}}
+        for(let a=0;a<=12;a++)plot(-.38-.06*a/12,0,zc(-.4)+RZ+5+a*.2,[col('#ff6ad5'),col('#ff6ad5',.35)]);                       // pink fin stripe
+        for(const[y,z]of[[0,RZ+3.4],[-.05,RZ+1.6],[.05,RZ+1.6]])for(let q=0;q<20;q++){const th=q/20*6.283;plot(-.5,y+Math.cos(th)*.035,z+Math.sin(th)*1.1,q%5?'#3a3f4a':[col('#5fe6f2'),col('#5fe6f2',.5)]);
+          plot(-.505,y,z,[col('#bff6ff'),col('#ffffff')]);}
+      }else{
       // wings (swept, slight dihedral) and tailplane
       const wing=(sLe0,sTe0,sweep,span,z0,dih)=>{for(let a=0;a<=140;a++){const t=a/70-1,ta=Math.abs(t),le=sLe0-sweep*ta,te=sTe0-sweep*.55*ta-.02*ta;
         for(let b=0;b<=26;b++){const s=te+(le-te)*b/26;plot(s,t*span,z0+ta*dih,C.body,b<3?-.18:ta>.94?-.06:.06);}}};
@@ -987,6 +1006,7 @@ function buildSprites(){
         plot(s,y,z,cc,typeof cc==='string'?sh:0);}}
       // fin
       for(let a=0;a<=30;a++){const h=a/30,le=-.31-.15*h,te=-.5-.02*h;for(let b=0;b<=16;b++){const s=te+(le-te)*b/16;plot(s,0,zcAt(s)+RZ*.5+h*8,C.fin,b<2?-.2:.04);}}
+      }
       // a thin dark outline keeps the silhouette crisp
       const solid=k=>pb.d[k]>>>24;const out=[];for(let y=0;y<H0;y++)for(let x=0;x<W0;x++){const k=y*W0+x;if(solid(k))continue;
         if((x>0&&solid(k-1))||(x<W0-1&&solid(k+1))||(y>0&&solid(k-W0))||(y<H0-1&&solid(k+W0)))out.push(k);}
@@ -1504,7 +1524,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.HOSP:hosp++;stamp(w.health,cx,cy,10,1.4);break;
       case K.PORT:ports++;stamp(tmpD,cx,cy,8,.09);break;
       case K.RAIL:rails++;break;
-      case K.AIRPORT:if(w.anchor[i]===i){airports++;apts.push(i);stamp(tmpG,x+1.5,y+1.5,14,.2);stamp(w.pol,x+1.5,y+2.6,4,.12);}break;
+      case K.AIRPORT:if(w.anchor[i]===i){airports++;apts.push(i);stamp(tmpG,x+2.5,y+2.5,15,.2);stamp(w.pol,x+2.5,y+4.5,4,.12);}break;
       case K.DECO:{const it=DECO[L]||DECO[0];stamp(tmpC,cx,cy,it.prem?6:3,it.prem?.14:.05);break;}
       case K.DEPOT:depots++;stamp(tmpD,cx,cy,6,.06);break;
       case K.FIRE:fires++;stamp(w.fcov,cx,cy,12,1.4);break;
@@ -1674,7 +1694,7 @@ const TOOLS=[
   {id:'coal',names:['','','','증기 발전소','화력 발전소','핵융합 발전소'],era:3,key:'7',cost:3000,kind:K.COAL,size:2,hl:'build',desc:'전력 1,600을 만들지만 오염이 심합니다. 2×2.'},
   {id:'hall',name:'시청',era:4,key:'H',cost:4000,kind:K.HALL,size:2,hl:'build',landmark:1500,desc:'도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. 2×2.'},
   {id:'stadium',name:'경기장',era:4,key:'J',cost:12000,kind:K.STADIUM,size:3,hl:'build',landmark:4000,desc:'도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. 3×3.'},
-  {id:'airport',names:['','','','','공항','우주공항'],era:4,key:'',cost:7000,prem:{4:3,5:3},kind:K.AIRPORT,size:3,popReq:3000,hl:'build',desc:'★ 특별 건물. 3×3. 비행기가 뜨고 내리고, 관광객 덕분에 상업·주거 수요와 주변 땅값이 크게 올라요. 활주로 근처는 조금 시끄러워요. 인구 3,000명부터.'},
+  {id:'airport',names:['','','','','공항','우주공항'],era:4,key:'',cost:7000,prem:{4:3,5:3},kind:K.AIRPORT,size:5,popReq:3000,hl:'build',desc:'★ 특별 건물. 5×5(긴 활주로). 비행기가 뜨고 내리고, 관광객 덕분에 상업·주거 수요와 주변 땅값이 크게 올라요. 활주로 근처는 조금 시끄러워요. 인구 3,000명부터.'},
   {id:'tower',name:'전파탑',era:4,key:'K',cost:20000,kind:K.TOWER,hl:'build',landmark:10000,desc:'대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.'},
   {id:'w0',name:'고인돌',wonder:0,era:0,until:0,key:'Y',fixed:3000,kind:K.DOLMEN,size:2,hl:'build',desc:'부족의 힘을 모아 거대한 돌을 세웁니다. 공사는 현실 시간 2시간(꺼 둬도 진행)이고, 완공되면 청동기시대가 열려요. 2×2.'},
   {id:'w1',name:'고분',wonder:1,era:1,until:1,key:'Y',fixed:8000,kind:K.MOUND,size:2,hl:'build',desc:'왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 공사는 현실 시간 6시간(꺼 둬도 진행)이고, 완공되면 왕조시대가 열려요. 2×2.'},
@@ -1962,12 +1982,17 @@ function stepPlanes(dt){const list=W.st.apts||[];for(const a of[...planes.keys()
   for(const a of list){let p=planes.get(a);if(!p){p={ph:'wait',t:2+Math.random()*4,u:0,alt:0,dir:1,e:W.era};planes.set(a,p);}
     p.t-=dt;
     if(p.ph==='wait'&&p.t<=0){p.ph='land';p.u=-7;p.dir=1;p.e=W.era;}
-    else if(p.ph==='land'){const v=p.u<.6?1.6:Math.max(.25,1.6-(p.u-.6)*1.0);p.u+=v*dt;p.alt=Math.max(0,(.6-p.u)*7);if(p.u>=2.0){p.u=2.0;p.ph='park';p.t=4+Math.random()*3;}}
+    else if(p.ph==='land'){const v=p.u<.8?1.8:Math.max(.3,1.8-(p.u-.8)*.55);p.u+=v*dt;p.alt=Math.max(0,(.8-p.u)*7);if(p.u>=3.7){p.u=3.7;p.ph='park';p.t=4+Math.random()*3;}}
     else if(p.ph==='park'&&p.t<=0){p.ph='takeoff';p.dir=-1;p.v=.2;}
-    else if(p.ph==='takeoff'){p.v=Math.min(2.4,p.v+dt*.9);p.u-=p.v*dt;p.alt=Math.max(0,(1.3-p.u)*8);if(p.u<-8){p.ph='wait';p.t=7+Math.random()*8;}}}}
-function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,gx=ax+p.u,gy=ay+2.55,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
+    else if(p.ph==='takeoff'){p.v=Math.min(2.8,p.v+dt*(p.e>=5?1.4:.9));p.u-=p.v*dt;p.alt=Math.max(0,(2.0-p.u)*(p.e>=5?11:8));if(p.u<-8){p.ph='wait';p.t=7+Math.random()*8;}}}}
+function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,gx=ax+p.u,gy=ay+4.52,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
     const sp=SP.plane[p.e>=5?1:0][p.dir>0?0:1];    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
     {const ga=c.globalAlpha;c.globalAlpha=.28*(1-Math.min(.8,alt/70))*(1-nightF*.7);c.drawImage(sp.sil,sx+sp.ox+Math.round(alt*.35),sy+sp.oy+3+Math.round(alt*.15));c.globalAlpha=ga;}   // its shadow on the ground
+    if(p.e>=5&&p.ph==='takeoff'&&p.v>.6){const nx=sp.ox+sp.nose[0],ny=sp.oy+sp.nose[1],tx=sx-nx*.92,ty=sy-alt-ny*.92-8,dx=-p.dir*2,dy=-p.dir;   // rocket exhaust
+      const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.55;c.drawImage(SP.glow.c,Math.round(tx+dx*3)-15,Math.round(ty+dy*3)-7);
+        const fl=10+Math.random()*4;for(let k=0;k<fl;k++){c.globalAlpha=(1-k/fl)*(.75+.25*Math.random());c.fillStyle=k<2?'#ffffff':k<5?'#bff6ff':k<8?'#5fe6f2':'#ff6ad5';
+        const w=k<2?3:k<6?4:3;c.fillRect(Math.round(tx+dx*k)-(w>>1),Math.round(ty+dy*k)-1,w,k<7?3:2);}c.globalCompositeOperation='source-over';c.globalAlpha=ga;
+      if(SPEEDS[speed]&&Math.random()<.5&&parts.length<700)parts.push({x:tx+dx*7+X0,y:ty+dy*7+Y0,vx:dx*4,vy:-2,life:0,max:1.4,sz:2,kind:'steam',g:0});}
     drawSpr(c,sp,sx,sy-alt);if((now/400|0)%2){c.fillStyle='#ff4a4a';c.fillRect(sx+sp.ox+sp.nose[0],sy-alt+sp.oy+sp.nose[1],1,1);}
     if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}}}
 function drawBoat(c,b){const gx=b.x+.5+DIRS[b.d][0]*b.t,gy=b.y+.5+DIRS[b.d][1]*b.t,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0+Math.sin(now/600+b.ph)*.6),sp=SP.boat[Math.min(5,b.e)][b.d&1];
@@ -2053,7 +2078,7 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
-  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i];return SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][((i/N|0)-(a/N|0))*3+(i%N-a%N)]||SP.plaza;}if(k===K.DECO){if(w.level[i]===3||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
+  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i];return SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][((i/N|0)-(a/N|0))*5+(i%N-a%N)]||SP.plaza;}if(k===K.DECO){if(w.level[i]===3||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
   if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(k===K.SCHOOL){const a=w.anchor[i];return SP.field[((i/N|0)-(a/N|0))*2+(i%N-a%N)]||SP.plaza;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
@@ -2497,9 +2522,9 @@ function buyPack(id){const iap=window.DotIAP;if(!iap||shopBusy)return;shopBusy=i
 // test only (the app build strips these buttons): a town of that era with an airport, a plane already on approach
 function airTest(e){newGame('era'+e);closeEra();if(typeof closeMenu==='function')closeMenu();let best=null;
   for(let r=0;r<20&&!best;r++)for(let dy=-r;dy<=r&&!best;dy++)for(let dx=-r;dx<=r&&!best;dx++){const x=30+dx,y=30+dy;let ok=true;
-    for(let j=-1;j<=3&&ok;j++)for(let i=-1;i<=3;i++){if(!inb(x+i,y+j)){ok=false;break;}const k=W.kind[idx(x+i,y+j)];if(W.terrain[idx(x+i,y+j)]===1||(j>=0&&j<3&&i>=0&&i<3&&k)){ok=false;break;}}if(ok)best=[x,y];}
-  if(!best){toast('공항 자리를 찾지 못했어요.','warn');return;}const[x,y]=best;for(let j=0;j<3;j++)for(let i=0;i<3;i++)clearTile(x+i,y+j);
-  placeRaw(K.AIRPORT,x,y);W.funds+=50000;recompute();cam.s=Math.max(cam.s,4);cam.x=(x+1.5-(y+1.5))*16-60;cam.y=(x+y+3)*8-20;setSpeed(1);
+    for(let j=-1;j<=5&&ok;j++)for(let i=-1;i<=5;i++){if(!inb(x+i,y+j)){ok=false;break;}const k=W.kind[idx(x+i,y+j)];if(W.terrain[idx(x+i,y+j)]===1||(j>=0&&j<5&&i>=0&&i<5&&k)){ok=false;break;}}if(ok)best=[x,y];}
+  if(!best){toast('공항 자리를 찾지 못했어요.','warn');return;}const[x,y]=best;for(let j=0;j<5;j++)for(let i=0;i<5;i++)clearTile(x+i,y+j);
+  placeRaw(K.AIRPORT,x,y);W.funds+=50000;recompute();cam.s=Math.max(cam.s,4);cam.x=(x-y)*16-70;cam.y=(x+y+5)*8-10;setSpeed(1);
   planes.clear();planes.set(idx(x,y),{ph:'wait',t:.5,u:0,alt:0,dir:1,e:W.era});updateHud(true);save();
   toast('✈ 비행기가 곧 내려와요. 착륙 → 잠깐 대기 → 이륙 → 멀리 날아갔다 다시 돌아와요.','good');}
 function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];boats=[];trains=[];selected=null;$('#info').hidden=true;
