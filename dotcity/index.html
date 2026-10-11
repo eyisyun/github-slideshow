@@ -1554,9 +1554,9 @@ const TOOLS=[
   {id:'well',name:'우물',era:1,until:2,key:'6',cost:400,kind:K.WELL,hl:'build',desc:'반경 7칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.'},
   {id:'police',names:['','','포도청','경찰서','경찰서','치안 센터'],era:2,key:'5',cost:500,kind:K.POLICE,hl:'build',desc:'반경 12칸의 범죄를 줄입니다.'},
   {id:'hosp',names:['약초 움막','약초방','혜민서','적십자 병원','종합병원','메디컬 센터'],key:'G',cost:400,kind:K.HOSP,hl:'build',desc:'반경 10칸 주민의 건강을 돌봐요. 3단계 이상 큰 집은 건강해야 올라가요. 오염이 심하면 건강이 나빠져요.'},
-  {id:'port',names:['나루터','나루터','포구','항구','여객 터미널','수상 정거장'],key:'B',cost:300,kind:K.PORT,hl:'build',desc:'물가(물과 맞닿은 땅)에만 지을 수 있어요. 배가 오가고, 반경 8칸 땅값과 상업 수요가 올라가요.'},
+  {id:'port',names:['나루터','나루터','포구','항구','여객 터미널','수상 정거장'],key:'B',cost:300,kind:K.PORT,hl:'build',desc:'물가(물과 맞닿은 땅)에만 지을 수 있어요. 배가 한 척씩 오가고, 반경 8칸 땅값과 상업 수요가 올라가요.'},
   {id:'rail',names:['','','','철길','철길','자기부상 궤도'],era:3,key:'M',cost:30,drag:'line',hl:'road',desc:'기차가 다니는 길. 곧은 도로를 가로질러 건널목을 만들 수 있어요(철길끼리 나란히는 안 돼요). 물 위에는 깔 수 없어요.'},
-  {id:'depot',names:['','','','간이역','전철역','자기부상역'],era:3,key:'N',cost:800,kind:K.DEPOT,hl:'build',desc:'철길 바로 옆에 지어요. 역마다 기차 2대가 다니고, 반경 9칸은 차가 덜 막혀요.'},
+  {id:'depot',names:['','','','간이역','전철역','자기부상역'],era:3,key:'N',cost:800,kind:K.DEPOT,hl:'build',desc:'철길 바로 옆에 지어요. 역마다 기차 1대가 다니고, 반경 9칸은 차가 덜 막혀요.'},
   {id:'fire',name:'소방서',era:3,key:'8',cost:600,kind:K.FIRE,hl:'build',desc:'반경 12칸의 불을 금방 끄고 번지지 않게 막습니다.'},
   {id:'school',names:['','','서당','학교','학교','미래 학교'],era:2,key:'9',cost:1500,kind:K.SCHOOL,size:2,hl:'build',desc:'반경 14칸 주민을 가르쳐 땅값을 올리고 범죄를 줄입니다. 현대의 고층 건물엔 꼭 필요해요. 2×2.'},
   {id:'wind',name:'풍력 발전기',era:4,key:'6',cost:350,kind:K.WIND,hl:'build',desc:'깨끗한 전력 60.'},
@@ -1681,8 +1681,9 @@ function roadDrawMask(x,y){let m=roadMask(x,y);
   const run=(x,y,dx,dy)=>{let n=1;for(let k=1;k<=6&&isRoad(x+dx*k,y+dy*k);k++)n++;for(let k=1;k<=6&&isRoad(x-dx*k,y-dy*k);k++)n++;return n;};
   const lx=run(x,y,1,0),ly=run(x,y,0,1);let dx=0,dy=0;
   // a side neighbour is a parallel lane only when both tiles are part of long roads running the same way
-  if(ly<=3&&lx>=3)for(const[b,o]of[[2,1],[8,-1]])if((m&b)&&run(x,y+o,1,0)>=3)dy|=b;
-  if(lx<=3&&ly>=3)for(const[b,o]of[[1,1],[4,-1]])if((m&b)&&run(x+o,y,0,1)>=3)dx|=b;
+  // ...and only when the two really sit side by side (part of a 2x2 block), so a staircase / S-bend keeps its link
+  if(ly<=3&&lx>=3)for(const[b,o]of[[2,1],[8,-1]])if((m&b)&&run(x,y+o,1,0)>=3&&(isRoad(x+1,y)&&isRoad(x+1,y+o)||isRoad(x-1,y)&&isRoad(x-1,y+o)))dy|=b;
+  if(lx<=3&&ly>=3)for(const[b,o]of[[1,1],[4,-1]])if((m&b)&&run(x+o,y,0,1)>=3&&(isRoad(x,y+1)&&isRoad(x+o,y+1)||isRoad(x,y-1)&&isRoad(x+o,y-1)))dx|=b;
   if(dy&&!dx)m&=~dy;else if(dx&&!dy)m&=~dx;return m;}
 // bridges: road on water. Height above the water by era; an end that meets the bank ramps down to it.
 const BRIDGE_H=[1,2,5,2,3,4];
@@ -1709,7 +1710,7 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
 
 // boats: sail tile to tile over water (under bridges too), three for each port
 const isWater=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]===1;
-function stepBoats(dt){const S=W.st,target=Math.min(36,(S.ports||0)*3);
+function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boat per port
   if(boats.length<target&&Math.random()<.04){const ps=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.PORT)ps.push(i);
     const p0=ps[(Math.random()*ps.length)|0],px=p0%N,py=p0/N|0,ws=DIRS.map(([dx,dy])=>[px+dx,py+dy]).filter(([x,y])=>isWater(x,y));
     if(ws.length){const[x,y]=ws[(Math.random()*ws.length)|0],opts=[0,1,2,3].filter(d=>isWater(x+DIRS[d][0],y+DIRS[d][1]));
@@ -1721,7 +1722,7 @@ function stepBoats(dt){const S=W.st,target=Math.min(36,(S.ports||0)*3);
       b.d=opts.length?(opts.includes(b.d)&&Math.random()<.8?b.d:opts[(Math.random()*opts.length)|0]):(b.d+2)%4;}}}
 // trains: an engine and coaches following the engine's trail along the rails; they halt at stations
 function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.DEPOT&&DIRS.some(([dx,dy])=>isRail(i%N+dx,(i/N|0)+dy)))ds.push(i);
-  const target=W.era<3?0:Math.min(10,ds.length*2,Math.floor((S.rails||0)/4));
+  const target=W.era<3||(S.rails||0)<2?0:Math.min(12,ds.length);   // one train per station
   if(trains.length<target&&Math.random()<.03){const p0=ds[(Math.random()*ds.length)|0],px=p0%N,py=p0/N|0,rs=DIRS.map(([dx,dy])=>[px+dx,py+dy]).filter(([x,y])=>isRail(x,y));
     if(rs.length){const[x,y]=rs[(Math.random()*rs.length)|0],opts=[0,1,2,3].filter(d=>isRail(x+DIRS[d][0],y+DIRS[d][1]));
       if(opts.length)trains.push({trail:[[x,y]],d:opts[(Math.random()*opts.length)|0],t:0,e:W.era,n:W.era>=4?4:3,sp:W.era>=5?1.5:W.era>=4?1.2:.8,wait:1.5,stop:true});}}
