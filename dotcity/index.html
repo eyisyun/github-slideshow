@@ -1481,7 +1481,7 @@ let W=null;
 const CAP_W=60,CAP_C=1600,CAP_F=8000;
 const POP=[0,6,18,45,110,260],JC=[0,4,12,32,80,190],JI=[0,8,20,40,70];
 function blankWorld(seed){const NN=N*N;return{wb:null,savedAt:0,seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
-  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
+  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),flip:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
   powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),health:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
   st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
@@ -1512,7 +1512,7 @@ const idx=(x,y)=>y*N+x;
 function placeRaw(k,x,y){const w=W;
   const sz=sizeOf(k);if(sz>1){const a=idx(x,y);for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(x+dx,y+dy);w.kind[j]=k;w.anchor[j]=a;w.trees[j]=0;w.level[j]=0;w.fire[j]=0;w.te[j]=w.era;}return;}
   const i=idx(x,y);w.kind[i]=k;w.trees[i]=0;w.level[i]=0;w.build[i]=0;w.anchor[i]=-1;w.te[i]=w.era;w.vari[i]=(Math.random()*256)|0;}
-function clearTile(x,y){const w=W,i=idx(x,y),an=w.anchor[i]>=0?w.anchor[i]:i;delete w.labels[an];
+function clearTile(x,y){const w=W,i=idx(x,y),an=w.anchor[i]>=0?w.anchor[i]:i;delete w.labels[an];w.flip[an]=0;w.flip[i]=0;
   const sz=sizeOf(w.kind[i]);if(w.wb&&w.anchor[i]===w.wb.a)w.wb=null;if(sz>1&&w.anchor[i]>=0){const a=w.anchor[i],ax=a%N,ay=a/N|0;for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){const j=idx(ax+dx,ay+dy);w.kind[j]=0;w.anchor[j]=-1;}return;}
   w.fire[i]=0;w.kind[i]=0;w.level[i]=0;w.build[i]=0;w.trees[i]=0;w.rail[i]=0;}
 
@@ -1708,10 +1708,10 @@ function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCo
 function unb64(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,wb:w.wb,savedAt:Date.now(),lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
   labels:w.labels,wx:w.wx,wxEnd:w.wxEnd,
-  a:{terrain:b64(w.terrain),rail:b64(w.rail),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
+  a:{terrain:b64(w.terrain),rail:b64(w.rail),flip:b64(w.flip),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
 function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('bad save');const w=blankWorld(o.seed);
   for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd'])if(o[k]!=null)w[k]=o[k];
-  for(const k of['terrain','trees','kind','rail','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
+  for(const k of['terrain','trees','kind','rail','flip','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
   if(o.era==null){w.era=4;w.te.fill(4);}
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
 function save(){W.savedAt=Date.now();try{localStorage.setItem(KEY,serialize());}catch(e){}}
@@ -1858,7 +1858,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
       derive(W);if(puffs++<12)dust(x,y,s===0?'#4a8ccb':'#9a8a74');}
     else if(t.id==='rail'){const i=idx(x,y);if(!W.rail[i]){if(W.kind[i]===0)placeRaw(K.RAIL,x,y);W.rail[i]=1;}}
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
-    else{placeRaw(t.kind,x,y);if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
+    else{placeRaw(t.kind,x,y);if(canTurn(t))W.flip[idx(x,y)]=buildFlip;if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
   if(t.wonder!=null){const tt=tiles.find(([x,y])=>W.kind[idx(x,y)]===t.kind)||tiles[0];W.wb={a:W.anchor[idx(tt[0],tt[1])],k:t.kind,start:Date.now(),dur:ERAS[W.era].build*3600000};toast(`${tn(t)} 공사를 시작했어요. ${ERAS[W.era].build}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.`,'good');save();setTool('inspect');}
   recompute();
   if(t.kind>=K.RES&&t.kind<=K.IND){let why='';for(const[x,y]of tiles){const i=idx(x,y);if(W.kind[i]!==t.kind||W.level[i])continue;const b=zoneBlock(t.kind,x,y);
@@ -2097,10 +2097,10 @@ function stepPlanes(dt){const list=W.st.apts||[];for(const a of[...planes.keys()
     else if(p.ph==='land'){const v=p.u<.8?1.8:Math.max(.3,1.8-(p.u-.8)*.55);p.u+=v*dt;p.alt=Math.max(0,(.8-p.u)*7);if(p.u>=3.7){p.u=3.7;p.ph='park';p.t=4+Math.random()*3;}}
     else if(p.ph==='park'&&p.t<=0){p.ph='takeoff';p.dir=-1;p.v=.2;}
     else if(p.ph==='takeoff'){p.v=Math.min(2.8,p.v+dt*(p.e>=5?1.4:.9));p.u-=p.v*dt;p.alt=Math.max(0,(2.0-p.u)*(p.e>=5?11:8));if(p.u<-8){p.ph='wait';p.t=7+Math.random()*8;}}}}
-function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,gx=ax+p.u,gy=ay+4.52,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
-    const sp=SP.plane[p.e>=5?1:0][p.dir>0?0:1];    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
+function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,fa=W.flip[a],gx=fa?ax+4.52:ax+p.u,gy=fa?ay+p.u:ay+4.52,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
+    const sp0=SP.plane[p.e>=5?1:0][p.dir>0?0:1],sp=fa?flipped(sp0):sp0;    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
     {const ga=c.globalAlpha;c.globalAlpha=.28*(1-Math.min(.8,alt/70))*(1-nightF*.7);c.drawImage(sp.sil,sx+sp.ox+Math.round(alt*.35),sy+sp.oy+3+Math.round(alt*.15));c.globalAlpha=ga;}   // its shadow on the ground
-    if(p.e>=5&&p.ph==='takeoff'&&p.v>.6){const nx=sp.ox+sp.nose[0],ny=sp.oy+sp.nose[1],tx=sx-nx*.92,ty=sy-alt-ny*.92-8,dx=-p.dir*2,dy=-p.dir;   // rocket exhaust
+    if(p.e>=5&&p.ph==='takeoff'&&p.v>.6){const nx=sp.ox+sp.nose[0],ny=sp.oy+sp.nose[1],tx=sx-nx*.92,ty=sy-alt-ny*.92-8,dx=fa?p.dir*2:-p.dir*2,dy=-p.dir;   // rocket exhaust
       const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.55;c.drawImage(SP.glow.c,Math.round(tx+dx*3)-15,Math.round(ty+dy*3)-7);
         const fl=10+Math.random()*4;for(let k=0;k<fl;k++){c.globalAlpha=(1-k/fl)*(.75+.25*Math.random());c.fillStyle=k<2?'#ffffff':k<5?'#bff6ff':k<8?'#5fe6f2':'#ff6ad5';
         const w=k<2?3:k<6?4:3;c.fillRect(Math.round(tx+dx*k)-(w>>1),Math.round(ty+dy*k)-1,w,k<7?3:2);}c.globalCompositeOperation='source-over';c.globalAlpha=ga;
@@ -2190,9 +2190,9 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
-  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i];return SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][((i/N|0)-(a/N|0))*5+(i%N-a%N)]||SP.plaza;}if(k===K.DECO){if(w.level[i]===12)return SP.sand[(x*7+y)&1];if(w.level[i]===3||w.level[i]===11||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
+  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i],dx=i%N-a%N,dy=(i/N|0)-(a/N|0),f=w.flip[a],g=SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][f?dx*5+dy:dy*5+dx]||SP.plaza;return f?flipped(g):g;}if(k===K.DECO){if(w.level[i]===12)return SP.sand[(x*7+y)&1];if(w.level[i]===3||w.level[i]===11||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
   if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
-  if(k===K.SCHOOL){const a=w.anchor[i];return SP.field[((i/N|0)-(a/N|0))*2+(i%N-a%N)]||SP.plaza;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
+  if(k===K.SCHOOL){const a=w.anchor[i],dx=i%N-a%N,dy=(i/N|0)-(a/N|0),f=w.flip[a];const g=SP.field[f?dx*2+dy:dy*2+dx]||SP.plaza;return f?flipped(g):g;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
 function heatSpr(i){const w=W;if(overlay==='power'){const k=w.kind[i];if(!k||k===K.ROAD&&!w.powered[i]&&true)return k===K.ROAD&&w.powered[i]?SP.hl.pow:null;return w.powered[i]||powNeed(i)===0?SP.hl.pow:SP.hl.nopow;}
   if(overlay==='traffic'){if(w.kind[i]!==K.ROAD)return w.terrain[i]===1?null:SP.dim;return SP.ramp.traffic[Math.min(7,Math.floor(w.traf[i]/1.25*8))];}
@@ -2256,26 +2256,26 @@ function render(){
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const sw=Math.round(Math.sin(now/1700+x*.9+y*.45)*.75);for(const[u,v,s]of pts){swayDX=s&1?sw:0;drawSpr(c,SP.tree[s],sx+(u-v)*16+swayDX,sy+(u+v)*8);}swayDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
-      if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=bigSprite(ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);}}
+      if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOld:SP.cons;drawSpr(c,sp,sx,sy);}
-      else if(L>0){sp=bldSprite(i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      else if(L>0){sp=FL(bldSprite(i),i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
-    else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
-    else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
-    else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
+    else if(k===K.PARK)drawSpr(c,FL(parkSprite(i),i),sx,sy);
+    else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
+    else if(k===K.WELL)drawSpr(c,FL(SP.well,i),sx,sy);
     else if(k===K.DECO){const sp=decoSprite(i),oy=sp.gp?8:0;drawSpr(c,sp,sx,sy+oy);extras(c,sp,sx,sy+oy,blinkOn);emit(sp,sx,sy+oy);}
-    else if(k===K.DEPOT){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
-    else if(k===K.PORT){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
-    else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
+    else if(k===K.DEPOT){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
+    else if(k===K.PORT){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
+    else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
-    else if(k===K.TOWER){drawSpr(c,SP.tower,sx,sy);extras(c,SP.tower,sx,sy,blinkOn);}
-    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=civSprite(k,w.te[a]);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
+    else if(k===K.TOWER){const sp=FL(SP.tower,i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
+    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;castSh=false;
   if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=decoView(L,decoRot);
     if(sp){c.globalAlpha=.75;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0+(sp.gp?8:0));c.globalAlpha=1;}ghost=null;}
-  if(ghost){const[x,y]=ghost,sp=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null;
+  if(ghost){const[x,y]=ghost,s0=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null,sp=s0&&buildFlip&&canTurn(tl)?flipped(s0):s0;
     if(sp){c.globalAlpha=.72;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0);c.globalAlpha=1;}}
   // particles
   for(const p of parts){if(p.life<0)continue;const t=p.life/p.max,px=Math.round(p.x-X0),py=Math.round(p.y-Y0);
@@ -2307,7 +2307,11 @@ const isFence=(x,y)=>inb(x,y)&&W.kind[idx(x,y)]===K.DECO&&W.level[idx(x,y)]===1;
 const DECO_ROT={3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
 function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.translate(sp.w,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
   const mx=v=>v&&v.map(a=>[sp.w-1-a[0],...a.slice(1)]);
-  return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em)});}
+  const m1=v=>v&&[sp.w-1-v[0],...v.slice(1)];
+  return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,sil:null,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em),siren:m1(sp.siren),nose:m1(sp.nose),head:m1(sp.head),hub:m1(sp.hub)});}
+// 건물 돌리기: any building can be mirrored (W.flip on its anchor tile); multi-tile ground art is mirrored with it
+const anc=i=>W.anchor[i]>=0?W.anchor[i]:i,FL=(sp,i)=>sp&&W.flip[anc(i)]?flipped(sp):sp;
+let buildFlip=0;const canTurn=t=>t&&!t.items&&t.kind>=K.POLICE&&t.kind!==K.WIND&&t.kind!==K.DECO;
 function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];const b=L===1?SP.fence[0]:SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
 function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
 function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
@@ -2529,6 +2533,8 @@ function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i
     ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],W.era<3?'불씨·우물 가까움':'전기 들어옴',W.era<3?'불씨·우물 멀어요':'전기 끊김')}${zone?fl(w.road[i],'길 가까움','길 없음')+(W.era>=3?fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};
+  if(k&&k!==K.ROAD&&k!==K.RAIL&&k!==K.DECO&&k!==K.WIND&&!(k>=K.RES&&k<=K.IND&&!L)){$('#info').insertAdjacentHTML('beforeend','<button class="btn" id="flipBtn" style="width:100%;margin-top:8px">↻ 건물 방향 돌리기</button>');
+    $('#flipBtn').onclick=()=>{const big=k>=K.RES&&k<=K.IND?bigAt(x,y):-1,a=big>=0?big:anc(i);w.flip[a]^=1;shKey='';save();sfx('click');};}
   if(k===K.DECO&&DECO_ROT[L]){$('#info').insertAdjacentHTML('beforeend','<button class="btn" id="rotBtn" style="width:100%;margin-top:8px">↻ 방향 돌리기</button>');
     $('#rotBtn').onclick=()=>{w.vari[i]=((w.vari[i]%DECO_ROT[L])+1)%DECO_ROT[L];save();sfx('click');};}
   if(k&&k!==K.ROAD&&k!==K.RAIL){const an=w.anchor[i]>=0?w.anchor[i]:i,lab=w.labels[an];
@@ -2557,7 +2563,7 @@ function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panni
   if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;goalsOpen=false;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
   else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);
-    if(d.pt==='mouse'&&!(t.id==='deco'&&DECO_ROT[subSel.deco]))applyTool(t,tilesFor(t,d.a,d.a));   // items that can turn ask first, so the ↻ button is there
+    if(d.pt==='mouse'&&!(t.id==='deco'&&DECO_ROT[subSel.deco])&&!canTurn(t))applyTool(t,tilesFor(t,d.a,d.a));   // items that can turn ask first, so the ↻ button is there
     else if(target&&target.g[0]===d.a[0]&&target.g[1]===d.a[1])commitTarget();
     else{target={g:d.a};sfx('click');showTarget();}}
   updateCost(e);}
@@ -2565,7 +2571,7 @@ view.addEventListener('pointerup',endPointer);view.addEventListener('pointercanc
 view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;$('#cost').hidden=true;}});
 function clearTarget(){target=null;const el=$('#tconf');if(el)el.hidden=true;}
 function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}const t=T(tool),[x,y]=target.g,ok=validAt(t,x,y),c=ok?costAt(t,x,y):0,rich=c<=W.funds;
-  $('#tcRot').hidden=!(t.id==='deco'&&DECO_ROT[subSel.deco]);
+  $('#tcRot').hidden=!((t.id==='deco'&&DECO_ROT[subSel.deco])||canTurn(t));
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
   $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':(t.id==='road'||t.id==='avenue')&&W.terrain[idx(x,y)]===1&&W.kind[idx(x,y)]!==K.ROAD?'다리 놓기':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
   const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
@@ -2595,7 +2601,7 @@ window.addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(W)catchUp(W.savedAt);});
 
 $('#fundsBtn').addEventListener('click',()=>{openShop();sfx('click');});$('#shopClose').addEventListener('click',closeShop);$('#shop').addEventListener('click',e=>{if(e.target.id==='shop')closeShop();});
-$('#tcOk').addEventListener('click',()=>commitTarget());$('#tcRot').addEventListener('click',()=>{const n=DECO_ROT[subSel.deco]||1;decoRot=(decoRot+1)%n;sfx('click');renderSub();showTarget();});$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
+$('#tcOk').addEventListener('click',()=>commitTarget());$('#tcRot').addEventListener('click',()=>{const t=T(tool);if(canTurn(t))buildFlip^=1;else{const n=DECO_ROT[subSel.deco]||1;decoRot=(decoRot+1)%n;renderSub();}sfx('click');showTarget();});$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
 ['pointerdown','pointerup'].forEach(ev=>$('#tconf').addEventListener(ev,e=>e.stopPropagation()));
 /* ---------------- main loop ---------------- */
 let last=0,miniT=0;
