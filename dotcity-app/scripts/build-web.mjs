@@ -114,6 +114,22 @@ const native = `
     }
   }
 
+  // Photo mode: save / send the city picture through the native share sheet (Photos, Messages, ...)
+  var SH = P.Share, FS = P.Filesystem;
+  if (SH && FS) {
+    window.DotShare = function (blob, name) {
+      return new Promise(function (resolve, reject) {
+        var r = new FileReader();
+        r.onload = function () {
+          FS.writeFile({ path: name, data: String(r.result).split(',')[1], directory: 'CACHE' })
+            .then(function (f) { return SH.share({ title: '도트시티', files: [f.uri] }); })
+            .then(resolve, reject);
+        };
+        r.onerror = reject; r.readAsDataURL(blob);
+      });
+    };
+  }
+
   // Rewarded ads (AdMob). These are Google's public TEST unit ids: replace them with your own before release.
   var AM = P.AdMob;
   if (AM) {

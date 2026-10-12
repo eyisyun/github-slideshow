@@ -2455,7 +2455,9 @@ function photoMode(on){if(on){photoPrev={dayMode};setTool('inspect');selected=nu
   else{photoWx=null;document.body.classList.remove('photo');$('#photobar').hidden=true;if(photoPrev){dayMode=photoPrev.dayMode;if(typeof paintDayBtn==='function')paintDayBtn();}photoPrev=null;}}
 function paintPhoto(){document.querySelectorAll('#photobar [data-ph]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ph===dayMode)));
   document.querySelectorAll('#photobar [data-wx]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.wx==='auto'?photoWx==null:photoWx===+b.dataset.wx)));}
-function takePhoto(){sfx('place');requestAnimationFrame(()=>view.toBlob(async blob=>{if(!blob)return;const file=new File([blob],'dotcity.png',{type:'image/png'});
+function takePhoto(){sfx('place');requestAnimationFrame(()=>view.toBlob(async blob=>{if(!blob)return;
+  if(window.DotShare){try{await window.DotShare(blob,'dotcity.png');return;}catch(e){if(/cancel/i.test(String(e&&e.message||e)))return;}}   // the app: native share sheet
+  const file=new File([blob],'dotcity.png',{type:'image/png'});
   try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:W.name});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   const url=URL.createObjectURL(blob);let framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}if(!window.Capacitor&&!framed){const a=document.createElement('a');a.href=url;a.download=`${W.name}.png`;document.body.append(a);a.click();a.remove();toast('사진을 저장했어요.','good');return;}
   $('#shotImg').src=url;$('#shotView').hidden=false;},'image/png'));}
