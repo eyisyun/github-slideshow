@@ -1440,6 +1440,19 @@ function buildSprites(){
     SP.lampD=vehModel([{b:[-.45,.45,-.45,.45,0,1],c:'#4a4f5a'},{b:[-.14,.14,-.14,.14,1,19],c:'#3a3f4a'},{b:[0,.8,-.12,.12,18,19],c:'#3a3f4a'},{b:[.62,.72,-.12,.12,17,18],c:'#3a3f4a'},
       {b:[.55,.95,-.6,.6,16,17.4],f:(f,a,b)=>f==='top'?'#3a3f4a':[col('#e8e4d4'),col('#fff2c0')]}],.32,.06,{h:28,light:[.75,15.5]});
     for(const sp of[...SP.benchD,...SP.lampD]){sp.g=0;sp.gp=1;}
+    // 정자: stone plinth, red-lacquered posts, low rails and a tiled roof with upturned eaves
+    SP.deco[11]=mk1(52,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:12,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:(u,v)=>col('#bdb6a6',((Math.floor(u*4)+Math.floor(v*4))&1)?.06:0)});
+      const P=[[cx-9,cy-1],[cx+9,cy-1],[cx,cy-5],[cx,cy+3]];for(const[x,y]of P)for(let i=0;i<10;i++){pb.put(x,y-i,col('#9a3a2a',i%4?0:-.12));pb.put(x+1,y-i,col('#7a2a1e'));}
+      for(const[[x0,y0],[x1,y1]]of[[P[0],P[3]],[P[3],P[1]]]){pb.line(x0,y0-3,x1,y1-3,col('#7a5233'));pb.line(x0,y0-4,x1,y1-4,col('#a37b4c'));}
+      for(let k=-12;k<=12;k++){pb.put(cx+k,cy-11-Math.round(Math.abs(k)/4),col('#3e8a6a'));}        // green 단청 band under the eaves
+      giwa(pb,cx,cy-13,14,8);for(const sg of[-1,1]){pb.put(cx+sg*15,cy-15,col(TILE,.1));pb.put(cx+sg*16,cy-16,col(TILE,.15));}});
+    // 놀이터: swings, a slide on a little tower, a sandpit
+    SP.deco[12]=mk1(44,(pb,cx,cy)=>{const B='#3a7dd8',Y='#f2c84a',R='#e0503a';
+      for(const x of[cx-11,cx-2]){pb.line(x-2,cy+1,x,cy-11,col(B));pb.line(x+2,cy+1,x,cy-11,col(B,-.2));}pb.line(cx-11,cy-11,cx-2,cy-11,col(B,.1));
+      for(const x of[cx-9,cx-5]){for(let i=0;i<7;i++)pb.put(x,cy-10+i,col('#9aa3ad'));pb.put(x-1,cy-3,col(R));pb.put(x,cy-3,col(R));pb.put(x+1,cy-3,col(R,-.2));}
+      pb.box({cx:cx+5,cy:cy-2,hw:3,h:7,L:()=>col(R),R:()=>col(R,-.25),T:()=>col(Y)});for(let k=0;k<7;k++)pb.put(cx+2-k%2,cy-1-k,col('#9aa3ad'));
+      for(let k=0;k<8;k++){pb.put(cx+7+k,cy-8+k,col(Y));pb.put(cx+7+k,cy-7+k,col(Y,-.2));}pb.roof(cx+5,cy-9,4,3,'#3a7dd8');
+      pb.box({cx:cx-4,cy:cy+4,hw:4,h:1,L:()=>col(WOOD),R:()=>col(WOOD,-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.15?col(WOOD,.1):col(PAL.sand,hash(x,y,3)<.2?-.1:0)});});
     SP.fence=Array.from({length:16},(_,m)=>mk1(26,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
       for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#a37b4c'));pb.put(x,y-4,col('#b8905e'));if(k%4===0){for(let h=0;h<6;h++)pb.put(x,y-h,col('#6e4e2c',h===5?.15:0));}}}
       for(let h=0;h<6;h++)pb.put(cx,cy-h,col('#6e4e2c',h===5?.15:0));}));
@@ -1584,7 +1597,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.PORT:ports++;stamp(tmpD,cx,cy,8,.09);break;
       case K.RAIL:rails++;break;
       case K.AIRPORT:if(w.anchor[i]===i){airports++;apts.push(i);stamp(tmpG,x+2.5,y+2.5,15,.2);stamp(w.pol,x+2.5,y+4.5,4,.12);}break;
-      case K.DECO:{const it=DECO[L]||DECO[0];stamp(tmpC,cx,cy,it.prem?6:3,it.prem?.14:.05);break;}
+      case K.DECO:{const it=DECO[L]||DECO[0];if(it.lv)stamp(tmpC,cx,cy,it.lv[0],it.lv[1]);else stamp(tmpC,cx,cy,it.prem?6:3,it.prem?.14:.05);break;}
       case K.DEPOT:depots++;stamp(tmpD,cx,cy,6,.06);break;
       case K.FIRE:fires++;stamp(w.fcov,cx,cy,12,1.4);break;
       case K.SCHOOL:if(w.anchor[i]===i){schools++;stamp(w.edu,x+1,y+1,14,1.4);}break;
@@ -1767,7 +1780,8 @@ const tn=t=>t.names?t.names[W.era]:t.name;
 const PRICE=[.6,.8,1,1.2,1.4,1.7];
 // item tools (꾸미기 / 땅 바꾸기 / 칠하기) price by the picked item; special buildings (★) cost more in the eras where they are special
 const DECO=[{n:'꽃밭',c:15},{n:'울타리',c:8},{n:'돌탑',c:25},{n:'장독대',c:40},{n:'벤치',c:30},{n:'솟대',c:30},{n:'가로등',c:50,era:3},
-  {n:'벚꽃나무',c:800,prem:1},{n:'분수',c:2500,prem:1},{n:'동상',c:4000,prem:1},{n:'시계탑',c:6000,prem:1,era:3}];
+  {n:'벚꽃나무',c:800,prem:1},{n:'분수',c:2500,prem:1},{n:'동상',c:4000,prem:1},{n:'시계탑',c:6000,prem:1,era:3},
+  {n:'정자',c:250,lv:[5,.1]},{n:'놀이터',c:350,era:3,lv:[5,.12]}];
 const LAND=[{n:'물 파기',c:50},{n:'땅 메우기',c:80},{n:'모래',c:10},{n:'풀밭',c:10},{n:'나무 심기',c:15}];
 const ITEMS={deco:DECO,land:LAND},subSel={deco:0,land:0};
 const curItem=t=>t.items?ITEMS[t.items][subSel[t.items]]:null;
@@ -2175,7 +2189,7 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
   if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:SP.parkG;if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
-  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i];return SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][((i/N|0)-(a/N|0))*5+(i%N-a%N)]||SP.plaza;}if(k===K.DECO){if(w.level[i]===3||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
+  if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i];return SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][((i/N|0)-(a/N|0))*5+(i%N-a%N)]||SP.plaza;}if(k===K.DECO){if(w.level[i]===12)return SP.sand[(x*7+y)&1];if(w.level[i]===3||w.level[i]===11||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
   if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(k===K.SCHOOL){const a=w.anchor[i];return SP.field[((i/N|0)-(a/N|0))*2+(i%N-a%N)]||SP.plaza;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
   if(w.terrain[i]===2)return SP.sand[(x*7+y)&1];return SP.grass[w.gv[i]];}
