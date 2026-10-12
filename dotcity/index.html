@@ -134,6 +134,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .tconf button{font:inherit;border:0;cursor:pointer;min-height:40px;padding:0 14px}
 .tconf #tcOk{background:var(--gold);color:#1a1404}
 .tconf #tcOk small{opacity:.75;margin-left:4px}
+.tconf #tcRot{background:var(--panel-hi);color:var(--gold);min-width:44px;padding:0;font-size:20px}
 .tconf #tcX{background:var(--panel-hi);color:var(--ink);min-width:40px;padding:0}
 .cost{position:fixed;z-index:15;pointer-events:none;font:12px var(--f-px);color:var(--gold);background:var(--edge);padding:3px 6px;box-shadow:0 0 0 2px var(--panel-hi)}
 .cost.bad{color:var(--bad)}
@@ -303,7 +304,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
 </div>
 <div class="modal" id="shotView" hidden><div class="card sheet"><img id="shotImg" alt="도시 사진" style="width:100%;image-rendering:pixelated"><p style="margin:8px 0">이미지를 길게 누르거나(휴대폰) 오른쪽 클릭해서(컴퓨터) 저장하세요.</p><button class="btn primary" id="shotClose">닫기</button></div></div>
 <div class="cost" id="cost" hidden></div>
-<div class="tconf" id="tconf" hidden><span id="tcMsg"></span><button id="tcOk"></button><button id="tcX" aria-label="취소">✕</button></div>
+<div class="tconf" id="tconf" hidden><span id="tcMsg"></span><button id="tcRot" hidden aria-label="방향 돌리기">↻</button><button id="tcOk"></button><button id="tcX" aria-label="취소">✕</button></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <section class="card ipanel" id="info" hidden></section>
 
@@ -1852,7 +1853,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
   for(const[x,y]of tiles){if(!validAt(t,x,y))continue;
     if(t.id==='bulldoze'){clearTile(x,y);if(puffs++<24)dust(x,y,'#9a8a74');}
     else if(t.id==='road'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);}
-    else if(t.id==='deco'){placeRaw(K.DECO,x,y);W.level[idx(x,y)]=subSel.deco;if(DECO_ROT.includes(subSel.deco))W.vari[idx(x,y)]=decoRot;if(puffs++<12)dust(x,y,'#d8cfc0');}
+    else if(t.id==='deco'){placeRaw(K.DECO,x,y);W.level[idx(x,y)]=subSel.deco;W.vari[idx(x,y)]=DECO_ROT[subSel.deco]?decoRot%DECO_ROT[subSel.deco]:0;if(puffs++<12)dust(x,y,'#d8cfc0');}
     else if(t.id==='land'){const i=idx(x,y),s=subSel.land;if(s===0){W.terrain[i]=1;W.trees[i]=0;}else if(s===1)W.terrain[i]=0;else if(s===2)W.terrain[i]=2;else if(s===3)W.terrain[i]=0;else W.trees[i]=Math.min(5,W.trees[i]+2);
       derive(W);if(puffs++<12)dust(x,y,s===0?'#4a8ccb':'#9a8a74');}
     else if(t.id==='rail'){const i=idx(x,y);if(!W.rail[i]){if(W.kind[i]===0)placeRaw(K.RAIL,x,y);W.rail[i]=1;}}
@@ -2272,7 +2273,7 @@ function render(){
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;castSh=false;
-  if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=L===4?SP.benchD[decoRot]:L===6?SP.lampD[decoRot]:L===1?SP.fence[0]:SP.deco[L];
+  if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=decoView(L,decoRot);
     if(sp){c.globalAlpha=.75;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0+(sp.gp?8:0));c.globalAlpha=1;}ghost=null;}
   if(ghost){const[x,y]=ghost,sp=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null;
     if(sp){c.globalAlpha=.72;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0);c.globalAlpha=1;}}
@@ -2302,8 +2303,13 @@ function render(){
   drawLabels(fx,fy,s);}
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
 const isFence=(x,y)=>inb(x,y)&&W.kind[idx(x,y)]===K.DECO&&W.level[idx(x,y)]===1;
-const DECO_ROT=[4,6];let decoRot=0;
-function decoSprite(i){const L=W.level[i];if(L===4)return SP.benchD[W.vari[i]&3];if(L===6)return SP.lampD[W.vari[i]&3];if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
+// items that can face different ways: 4 directions for the bench and lamp models, mirrored left/right for the drawn ones
+const DECO_ROT={3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
+function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.translate(sp.w,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
+  const mx=v=>v&&v.map(a=>[sp.w-1-a[0],...a.slice(1)]);
+  return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em)});}
+function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];const b=L===1?SP.fence[0]:SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
+function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
 function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
@@ -2450,10 +2456,10 @@ function takePhoto(){sfx('place');requestAnimationFrame(()=>view.toBlob(async bl
   const url=URL.createObjectURL(blob);let framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}if(!window.Capacitor&&!framed){const a=document.createElement('a');a.href=url;a.download=`${W.name}.png`;document.body.append(a);a.click();a.remove();toast('사진을 저장했어요.','good');return;}
   $('#shotImg').src=url;$('#shotView').hidden=false;},'image/png'));}
 function renderSub(){const t=T(tool),bar=$('#subbar');if(!t||!t.items){bar.hidden=true;return;}bar.hidden=false;bar.innerHTML='';
-  if(t.items==='deco'&&DECO_ROT.includes(subSel.deco)){const r=document.createElement('button');r.className='it';r.setAttribute('aria-label','방향 돌리기');
-    r.innerHTML=`<span style="font-size:22px;line-height:1">${['↘','↙','↖','↗'][decoRot]}</span><span>방향 돌리기</span>`;r.addEventListener('click',()=>{decoRot=(decoRot+1)&3;sfx('click');renderSub();});bar.append(r);}
+  if(t.items==='deco'&&DECO_ROT[subSel.deco]){decoRot%=DECO_ROT[subSel.deco];const two=DECO_ROT[subSel.deco]===2;const r=document.createElement('button');r.className='it';r.setAttribute('aria-label','방향 돌리기');
+    r.innerHTML=`<span style="font-size:22px;line-height:1">${two?['⇢','⇠'][decoRot]:['↘','↙','↖','↗'][decoRot]}</span><span>방향 돌리기</span>`;r.addEventListener('click',()=>{decoRot=(decoRot+1)%DECO_ROT[subSel.deco];sfx('click');renderSub();});bar.append(r);}
   ITEMS[t.items].forEach((it,n)=>{if(t.items==='deco'&&(it.era||0)>W.era)return;const b=document.createElement('button');b.className='it';b.setAttribute('aria-pressed',String(subSel[t.items]===n));
-    let ic;if(t.items==='deco')ic=spriteIcon(n===1?SP.fence[5]:n===4?SP.benchD[decoRot]:n===6?SP.lampD[decoRot]:SP.deco[n],30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
+    let ic;if(t.items==='deco')ic=spriteIcon(n===1?SP.fence[5]:decoView(n,n===subSel.deco?decoRot:0),30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
     b.append(ic);b.insertAdjacentHTML('beforeend',`<span>${it.n}</span>${it.c?`<small>${money(Math.max(1,Math.round(it.c*PRICE[W.era])))}</small>`:''}${it.prem?'<span class="star">★</span>':''}`);
     b.addEventListener('click',()=>{subSel[t.items]=n;sfx('click');renderSub();showTarget();});bar.append(b);});}
 function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspect')goalsOpen=false;document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
@@ -2523,8 +2529,8 @@ function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i
     ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],W.era<3?'불씨·우물 가까움':'전기 들어옴',W.era<3?'불씨·우물 멀어요':'전기 끊김')}${zone?fl(w.road[i],'길 가까움','길 없음')+(W.era>=3?fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};
-  if(k===K.DECO&&DECO_ROT.includes(L)){$('#info').insertAdjacentHTML('beforeend','<button class="btn" id="rotBtn" style="width:100%;margin-top:8px">↻ 방향 돌리기</button>');
-    $('#rotBtn').onclick=()=>{w.vari[i]=(w.vari[i]+1)&3;save();sfx('click');};}
+  if(k===K.DECO&&DECO_ROT[L]){$('#info').insertAdjacentHTML('beforeend','<button class="btn" id="rotBtn" style="width:100%;margin-top:8px">↻ 방향 돌리기</button>');
+    $('#rotBtn').onclick=()=>{w.vari[i]=((w.vari[i]%DECO_ROT[L])+1)%DECO_ROT[L];save();sfx('click');};}
   if(k&&k!==K.ROAD&&k!==K.RAIL){const an=w.anchor[i]>=0?w.anchor[i]:i,lab=w.labels[an];
     $('#info').insertAdjacentHTML('beforeend',`<button class="btn" id="nameBtn" style="width:100%;margin-top:8px">✎ 이름 ${lab?'바꾸기':'붙이기'}</button>`);
     $('#nameBtn').onclick=()=>{const v=prompt('이 건물의 이름 (12자까지, 비우면 지워져요)',lab||'');if(v==null)return;const nm=v.trim().slice(0,12);if(nm)w.labels[an]=nm;else delete w.labels[an];save();renderInfo();sfx('click');};}}
@@ -2559,6 +2565,7 @@ view.addEventListener('pointerup',endPointer);view.addEventListener('pointercanc
 view.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;$('#cost').hidden=true;}});
 function clearTarget(){target=null;const el=$('#tconf');if(el)el.hidden=true;}
 function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}const t=T(tool),[x,y]=target.g,ok=validAt(t,x,y),c=ok?costAt(t,x,y):0,rich=c<=W.funds;
+  $('#tcRot').hidden=!(t.id==='deco'&&DECO_ROT[subSel.deco]);
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
   $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':(t.id==='road'||t.id==='avenue')&&W.terrain[idx(x,y)]===1&&W.kind[idx(x,y)]!==K.ROAD?'다리 놓기':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
   const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
@@ -2588,7 +2595,7 @@ window.addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(W)catchUp(W.savedAt);});
 
 $('#fundsBtn').addEventListener('click',()=>{openShop();sfx('click');});$('#shopClose').addEventListener('click',closeShop);$('#shop').addEventListener('click',e=>{if(e.target.id==='shop')closeShop();});
-$('#tcOk').addEventListener('click',()=>commitTarget());$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
+$('#tcOk').addEventListener('click',()=>commitTarget());$('#tcRot').addEventListener('click',()=>{const n=DECO_ROT[subSel.deco]||1;decoRot=(decoRot+1)%n;sfx('click');renderSub();showTarget();});$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
 ['pointerdown','pointerup'].forEach(ev=>$('#tconf').addEventListener(ev,e=>e.stopPropagation()));
 /* ---------------- main loop ---------------- */
 let last=0,miniT=0;
