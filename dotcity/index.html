@@ -2292,7 +2292,7 @@ function render(){
   // the picked tile's edge and pin go on top of trees and buildings
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
     for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++)if(inb(x+dx,y+dy))tileSp(SP.tgt.edge,x+dx,y+dy);
-    const bx=(x-y)*16-X0,by=(x+y)*8-Y0+8*sz-7-Math.round(Math.abs(Math.sin(now/220))*4),fc=ok?'#ffd21f':'#ff3030';
+    const bx=(x-y)*16-X0,by=(x+y)*8-Y0+8*sz-7-(tl.id==='deco'?14:0)-Math.round(Math.abs(Math.sin(now/220))*4),fc=ok?'#ffd21f':'#ff3030';
     const row=(yy,x0,w,colr)=>{c.fillStyle=colr;c.fillRect(bx+x0,by+yy,w,1);};
     for(let r=0;r<7;r++){row(r-6,-4,9,'#1a1404');}for(let r=0;r<5;r++)row(r-5,-3,7,fc);
     for(let r=0;r<6;r++){const w=11-2*r;row(r+1,-Math.floor(w/2),w,'#1a1404');if(w>2)row(r+1,-Math.floor(w/2)+1,w-2,fc);}
@@ -2557,7 +2557,7 @@ function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panni
   if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;goalsOpen=false;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
   else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);
-    if(d.pt==='mouse')applyTool(t,tilesFor(t,d.a,d.a));
+    if(d.pt==='mouse'&&!(t.id==='deco'&&DECO_ROT[subSel.deco]))applyTool(t,tilesFor(t,d.a,d.a));   // items that can turn ask first, so the ↻ button is there
     else if(target&&target.g[0]===d.a[0]&&target.g[1]===d.a[1])commitTarget();
     else{target={g:d.a};sfx('click');showTarget();}}
   updateCost(e);}
