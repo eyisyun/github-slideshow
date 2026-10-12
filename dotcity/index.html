@@ -325,7 +325,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
     </div>
     <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
-    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn" data-test="police" data-warn="한 번 더">🚓 경찰 출동 테스트</button><button class="btn" data-test="fire" data-warn="한 번 더">🔥 화재 출동 테스트</button><button class="btn" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button></div>
+    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn" data-test="police" data-warn="한 번 더">🚓 경찰 출동 테스트</button><button class="btn" data-test="med" data-warn="한 번 더">🚑 구급차 출동 테스트</button><button class="btn" data-test="fire" data-warn="한 번 더">🔥 화재 출동 테스트</button><button class="btn" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button></div>
     <h3 class="msub" id="sndHead">소리 <small>위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요</small></h3>
     <div class="sndrow"><button class="btn" id="mMusic"></button><button class="btn" id="mSfx"></button>
       <label class="vol">음악 크기<input type="range" id="mVol" min="0" max="100" step="5"></label></div>
@@ -495,7 +495,7 @@ function bitmapPB(rows,map,outline){const h=rows.length,w=Math.max(...rows.map(r
 
 // Vehicles are small 3D box models (s along the heading -.5..5 * L tiles, t across -1..1 * W tiles, z in px) drawn per direction
 // with a depth buffer and face lighting: a body, a glass cabin, wheels, head/tail lights - so they read as cars, not blobs.
-function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].map(d=>{const W0=24,H0=20,CX=12,CY=14,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9);
+function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].map(d=>{const W0=24,H0=opt.h||20,CX=12,CY=H0-6,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9);
     const hx=DIRS[d][0],hy=DIRS[d][1],lx=-hy,ly=hx;
     const plot=(s,t,z,c,n)=>{z*=VSC;const X=(s*L*hx+t*Wd*lx)*VSC,Y=(s*L*hy+t*Wd*ly)*VSC,px=Math.round(CX+(X-Y)*16),py=Math.round(CY+(X+Y)*8-z);if(px<0||py<0||px>=W0||py>=H0||c==null)return;
       const dep=(X+Y)*8+z,k=py*W0+px;if(dep<zb[k])return;zb[k]=dep;if(Array.isArray(c)||typeof c==='number'){pb.put(px,py,c);return;}
@@ -506,7 +506,8 @@ function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].ma
       for(let i=0;i<=ns;i++)for(let j=0;j<=nz;j++){const a=i/ns,b=j/nz,z=z0+(z1-z0)*b;plot(s0+(s1-s0)*a,t1,z,C('+t',a,b),[0,1,0]);plot(s0+(s1-s0)*a,t0,z,C('-t',a,b),[0,-1,0]);}
       for(let i=0;i<=nt;i++)for(let j=0;j<=nz;j++){const a=i/nt,b=j/nz,z=z0+(z1-z0)*b;plot(s1,t0+(t1-t0)*a,z,C('+s',a,b),[1,0,0]);plot(s0,t0+(t1-t0)*a,z,C('-s',a,b),[-1,0,0]);}}
     if(opt.shadowGlow){for(let i=0;i<=20;i++)for(let j=0;j<=6;j++)plot(-.45+.9*i/20,-.8+1.6*j/6,0,col('#0e1630',0,70),[0,0,1]);}
-    const meta={};if(opt.siren){const[s0,z0]=opt.siren,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.siren=[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)];}   // light bar, blinked in drawCar
+    const meta={};if(opt.light){const[s0,z0]=opt.light,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.lights=[[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)+3]];}
+    if(opt.siren){const[s0,z0]=opt.siren,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.siren=[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)];}   // light bar, blinked in drawCar
     return mk(pb,-CX,-CY,true,meta);});}
 const VSC=.78;   // overall vehicle size
 const GLASS='#8fb4d4',HEAD=[0,0].map((_,i)=>i?col('#fff2a0'):col('#fff6d0')),TAIL=[col('#a8322a'),col('#ff3a3a')];
@@ -1433,6 +1434,12 @@ function buildSprites(){
       mk1(64,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>b>=h-1.5?col('#e8dcc0',t):brick('#a0523a',t)(a,b);pb.box({cx,cy:cy-1,hw:6,h:30,L:f(0),R:f(-.25)});pb.roof(cx,cy-31,7,8,'#3e6a5a');
         pb.ell(cx-3,cy-23,2.6,(dx,dy)=>dx*dx+dy*dy>.6?col('#2e2b33'):[col('#f6f2e4'),col('#fff2c0')]);pb.put(cx-3,cy-25,col('#2e2b33'));pb.put(cx-2,cy-23,col('#2e2b33'));
         pb.ell(cx+3,cy-23,2.6,(dx,dy)=>dx*dx+dy*dy>.6?col('#2e2b33'):[col('#e6e2d4'),col('#f2e4b0')]);},(cx,cy)=>({lights:[[cx,cy-22]]}))];
+    // benches and street lamps can face any of the four ways (vari&3); small box models like the cars
+    SP.benchD=vehModel([{b:[-.46,-.34,-.6,.6,0,1.7],c:'#3a3f4a'},{b:[.34,.46,-.6,.6,0,1.7],c:'#3a3f4a'},
+      {b:[-.5,.5,-.75,.75,1.7,2.3],f:(f,a,b)=>f==='top'&&(b*4|0)%2?col('#a37b4c',-.08):'#a37b4c'},{b:[-.5,.5,-1,-.72,2.3,4.4],f:(f,a,b)=>(b*3|0)%2?col('#8a6238',-.1):'#8a6238'}],.34,.07);
+    SP.lampD=vehModel([{b:[-.45,.45,-.45,.45,0,1],c:'#4a4f5a'},{b:[-.14,.14,-.14,.14,1,19],c:'#3a3f4a'},{b:[0,.8,-.12,.12,18,19],c:'#3a3f4a'},{b:[.62,.72,-.12,.12,17,18],c:'#3a3f4a'},
+      {b:[.55,.95,-.6,.6,16,17.4],f:(f,a,b)=>f==='top'?'#3a3f4a':[col('#e8e4d4'),col('#fff2c0')]}],.32,.06,{h:28,light:[.75,15.5]});
+    for(const sp of[...SP.benchD,...SP.lampD]){sp.g=0;sp.gp=1;}
     SP.fence=Array.from({length:16},(_,m)=>mk1(26,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
       for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#a37b4c'));pb.put(x,y-4,col('#b8905e'));if(k%4===0){for(let h=0;h<6;h++)pb.put(x,y-h,col('#6e4e2c',h===5?.15:0));}}}
       for(let h=0;h<6;h++)pb.put(cx,cy-h,col('#6e4e2c',h===5?.15:0));}));
@@ -1831,7 +1838,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
   for(const[x,y]of tiles){if(!validAt(t,x,y))continue;
     if(t.id==='bulldoze'){clearTile(x,y);if(puffs++<24)dust(x,y,'#9a8a74');}
     else if(t.id==='road'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);}
-    else if(t.id==='deco'){placeRaw(K.DECO,x,y);W.level[idx(x,y)]=subSel.deco;if(puffs++<12)dust(x,y,'#d8cfc0');}
+    else if(t.id==='deco'){placeRaw(K.DECO,x,y);W.level[idx(x,y)]=subSel.deco;if(DECO_ROT.includes(subSel.deco))W.vari[idx(x,y)]=decoRot;if(puffs++<12)dust(x,y,'#d8cfc0');}
     else if(t.id==='land'){const i=idx(x,y),s=subSel.land;if(s===0){W.terrain[i]=1;W.trees[i]=0;}else if(s===1)W.terrain[i]=0;else if(s===2)W.terrain[i]=2;else if(s===3)W.terrain[i]=0;else W.trees[i]=Math.min(5,W.trees[i]+2);
       derive(W);if(puffs++<12)dust(x,y,s===0?'#4a8ccb':'#9a8a74');}
     else if(t.id==='rail'){const i=idx(x,y);if(!W.rail[i]){if(W.kind[i]===0)placeRaw(K.RAIL,x,y);W.rail[i]=1;}}
@@ -2003,14 +2010,17 @@ function dispatchFire(){const w=W;if(w.era<3||!w.st.fires)return;const assigned=
 // police: now and then a theft happens at a building (more where crime is high); a patrol car from the nearest police station
 // drives there, stays a few seconds with its lights on and solves it. Unanswered cases go cold after a while.
 const incidents=[];let polMsg=0;
-function maybeIncident(){const w=W,S=w.st;if(w.era<3||S.pop<300||incidents.length>=3)return;let cr=0,n=0;for(let i=0;i<N*N;i+=7){cr+=w.crime[i];n++;}
-  if(Math.random()>.006*(1+cr/n*6))return;
-  for(let t=0;t<60;t++){const i=(Math.random()*N*N)|0;if(!isBld(i)||w.fire[i]||incidents.some(o=>o.i===i))continue;if(w.crime[i]<.15&&Math.random()<.7)continue;
-    incidents.push({i,t:0,done:false});if(!S.police)toast(`🚨 (${i%N}, ${i/N|0})에서 도난 사건이 났어요. 경찰서가 있으면 경찰차가 출동해요.`,'warn');return;}}
-function dispatchPolice(dt){const w=W;for(let n=incidents.length-1;n>=0;n--){const o=incidents[n];o.t+=dt;if(o.done||!w.kind[o.i]){incidents.splice(n,1);continue;}
-    const has=cars.some(c=>c.inc===o);if(!has&&o.t>40){incidents.splice(n,1);toast('도둑이 달아났어요… 경찰서를 가까이 짓고 도로로 이어 주세요.','warn');continue;}
-    if(has||!w.st.police||w.era<3||(o.retry||0)>now)continue;const path=roadPath(K.POLICE,o.i);if(!path){o.retry=now+5000;continue;}
-    sendCar(path,0,{inc:o});if(now>polMsg){polMsg=now+8000;toast(`🚓 경찰차가 출동했어요! (${o.i%N}, ${o.i/N|0})`,'info');}}}
+const INC={theft:{src:K.POLICE,em:0,cnt:'police',call:'🚓 경찰차가 출동했어요!',done:'🚓 사건 해결! 경찰이 도둑을 잡았어요.',lost:'도둑이 달아났어요… 경찰서를 가까이 짓고 도로로 이어 주세요.',none:'도난 사건이 났어요. 경찰서가 있으면 경찰차가 출동해요.'},
+  med:{src:K.HOSP,em:1,cnt:'hosp',call:'🚑 구급차가 출동했어요!',done:'🚑 환자를 병원으로 무사히 옮겼어요.',lost:'환자가 오래 기다렸어요… 병원을 가까이 짓고 도로로 이어 주세요.',none:'응급 환자가 생겼어요. 병원이 있으면 구급차가 출동해요.'}};
+function maybeIncident(){const w=W,S=w.st;if(w.era<3||S.pop<300||incidents.length>=4)return;let cr=0,hl=0,n=0;for(let i=0;i<N*N;i+=7){cr+=w.crime[i];if(w.kind[i]===K.RES)hl+=1-w.health[i];n++;}
+  const type=Math.random()<.5?'theft':'med';if(Math.random()>.006*(1+(type==='theft'?cr/n*6:hl/n*4)))return;
+  for(let t=0;t<60;t++){const i=(Math.random()*N*N)|0;if(!isBld(i)||w.fire[i]||incidents.some(o=>o.i===i))continue;
+    if(type==='med'&&w.kind[i]!==K.RES)continue;if(type==='theft'&&w.crime[i]<.15&&Math.random()<.7)continue;if(type==='med'&&w.health[i]>.5&&Math.random()<.7)continue;
+    incidents.push({i,t:0,done:false,type});if(!S[INC[type].cnt])toast(`${type==='med'?'🚑':'🚨'} (${i%N}, ${i/N|0}) ${INC[type].none}`,'warn');return;}}
+function dispatchPolice(dt){const w=W;for(let n=incidents.length-1;n>=0;n--){const o=incidents[n],I=INC[o.type||'theft'];o.t+=dt;if(o.done||!w.kind[o.i]){incidents.splice(n,1);continue;}
+    const has=cars.some(c=>c.inc===o);if(!has&&o.t>40){incidents.splice(n,1);toast(I.lost,'warn');continue;}
+    if(has||!w.st[I.cnt]||w.era<3||(o.retry||0)>now)continue;const path=roadPath(I.src,o.i);if(!path){o.retry=now+5000;continue;}
+    sendCar(path,I.em,{inc:o});if(now>polMsg){polMsg=now+6000;toast(`${I.call} (${o.i%N}, ${o.i/N|0})`,'info');}}}
 function stepTruck(c,dt){
   const live=c.fire!=null?W.fire[c.fire]>0:c.inc?!c.inc.done:false;
   if(c.st==='go'&&!live){c.st='back';c.path=null;c.ttl=10;return;}
@@ -2018,7 +2028,7 @@ function stepTruck(c,dt){
       if(c.pi<c.path.length-1){const k=c.path[c.pi+1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}else{c.st='work';c.t=0;}}
     if(c.pi>=c.path.length-1){c.st='work';c.t=0;}return;}
   if(c.st==='work'){c.t=0;c.wt+=dt;
-    if(c.inc&&c.wt>4&&!c.inc.done){c.inc.done=true;if(now>polMsg-4000){polMsg=now+4000;toast('🚓 사건 해결! 경찰이 도둑을 잡았어요.','good');}}
+    if(c.inc&&c.wt>4&&!c.inc.done){c.inc.done=true;if(now>polMsg-4000){polMsg=now+4000;toast(INC[c.inc.type||'theft'].done,'good');}}
     if(!live||c.wt>45){c.st='back';c.path=null;c.ttl=10;}}}
 function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24));
   dispAcc+=dt;if(dispAcc>.5){dispAcc=0;dispatchFire();}
@@ -2209,7 +2219,7 @@ function render(){
   else if(hover&&inb(...hover))tileSp(SP.outline,hover[0],hover[1]);
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
     for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++)if(inb(x+dx,y+dy))tileSp(ok?SP.tgt.ok:SP.tgt.bad,x+dx,y+dy);
-    if(ok&&tl.kind>=K.POLICE)ghost=[x,y];
+    if(ok&&(tl.kind>=K.POLICE||tl.id==='deco'))ghost=[x,y];
   }
   if(selected)tileSp(SP.sel,selected[0],selected[1]);
   // objects, back to front
@@ -2238,7 +2248,7 @@ function render(){
     else if(k===K.PARK)drawSpr(c,parkSprite(i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,SP.firepit,sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
     else if(k===K.WELL)drawSpr(c,SP.well,sx,sy);
-    else if(k===K.DECO){const sp=decoSprite(i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);emit(sp,sx,sy);}
+    else if(k===K.DECO){const sp=decoSprite(i),oy=sp.gp?8:0;drawSpr(c,sp,sx,sy+oy);extras(c,sp,sx,sy+oy,blinkOn);emit(sp,sx,sy+oy);}
     else if(k===K.DEPOT){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.PORT){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=civSprite(k,w.te[i]);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
@@ -2248,6 +2258,8 @@ function render(){
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;castSh=false;
+  if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=L===4?SP.benchD[decoRot]:L===6?SP.lampD[decoRot]:L===1?SP.fence[0]:SP.deco[L];
+    if(sp){c.globalAlpha=.75;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0+(sp.gp?8:0));c.globalAlpha=1;}ghost=null;}
   if(ghost){const[x,y]=ghost,sp=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null;
     if(sp){c.globalAlpha=.72;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0);c.globalAlpha=1;}}
   // particles
@@ -2258,7 +2270,9 @@ function render(){
     c.globalAlpha=1;c.fillRect(px-(sz>>1),py-(sz>>1),sz,sz);}
   c.globalAlpha=1;
   for(const o of incidents){if(o.done)continue;const x=o.i%N,y=o.i/N|0,bx=(x-y)*16-X0,by=(x+y)*8-Y0+objTop(o.i)-6-Math.round(Math.abs(Math.sin(now/250))*2),on=(now/300|0)%2;
-    c.fillStyle='#1a1404';c.fillRect(bx-3,by-9,7,11);c.fillStyle=on?'#ff3a3a':'#3a7dff';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#ffffff';c.fillRect(bx,by-7,1,4);c.fillRect(bx,by-2,1,1);}
+    c.fillStyle='#1a1404';c.fillRect(bx-3,by-9,7,11);
+    if(o.type==='med'){c.fillStyle=on?'#ffffff':'#ffd8d8';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#e0302a';c.fillRect(bx,by-7,1,7);c.fillRect(bx-2,by-4,5,1);}
+    else{c.fillStyle=on?'#ff3a3a':'#3a7dff';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#ffffff';c.fillRect(bx,by-7,1,4);c.fillRect(bx,by-2,1,1);}}
   drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
   // the picked tile's edge and pin go on top of trees and buildings
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
@@ -2274,7 +2288,8 @@ function render(){
   drawLabels(fx,fy,s);}
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
 const isFence=(x,y)=>inb(x,y)&&W.kind[idx(x,y)]===K.DECO&&W.level[idx(x,y)]===1;
-function decoSprite(i){const L=W.level[i];if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
+const DECO_ROT=[4,6];let decoRot=0;
+function decoSprite(i){const L=W.level[i];if(L===4)return SP.benchD[W.vari[i]&3];if(L===6)return SP.lampD[W.vari[i]&3];if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
 function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
@@ -2403,7 +2418,7 @@ function buildUI(){
   $('#mResume').addEventListener('click',closeMenu);
   let armed=null;const arm=(btn,fn)=>btn.addEventListener('click',()=>{if(armed!==btn){if(armed){armed.classList.remove('danger');armed.firstChild.textContent=armed.dataset.t;}armed=btn;btn.dataset.t=btn.firstChild.textContent;btn.classList.add('danger');btn.firstChild.textContent=btn.dataset.warn||'한 번 더 누르면 지금 도시를 지웁니다 ';return;}
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
-  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>b.dataset.test==='fire'?fireTest():b.dataset.test==='police'?policeTest():b.dataset.test?airTest(+b.dataset.test):newGame('era'+b.dataset.era)));
+  arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>b.dataset.test==='fire'?fireTest():b.dataset.test==='police'?policeTest():b.dataset.test==='med'?policeTest('med'):b.dataset.test?airTest(+b.dataset.test):newGame('era'+b.dataset.era)));
   $('#emGo').addEventListener('click',closeEra);
   $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&goalsDone()&&!W.wb){setTool(wt.id);sfx('click');}else{goalsOpen=true;selected=null;$('#info').hidden=false;renderGoals();sfx('click');}});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
@@ -2421,8 +2436,10 @@ function takePhoto(){sfx('place');requestAnimationFrame(()=>view.toBlob(async bl
   const url=URL.createObjectURL(blob);let framed=false;try{framed=window.self!==window.top;}catch(e){framed=true;}if(!window.Capacitor&&!framed){const a=document.createElement('a');a.href=url;a.download=`${W.name}.png`;document.body.append(a);a.click();a.remove();toast('사진을 저장했어요.','good');return;}
   $('#shotImg').src=url;$('#shotView').hidden=false;},'image/png'));}
 function renderSub(){const t=T(tool),bar=$('#subbar');if(!t||!t.items){bar.hidden=true;return;}bar.hidden=false;bar.innerHTML='';
+  if(t.items==='deco'&&DECO_ROT.includes(subSel.deco)){const r=document.createElement('button');r.className='it';r.setAttribute('aria-label','방향 돌리기');
+    r.innerHTML=`<span style="font-size:22px;line-height:1">${['↘','↙','↖','↗'][decoRot]}</span><span>방향 돌리기</span>`;r.addEventListener('click',()=>{decoRot=(decoRot+1)&3;sfx('click');renderSub();});bar.append(r);}
   ITEMS[t.items].forEach((it,n)=>{if(t.items==='deco'&&(it.era||0)>W.era)return;const b=document.createElement('button');b.className='it';b.setAttribute('aria-pressed',String(subSel[t.items]===n));
-    let ic;if(t.items==='deco')ic=spriteIcon(n===1?SP.fence[5]:SP.deco[n],30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
+    let ic;if(t.items==='deco')ic=spriteIcon(n===1?SP.fence[5]:n===4?SP.benchD[decoRot]:n===6?SP.lampD[decoRot]:SP.deco[n],30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
     b.append(ic);b.insertAdjacentHTML('beforeend',`<span>${it.n}</span>${it.c?`<small>${money(Math.max(1,Math.round(it.c*PRICE[W.era])))}</small>`:''}${it.prem?'<span class="star">★</span>':''}`);
     b.addEventListener('click',()=>{subSel[t.items]=n;sfx('click');renderSub();showTarget();});bar.append(b);});}
 function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspect')goalsOpen=false;document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
@@ -2492,6 +2509,8 @@ function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i
     ${need?`<div class="need">${need}</div>`:''}
     ${zone||k===K.POLICE?`<div class="flags">${fl(w.powered[i],W.era<3?'불씨·우물 가까움':'전기 들어옴',W.era<3?'불씨·우물 멀어요':'전기 끊김')}${zone?fl(w.road[i],'길 가까움','길 없음')+(W.era>=3?fl(w.fcov[i]>.25,'소방 보호','소방 없음'):''):''}</div>`:''}`;
   $('#infoX').onclick=()=>{selected=null;$('#info').hidden=true;};
+  if(k===K.DECO&&DECO_ROT.includes(L)){$('#info').insertAdjacentHTML('beforeend','<button class="btn" id="rotBtn" style="width:100%;margin-top:8px">↻ 방향 돌리기</button>');
+    $('#rotBtn').onclick=()=>{w.vari[i]=(w.vari[i]+1)&3;save();sfx('click');};}
   if(k&&k!==K.ROAD&&k!==K.RAIL){const an=w.anchor[i]>=0?w.anchor[i]:i,lab=w.labels[an];
     $('#info').insertAdjacentHTML('beforeend',`<button class="btn" id="nameBtn" style="width:100%;margin-top:8px">✎ 이름 ${lab?'바꾸기':'붙이기'}</button>`);
     $('#nameBtn').onclick=()=>{const v=prompt('이 건물의 이름 (12자까지, 비우면 지워져요)',lab||'');if(v==null)return;const nm=v.trim().slice(0,12);if(nm)w.labels[an]=nm;else delete w.labels[an];save();renderInfo();sfx('click');};}}
@@ -2614,14 +2633,14 @@ function airTest(e){newGame('era'+e);closeEra();if(typeof closeMenu==='function'
   planes.clear();planes.set(idx(x,y),{ph:'wait',t:.5,u:0,alt:0,dir:1,e:W.era});updateHud(true);save();
   toast('✈ 비행기가 곧 내려와요. 착륙 → 잠깐 대기 → 이륙 → 멀리 날아갔다 다시 돌아와요.','good');}
 // test only: a modern town with a fire station; a house a few blocks away catches fire and an engine is sent
-function policeTest(){newGame('era4');closeEra();if(typeof closeMenu==='function')closeMenu();W.funds+=50000;
-  if(!builtCount(K.POLICE)){outer:for(let r=0;r<12;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=30+dx,y=30+dy;if(!inb(x,y)||W.terrain[idx(x,y)]===1)continue;const k=W.kind[idx(x,y)];if(k&&(k<K.RES||k>K.IND))continue;
-      if(!DIRS.some(([a,b])=>isRoad(x+a,y+b)))continue;clearTile(x,y);placeRaw(K.POLICE,x,y);break outer;}}
-  recompute();let st=-1;for(let j=0;j<N*N;j++)if(W.kind[j]===K.POLICE){st=j;break;}
-  let best=-1,bd=0;for(let j=0;j<N*N;j++){if(!isBld(j))continue;const d=Math.hypot(j%N-st%N,(j/N|0)-(st/N|0));if(d>bd&&d<14&&d>6){bd=d;best=j;}}
-  if(best<0){toast('사건 장소를 찾지 못했어요.','warn');return;}incidents.length=0;incidents.push({i:best,t:0,done:false});
+function policeTest(type='theft'){const SK=type==='med'?K.HOSP:K.POLICE;newGame('era4');closeEra();if(typeof closeMenu==='function')closeMenu();W.funds+=50000;
+  if(!builtCount(SK)){outer:for(let r=0;r<12;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=30+dx,y=30+dy;if(!inb(x,y)||W.terrain[idx(x,y)]===1)continue;const k=W.kind[idx(x,y)];if(k&&(k<K.RES||k>K.IND))continue;
+      if(!DIRS.some(([a,b])=>isRoad(x+a,y+b)))continue;clearTile(x,y);placeRaw(SK,x,y);break outer;}}
+  recompute();let st=-1;for(let j=0;j<N*N;j++)if(W.kind[j]===SK){st=j;break;}
+  let best=-1,bd=0;for(let j=0;j<N*N;j++){if(!isBld(j)||(type==='med'&&W.kind[j]!==K.RES))continue;const d=Math.hypot(j%N-st%N,(j/N|0)-(st/N|0));if(d>bd&&d<14&&d>6){bd=d;best=j;}}
+  if(best<0){toast('사건 장소를 찾지 못했어요.','warn');return;}incidents.length=0;incidents.push({i:best,t:0,done:false,type});
   const bx=best%N,by=best/N|0,sx2=st%N,sy2=st/N|0;cam.s=Math.max(cam.s,3);cam.x=((bx+sx2)/2-(by+sy2)/2)*16;cam.y=((bx+sx2)/2+(by+sy2)/2)*8;setSpeed(1);updateHud(true);
-  toast(`🚨 (${bx}, ${by})에서 도난 사건이 났어요! 경찰서에서 경찰차가 출동해요.`,'warn');}
+  toast(type==='med'?`🚑 (${bx}, ${by})에 응급 환자가 생겼어요! 병원에서 구급차가 출동해요.`:`🚨 (${bx}, ${by})에서 도난 사건이 났어요! 경찰서에서 경찰차가 출동해요.`,'warn');}
 function fireTest(){newGame('era4');closeEra();if(typeof closeMenu==='function')closeMenu();W.funds+=50000;
   if(!builtCount(K.FIRE)){outer:for(let r=0;r<12;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=30+dx,y=30+dy;if(!inb(x,y)||W.terrain[idx(x,y)]===1)continue;const k=W.kind[idx(x,y)];if(k&&(k<K.RES||k>K.IND))continue;
       if(!DIRS.some(([a,b])=>isRoad(x+a,y+b)))continue;clearTile(x,y);placeRaw(K.FIRE,x,y);break outer;}}
