@@ -557,6 +557,15 @@ function buildSprites(){
   /* ground ---------------------------------------------------- */
   SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const h=hash(x,y,v*31+7),t=p?.035:0;
     if(h<.055)return col(PAL.g2,t);if(h>.955)return col(PAL.g0,t);if(h<.07)return col(PAL.g3);return col(PAL.g1,t);}));
+  // weather on the ground: snow lying in 4 depths (patchy -> full), wet sheen and puddles after rain
+  const sm=(x,y,k)=>{const gx=x/7,gy=y/3.5,x0=Math.floor(gx),y0=Math.floor(gy),fx=gx-x0,fy=gy-y0,f=t=>t*t*(3-2*t),a=hash(x0,y0,k),b=hash(x0+1,y0,k),c=hash(x0,y0+1,k),d=hash(x0+1,y0+1,k);
+    return(a+(b-a)*f(fx))*(1-f(fy))+(c+(d-c)*f(fx))*f(fy);};   // smooth blobs, so snow lies in drifts instead of static
+  // 4 depths x 3 layouts; blobs follow the tile's own diamond so neighbouring tiles don't repeat the same stripe
+  SP.snowG=[0,1,2,3].map(st=>[0,1,2].map(vr=>G((u,w,x,y)=>{const h=sm(u*20,w*10,11+vr)*.62+sm(u*44,w*22,21+vr)*.32+hash(x,y,4+vr)*.06,cov=[.3,.48,.66,1.01][st];if(h>cov)return null;
+    const edge=h>cov-.06;return col(edge?'#c9d6ea':hash(x,y,5)<.08?'#dfe8f5':'#f4f8fd',0,edge?200:245);})));
+  SP.wetG=G(()=>col('#1c2a48',0,46));
+  SP.puddle=[0,1,2].map(k=>G((u,w,x,y)=>{const cu=[.42,.6,.35][k],cv=[.5,.38,.62][k],r=[.2,.16,.14][k],d=Math.hypot((u-cu)/r,(w-cv)/(r*.8))+hash(x,y,k+3)*.18;
+    if(d>1)return null;return col(d<.35&&hash(x,y,k)<.5?'#c8dcf0':d>.8?'#3c5272':'#5d7aa0',0,d>.8?150:185);}));
   SP.sand=[0,1].map(v=>G((u,w,x,y)=>{const h=hash(x,y,v+50);return h<.1?col(PAL.sand2):h>.96?col('#f1e3b3'):col(PAL.sand);}));
   SP.water=[];for(let f=0;f<4;f++){SP.water[f]=[];for(let m=0;m<16;m++)SP.water[f][m]=G((u,v,x,y)=>{
     const fm=((m&1)&&u>.87)||((m&2)&&v>.87)||((m&4)&&u<.13)||((m&8)&&v<.13);
@@ -1493,7 +1502,7 @@ let W=null;
 const CAP_W=60,CAP_C=1600,CAP_F=8000;
 const POP=[0,6,18,45,110,260],JC=[0,4,12,32,80,190],JI=[0,8,20,40,70];
 function blankWorld(seed){const NN=N*N;return{wb:null,savedAt:0,seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
-  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),flip:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
+  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),flip:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,snow:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
   powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),health:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
   st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
@@ -1719,10 +1728,10 @@ const KEY='dotcity.save.v1';
 function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
 function unb64(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,wb:w.wb,savedAt:Date.now(),lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
-  labels:w.labels,wx:w.wx,wxEnd:w.wxEnd,
+  labels:w.labels,wx:w.wx,wxEnd:w.wxEnd,snow:w.snow,
   a:{terrain:b64(w.terrain),rail:b64(w.rail),flip:b64(w.flip),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
 function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('bad save');const w=blankWorld(o.seed);
-  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd'])if(o[k]!=null)w[k]=o[k];
+  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd','snow'])if(o[k]!=null)w[k]=o[k];
   for(const k of['terrain','trees','kind','rail','flip','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
   if(o.era==null){w.era=4;w.te.fill(4);}
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
@@ -2140,13 +2149,30 @@ function drawLabels(fx,fy,s){const ks=Object.keys(W.labels);if(!ks.length||overl
   c.restore();}
 
 /* ---------------- weather: rain, snow, falling petals (auto by season, or picked in photo mode) ---------------- */
-const wxp=[];let wxCur=0;
-function weatherFx(c,lw,lh){const wx=photoWx??(W.wx||0),dt=Math.min(.1,frameDt);if(wx!==wxCur){wxp.length=0;wxCur=wx;}if(!wx)return;
-  const want=Math.round(lw*lh/(wx===1?700:wx===2?1400:2600));while(wxp.length<want)wxp.push({x:Math.random()*lw,y:Math.random()*lh,v:.6+Math.random()*.6,p:Math.random()*6});
-  c.globalCompositeOperation='source-atop';c.fillStyle=wx===1?`rgba(30,40,80,${.14*(1-nightF*.5)})`:wx===2?`rgba(240,246,255,${.2*(1-nightF*.5)})`:'rgba(255,200,220,.05)';c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';
-  for(const q of wxp){if(wx===1){q.x-=60*dt*q.v;q.y+=260*dt*q.v;}else if(wx===2){q.y+=22*dt*q.v;q.x+=Math.sin(now/900+q.p)*10*dt;}else{q.y+=16*dt*q.v;q.x+=(14+Math.sin(now/700+q.p)*14)*dt;}
-    if(q.y>lh+4){q.y=-4;q.x=Math.random()*(lw+60);}if(q.x<-6)q.x=lw+4;if(q.x>lw+6)q.x=-4;
-    if(wx===1){c.fillStyle=nightCss('#b8d4ff',nightF*.6,.55);c.fillRect(q.x|0,q.y|0,1,3);c.fillRect((q.x|0)-1,(q.y|0)+3,1,1);}
+const wxp=[],wsp=[];let wxCur=0,wetAmt=0;
+// snow builds up while it snows (about a minute to cover everything) and melts slowly afterwards; rain leaves the ground wet with puddles
+function wxAccumulate(wx,dt){const sn=W.snow||0;
+  W.snow=Math.max(0,Math.min(1,sn+(wx===2?dt/60:-dt/(wx===1?40:150))));
+  wetAmt=Math.max(0,Math.min(1,wetAmt+(wx===1?dt/15:sn>W.snow&&sn>.05?dt/90:-dt/70)));}
+function groundWeather(c,lh){const sn=W.snow||0,wet=wetAmt;if(sn<.03&&wet<.03)return;const w=W;
+  for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0,k=w.kind[i];
+    if(wet>.03){c.globalAlpha=wet;c.drawImage(SP.wetG.c,sx-16,sy);const h=hash(x,y,61);if(h<(k===K.ROAD?.3:k===K.NONE?.16:.08)){c.globalAlpha=Math.min(1,wet*1.4);c.drawImage(SP.puddle[(h*30|0)%3].c,sx-16,sy);}c.globalAlpha=1;}
+    if(sn>.03){const lv=sn*(k===K.ROAD?.5:1)*4+hash(x,y,77)*.9-.6;if(lv>=0)c.drawImage(SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0].c,sx-16,sy);}}}
+function weatherFx(c,lw,lh){const wx=photoWx??(W.wx||0),dt=Math.min(.1,frameDt);wxAccumulate(wx,dt);if(wx!==wxCur){wxp.length=0;wsp.length=0;wxCur=wx;}
+  const sn=W.snow||0;if(sn>.03){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(236,242,252,${.12*sn*(1-nightF*.5)})`;c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';}   // frost on roofs and trees
+  if(!wx)return;
+  const want=Math.round(lw*lh/(wx===1?900:wx===2?1400:2600));while(wxp.length<want)wxp.push({x:Math.random()*lw,y:Math.random()*lh,v:.6+Math.random()*.6,p:Math.random()*6});if(wxp.length>want)wxp.length=want;
+  c.globalCompositeOperation='source-atop';c.fillStyle=wx===1?`rgba(30,40,80,${.14*(1-nightF*.5)})`:wx===2?`rgba(240,246,255,${.12*(1-nightF*.5)})`:'rgba(255,200,220,.05)';c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';
+  if(wx===1){ // splashes on land, rings on water
+    for(let k=0;k<lw*lh/9000&&visN;k++){const n=((Math.random()*visN/3)|0)*3,i=visBuf[n];wsp.push({x:visBuf[n+1]+X0+(Math.random()-.5)*20,y:visBuf[n+2]+Y0+4+Math.random()*8,t:0,wt:W.terrain[i]===1});}
+    for(let k=wsp.length-1;k>=0;k--){const q=wsp[k];q.t+=dt;if(q.t>.32){wsp.splice(k,1);continue;}const px=Math.round(q.x-X0),py=Math.round(q.y-Y0),f=q.t/.32;
+      c.fillStyle=nightCss('#d6e6ff',nightF*.6,(1-f)*.7);
+      if(q.wt){const r=1+Math.round(f*3);c.fillRect(px-r,py,1,1);c.fillRect(px+r,py,1,1);c.fillRect(px,py-(r>>1),1,1);c.fillRect(px,py+(r>>1),1,1);}
+      else if(f<.35)c.fillRect(px,py,1,1);else{c.fillRect(px-1,py-1,1,1);c.fillRect(px+1,py-1,1,1);}}}
+  for(const q of wxp){if(wx===1){q.x-=55*dt*q.v;q.y+=240*dt*q.v;}else if(wx===2){q.y+=22*dt*q.v;q.x+=Math.sin(now/900+q.p)*10*dt;}else{q.y+=16*dt*q.v;q.x+=(14+Math.sin(now/700+q.p)*14)*dt;}
+    if(q.y>lh+8){q.y=-8;q.x=Math.random()*(lw+60);}if(q.x<-6)q.x=lw+4;if(q.x>lw+6)q.x=-4;
+    if(wx===1){ // thin slanted streak that fades towards its tail, instead of a bright hook
+      const x0=q.x|0,y0=q.y|0,L=q.v>.95?4:3;c.fillStyle=nightCss('#b4cbee',nightF*.6,.55*q.v);c.fillRect(x0,y0+L-2,1,2);c.fillStyle=nightCss('#b4cbee',nightF*.6,.26*q.v);c.fillRect(x0+1,y0,1,L-2);}
     else if(wx===2){c.fillStyle=nightCss('#ffffff',nightF*.5,.9);c.fillRect(q.x|0,q.y|0,q.v>1?2:1,q.v>1?2:1);}
     else{c.fillStyle=nightCss((q.p*10|0)%2?'#ffb7d2':'#f48ab6',nightF*.6,.95);c.fillRect(q.x|0,q.y|0,(now/300+q.p|0)%2?2:1,1);}}}
 // a spell of weather lasts a few real minutes (rain/snow/petals 2-5 min, clear skies 3-8 min), then the season picks the next one
@@ -2199,7 +2225,17 @@ let shRec=[],shHash=0,spIds=0,swayDX=0;const shCv=document.createElement('canvas
 function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp);if(sh){
       if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
       else{const wx=x-swayDX+sp.ox+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13)|0;}}}
-  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
+  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}
+  if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;c.drawImage(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+// snow caps: the top few opaque pixels of every column of a standing sprite (roofs, treetops), built once per sprite
+let capA=0;const capCache=new WeakMap();
+function capOf(sp){let cp=capCache.get(sp);if(cp!==undefined)return cp;cp=null;
+  const w=sp.w,h=sp.h,sc=sp.c.getContext('2d');if(sc&&w&&h){const src=sc.getImageData(0,0,w,h).data,cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d'),out=cx.createImageData(w,h),o=out.data;let any=false;
+    const op=(x,y)=>y>=0&&y<h&&src[(y*w+x)*4+3]>200;
+    for(let x=0;x<w;x++)for(let y=0;y<h;y++){if(!op(x,y))continue;if(op(x,y-1))continue;   // top of a run: snow settles here
+      const L=(x*7+y*3)%5===0?3:2;for(let k=0;k<L&&op(x,y+k);k++){const j=((y+k)*w+x)*4,sh=k===L-1;o[j]=sh?214:246;o[j+1]=sh?224:249;o[j+2]=sh?238:253;o[j+3]=sh?190:250;any=true;}}
+    if(any){cx.putImageData(out,0,0);cp=cv;}}
+  capCache.set(sp,cp);return cp;}
 function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
   if(k===K.RAIL)return SP.rail[Math.max(3,e)][railMask(x,y)];
   if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
@@ -2232,6 +2268,7 @@ function render(){
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
     c.drawImage(groundOf(i,x,y).c,sx-16,sy);if(w.rail[i]&&w.kind[i]===K.ROAD)c.drawImage(SP.railX[Math.max(3,Math.min(5,w.te[i]))][(railMask(x,y)&5)?0:1].c,sx-16,sy);const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
+  groundWeather(c,lh);
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
     for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
@@ -2257,7 +2294,7 @@ function render(){
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){const k=idx(Math.floor(b.x+.5+DIRS[b.d][0]*b.t),Math.floor(b.y+.5+DIRS[b.d][1]*b.t));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
-  const oa=overlay?.28:1;c.globalAlpha=oa;const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
+  const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh;
     if(key!==shKey){shKey=key;if(shCv.width!==lw||shCv.height!==lh){shCv.width=lw;shCv.height=lh;}else shCx.clearRect(0,0,lw,lh);
       for(let n=0;n<shRec.length;n+=3)shCx.drawImage(shRec[n],shRec[n+1]-X0,shRec[n+2]-Y0);}
@@ -2288,7 +2325,7 @@ function render(){
     else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
-  c.globalAlpha=1;castSh=false;
+  c.globalAlpha=1;castSh=false;capA=0;
   if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=decoView(L,decoRot);
     if(sp){c.globalAlpha=.75;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0+(sp.gp?8:0));c.globalAlpha=1;}ghost=null;}
   if(ghost){const[x,y]=ghost,s0=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null,sp=s0&&buildFlip&&canTurn(tl)?flipped(s0):s0;
