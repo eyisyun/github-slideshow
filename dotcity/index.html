@@ -75,6 +75,7 @@ button{font:inherit;color:inherit}
 .em-name small{display:block;margin-top:6px;font-size:12px;color:var(--ink-dim)}
 .date{font-size:12px;color:var(--ink-dim)}
 .ctrl{margin-left:auto;display:flex;gap:6px;align-items:center;padding:6px}
+#speed[hidden]{display:none}   /* the city always runs at one pace; pause only happens behind dialogs */
 .seg{display:flex;gap:2px;background:var(--edge);padding:2px}
 .ib{width:38px;height:38px;display:grid;place-items:center;background:var(--panel-lo);border:0;cursor:pointer;color:var(--ink-dim);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
 .ib:hover{color:var(--ink);background:#1b2342}
@@ -268,7 +269,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <div class="et" id="eraTask"></div>
   </section>
   <section class="card ctrl">
-    <div class="seg" id="speed" role="group" aria-label="게임 속도"></div>
+    <div class="seg" id="speed" role="group" aria-label="게임 속도" hidden></div>
     <button class="ib" id="dayBtn" aria-label="시간대"></button>
     <button class="ib" id="sndBtn" aria-label="소리"></button>
     <button class="ib" id="photoBtn" aria-label="사진 모드" title="사진 모드"></button>
@@ -351,7 +352,6 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <dt class="kb">우클릭 드래그</dt><dd class="kb">지도 이동 · 휴대폰은 두 손가락</dd>
       <dt class="kb">휠 / + -</dt><dd class="kb">확대·축소</dd>
       <dt class="kb">WASD</dt><dd class="kb">지도 이동</dd>
-      <dt class="kb">SPACE</dt><dd class="kb">일시정지</dd>
       <dt class="kb">Q X R U 1-9 G H J K</dt><dd class="kb">도구 선택 · P V O C T E F L 데이터 보기</dd>
     </dl>
   </div>
@@ -2689,7 +2689,6 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
   if(!$('#menu').hidden){if(k==='escape')closeMenu();return;}
   if(!$('#shop').hidden){if(k==='escape')closeShop();return;}
   if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){keys.add(k);e.preventDefault();return;}
-  if(k===' '){e.preventDefault();setSpeed(speed?0:1);return;}
   if(k==='escape'&&document.body.classList.contains('photo')){photoMode(false);return;}
   if(k==='escape'){drag=null;clearTarget();setTool('inspect');selected=null;$('#info').hidden=true;return;}
   if(k==='+'||k==='='){zoomTo(cam.s+1);return;}if(k==='-'||k==='_'){zoomTo(cam.s-1);return;}

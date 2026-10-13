@@ -15,7 +15,7 @@ dotcity-app/
 │  ├─ make-art.cjs         게임 스프라이트로 앱 아이콘·시작 화면 그리기
 │  └─ make-screenshots.cjs 스토어 스크린샷 그리기
 ├─ assets/                 아이콘·시작 화면 원본, 내장 폰트
-├─ store/screenshots/      스토어용 스크린샷 (iPhone 1290×2796, Android 1080×1920)
+├─ store/screenshots/      스토어용 스크린샷 (iPhone 1206×2622, Android 1080×1920)
 ├─ android/                Android Studio 프로젝트
 └─ ios/                    Xcode 프로젝트 (Swift Package Manager, CocoaPods 불필요)
 ```
@@ -79,7 +79,7 @@ Xcode에서는 처음 한 번 **App 타깃 → Signing & Capabilities → Team**
 2. [App Store Connect](https://appstoreconnect.apple.com) → **나의 앱 → +** → 번들 ID `com.eyisyun.dotcity`로 새 앱을 만듭니다.
 3. Xcode에서 기기를 **Any iOS Device**로 두고 **Product → Archive** → **Distribute App → App Store Connect**.
 4. App Store Connect에서 채울 것:
-   - 스크린샷: `store/screenshots/ios-*.png` (1290×2796)
+   - 스크린샷: `store/screenshots/ios-*.png` (1206×2622)
    - 설명·키워드(아래 예시), 카테고리 **게임 → 시뮬레이션**, 연령 등급 설문
    - 개인정보처리방침 URL, **앱 개인정보**: 광고(AdMob) 때문에 '기기 ID' 등을 표시 — 아래 5-2 참고
    - 수출 규정 질문은 `Info.plist`에 `ITSAppUsesNonExemptEncryption = NO`를 넣어 두어 생략됩니다.

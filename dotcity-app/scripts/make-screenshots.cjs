@@ -1,4 +1,4 @@
-// Renders store screenshots (iPhone 6.7"/6.9" class 1290x2796, Android 1080x1920) from the built www/.
+// Renders store screenshots (iPhone with Dynamic Island 1206x2622, Android 1080x1920) from the built www/.
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path');
 const out = path.join(__dirname, '..', 'store', 'screenshots');
@@ -8,7 +8,7 @@ const scenes = [
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  for (const [dev, vp, dpr] of [['ios', { width: 430, height: 932 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
+  for (const [dev, vp, dpr] of [['ios', { width: 402, height: 874 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
     for (const [name, era, night, shop, feat] of scenes) {
       const p = await b.newPage({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true });
       await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForTimeout(900);

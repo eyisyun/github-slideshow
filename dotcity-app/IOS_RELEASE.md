@@ -91,7 +91,7 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 - 콘텐츠 권한: 제3자 콘텐츠 없음
 
 **1.0 버전 정보**
-- 스크린샷 (6.9"/6.7" iPhone, 1290×2796) — `store/screenshots/`의 iOS 6장. 첫 두 장이 가장 많이 보이니 이 순서를 추천합니다:
+- 스크린샷 (Dynamic Island 지원 iPhone, 1206×2622) — `store/screenshots/`의 iOS 6장. 첫 두 장이 가장 많이 보이니 이 순서를 추천합니다:
   `ios-3-modern-night.png`(현대 야경), `ios-6-airport.png`(공항·기차·배), `ios-4-future.png`(미래), `ios-2-dynasty.png`(왕조), `ios-1-stone.png`(석기), `ios-5-shop.png`(충전)
 - 프로모션 텍스트 (170자):
   ```
