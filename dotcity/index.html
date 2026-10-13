@@ -103,6 +103,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .tb:hover{background:#1c2546;color:var(--ink)}
 .tb[aria-pressed="true"]{background:#302c52;color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold),inset 0 -3px 0 rgba(0,0,0,.4)}
 .tb canvas{image-rendering:pixelated;display:block;pointer-events:none}
+.touch .tb .k,.touch small.kb,.touch kbd,.touch .keys .kb,html:not(.touch) .keys .tc{display:none}
 .tb .k{position:absolute;right:3px;top:2px;font:8px var(--f-px);color:var(--ink-faint)}
 .tb[aria-pressed="true"] .k{color:var(--gold-dk)}
 .tb .sw{position:absolute;left:4px;bottom:5px;width:6px;height:6px}
@@ -175,7 +176,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .flag.no{color:var(--bad)}
 
 .modal{position:fixed;inset:0;z-index:30;background:rgba(8,10,22,.72);display:grid;place-items:center;padding:16px}
-.sheet{width:min(440px,100%);padding:20px 22px 22px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.sheet{box-sizing:border-box;width:min(440px,100%);padding:20px 22px 22px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
 .sheet h2{margin:0;font-weight:400;font-size:28px;color:var(--gold);letter-spacing:.02em}
 .sheet p{margin:0;color:var(--ink-dim);line-height:1.5;font-size:15px}
 .btns{display:grid;gap:8px}
@@ -304,7 +305,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <div class="row"><input id="emName" maxlength="12" spellcheck="false" autocomplete="off" placeholder="도시 이름"><button class="dice" id="emDice" type="button" aria-label="이름 추천">🎲</button></div>
       <small>나중에 왼쪽 위 도시 이름을 눌러도 바꿀 수 있어요.</small>
     </div>
-    <button class="btn primary" id="emGo">시작하기 <small>Enter</small></button>
+    <button class="btn primary" id="emGo">시작하기 <small class="kb">Enter</small></button>
   </div>
 </div>
 <div class="tip" id="tip" hidden></div>
@@ -325,7 +326,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <h2 id="shopTitle">자금 충전</h2>
     <p id="shopNote">지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.</p>
     <div class="btns" id="shopList"></div>
-    <button class="btn" id="shopClose">닫기 <small>Esc</small></button>
+    <button class="btn" id="shopClose">닫기 <small class="kb">Esc</small></button>
   </div>
 </div>
 <div class="modal" id="menu" hidden>
@@ -333,7 +334,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <h2 id="menuTitle">도트시티</h2>
     <p>석기시대 움집 마을에서 시작해 청동기, 왕조, 근대, 현대를 거쳐 미래 도시까지 키우세요. 시대마다 목표를 채우고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.</p>
     <div class="btns">
-      <button class="btn primary" id="mResume">계속하기 <small>Esc</small></button>
+      <button class="btn primary" id="mResume">계속하기 <small class="kb">Esc</small></button>
       <button class="btn" id="mNewTown">새 부족: 석기시대부터 <small>기본</small></button>
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
     </div>
@@ -344,19 +345,24 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <label class="vol">음악 크기<input type="range" id="mVol" min="0" max="100" step="5"></label></div>
     <dl class="keys">
       <dt>휴대폰 터치</dt><dd>고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요</dd>
-      <dt>마우스 클릭</dt><dd>표시된 칸에 바로 1칸 짓기</dd>
+      <dt class="kb">마우스 클릭</dt><dd class="kb">표시된 칸에 바로 1칸 짓기</dd>
       <dt>드래그</dt><dd>지도 이동</dd>
-      <dt>우클릭 드래그</dt><dd>지도 이동 · 휴대폰은 두 손가락</dd>
-      <dt>휠 / + -</dt><dd>확대·축소</dd>
-      <dt>WASD</dt><dd>지도 이동</dd>
-      <dt>SPACE</dt><dd>일시정지</dd>
-      <dt>Q X R U 1-9 G H J K</dt><dd>도구 선택 · P V O C T E F L 데이터 보기</dd>
+      <dt class="tc">두 손가락</dt><dd class="tc">벌리면 확대 · 오므리면 축소</dd>
+      <dt class="kb">우클릭 드래그</dt><dd class="kb">지도 이동 · 휴대폰은 두 손가락</dd>
+      <dt class="kb">휠 / + -</dt><dd class="kb">확대·축소</dd>
+      <dt class="kb">WASD</dt><dd class="kb">지도 이동</dd>
+      <dt class="kb">SPACE</dt><dd class="kb">일시정지</dd>
+      <dt class="kb">Q X R U 1-9 G H J K</dt><dd class="kb">도구 선택 · P V O C T E F L 데이터 보기</dd>
     </dl>
   </div>
 </div>
 
 <script>
 'use strict';
+// phones and the app have no keyboard: hide shortcut letters there
+const TOUCH=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())||matchMedia('(hover:none) and (pointer:coarse)').matches;
+if(TOUCH)document.documentElement.classList.add('touch');
+const kx=s=>TOUCH?String(s).replace(/ ?\((?:[A-Z0-9]|Esc|Enter)\)/g,''):s;
 /* ================================================================
    DOT CITY — pixel isometric city builder
    ================================================================ */
@@ -1733,12 +1739,12 @@ function simDay(quiet){const w=W;w.day++;autoWeather(w,quiet);if(!quiet)maybeInc
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]);
   const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
-function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;
+function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(W.funds<0)W.funds=0;   // no debt: an empty purse just stays empty
   if(!quiet&&W.era===5&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 미래 도시가 완성됐어요.','good');fireworks();sfx('win');}
   if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.era===0&&!cntOf(S,K.FIREPIT)&&say('nofirepit','먼저 모닥불(6)을 피우세요. 모닥불 5칸 안, 길 2칸 안에 놓은 움집 터에만 집이 생겨요.','warn',3))return;
-  if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
+  if(W.funds<=0&&W.lastNet<0&&say('debt','돈이 다 떨어졌어요. 세율을 올리거나 지출을 줄여 보세요. 자금 옆 ＋에서 충전할 수도 있어요.','warn',4))return;
   if(W.era<5){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(!W.wb&&goalsDone()&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
   if(W.era<3){if(S.unpowered>3&&say('cover',W.era===0?'불씨가 닿지 않는 움집 터가 있어요. 모닥불(6)을 가까이 피워주세요.':'우물이 먼 집이 있어요. 우물(6)을 가까이 파주세요.','warn',5))return;}
   else if(S.zones>0&&S.cap===0&&say('nopow',W.era===3?'증기 발전소(7)를 지어야 3단계 건물이 올라가요.':'발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.','warn',3))return;
@@ -1770,6 +1776,7 @@ function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('ba
   for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd','snow'])if(o[k]!=null)w[k]=o[k];
   for(const k of['terrain','trees','kind','rail','flip','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
   if(o.era==null){w.era=4;w.te.fill(4);}
+  if(!(w.funds>=0))w.funds=0;   // older saves could sink into debt
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
 function save(){W.savedAt=Date.now();try{localStorage.setItem(KEY,serialize());}catch(e){}}
 // While the game is closed the city keeps growing slowly: one in-game day per real minute, up to two years.
@@ -1924,8 +1931,8 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
   sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 let prevSpeed=1;
 function advanceEra(quiet){if(W.era>=5)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];boats=[];trains=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
-function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
-  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · ');const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'?W.name:randomCityName();
+function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=kx(e.story);
+  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=kx(u);$('#emList').append(li);}$('#emGoal').textContent=kx(e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · '));const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'?W.name:randomCityName();
   $('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);(!adv&&matchMedia('(pointer:fine)').matches?$('#emName'):$('#emGo')).focus();}
 const CITY_NAMES=['햇살마을','별빛시','무지개시','솔바람시','푸른강시','달빛마을','꽃내음시','은하시','도토리마을','바람개비시','구름다리시','반짝시','새싹마을','노을시','하늘숲시','파도마을','초록별시','방울시'];
 function randomCityName(){const cur=$('#emName').value;let n;do n=CITY_NAMES[(Math.random()*CITY_NAMES.length)|0];while(n===cur);return n;}
@@ -2564,14 +2571,14 @@ function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspec
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
 let tipTimer=0;
-function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&!o.items&&whyNot(o),cst=isOv?0:costOf(o);tip.innerHTML=`<div class="h"><span>${isOv?o.name:tn(o)}<kbd>${o.key}</kbd></span>${cst?`<span class="c">${money(cst)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${o.desc}</div>${why?`<div class="d" style="color:var(--gold)">${why}</div>`:''}`;
+function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&!o.items&&whyNot(o),cst=isOv?0:costOf(o);tip.innerHTML=`<div class="h"><span>${isOv?o.name:tn(o)}<kbd>${o.key}</kbd></span>${cst?`<span class="c">${money(cst)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${kx(o.desc)}</div>${why?`<div class="d" style="color:var(--gold)">${kx(why)}</div>`:''}`;
   tip.hidden=false;const r=btn.getBoundingClientRect(),tr=tip.getBoundingClientRect();
   if(matchMedia('(max-width:760px)').matches){tip.style.left=clamp(r.left+r.width/2-tr.width/2,12,innerWidth-tr.width-12)+'px';tip.style.top=(r.top-tr.height-12)+'px';}
   else{tip.style.left=(r.right+14)+'px';tip.style.top=clamp(r.top+r.height/2-tr.height/2,8,innerHeight-tr.height-8)+'px';}
   clearTimeout(tipTimer);if(brief)tipTimer=setTimeout(hideTip,1800);}
 function hideTip(){$('#tip').hidden=true;}
 function toast(msg,type='info'){const box=$('#toasts'),el=document.createElement('div');el.className='toast '+type;
-  el.innerHTML=`<span class="ti">${svg(type==='warn'?'warn':type==='good'?'star':'info',2)}</span><span></span>`;el.lastChild.textContent=msg;box.prepend(el);
+  el.innerHTML=`<span class="ti">${svg(type==='warn'?'warn':type==='good'?'star':'info',2)}</span><span></span>`;el.lastChild.textContent=kx(msg);box.prepend(el);
   while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.classList.add('out'),4300);setTimeout(()=>el.remove(),4650);}
 function openMenu(){$('#menu').hidden=false;$('#mResume').focus();}
 function closeMenu(){$('#menu').hidden=true;}
@@ -2607,7 +2614,7 @@ let goalsOpen=false;
 function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);
   const row=g=>`<div class="goal ${g.done?'ok':''}"><span class="gk">${g.done?'✓':''}</span><span class="gt">${g.t}</span><span class="px">${fmt(g.cur)}/${fmt(g.n)}</span>${!g.done&&g.tool&&toolOn(T(g.tool))?`<button class="gb" data-tool="${g.tool}">짓기</button>`:''}</div>`;
   const tail=W.era>=5?'':W.wb?`<div class="need">${tn(wt)} 공사 중 · ${fmtDur(wbLeft())} 남음. 게임을 꺼 둬도 공사는 계속돼요.</div>`:gl.every(g=>g.done)?`<button class="btn primary" id="goWonder">${tn(wt)} 세우기 <small>${money(wt.fixed)}</small></button>`:`<div class="sub">목표를 모두 채우면 ${tn(wt)}을(를) 세울 수 있어요. 공사는 현실 시간으로 ${e.build}시간 걸려요.</div>`;
-  $('#info').innerHTML=`<h3><span>${e.name} 목표</span><button class="x" id="infoX" aria-label="닫기">X</button></h3>${gl.map(row).join('')}${tail}`;
+  $('#info').innerHTML=kx(`<h3><span>${e.name} 목표</span><button class="x" id="infoX" aria-label="닫기">X</button></h3>${gl.map(row).join('')}${tail}`);
   $('#infoX').onclick=()=>{goalsOpen=false;$('#info').hidden=true;};
   $('#info').querySelectorAll('.gb').forEach(b=>b.onclick=()=>{setTool(b.dataset.tool);sfx('click');});
   const gw=$('#goWonder');if(gw)gw.onclick=()=>{setTool(wt.id);goalsOpen=false;$('#info').hidden=true;sfx('click');};}
@@ -2668,7 +2675,7 @@ function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}co
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
   $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':(t.id==='road'||t.id==='avenue')&&W.terrain[idx(x,y)]===1&&W.kind[idx(x,y)]!==K.ROAD?'다리 놓기':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
   const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
-  $('#tcMsg').textContent=!ok?(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
+  $('#tcMsg').textContent=!ok?kx(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
 function commitTarget(){if(!target)return;const t=T(tool),g=target.g;target=null;$('#tconf').hidden=true;applyTool(t,tilesFor(t,g,g));}
 function placeTarget(){const el=$('#tconf');if(!target||el.hidden)return;const[x,y]=target.g,s=cam.s,ox=cam.x-view.width/s/2,oy=cam.y-view.height/s/2,sz=T(tool).size||1;
   const px=(((x-y)*16+(sz-1)*0-ox)*s)/DPR,py=(((x+y)*8-oy)*s)/DPR,w=el.offsetWidth,h=el.offsetHeight;
