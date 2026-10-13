@@ -66,6 +66,13 @@ button{font:inherit;color:inherit}
 .em-year{color:var(--ink-dim);margin-top:-10px;font-size:15px}
 .em-list{margin:0;padding-left:18px;color:var(--ink);line-height:1.65;font-size:15px}
 .em-goal{color:var(--gold)!important}
+.em-name{margin:14px 0 4px;padding:10px 12px;background:var(--panel-lo);box-shadow:inset 0 0 0 2px var(--gold-dk)}
+.em-name label{display:block;font-size:13px;color:var(--gold);margin-bottom:6px}
+.em-name .row{display:flex;gap:8px}
+.em-name input{flex:1;min-width:0;height:40px;padding:0 10px;border:0;background:var(--edge);color:var(--ink);font:20px var(--f-ui);outline:none;box-shadow:inset 0 0 0 2px var(--panel-hi)}
+.em-name input:focus{box-shadow:inset 0 0 0 2px var(--gold)}
+.em-name .dice{width:44px;height:40px;border:0;background:var(--panel-hi);color:var(--ink);font-size:20px;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+.em-name small{display:block;margin-top:6px;font-size:12px;color:var(--ink-dim)}
 .date{font-size:12px;color:var(--ink-dim)}
 .ctrl{margin-left:auto;display:flex;gap:6px;align-items:center;padding:6px}
 .seg{display:flex;gap:2px;background:var(--edge);padding:2px}
@@ -292,6 +299,11 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <p id="emDesc"></p>
     <ul class="em-list" id="emList"></ul>
     <p class="em-goal" id="emGoal"></p>
+    <div class="em-name" id="emNameBox" hidden>
+      <label for="emName">우리 도시 이름을 지어 주세요</label>
+      <div class="row"><input id="emName" maxlength="12" spellcheck="false" autocomplete="off" placeholder="도시 이름"><button class="dice" id="emDice" type="button" aria-label="이름 추천">🎲</button></div>
+      <small>나중에 왼쪽 위 도시 이름을 눌러도 바꿀 수 있어요.</small>
+    </div>
     <button class="btn primary" id="emGo">시작하기 <small>Enter</small></button>
   </div>
 </div>
@@ -1868,8 +1880,12 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
 let prevSpeed=1;
 function advanceEra(quiet){if(W.era>=5)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];boats=[];trains=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
 function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
-  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · ');$('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);$('#emGo').focus();}
-function closeEra(){$('#eraModal').hidden=true;setSpeed(prevSpeed);}
+  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · ');const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'?W.name:randomCityName();
+  $('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);(!adv&&matchMedia('(pointer:fine)').matches?$('#emName'):$('#emGo')).focus();}
+const CITY_NAMES=['햇살마을','별빛시','무지개시','솔바람시','푸른강시','달빛마을','꽃내음시','은하시','도토리마을','바람개비시','구름다리시','반짝시','새싹마을','노을시','하늘숲시','파도마을','초록별시','방울시'];
+function randomCityName(){const cur=$('#emName').value;let n;do n=CITY_NAMES[(Math.random()*CITY_NAMES.length)|0];while(n===cur);return n;}
+function closeEra(){if(!$('#emNameBox').hidden){$('#emName').blur();const n=$('#emName').value.trim().slice(0,12)||randomCityName();W.name=n;$('#cityName').value=n;$('#emNameBox').hidden=true;save();toast(`${n}의 역사가 시작돼요!`,'good');}
+  $('#eraModal').hidden=true;setSpeed(prevSpeed);}
 
 /* ---------------- particles ---------------- */
 function dust(gx,gy,colr){const wx=(gx-gy)*16,wy=(gx+gy)*8+8;for(let k=0;k<6;k++)parts.push({x:wx+(Math.random()-.5)*16,y:wy+(Math.random()-.5)*6,vx:(Math.random()-.5)*18,vy:-6-Math.random()*10,life:0,max:.6+Math.random()*.4,sz:2,kind:'dust',c:colr,g:18});}
@@ -2444,6 +2460,8 @@ function buildUI(){
     btn.classList.remove('danger');btn.firstChild.textContent=btn.dataset.t;armed=null;fn();closeMenu();});
   arm($('#mNewTown'),()=>newGame('stone'));arm($('#mNewEmpty'),()=>newGame('empty'));document.querySelectorAll('#mEras .btn').forEach(b=>arm(b,()=>b.dataset.test==='fire'?fireTest():b.dataset.test==='police'?policeTest():b.dataset.test==='med'?policeTest('med'):b.dataset.test?airTest(+b.dataset.test):newGame('era'+b.dataset.era)));
   $('#emGo').addEventListener('click',closeEra);
+  $('#emDice').addEventListener('click',()=>{$('#emName').value=randomCityName();sfx('click');});
+  $('#emName').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();closeEra();}});
   $('#eraCard').addEventListener('click',()=>{const wt=TOOLS.find(t=>t.wonder===W.era);if(wt&&goalsDone()&&!W.wb){setTool(wt.id);sfx('click');}else{goalsOpen=true;selected=null;$('#info').hidden=false;renderGoals();sfx('click');}});
   $('#menu').addEventListener('click',e=>{if(e.target.id==='menu')closeMenu();});
   paintDayBtn();paintSnd();}
