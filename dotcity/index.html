@@ -103,6 +103,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .tb:hover{background:#1c2546;color:var(--ink)}
 .tb[aria-pressed="true"]{background:#302c52;color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold),inset 0 -3px 0 rgba(0,0,0,.4)}
 .tb canvas{image-rendering:pixelated;display:block;pointer-events:none}
+.touch .tb .k,.touch small.kb,.touch kbd,.touch .keys .kb,html:not(.touch) .keys .tc{display:none}
 .tb .k{position:absolute;right:3px;top:2px;font:8px var(--f-px);color:var(--ink-faint)}
 .tb[aria-pressed="true"] .k{color:var(--gold-dk)}
 .tb .sw{position:absolute;left:4px;bottom:5px;width:6px;height:6px}
@@ -175,7 +176,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .flag.no{color:var(--bad)}
 
 .modal{position:fixed;inset:0;z-index:30;background:rgba(8,10,22,.72);display:grid;place-items:center;padding:16px}
-.sheet{width:min(440px,100%);padding:20px 22px 22px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.sheet{box-sizing:border-box;width:min(440px,100%);padding:20px 22px 22px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
 .sheet h2{margin:0;font-weight:400;font-size:28px;color:var(--gold);letter-spacing:.02em}
 .sheet p{margin:0;color:var(--ink-dim);line-height:1.5;font-size:15px}
 .btns{display:grid;gap:8px}
@@ -304,7 +305,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <div class="row"><input id="emName" maxlength="12" spellcheck="false" autocomplete="off" placeholder="도시 이름"><button class="dice" id="emDice" type="button" aria-label="이름 추천">🎲</button></div>
       <small>나중에 왼쪽 위 도시 이름을 눌러도 바꿀 수 있어요.</small>
     </div>
-    <button class="btn primary" id="emGo">시작하기 <small>Enter</small></button>
+    <button class="btn primary" id="emGo">시작하기 <small class="kb">Enter</small></button>
   </div>
 </div>
 <div class="tip" id="tip" hidden></div>
@@ -325,7 +326,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <h2 id="shopTitle">자금 충전</h2>
     <p id="shopNote">지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.</p>
     <div class="btns" id="shopList"></div>
-    <button class="btn" id="shopClose">닫기 <small>Esc</small></button>
+    <button class="btn" id="shopClose">닫기 <small class="kb">Esc</small></button>
   </div>
 </div>
 <div class="modal" id="menu" hidden>
@@ -333,7 +334,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <h2 id="menuTitle">도트시티</h2>
     <p>석기시대 움집 마을에서 시작해 청동기, 왕조, 근대, 현대를 거쳐 미래 도시까지 키우세요. 시대마다 목표를 채우고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.</p>
     <div class="btns">
-      <button class="btn primary" id="mResume">계속하기 <small>Esc</small></button>
+      <button class="btn primary" id="mResume">계속하기 <small class="kb">Esc</small></button>
       <button class="btn" id="mNewTown">새 부족: 석기시대부터 <small>기본</small></button>
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
     </div>
@@ -344,19 +345,24 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <label class="vol">음악 크기<input type="range" id="mVol" min="0" max="100" step="5"></label></div>
     <dl class="keys">
       <dt>휴대폰 터치</dt><dd>고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요</dd>
-      <dt>마우스 클릭</dt><dd>표시된 칸에 바로 1칸 짓기</dd>
+      <dt class="kb">마우스 클릭</dt><dd class="kb">표시된 칸에 바로 1칸 짓기</dd>
       <dt>드래그</dt><dd>지도 이동</dd>
-      <dt>우클릭 드래그</dt><dd>지도 이동 · 휴대폰은 두 손가락</dd>
-      <dt>휠 / + -</dt><dd>확대·축소</dd>
-      <dt>WASD</dt><dd>지도 이동</dd>
-      <dt>SPACE</dt><dd>일시정지</dd>
-      <dt>Q X R U 1-9 G H J K</dt><dd>도구 선택 · P V O C T E F L 데이터 보기</dd>
+      <dt class="tc">두 손가락</dt><dd class="tc">벌리면 확대 · 오므리면 축소</dd>
+      <dt class="kb">우클릭 드래그</dt><dd class="kb">지도 이동 · 휴대폰은 두 손가락</dd>
+      <dt class="kb">휠 / + -</dt><dd class="kb">확대·축소</dd>
+      <dt class="kb">WASD</dt><dd class="kb">지도 이동</dd>
+      <dt class="kb">SPACE</dt><dd class="kb">일시정지</dd>
+      <dt class="kb">Q X R U 1-9 G H J K</dt><dd class="kb">도구 선택 · P V O C T E F L 데이터 보기</dd>
     </dl>
   </div>
 </div>
 
 <script>
 'use strict';
+// phones and the app have no keyboard: hide shortcut letters there
+const TOUCH=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())||matchMedia('(hover:none) and (pointer:coarse)').matches;
+if(TOUCH)document.documentElement.classList.add('touch');
+const kx=s=>TOUCH?String(s).replace(/ ?\((?:[A-Z0-9]|Esc|Enter)\)/g,''):s;
 /* ================================================================
    DOT CITY — pixel isometric city builder
    ================================================================ */
@@ -441,6 +447,8 @@ function nightOf(c){const r=c&255,g=c>>>8&255,b=c>>>16&255,a=c>>>24;return pack(
 function nightCss(hex,f,alpha=1){const[r,g,b]=rgbOf(hex);const k=NA*f;return`rgba(${Math.round(r*(1-k)+NC[0]*k)},${Math.round(g*(1-k)+NC[1]*k)},${Math.round(b*(1-k)+NC[2]*k)},${alpha})`;}
 
 /* ---------------- pixel buffer: every sprite is shaded per pixel ---------------- */
+function tone(v,f){if(v==null)return v;if(typeof v!=='number')return[tone(v[0],f),v[1]!=null?tone(v[1],f*.6):v[1]];const al=v>>>24;if(!al)return v;let r=v&255,g=v>>>8&255,b=v>>>16&255;
+  if(f>0){r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f;}else{r*=1+f;g*=1+f;b*=1+f;}return pack(r,g,b,al);}
 class PB{
   constructor(w,h){this.w=w;this.h=h;this.d=new Uint32Array(w*h);this.n=new Uint32Array(w*h);}
   put(x,y,v){if(v==null)return;x|=0;y|=0;if(x<0||y<0||x>=this.w||y>=this.h)return;const i=y*this.w+x;
@@ -449,17 +457,19 @@ class PB{
   box({cx,cy,hw,h,L,R,T}){const hh=hw/2;
     for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){const X=x+.5;if(X<cx-hw||X>cx+hw)continue;
       const left=X<cx,a=left?X-(cx-hw):X-cx,eb=left?cy+a/2:cy+hh-a/2,f=left?L:R;if(!f)continue;
-      for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h)this.put(x,y,f(a,b,hw,h));}}
+      const corner=left&&a>hw-1;   // the near vertical corner catches the light; the bottom course sits in shade
+      for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h){let v=f(a,b,hw,h);if(h>=3&&(b<1||corner))v=tone(v,b<1?-.2:.12);this.put(x,y,v);}}}
     if(T)this.diamond(cx,cy-h,hw,T);}
   diamond(cx,cy,hw,T){const hh=hw/2;
     for(let y=Math.floor(cy-hh);y<Math.ceil(cy+hh);y++)for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){
       const dx=x+.5-cx,dy=y+.5-cy;if(Math.abs(dx)/hw+Math.abs(dy)/hh<=1){const u=(dy/hh+dx/hw)/2+.5,v=(dy/hh-dx/hw)/2+.5;this.put(x,y,T(u,v,x,y));}}}
   // hip roof sitting on an eave diamond at (cx,cy)
-  roof(cx,cy,hw,rh,hex){const cl=col(hex,.08),cl2=col(hex,-.06),cr=col(hex,-.26),cr2=col(hex,-.38),cb=col(hex,.24),rid=col(hex,.34),eave=col(hex,-.5);
+  roof(cx,cy,hw,rh,hex){const clj=col(hex,.01),crj=col(hex,-.31),cl=col(hex,.08),cl2=col(hex,-.06),cr=col(hex,-.26),cr2=col(hex,-.38),cb=col(hex,.24),rid=col(hex,.34),eave=col(hex,-.5);
     for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){const X=x+.5,left=X<cx,a=left?X-(cx-hw):(cx+hw)-X;if(a<0)continue;
       const yb=cy+a/2,yt=cy-a*rh/hw,yk=cy-a/2;
       for(let y=Math.floor(Math.min(yt,yk)-1);y<=Math.ceil(yb);y++){const Y=y+.5;
-        if(Y<=yb&&Y>=yt){const t=yb-Y;let c=left?(Math.floor(t)%3===2?cl2:cl):(Math.floor(t)%3===2?cr2:cr);
+        if(Y<=yb&&Y>=yt){const t=yb-Y,row=Math.floor(t/3),joint=Math.floor(t)%3!==2&&(x+row*2)%4===0;   // tile courses with staggered joints
+          let c=left?(Math.floor(t)%3===2?cl2:joint?clj:cl):(Math.floor(t)%3===2?cr2:joint?crj:cr);
           if(t<1)c=eave;if(X<cx&&X>cx-1)c=rid;this.put(x,y,c);}
         else if(Y<yt&&Y>=yk)this.put(x,y,cb);}}}
   ell(cx,cy,r,fn){const ry=r/2;for(let y=Math.floor(cy-ry-1);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-r-1);x<=Math.ceil(cx+r);x++){
@@ -468,7 +478,24 @@ class PB{
   line(x0,y0,x1,y1,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0;for(let i=0;i<=n;i++){const t=n?i/n:0;this.put(Math.round(x0+(x1-x0)*t),Math.round(y0+(y1-y0)*t),c);}}
 }
 function toCanvas(w,h,arr){const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(arr.buffer.slice(0)),w,h),0,0);return c;}
-function mk(pb,ox,oy,night=true,meta){const s={c:toCanvas(pb.w,pb.h,pb.d),ox,oy,w:pb.w,h:pb.h};if(night)s.n=toCanvas(pb.w,pb.h,pb.n);
+// pixel-art finish for standing sprites: lit top edges, crisp face seams, a faint grain, a soft contact line at the base,
+// and a dark selective outline so shapes read clearly against the ground
+let POLISH=true;
+function polish(pb){const W2=pb.w,H2=pb.h,src=pb.d.slice(),srcN=pb.n.slice(),A=i=>src[i]>>>24>160;
+  const sh=(c,f)=>{const a=c>>>24;if(!a)return c;let r=c&255,g=c>>>8&255,b=c>>>16&255;if(f>0){r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f;}else{r*=1+f;g*=1+f;b*=1+f;}return pack(r,g,b,a);};
+  const lum=c=>(c&255)*.3+(c>>>8&255)*.59+(c>>>16&255)*.11;
+  for(let y=0;y<H2;y++)for(let x=0;x<W2;x++){const i=y*W2+x;
+    if(A(i)){let f=(hash(x,y,313)-.5)*.06;                                   // grain
+      if(y===0||!A(i-W2))f+=.16;                                               // light on top edges
+      else if(y<H2-1&&A(i+W2)&&x<W2-1&&A(i+1)){const d=lum(src[i])-lum(src[i+1]);if(d>38)f+=.06;}   // brighter face meets darker face
+      if(y<H2-1&&!A(i+W2))f-=.12;                                              // base touches the ground
+      if(f){pb.d[i]=sh(src[i],f);pb.n[i]=sh(srcN[i],f*.6);}continue;}
+    if(src[i]>>>24)continue;
+    let nb=-1;for(const j of[x>0?i-1:-1,x<W2-1?i+1:-1,y>0?i-W2:-1,y<H2-1?i+W2:-1])if(j>=0&&A(j)){nb=j;break;}
+    if(nb<0)continue;const o=src[nb],on=srcN[nb];
+    const dk=c=>pack((c&255)*.32+8,(c>>>8&255)*.3+8,(c>>>16&255)*.34+14,y>0&&A(i-W2)?235:150);   // under-side outline is solid, top-side softer
+    pb.d[i]=dk(o);pb.n[i]=dk(on);}}
+function mk(pb,ox,oy,night=true,meta){if(night&&POLISH&&!(meta&&meta.raw))polish(pb);const s={c:toCanvas(pb.w,pb.h,pb.d),ox,oy,w:pb.w,h:pb.h};if(night)s.n=toCanvas(pb.w,pb.h,pb.n);
   let top=pb.h;for(let y=0;y<pb.h&&top===pb.h;y++)for(let x=0;x<pb.w;x++)if(pb.d[y*pb.w+x]>>>24){top=y;break;}s.top=oy+top;if(meta)Object.assign(s,meta);return s;}
 function G(fn){const pb=new PB(32,16);for(let y=0;y<16;y++)for(let x=0;x<32;x++){const X=x+.5-16,Y=y+.5,u=(Y/8+X/16)/2,v=(Y/8-X/16)/2;if(u<0||u>=1||v<0||v>=1)continue;pb.put(x,y,fn(u,v,x,y));}return mk(pb,-16,0,false);}
 
@@ -557,6 +584,15 @@ function buildSprites(){
   /* ground ---------------------------------------------------- */
   SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const h=hash(x,y,v*31+7),t=p?.035:0;
     if(h<.055)return col(PAL.g2,t);if(h>.955)return col(PAL.g0,t);if(h<.07)return col(PAL.g3);return col(PAL.g1,t);}));
+  // weather on the ground: snow lying in 4 depths (patchy -> full), wet sheen and puddles after rain
+  const sm=(x,y,k)=>{const gx=x/7,gy=y/3.5,x0=Math.floor(gx),y0=Math.floor(gy),fx=gx-x0,fy=gy-y0,f=t=>t*t*(3-2*t),a=hash(x0,y0,k),b=hash(x0+1,y0,k),c=hash(x0,y0+1,k),d=hash(x0+1,y0+1,k);
+    return(a+(b-a)*f(fx))*(1-f(fy))+(c+(d-c)*f(fx))*f(fy);};   // smooth blobs, so snow lies in drifts instead of static
+  // 4 depths x 3 layouts; blobs follow the tile's own diamond so neighbouring tiles don't repeat the same stripe
+  SP.snowG=[0,1,2,3].map(st=>[0,1,2].map(vr=>G((u,w,x,y)=>{const h=sm(u*20,w*10,11+vr)*.62+sm(u*44,w*22,21+vr)*.32+hash(x,y,4+vr)*.06,cov=[.3,.48,.66,1.01][st];if(h>cov)return null;
+    const edge=h>cov-.06;return col(edge?'#c9d6ea':hash(x,y,5)<.08?'#dfe8f5':'#f4f8fd',0,edge?200:245);})));
+  SP.wetG=G(()=>col('#1c2a48',0,46));
+  SP.puddle=[0,1,2].map(k=>G((u,w,x,y)=>{const cu=[.42,.6,.35][k],cv=[.5,.38,.62][k],r=[.2,.16,.14][k],d=Math.hypot((u-cu)/r,(w-cv)/(r*.8))+hash(x,y,k+3)*.18;
+    if(d>1)return null;return col(d<.35&&hash(x,y,k)<.5?'#c8dcf0':d>.8?'#3c5272':'#5d7aa0',0,d>.8?150:185);}));
   SP.sand=[0,1].map(v=>G((u,w,x,y)=>{const h=hash(x,y,v+50);return h<.1?col(PAL.sand2):h>.96?col('#f1e3b3'):col(PAL.sand);}));
   SP.water=[];for(let f=0;f<4;f++){SP.water[f]=[];for(let m=0;m<16;m++)SP.water[f][m]=G((u,v,x,y)=>{
     const fm=((m&1)&&u>.87)||((m&2)&&v>.87)||((m&4)&&u<.13)||((m&8)&&v<.13);
@@ -800,12 +836,12 @@ function buildSprites(){
     const awning=(a,b,t)=>(Math.floor(a/2)%2)?col(aw,(b<7.6?-.2:0)+t):col('#f7f3ea',(b<7.6?-.15:0)+t);
     const brand=(a,b,t)=>(b>=7.4&&b<8.6&&(a|0)%2&&hash(a|0,0,s)<.7)?[col('#ffffff',t),col('#ffffff')]:[col(aw,t),col(aw,.2)];
     if(type===0||type===1){pb.box({cx,cy:cy-1,hw:12,h:10,L:shopL(12,type?brand:awning),R:shopR(12,type?brand:awning),T:roofTop('flat',wall)});
-      if(type===0)pb.box({cx:cx-1,cy:cy-11,hw:6,h:4,L:(a,b)=>(a>=1&&a<5&&b>=.8&&b<3.2&&hash(a|0,b|0,s)<.6)?[col(neon,-.1),col(neon)]:col('#2a2d3e'),R:()=>col('#1d2030'),T:()=>col('#3a3e52')});
+      if(type===0)pb.box({cx:cx-1,cy:cy-11,hw:6,h:4,L:(a,b)=>(a>=1&&a<5&&b>=.8&&b<3.2&&hash(a|0,b|0,s)<.85)?[col(neon,-.1),col(neon)]:col('#4a5068'),R:()=>col('#363b4f'),T:()=>col('#646a80')});
       else{P.ac(pb,cx+3,cy-11);if(r()<.5)P.ac(pb,cx-4,cy-10);}}
     else if(type===2){pb.box({cx:cx+3,cy:cy-3,hw:9,h:9,L:shopL(9,awning),R:shopR(9,awning),T:roofTop('garden',wall)});
       [[cx-8,cy+1],[cx-2,cy+5]].forEach(([ux,uy],j)=>{for(let i=0;i<4;i++)pb.put(ux,uy-i,col('#6a5a4a'));pb.ell(ux,uy-4,3.2,(dx,dy)=>col(j?aw:'#f7f3ea',dx>.2?-.2:0));});}
     else{pb.box({cx,cy:cy-1,hw:11,h:8,L:shopL(11,(a,b,t)=>col(wall,t-.1)),R:shopR(11,(a,b,t)=>col(wall,t-.1)),T:()=>col(wall)});pb.roof(cx,cy-9,13,5,aw);
-      pb.box({cx:cx-6,cy:cy-6,hw:3,h:5,L:(a,b)=>b>1&&b<4&&a>.5&&a<2.5?[col(neon,-.2),col(neon)]:col('#2a2d3e'),R:()=>col('#1d2030'),T:()=>col('#3a3e52')});}
+      pb.box({cx:cx-6,cy:cy-6,hw:3,h:5,L:(a,b)=>b>1&&b<4&&a>.5&&a<2.5?[col(neon,-.2),col(neon)]:col('#4a5068'),R:()=>col('#363b4f'),T:()=>col('#646a80')});}
     SP.bld[C][1].push(mk(pb,-16,16-H));}
 
   /* commercial L2: offices, billboards, brick blocks */
@@ -817,7 +853,7 @@ function buildSprites(){
     const sh=type%2?grid:ribbon;
     pb.box({cx,cy:cy-1,hw:12,h:hgt,L:sh(0,0),R:sh(-.22,1),T:roofTop(type===3?'garden':'flat',wall)});
     const ty=cy-1-hgt;
-    if(type===1){pb.box({cx:cx-2,cy:ty-1,hw:7,h:6,L:(a,b)=>{const c=['#ff5f7a','#ffd84a','#5fe0ff','#9aff6a'][(Math.floor(a/2)+Math.floor(b/2)+v)%4];return a>.8&&a<6.2&&b>.8&&b<5.2?[col(c,-.1),col(c)]:col('#2a2d3e');},R:()=>col('#1d2030'),T:()=>col('#3a3e52')});}
+    if(type===1){pb.box({cx:cx-2,cy:ty-1,hw:7,h:6,L:(a,b)=>{const c=['#ff5f7a','#ffd84a','#5fe0ff','#9aff6a'][(Math.floor(a/2)+Math.floor(b/2)+v)%4];return a>.8&&a<6.2&&b>.8&&b<5.2?[col(c,-.1),col(c)]:col('#4a5068');},R:()=>col('#363b4f'),T:()=>col('#646a80')});}
     else{P.ac(pb,cx+4,ty-1);if(r()<.6)P.ac(pb,cx-4,ty);}
     SP.bld[C][2].push(mk(pb,-16,16-H));}
 
@@ -1236,11 +1272,26 @@ function buildSprites(){
       lotSet((u,v,x,y)=>col(PAL.asph,hash(x,y,9)<.1?.07:0),()=>col(PAL.curb))];
     SP.consOld=mk1(44,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#7a5233'):null,R:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#5a3a22'):null});for(let k=0;k<5;k++)pb.put(cx+6+(k%2),cy+3-(k>>1),col('#c9a45a'));});
     const vehSet=pal=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}if(pal[k]!=null)pb.put(x,y,pal[k]);}));return mk(pb,-3,-3);});
-    const walker=body=>{const pb=new PB(3,5);pb.put(1,0,col('#2a1d14'));pb.put(1,1,col('#e0b088'));pb.put(0,2,col(body,-.1));pb.put(1,2,col(body));pb.put(2,2,col(body,-.2));pb.put(1,3,col(body,-.1));pb.put(0,4,col('#3a2a20'));pb.put(2,4,col('#3a2a20'));const sp=mk(pb,-1,-5);return[sp,sp,sp,sp];};
-    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(walker),
-      [...['#e8e0c8','#c9b896'].map(walker),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
-      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(walker),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
-      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(walker)],
+    // people: 5x9 figures (hair, face, shirt with arms, trousers, shoes) facing front or back, with a two-step walk
+    const HAIR=['#2a1d14','#4a2e1a','#151318','#7a4a24','#b8863e','#5a5560'],SKIN=['#f0c49a','#e0aa7e','#c98e62','#f6d2b0'];
+    const walker=(body,pants)=>{let hs=0;for(const ch of body)hs=hs*31+ch.charCodeAt(0)|0;hs=Math.abs(hs);
+      const hair=col(HAIR[hs%HAIR.length]),skin=col(SKIN[(hs>>3)%SKIN.length]),skinD=col(SKIN[(hs>>3)%SKIN.length],-.18),sh=col(body),shD=col(body,-.22),shL=col(body,.14),
+        pa=col(pants||(hs&1?'#34405e':'#3e3530')),paD=col(pants||(hs&1?'#34405e':'#3e3530'),-.25),shoe=col('#1e1a1a');
+      const fig=(back,flip,step)=>{const pb=new PB(7,11),P=(x,y,c)=>pb.put(flip?6-x:x,y,c);
+        P(2,1,hair);P(3,1,hair);P(4,1,hair);
+        if(back){P(2,2,hair);P(3,2,hair);P(4,2,hair);P(2,3,hair);P(3,3,col(HAIR[hs%HAIR.length],-.15));P(4,3,hair);}
+        else{P(2,2,hair);P(3,2,skin);P(4,2,skin);P(2,3,skinD);P(3,3,skin);P(4,3,skin);}
+        for(let x=1;x<=5;x++)P(x,4,x===1||x===5?shD:x===2?shL:sh);
+        P(1,5,shD);P(2,5,shL);P(3,5,sh);P(4,5,sh);P(5,5,shD);
+        P(1,6,step?shD:skinD);P(2,6,sh);P(3,6,sh);P(4,6,shD);P(5,6,step?skinD:shD);if(!step){P(1,6,skin);}
+        P(2,7,pa);P(3,7,pa);P(4,7,paD);
+        if(step){P(2,8,pa);P(4,8,paD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,pa);P(2,8,paD);P(3,9,shoe);P(2,9,shoe);}
+        const sp=mk(pb,-3,-10);sp.g=0;return sp;};
+      return[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});};
+    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
+      [...['#e8e0c8','#c9b896'].map(b=>walker(b)),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
+      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
+      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(b=>walker(b))],
       SP.car];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
     SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
@@ -1493,7 +1544,7 @@ let W=null;
 const CAP_W=60,CAP_C=1600,CAP_F=8000;
 const POP=[0,6,18,45,110,260],JC=[0,4,12,32,80,190],JI=[0,8,20,40,70];
 function blankWorld(seed){const NN=N*N;return{wb:null,savedAt:0,seed,name:'새벽시',funds:20000,month:0,day:0,tax:9,tod:9.5,ms:0,adv:{},lastNet:0,
-  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),flip:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
+  era:0,eraStart:0,te:new Uint8Array(NN),grid:new Uint8Array(NN),cov:new Float32Array(NN),terrain:new Uint8Array(NN),trees:new Uint8Array(NN),kind:new Uint8Array(NN),rail:new Uint8Array(NN),flip:new Uint8Array(NN),labels:{},wx:0,wxEnd:0,snow:0,level:new Uint8Array(NN),vari:new Uint8Array(NN),build:new Uint8Array(NN),anchor:new Int16Array(NN).fill(-1),
   powered:new Uint8Array(NN),road:new Uint8Array(NN),lv:new Float32Array(NN),pol:new Float32Array(NN),crime:new Float32Array(NN),traf:new Float32Array(NN),jam:new Float32Array(NN),edu:new Float32Array(NN),fcov:new Float32Array(NN),health:new Float32Array(NN),fire:new Uint8Array(NN),unl:{},wd:new Uint8Array(NN),wmask:new Uint8Array(NN),lmask:new Uint8Array(NN),gv:new Uint8Array(NN),
   st:{pop:0,jobsC:0,jobsI:0,dR:1,dC:.2,dI:.5,cap:0,use:0,roads:0,police:0,wind:0,coal:0,parks:0,unpowered:0,noroad:0,emptyR:0,emptyC:0,emptyI:0,zones:0,avgPolR:0,avenues:0,jammed:0,avgTraf:0,fires:0,schools:0,halls:0,stadiums:0,towers:0,burning:0,cnt:{},covPct:0}};}
 function vnoise(r,cell){const gs=Math.ceil(N/cell)+2,g=new Float32Array(gs*gs);for(let i=0;i<g.length;i++)g[i]=r();
@@ -1688,12 +1739,12 @@ function simDay(quiet){const w=W;w.day++;autoWeather(w,quiet);if(!quiet)maybeInc
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
 function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]);
   const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
-function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;
+function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(W.funds<0)W.funds=0;   // no debt: an empty purse just stays empty
   if(!quiet&&W.era===5&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 미래 도시가 완성됐어요.','good');fireworks();sfx('win');}
   if(quiet)return;advisor();milestone();save();}
 function advisor(){const S=W.st,m=W.month;const say=(key,msg,type,gap)=>{if((W.adv[key]??-99)+gap>m)return false;W.adv[key]=m;toast(msg,type);return true;};
   if(W.era===0&&!cntOf(S,K.FIREPIT)&&say('nofirepit','먼저 모닥불(6)을 피우세요. 모닥불 5칸 안, 길 2칸 안에 놓은 움집 터에만 집이 생겨요.','warn',3))return;
-  if(W.funds<0&&say('debt','적자입니다. 세율을 올리거나 지출을 줄이세요.','warn',4))return;
+  if(W.funds<=0&&W.lastNet<0&&say('debt','돈이 다 떨어졌어요. 세율을 올리거나 지출을 줄여 보세요. 자금 옆 ＋에서 충전할 수도 있어요.','warn',4))return;
   if(W.era<5){const e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);if(!W.wb&&goalsDone()&&say('wonder'+W.era,`${tn(wt)}을(를) 세울 수 있어요! 완성하면 ${ERAS[W.era+1].name}가 열립니다. (Y)`,'good',99))return;}
   if(W.era<3){if(S.unpowered>3&&say('cover',W.era===0?'불씨가 닿지 않는 움집 터가 있어요. 모닥불(6)을 가까이 피워주세요.':'우물이 먼 집이 있어요. 우물(6)을 가까이 파주세요.','warn',5))return;}
   else if(S.zones>0&&S.cap===0&&say('nopow',W.era===3?'증기 발전소(7)를 지어야 3단계 건물이 올라가요.':'발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.','warn',3))return;
@@ -1719,12 +1770,13 @@ const KEY='dotcity.save.v1';
 function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
 function unb64(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function serialize(){const w=W;return JSON.stringify({v:1,seed:w.seed,name:w.name,funds:w.funds,month:w.month,day:w.day,tax:w.tax,tod:w.tod,ms:w.ms,adv:w.adv,wb:w.wb,savedAt:Date.now(),lastNet:w.lastNet,unl:w.unl,era:w.era,eraStart:w.eraStart,
-  labels:w.labels,wx:w.wx,wxEnd:w.wxEnd,
+  labels:w.labels,wx:w.wx,wxEnd:w.wxEnd,snow:w.snow,
   a:{terrain:b64(w.terrain),rail:b64(w.rail),flip:b64(w.flip),trees:b64(w.trees),kind:b64(w.kind),level:b64(w.level),vari:b64(w.vari),build:b64(w.build),fire:b64(w.fire),te:b64(w.te),anchor:b64(new Uint8Array(w.anchor.buffer))}});}
 function deserialize(str){const o=JSON.parse(str);if(o.v!==1)throw new Error('bad save');const w=blankWorld(o.seed);
-  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd'])if(o[k]!=null)w[k]=o[k];
+  for(const k of['name','funds','month','day','tax','tod','ms','adv','lastNet','unl','era','eraStart','wb','savedAt','labels','wx','wxEnd','snow'])if(o[k]!=null)w[k]=o[k];
   for(const k of['terrain','trees','kind','rail','flip','level','vari','build','fire','te'])if(o.a[k])w[k].set(unb64(o.a[k]));
   if(o.era==null){w.era=4;w.te.fill(4);}
+  if(!(w.funds>=0))w.funds=0;   // older saves could sink into debt
   w.anchor=new Int16Array(unb64(o.a.anchor).buffer);derive(w);return w;}
 function save(){W.savedAt=Date.now();try{localStorage.setItem(KEY,serialize());}catch(e){}}
 // While the game is closed the city keeps growing slowly: one in-game day per real minute, up to two years.
@@ -1879,8 +1931,8 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
   sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 let prevSpeed=1;
 function advanceEra(quiet){if(W.era>=5)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];boats=[];trains=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
-function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=e.story;
-  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=u;$('#emList').append(li);}$('#emGoal').textContent=e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · ');const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'?W.name:randomCityName();
+function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=kx(e.story);
+  $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=kx(u);$('#emList').append(li);}$('#emGoal').textContent=kx(e.goal+' 목표: '+GOALS[W.era].map(g=>g.t).join(' · '));const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'?W.name:randomCityName();
   $('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);(!adv&&matchMedia('(pointer:fine)').matches?$('#emName'):$('#emGo')).focus();}
 const CITY_NAMES=['햇살마을','별빛시','무지개시','솔바람시','푸른강시','달빛마을','꽃내음시','은하시','도토리마을','바람개비시','구름다리시','반짝시','새싹마을','노을시','하늘숲시','파도마을','초록별시','방울시'];
 function randomCityName(){const cur=$('#emName').value;let n;do n=CITY_NAMES[(Math.random()*CITY_NAMES.length)|0];while(n===cur);return n;}
@@ -2140,13 +2192,30 @@ function drawLabels(fx,fy,s){const ks=Object.keys(W.labels);if(!ks.length||overl
   c.restore();}
 
 /* ---------------- weather: rain, snow, falling petals (auto by season, or picked in photo mode) ---------------- */
-const wxp=[];let wxCur=0;
-function weatherFx(c,lw,lh){const wx=photoWx??(W.wx||0),dt=Math.min(.1,frameDt);if(wx!==wxCur){wxp.length=0;wxCur=wx;}if(!wx)return;
-  const want=Math.round(lw*lh/(wx===1?700:wx===2?1400:2600));while(wxp.length<want)wxp.push({x:Math.random()*lw,y:Math.random()*lh,v:.6+Math.random()*.6,p:Math.random()*6});
-  c.globalCompositeOperation='source-atop';c.fillStyle=wx===1?`rgba(30,40,80,${.14*(1-nightF*.5)})`:wx===2?`rgba(240,246,255,${.2*(1-nightF*.5)})`:'rgba(255,200,220,.05)';c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';
-  for(const q of wxp){if(wx===1){q.x-=60*dt*q.v;q.y+=260*dt*q.v;}else if(wx===2){q.y+=22*dt*q.v;q.x+=Math.sin(now/900+q.p)*10*dt;}else{q.y+=16*dt*q.v;q.x+=(14+Math.sin(now/700+q.p)*14)*dt;}
-    if(q.y>lh+4){q.y=-4;q.x=Math.random()*(lw+60);}if(q.x<-6)q.x=lw+4;if(q.x>lw+6)q.x=-4;
-    if(wx===1){c.fillStyle=nightCss('#b8d4ff',nightF*.6,.55);c.fillRect(q.x|0,q.y|0,1,3);c.fillRect((q.x|0)-1,(q.y|0)+3,1,1);}
+const wxp=[],wsp=[];let wxCur=0,wetAmt=0;
+// snow builds up while it snows (about a minute to cover everything) and melts slowly afterwards; rain leaves the ground wet with puddles
+function wxAccumulate(wx,dt){const sn=W.snow||0;
+  W.snow=Math.max(0,Math.min(1,sn+(wx===2?dt/60:-dt/(wx===1?40:150))));
+  wetAmt=Math.max(0,Math.min(1,wetAmt+(wx===1?dt/15:sn>W.snow&&sn>.05?dt/90:-dt/70)));}
+function groundWeather(c,lh){const sn=W.snow||0,wet=wetAmt;if(sn<.03&&wet<.03)return;const w=W;
+  for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0,k=w.kind[i];
+    if(wet>.03){c.globalAlpha=wet;c.drawImage(SP.wetG.c,sx-16,sy);const h=hash(x,y,61);if(h<(k===K.ROAD?.3:k===K.NONE?.16:.08)){c.globalAlpha=Math.min(1,wet*1.4);c.drawImage(SP.puddle[(h*30|0)%3].c,sx-16,sy);}c.globalAlpha=1;}
+    if(sn>.03){const lv=sn*(k===K.ROAD?.5:1)*4+hash(x,y,77)*.9-.6;if(lv>=0)c.drawImage(SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0].c,sx-16,sy);}}}
+function weatherFx(c,lw,lh){const wx=photoWx??(W.wx||0),dt=Math.min(.1,frameDt);wxAccumulate(wx,dt);if(wx!==wxCur){wxp.length=0;wsp.length=0;wxCur=wx;}
+  const sn=W.snow||0;if(sn>.03){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(236,242,252,${.12*sn*(1-nightF*.5)})`;c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';}   // frost on roofs and trees
+  if(!wx)return;
+  const want=Math.round(lw*lh/(wx===1?900:wx===2?1400:2600));while(wxp.length<want)wxp.push({x:Math.random()*lw,y:Math.random()*lh,v:.6+Math.random()*.6,p:Math.random()*6});if(wxp.length>want)wxp.length=want;
+  c.globalCompositeOperation='source-atop';c.fillStyle=wx===1?`rgba(30,40,80,${.14*(1-nightF*.5)})`:wx===2?`rgba(240,246,255,${.12*(1-nightF*.5)})`:'rgba(255,200,220,.05)';c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';
+  if(wx===1){ // splashes on land, rings on water
+    for(let k=0;k<lw*lh/9000&&visN;k++){const n=((Math.random()*visN/3)|0)*3,i=visBuf[n];wsp.push({x:visBuf[n+1]+X0+(Math.random()-.5)*20,y:visBuf[n+2]+Y0+4+Math.random()*8,t:0,wt:W.terrain[i]===1});}
+    for(let k=wsp.length-1;k>=0;k--){const q=wsp[k];q.t+=dt;if(q.t>.32){wsp.splice(k,1);continue;}const px=Math.round(q.x-X0),py=Math.round(q.y-Y0),f=q.t/.32;
+      c.fillStyle=nightCss('#d6e6ff',nightF*.6,(1-f)*.7);
+      if(q.wt){const r=1+Math.round(f*3);c.fillRect(px-r,py,1,1);c.fillRect(px+r,py,1,1);c.fillRect(px,py-(r>>1),1,1);c.fillRect(px,py+(r>>1),1,1);}
+      else if(f<.35)c.fillRect(px,py,1,1);else{c.fillRect(px-1,py-1,1,1);c.fillRect(px+1,py-1,1,1);}}}
+  for(const q of wxp){if(wx===1){q.x-=55*dt*q.v;q.y+=240*dt*q.v;}else if(wx===2){q.y+=22*dt*q.v;q.x+=Math.sin(now/900+q.p)*10*dt;}else{q.y+=16*dt*q.v;q.x+=(14+Math.sin(now/700+q.p)*14)*dt;}
+    if(q.y>lh+8){q.y=-8;q.x=Math.random()*(lw+60);}if(q.x<-6)q.x=lw+4;if(q.x>lw+6)q.x=-4;
+    if(wx===1){ // thin slanted streak that fades towards its tail, instead of a bright hook
+      const x0=q.x|0,y0=q.y|0,L=q.v>.95?4:3;c.fillStyle=nightCss('#b4cbee',nightF*.6,.55*q.v);c.fillRect(x0,y0+L-2,1,2);c.fillStyle=nightCss('#b4cbee',nightF*.6,.26*q.v);c.fillRect(x0+1,y0,1,L-2);}
     else if(wx===2){c.fillStyle=nightCss('#ffffff',nightF*.5,.9);c.fillRect(q.x|0,q.y|0,q.v>1?2:1,q.v>1?2:1);}
     else{c.fillStyle=nightCss((q.p*10|0)%2?'#ffb7d2':'#f48ab6',nightF*.6,.95);c.fillRect(q.x|0,q.y|0,(now/300+q.p|0)%2?2:1,1);}}}
 // a spell of weather lasts a few real minutes (rain/snow/petals 2-5 min, clear skies 3-8 min), then the season picks the next one
@@ -2199,7 +2268,17 @@ let shRec=[],shHash=0,spIds=0,swayDX=0;const shCv=document.createElement('canvas
 function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp);if(sh){
       if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
       else{const wx=x-swayDX+sp.ox+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13)|0;}}}
-  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}
+  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}
+  if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;c.drawImage(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+// snow caps: the top few opaque pixels of every column of a standing sprite (roofs, treetops), built once per sprite
+let capA=0;const capCache=new WeakMap();
+function capOf(sp){let cp=capCache.get(sp);if(cp!==undefined)return cp;cp=null;
+  const w=sp.w,h=sp.h,sc=sp.c.getContext('2d');if(sc&&w&&h){const src=sc.getImageData(0,0,w,h).data,cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d'),out=cx.createImageData(w,h),o=out.data;let any=false;
+    const op=(x,y)=>y>=0&&y<h&&src[(y*w+x)*4+3]>200;
+    for(let x=0;x<w;x++)for(let y=0;y<h;y++){if(!op(x,y))continue;if(op(x,y-1))continue;   // top of a run: snow settles here
+      const L=(x*7+y*3)%5===0?3:2;for(let k=0;k<L&&op(x,y+k);k++){const j=((y+k)*w+x)*4,sh=k===L-1;o[j]=sh?214:246;o[j+1]=sh?224:249;o[j+2]=sh?238:253;o[j+3]=sh?190:250;any=true;}}
+    if(any){cx.putImageData(out,0,0);cp=cv;}}
+  capCache.set(sp,cp);return cp;}
 function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
   if(k===K.RAIL)return SP.rail[Math.max(3,e)][railMask(x,y)];
   if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
@@ -2232,6 +2311,7 @@ function render(){
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
     c.drawImage(groundOf(i,x,y).c,sx-16,sy);if(w.rail[i]&&w.kind[i]===K.ROAD)c.drawImage(SP.railX[Math.max(3,Math.min(5,w.te[i]))][(railMask(x,y)&5)?0:1].c,sx-16,sy);const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
+  groundWeather(c,lh);
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
     for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
@@ -2257,7 +2337,7 @@ function render(){
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){const k=idx(Math.floor(b.x+.5+DIRS[b.d][0]*b.t),Math.floor(b.y+.5+DIRS[b.d][1]*b.t));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
-  const oa=overlay?.28:1;c.globalAlpha=oa;const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
+  const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh;
     if(key!==shKey){shKey=key;if(shCv.width!==lw||shCv.height!==lh){shCv.width=lw;shCv.height=lh;}else shCx.clearRect(0,0,lw,lh);
       for(let n=0;n<shRec.length;n+=3)shCx.drawImage(shRec[n],shRec[n+1]-X0,shRec[n+2]-Y0);}
@@ -2288,7 +2368,7 @@ function render(){
     else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
-  c.globalAlpha=1;castSh=false;
+  c.globalAlpha=1;castSh=false;capA=0;
   if(ghost&&tl.id==='deco'){const[x,y]=ghost,L=subSel.deco,sp=decoView(L,decoRot);
     if(sp){c.globalAlpha=.75;drawSpr(c,sp,(x-y)*16-X0,(x+y)*8-Y0+(sp.gp?8:0));c.globalAlpha=1;}ghost=null;}
   if(ghost){const[x,y]=ghost,s0=tl.kind&&tl.kind>=K.POLICE?civSprite(tl.kind,W.era):null,sp=s0&&buildFlip&&canTurn(tl)?flipped(s0):s0;
@@ -2350,7 +2430,7 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
   const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
-  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}const sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];drawSpr(c,sp,sx,sy);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/190+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
@@ -2491,14 +2571,14 @@ function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspec
 function setOverlay(id){overlay=id;document.querySelectorAll('#tools .tb').forEach(b=>{if(OVERLAYS.some(o=>o.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});}
 function setSpeed(n){speed=n;[...$('#speed').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===n));}
 let tipTimer=0;
-function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&!o.items&&whyNot(o),cst=isOv?0:costOf(o);tip.innerHTML=`<div class="h"><span>${isOv?o.name:tn(o)}<kbd>${o.key}</kbd></span>${cst?`<span class="c">${money(cst)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${o.desc}</div>${why?`<div class="d" style="color:var(--gold)">${why}</div>`:''}`;
+function showTip(btn,o,isOv,brief){const tip=$('#tip'),why=!isOv&&!o.items&&whyNot(o),cst=isOv?0:costOf(o);tip.innerHTML=`<div class="h"><span>${isOv?o.name:tn(o)}<kbd>${o.key}</kbd></span>${cst?`<span class="c">${money(cst)}${o.drag?'/칸':''}</span>`:''}</div><div class="d">${kx(o.desc)}</div>${why?`<div class="d" style="color:var(--gold)">${kx(why)}</div>`:''}`;
   tip.hidden=false;const r=btn.getBoundingClientRect(),tr=tip.getBoundingClientRect();
   if(matchMedia('(max-width:760px)').matches){tip.style.left=clamp(r.left+r.width/2-tr.width/2,12,innerWidth-tr.width-12)+'px';tip.style.top=(r.top-tr.height-12)+'px';}
   else{tip.style.left=(r.right+14)+'px';tip.style.top=clamp(r.top+r.height/2-tr.height/2,8,innerHeight-tr.height-8)+'px';}
   clearTimeout(tipTimer);if(brief)tipTimer=setTimeout(hideTip,1800);}
 function hideTip(){$('#tip').hidden=true;}
 function toast(msg,type='info'){const box=$('#toasts'),el=document.createElement('div');el.className='toast '+type;
-  el.innerHTML=`<span class="ti">${svg(type==='warn'?'warn':type==='good'?'star':'info',2)}</span><span></span>`;el.lastChild.textContent=msg;box.prepend(el);
+  el.innerHTML=`<span class="ti">${svg(type==='warn'?'warn':type==='good'?'star':'info',2)}</span><span></span>`;el.lastChild.textContent=kx(msg);box.prepend(el);
   while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.classList.add('out'),4300);setTimeout(()=>el.remove(),4650);}
 function openMenu(){$('#menu').hidden=false;$('#mResume').focus();}
 function closeMenu(){$('#menu').hidden=true;}
@@ -2534,7 +2614,7 @@ let goalsOpen=false;
 function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wonder===W.era);
   const row=g=>`<div class="goal ${g.done?'ok':''}"><span class="gk">${g.done?'✓':''}</span><span class="gt">${g.t}</span><span class="px">${fmt(g.cur)}/${fmt(g.n)}</span>${!g.done&&g.tool&&toolOn(T(g.tool))?`<button class="gb" data-tool="${g.tool}">짓기</button>`:''}</div>`;
   const tail=W.era>=5?'':W.wb?`<div class="need">${tn(wt)} 공사 중 · ${fmtDur(wbLeft())} 남음. 게임을 꺼 둬도 공사는 계속돼요.</div>`:gl.every(g=>g.done)?`<button class="btn primary" id="goWonder">${tn(wt)} 세우기 <small>${money(wt.fixed)}</small></button>`:`<div class="sub">목표를 모두 채우면 ${tn(wt)}을(를) 세울 수 있어요. 공사는 현실 시간으로 ${e.build}시간 걸려요.</div>`;
-  $('#info').innerHTML=`<h3><span>${e.name} 목표</span><button class="x" id="infoX" aria-label="닫기">X</button></h3>${gl.map(row).join('')}${tail}`;
+  $('#info').innerHTML=kx(`<h3><span>${e.name} 목표</span><button class="x" id="infoX" aria-label="닫기">X</button></h3>${gl.map(row).join('')}${tail}`);
   $('#infoX').onclick=()=>{goalsOpen=false;$('#info').hidden=true;};
   $('#info').querySelectorAll('.gb').forEach(b=>b.onclick=()=>{setTool(b.dataset.tool);sfx('click');});
   const gw=$('#goWonder');if(gw)gw.onclick=()=>{setTool(wt.id);goalsOpen=false;$('#info').hidden=true;sfx('click');};}
@@ -2595,7 +2675,7 @@ function showTarget(){const el=$('#tconf');if(!target){el.hidden=true;return;}co
   el.classList.toggle('bad',!ok||!rich);el.hidden=false;
   $('#tcOk').hidden=!ok||!rich;$('#tcOk').innerHTML=`${t.id==='bulldoze'?'철거':(t.id==='road'||t.id==='avenue')&&W.terrain[idx(x,y)]===1&&W.kind[idx(x,y)]!==K.ROAD?'다리 놓기':'여기에 짓기'}${c?` <small>${money(c)}</small>`:''}`;
   const warn=ok&&rich&&t.kind>=K.RES&&t.kind<=K.IND?zoneBlock(t.kind,x,y):'';
-  $('#tcMsg').textContent=!ok?(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
+  $('#tcMsg').textContent=!ok?kx(whyNot(t)||'여기엔 지을 수 없어요'):!rich?'돈이 모자라요':warn?'⚠ '+({fire:'모닥불이 멀어요',water:'우물이 멀어요',power:'전기가 없어요',road:'길이 멀어요',demand:'원하는 사람이 없어요'}[warn])+' · 집이 안 생겨요':'';$('#tcMsg').hidden=!$('#tcMsg').textContent;$('#tcMsg').classList.toggle('warn',!!warn);}
 function commitTarget(){if(!target)return;const t=T(tool),g=target.g;target=null;$('#tconf').hidden=true;applyTool(t,tilesFor(t,g,g));}
 function placeTarget(){const el=$('#tconf');if(!target||el.hidden)return;const[x,y]=target.g,s=cam.s,ox=cam.x-view.width/s/2,oy=cam.y-view.height/s/2,sz=T(tool).size||1;
   const px=(((x-y)*16+(sz-1)*0-ox)*s)/DPR,py=(((x+y)*8-oy)*s)/DPR,w=el.offsetWidth,h=el.offsetHeight;

@@ -32,7 +32,8 @@ jobs:
         run: |
           mkdir -p _site/play _site/img
           cp -r site/. _site/
-          cp dotcity/index.html _site/play/index.html
+          # the public web game leaves out the era picker and test buttons, like the store app build
+          node -e "const fs=require('fs');let s=fs.readFileSync('dotcity/index.html','utf8');const n=s.length;s=s.replace(/\s*<h3 class=\"msub\">[\s\S]*?<\/h3>\s*<div class=\"eras\" id=\"mEras\">[\s\S]*?<\/div>/,'');if(s.length===n){console.error('era picker markup not found');process.exit(1);}fs.writeFileSync('_site/play/index.html',s);"
           cp dotcity-app/store/screenshots/ios-*.png _site/img/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
