@@ -2662,7 +2662,7 @@ function watchAd(){const ads=window.DotAds;if(!ads||adBusy||!adsLeft())return;ad
   ads.show().then(ok=>{adBusy=false;setSpeed(was);if(ok){useAd();const a=adAmount();W.funds+=a;save();updateHud(true);toast(`광고 보상 게임머니 +${money(a)}!`,'good');sfx('win');}else toast('광고를 끝까지 보면 받을 수 있어요.','info');renderShop();})
     .catch(()=>{adBusy=false;setSpeed(was);renderShop();const why=ads.test&&ads.lastError&&ads.lastError();toast('지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.'+(why?` (${why})`:''),'warn');});}
 function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
-  $('#shopNote').textContent=iap||window.DotAds?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
+  $('#shopNote').textContent=iap||window.DotAds?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.'+(window.DotAds&&window.DotAds.test?' [테스트 빌드: 테스트 광고]':''):'광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
   const ads=window.DotAds,left=adsLeft();
   $('#shopList').innerHTML=`<button class="btn pack ad" id="adBtn" ${!ads||adBusy||!left?'disabled':''}><span class="ico tv"></span><span class="nm">게임머니 +${money(adAmount())}<small>광고 보고 받기 · 오늘 ${left}/${AD_DAILY}번 남음</small></span><span class="pr">${adBusy?'광고 중…':left?'무료':'내일 다시'}</span></button>`+PACKS.map(p=>`<button class="btn pack" data-id="${p.id}" ${!iap||shopBusy?'disabled':''}><span class="ico coin"></span><span class="nm">게임머니 +${money(packAmount(p))}<small>${p===PACKS[0]?'기본':packBonus(p)||'&nbsp;'}</small></span><span class="pr">${shopBusy===p.id?'결제 중…':shopPrices[p.id]||'—'}</span></button>`).join('');
   $('#shopList').querySelectorAll('.pack[data-id]').forEach(b=>b.onclick=()=>buyPack(b.dataset.id));$('#adBtn').onclick=watchAd;}

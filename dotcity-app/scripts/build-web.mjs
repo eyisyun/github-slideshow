@@ -165,7 +165,7 @@ const native = `
       // resolves true only when the viewer watched long enough to earn the reward
       show: function () {
         return loadAd().then(function (ok) {
-          if (!ok) throw new Error('noad');
+          if (!ok) throw new Error(adErr || 'noad');
           adReady = false;
           var earned = false, hs = [];
           var on = function (ev, fn) { return AM.addListener(ev, fn).then(function (h) { hs.push(h); }); };
@@ -174,9 +174,9 @@ const native = `
             Promise.all([
               on('onRewardedVideoAdReward', function () { earned = true; }),
               on('onRewardedVideoAdDismissed', function () { done(); resolve(earned); }),
-              on('onRewardedVideoAdFailedToShow', function (e) { done(); reject(e); })
+              on('onRewardedVideoAdFailedToShow', function (e) { adErr = 'show: ' + ((e && e.message) || 'failed'); done(); reject(e); })
             ]).then(function () {
-              AM.showRewardVideoAd().then(function () { earned = true; }, function (e) { done(); reject(e); });
+              AM.showRewardVideoAd().then(function () { earned = true; }, function (e) { adErr = 'show: ' + ((e && e.message) || 'failed'); done(); reject(e); });
             });
           });
         });
