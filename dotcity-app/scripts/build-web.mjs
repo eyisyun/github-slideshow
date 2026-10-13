@@ -51,6 +51,11 @@ const head = `<!doctype html>
 `;
 
 // Native glue: Android back button, auto-save when the app goes to the background, status bar, in-app purchases, rewarded ads.
+// AdMob rewarded unit. Store builds use the real ids; DOT_TEST builds keep Google's public test units
+// (tapping your own live ads during development can get the AdMob account suspended).
+const AD_IOS = process.env.DOT_TEST ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-2841633824543051/3219774790';
+const AD_AND = 'ca-app-pub-3940256099942544/5224354917'; // TODO: Android unit once the Android app exists in AdMob
+
 const native = `
 <script>
 (function () {
@@ -130,11 +135,11 @@ const native = `
     };
   }
 
-  // Rewarded ads (AdMob). These are Google's public TEST unit ids: replace them with your own before release.
+  // Rewarded ads (AdMob). Unit ids are filled in by build-web.mjs (test units in DOT_TEST builds).
   var AM = P.AdMob;
   if (AM) {
     var IOS = C.getPlatform() === 'ios';
-    var UNIT = IOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917';
+    var UNIT = IOS ? '${AD_IOS}' : '${AD_AND}';
     var adReady = false, adLoading = null;
     var adInit = AM.initialize({})
       .then(function () { // iOS 14.5+: ask once for tracking; ads still work when declined (non-personalised)
@@ -184,4 +189,4 @@ await mkdir(www, { recursive: true });
 await cp(join(root, 'assets', 'fonts'), join(www, 'fonts'), { recursive: true });
 await cp(join(root, 'assets', 'fonts', 'fonts.css'), join(www, 'fonts.css'));
 await writeFile(join(www, 'index.html'), head + game + native + '</body>\n</html>\n');
-console.log('Built www/index.html from dotcity/index.html' + (process.env.DOT_TEST ? ' (test build: era picker kept)' : ''));
+console.log('Built www/index.html from dotcity/index.html' + (process.env.DOT_TEST ? ' (test build: era picker and test ads kept)' : ''));

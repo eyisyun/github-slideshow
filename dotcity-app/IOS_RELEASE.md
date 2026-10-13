@@ -11,7 +11,7 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 - ☐ Node.js 22 이상
 - ✅ [Apple Developer Program](https://developer.apple.com/programs/) 가입
 - ✅ App Store Connect 유료 앱 계약
-- ☐ [AdMob](https://admob.google.com) 가입 (광고 보고 충전용). 테스트 ID로 TestFlight까지 먼저 시험할 수 있어서 나중에 해도 됩니다.
+- ✅ [AdMob](https://admob.google.com) 가입, iOS 앱 "도트시티"와 보상형 광고 단위 "게임머니 충전" 만들기 (앱 출시 뒤 AdMob에서 App Store 앱 연결)
 - ☐ 공개 웹 주소 (GitHub Pages, 저장소에 준비됨 — 아래 0-1)
 
 ### 0-1. 공개 웹페이지 켜기 (GitHub Pages)
@@ -35,9 +35,9 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 
 ## 1. 코드에서 바꿀 것
 
-- ☐ **AdMob 광고 ID 교체.** 지금은 Google 테스트 ID라 수익이 생기지 않습니다. 순서는 README "5-2" 참고.
-  - `ios/App/App/Info.plist` → `GADApplicationIdentifier` = AdMob **iOS 앱 ID** (`ca-app-pub-…~…`)
-  - `scripts/build-web.mjs` → `UNIT`의 iOS 쪽 = **보상형 광고 단위 ID** (`ca-app-pub-…/…`)
+- ✅ **AdMob 광고 ID 교체** (README "5-2").
+  - `ios/App/App/Info.plist` → `GADApplicationIdentifier` = `ca-app-pub-2841633824543051~3550947287`
+  - `scripts/build-web.mjs` → `AD_IOS` = `ca-app-pub-2841633824543051/3219774790` (`DOT_TEST=1` 빌드는 테스트 광고)
 - ☐ 버전 확인: Xcode → App 타깃 → General → **Version 1.0**, **Build 1** (다시 올릴 때마다 Build를 1씩 올림)
 - ☐ 출시용으로 빌드:
   ```bash
@@ -57,7 +57,8 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 ## 2. 내 Mac·iPhone에서 시험
 
 - ☐ **시뮬레이터:** ▶ Run → 자금 칸 ＋ → 상품을 누르면 Xcode 시험용 결제 창이 뜹니다(`Products.storekit`, 돈 안 나감).
-  "광고 보고 받기"는 테스트 광고로 뜹니다.
+  기기·시뮬레이터 시험은 `DOT_TEST=1 npm run sync`로 빌드해서 "광고 보고 받기"가 **테스트 광고**로 뜨게 하세요.
+  출시 빌드(`npm run sync`)에서 내 진짜 광고를 직접 누르면 AdMob 계정이 정지될 수 있습니다.
 - ☐ **실제 iPhone:** USB로 연결 → 기기 선택 → ▶ Run. 처음 실행하면 "추적 허용" 창이 한 번 뜨는지 확인하세요.
 - ☐ 시험할 것: 석기시대 시작 → 모닥불·움집 터·길 → 집이 생김 → 저장 후 앱을 껐다 켜도 이어짐 → 충전 → 광고 3번 → "내일 다시"
 - ☐ 새 기능 확인: 배경 음악·효과음(메뉴 → 소리), 사진 모드(카메라 버튼 → 사진 저장 → 공유 창에서 "이미지 저장" → 사진 앱 권한 창),

@@ -130,19 +130,21 @@ Xcode에서 따로 켤 기능(Capability)은 없습니다. iOS 15 이상에서 �
 석기 50 조개 → 미래 ₩10,000)를 받습니다. 하루 3번까지이며(기기 기준, 자정에 초기화), `dotcity/index.html`의
 `AD_DAILY`, `adAmount`에서 바꿉니다. 플러그인은 [`@capacitor-community/admob`](https://github.com/capacitor-community/admob)입니다.
 
-**지금은 Google 공식 테스트 광고 ID가 들어 있습니다.** 테스트 ID로는 "Test Ad" 광고만 나오고 수익이 생기지 않습니다.
-출시 전에 아래 세 곳을 내 ID로 바꾸세요. 테스트 ID 그대로 출시하거나, 개발 중에 내 진짜 광고를 직접 누르면 계정이 정지될 수 있습니다.
+**iOS는 진짜 AdMob ID가 들어 있습니다.** `npm run sync`(출시 빌드)는 진짜 광고를, `DOT_TEST=1 npm run sync`(테스트 빌드)는
+Google 공식 테스트 광고("Test Ad")를 씁니다. 개발 중에 내 진짜 광고를 직접 누르면 계정이 정지될 수 있으니, 기기 테스트는 테스트 빌드로 하세요.
+Android는 아직 테스트 ID입니다.
 
-| 어디 | 무엇 | 지금 값 (테스트) |
+| 어디 | 무엇 | 지금 값 |
 |---|---|---|
-| `ios/App/App/Info.plist` → `GADApplicationIdentifier` | AdMob **iOS 앱 ID** (`~` 포함) | `ca-app-pub-3940256099942544~1458002511` |
-| `android/app/src/main/AndroidManifest.xml` → `APPLICATION_ID` | AdMob **Android 앱 ID** | `ca-app-pub-3940256099942544~3347511713` |
-| `scripts/build-web.mjs` → `UNIT` | **보상형 광고 단위 ID** (`/` 포함, iOS·Android 각각) | `.../1712485313`, `.../5224354917` |
+| `ios/App/App/Info.plist` → `GADApplicationIdentifier` | AdMob **iOS 앱 ID** (`~` 포함) | `ca-app-pub-2841633824543051~3550947287` |
+| `scripts/build-web.mjs` → `AD_IOS` | **iOS 보상형 광고 단위 ID** (`/` 포함) | `ca-app-pub-2841633824543051/3219774790` (테스트 빌드는 `.../1712485313`) |
+| `android/app/src/main/AndroidManifest.xml` → `APPLICATION_ID` | AdMob **Android 앱 ID** | 테스트 `ca-app-pub-3940256099942544~3347511713` |
+| `scripts/build-web.mjs` → `AD_AND` | **Android 보상형 광고 단위 ID** | 테스트 `.../5224354917` |
 
 **AdMob 설정 순서 (iOS)**
 1. [AdMob](https://admob.google.com)에 가입하고 결제(지급) 정보를 입력합니다.
 2. **앱 → 앱 추가 → iOS** → App Store에 올린 앱을 연결합니다(출시 전이면 나중에 연결). **앱 ID**를 `Info.plist`에 넣습니다.
-3. 그 앱에서 **광고 단위 → 보상형**을 만들고 **광고 단위 ID**를 `build-web.mjs`의 `UNIT`(iOS 쪽)에 넣은 뒤 `npm run sync`.
+3. 그 앱에서 **광고 단위 → 보상형**을 만들고 **광고 단위 ID**를 `build-web.mjs`의 `AD_IOS`에 넣은 뒤 `npm run sync`.
 4. **개인정보 보호 및 메시지**에서 GDPR 동의 메시지와 iOS 추적(ATT) 안내 메시지를 만들면, 앱이 필요한 지역에서 자동으로 띄웁니다.
 5. 웹사이트가 있다면 `app-ads.txt`를 등록합니다(권장).
 
