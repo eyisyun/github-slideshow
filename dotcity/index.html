@@ -2660,7 +2660,7 @@ function useAd(){try{const o=JSON.parse(localStorage.getItem('dotcity.ads')||'{}
 let adBusy=false;
 function watchAd(){const ads=window.DotAds;if(!ads||adBusy||!adsLeft())return;adBusy=true;renderShop();const was=speed;setSpeed(0);
   ads.show().then(ok=>{adBusy=false;setSpeed(was);if(ok){useAd();const a=adAmount();W.funds+=a;save();updateHud(true);toast(`광고 보상 게임머니 +${money(a)}!`,'good');sfx('win');}else toast('광고를 끝까지 보면 받을 수 있어요.','info');renderShop();})
-    .catch(()=>{adBusy=false;setSpeed(was);renderShop();toast('지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.','warn');});}
+    .catch(()=>{adBusy=false;setSpeed(was);renderShop();const why=ads.test&&ads.lastError&&ads.lastError();toast('지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.'+(why?` (${why})`:''),'warn');});}
 function renderShop(){if($('#shop').hidden)return;const iap=window.DotIAP;
   $('#shopNote').textContent=iap||window.DotAds?'지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.':'광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.';
   const ads=window.DotAds,left=adsLeft();

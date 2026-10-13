@@ -140,7 +140,8 @@ const native = `
   if (AM) {
     var IOS = C.getPlatform() === 'ios';
     var UNIT = IOS ? '${AD_IOS}' : '${AD_AND}';
-    var adReady = false, adLoading = null;
+    var adReady = false, adLoading = null, adErr = '';
+    AM.addListener('onRewardedVideoAdFailedToLoad', function (e) { adErr = (e && e.message) || 'load failed'; });
     var adInit = AM.initialize({})
       .then(function () { // iOS 14.5+: ask once for tracking; ads still work when declined (non-personalised)
         if (!IOS) return;
@@ -153,11 +154,14 @@ const native = `
       if (adReady) return Promise.resolve(true);
       if (adLoading) return adLoading;
       adLoading = adInit.then(function () { return AM.prepareRewardVideoAd({ adId: UNIT }); })
-        .then(function () { adReady = true; adLoading = null; return true; }, function () { adLoading = null; return false; });
+        .then(function () { adReady = true; adErr = ''; adLoading = null; return true; },
+              function (e) { adErr = adErr || (e && e.message) || 'load failed'; adLoading = null; return false; });
       return adLoading;
     };
     window.DotAds = {
       ready: loadAd,
+      test: ${process.env.DOT_TEST ? 'true' : 'false'},
+      lastError: function () { return adErr; },
       // resolves true only when the viewer watched long enough to earn the reward
       show: function () {
         return loadAd().then(function (ok) {
