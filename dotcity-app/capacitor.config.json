@@ -1,0 +1,27 @@
+{
+  "appId": "com.eyisyun.dotcity",
+  "appName": "도트시티",
+  "webDir": "www",
+  "backgroundColor": "#141a30",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#141a30"
+  },
+  "android": {
+    "backgroundColor": "#141a30"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#141a30",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#141a30",
+      "overlaysWebView": false
+    }
+  }
+}

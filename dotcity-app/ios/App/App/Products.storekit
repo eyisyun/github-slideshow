@@ -1,0 +1,47 @@
+{
+  "identifier" : "6A3F1C2E",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "2200",
+      "familyShareable" : false,
+      "internalID" : "6743000001",
+      "localizations" : [
+        { "description" : "지금 시대 게임머니를 충전해요.", "displayName" : "게임머니 충전 1", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.small",
+      "referenceName" : "게임머니 충전 1",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "5500",
+      "familyShareable" : false,
+      "internalID" : "6743000002",
+      "localizations" : [
+        { "description" : "지금 시대 게임머니를 3배 충전해요.", "displayName" : "게임머니 충전 3배", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.medium",
+      "referenceName" : "게임머니 충전 3배",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "13000",
+      "familyShareable" : false,
+      "internalID" : "6743000003",
+      "localizations" : [
+        { "description" : "지금 시대 게임머니를 8배 충전해요.", "displayName" : "게임머니 충전 8배", "locale" : "ko" }
+      ],
+      "productID" : "dotcity.coins.large",
+      "referenceName" : "게임머니 충전 8배",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6743000000",
+    "_developerTeamID" : "",
+    "_locale" : "ko",
+    "_storefront" : "KOR"
+  },
+  "subscriptionGroups" : [ ],
+  "version" : { "major" : 3, "minor" : 0 }
+}
