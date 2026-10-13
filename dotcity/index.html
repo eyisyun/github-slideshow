@@ -441,6 +441,8 @@ function nightOf(c){const r=c&255,g=c>>>8&255,b=c>>>16&255,a=c>>>24;return pack(
 function nightCss(hex,f,alpha=1){const[r,g,b]=rgbOf(hex);const k=NA*f;return`rgba(${Math.round(r*(1-k)+NC[0]*k)},${Math.round(g*(1-k)+NC[1]*k)},${Math.round(b*(1-k)+NC[2]*k)},${alpha})`;}
 
 /* ---------------- pixel buffer: every sprite is shaded per pixel ---------------- */
+function tone(v,f){if(v==null)return v;if(typeof v!=='number')return[tone(v[0],f),v[1]!=null?tone(v[1],f*.6):v[1]];const al=v>>>24;if(!al)return v;let r=v&255,g=v>>>8&255,b=v>>>16&255;
+  if(f>0){r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f;}else{r*=1+f;g*=1+f;b*=1+f;}return pack(r,g,b,al);}
 class PB{
   constructor(w,h){this.w=w;this.h=h;this.d=new Uint32Array(w*h);this.n=new Uint32Array(w*h);}
   put(x,y,v){if(v==null)return;x|=0;y|=0;if(x<0||y<0||x>=this.w||y>=this.h)return;const i=y*this.w+x;
@@ -449,17 +451,19 @@ class PB{
   box({cx,cy,hw,h,L,R,T}){const hh=hw/2;
     for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){const X=x+.5;if(X<cx-hw||X>cx+hw)continue;
       const left=X<cx,a=left?X-(cx-hw):X-cx,eb=left?cy+a/2:cy+hh-a/2,f=left?L:R;if(!f)continue;
-      for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h)this.put(x,y,f(a,b,hw,h));}}
+      const corner=left&&a>hw-1;   // the near vertical corner catches the light; the bottom course sits in shade
+      for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h){let v=f(a,b,hw,h);if(h>=3&&(b<1||corner))v=tone(v,b<1?-.2:.12);this.put(x,y,v);}}}
     if(T)this.diamond(cx,cy-h,hw,T);}
   diamond(cx,cy,hw,T){const hh=hw/2;
     for(let y=Math.floor(cy-hh);y<Math.ceil(cy+hh);y++)for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){
       const dx=x+.5-cx,dy=y+.5-cy;if(Math.abs(dx)/hw+Math.abs(dy)/hh<=1){const u=(dy/hh+dx/hw)/2+.5,v=(dy/hh-dx/hw)/2+.5;this.put(x,y,T(u,v,x,y));}}}
   // hip roof sitting on an eave diamond at (cx,cy)
-  roof(cx,cy,hw,rh,hex){const cl=col(hex,.08),cl2=col(hex,-.06),cr=col(hex,-.26),cr2=col(hex,-.38),cb=col(hex,.24),rid=col(hex,.34),eave=col(hex,-.5);
+  roof(cx,cy,hw,rh,hex){const clj=col(hex,.01),crj=col(hex,-.31),cl=col(hex,.08),cl2=col(hex,-.06),cr=col(hex,-.26),cr2=col(hex,-.38),cb=col(hex,.24),rid=col(hex,.34),eave=col(hex,-.5);
     for(let x=Math.floor(cx-hw);x<Math.ceil(cx+hw);x++){const X=x+.5,left=X<cx,a=left?X-(cx-hw):(cx+hw)-X;if(a<0)continue;
       const yb=cy+a/2,yt=cy-a*rh/hw,yk=cy-a/2;
       for(let y=Math.floor(Math.min(yt,yk)-1);y<=Math.ceil(yb);y++){const Y=y+.5;
-        if(Y<=yb&&Y>=yt){const t=yb-Y;let c=left?(Math.floor(t)%3===2?cl2:cl):(Math.floor(t)%3===2?cr2:cr);
+        if(Y<=yb&&Y>=yt){const t=yb-Y,row=Math.floor(t/3),joint=Math.floor(t)%3!==2&&(x+row*2)%4===0;   // tile courses with staggered joints
+          let c=left?(Math.floor(t)%3===2?cl2:joint?clj:cl):(Math.floor(t)%3===2?cr2:joint?crj:cr);
           if(t<1)c=eave;if(X<cx&&X>cx-1)c=rid;this.put(x,y,c);}
         else if(Y<yt&&Y>=yk)this.put(x,y,cb);}}}
   ell(cx,cy,r,fn){const ry=r/2;for(let y=Math.floor(cy-ry-1);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-r-1);x<=Math.ceil(cx+r);x++){
@@ -468,7 +472,24 @@ class PB{
   line(x0,y0,x1,y1,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0;for(let i=0;i<=n;i++){const t=n?i/n:0;this.put(Math.round(x0+(x1-x0)*t),Math.round(y0+(y1-y0)*t),c);}}
 }
 function toCanvas(w,h,arr){const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(arr.buffer.slice(0)),w,h),0,0);return c;}
-function mk(pb,ox,oy,night=true,meta){const s={c:toCanvas(pb.w,pb.h,pb.d),ox,oy,w:pb.w,h:pb.h};if(night)s.n=toCanvas(pb.w,pb.h,pb.n);
+// pixel-art finish for standing sprites: lit top edges, crisp face seams, a faint grain, a soft contact line at the base,
+// and a dark selective outline so shapes read clearly against the ground
+let POLISH=true;
+function polish(pb){const W2=pb.w,H2=pb.h,src=pb.d.slice(),srcN=pb.n.slice(),A=i=>src[i]>>>24>160;
+  const sh=(c,f)=>{const a=c>>>24;if(!a)return c;let r=c&255,g=c>>>8&255,b=c>>>16&255;if(f>0){r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f;}else{r*=1+f;g*=1+f;b*=1+f;}return pack(r,g,b,a);};
+  const lum=c=>(c&255)*.3+(c>>>8&255)*.59+(c>>>16&255)*.11;
+  for(let y=0;y<H2;y++)for(let x=0;x<W2;x++){const i=y*W2+x;
+    if(A(i)){let f=(hash(x,y,313)-.5)*.06;                                   // grain
+      if(y===0||!A(i-W2))f+=.16;                                               // light on top edges
+      else if(y<H2-1&&A(i+W2)&&x<W2-1&&A(i+1)){const d=lum(src[i])-lum(src[i+1]);if(d>38)f+=.06;}   // brighter face meets darker face
+      if(y<H2-1&&!A(i+W2))f-=.12;                                              // base touches the ground
+      if(f){pb.d[i]=sh(src[i],f);pb.n[i]=sh(srcN[i],f*.6);}continue;}
+    if(src[i]>>>24)continue;
+    let nb=-1;for(const j of[x>0?i-1:-1,x<W2-1?i+1:-1,y>0?i-W2:-1,y<H2-1?i+W2:-1])if(j>=0&&A(j)){nb=j;break;}
+    if(nb<0)continue;const o=src[nb],on=srcN[nb];
+    const dk=c=>pack((c&255)*.32+8,(c>>>8&255)*.3+8,(c>>>16&255)*.34+14,y>0&&A(i-W2)?235:150);   // under-side outline is solid, top-side softer
+    pb.d[i]=dk(o);pb.n[i]=dk(on);}}
+function mk(pb,ox,oy,night=true,meta){if(night&&POLISH&&!(meta&&meta.raw))polish(pb);const s={c:toCanvas(pb.w,pb.h,pb.d),ox,oy,w:pb.w,h:pb.h};if(night)s.n=toCanvas(pb.w,pb.h,pb.n);
   let top=pb.h;for(let y=0;y<pb.h&&top===pb.h;y++)for(let x=0;x<pb.w;x++)if(pb.d[y*pb.w+x]>>>24){top=y;break;}s.top=oy+top;if(meta)Object.assign(s,meta);return s;}
 function G(fn){const pb=new PB(32,16);for(let y=0;y<16;y++)for(let x=0;x<32;x++){const X=x+.5-16,Y=y+.5,u=(Y/8+X/16)/2,v=(Y/8-X/16)/2;if(u<0||u>=1||v<0||v>=1)continue;pb.put(x,y,fn(u,v,x,y));}return mk(pb,-16,0,false);}
 
@@ -809,12 +830,12 @@ function buildSprites(){
     const awning=(a,b,t)=>(Math.floor(a/2)%2)?col(aw,(b<7.6?-.2:0)+t):col('#f7f3ea',(b<7.6?-.15:0)+t);
     const brand=(a,b,t)=>(b>=7.4&&b<8.6&&(a|0)%2&&hash(a|0,0,s)<.7)?[col('#ffffff',t),col('#ffffff')]:[col(aw,t),col(aw,.2)];
     if(type===0||type===1){pb.box({cx,cy:cy-1,hw:12,h:10,L:shopL(12,type?brand:awning),R:shopR(12,type?brand:awning),T:roofTop('flat',wall)});
-      if(type===0)pb.box({cx:cx-1,cy:cy-11,hw:6,h:4,L:(a,b)=>(a>=1&&a<5&&b>=.8&&b<3.2&&hash(a|0,b|0,s)<.6)?[col(neon,-.1),col(neon)]:col('#2a2d3e'),R:()=>col('#1d2030'),T:()=>col('#3a3e52')});
+      if(type===0)pb.box({cx:cx-1,cy:cy-11,hw:6,h:4,L:(a,b)=>(a>=1&&a<5&&b>=.8&&b<3.2&&hash(a|0,b|0,s)<.85)?[col(neon,-.1),col(neon)]:col('#4a5068'),R:()=>col('#363b4f'),T:()=>col('#646a80')});
       else{P.ac(pb,cx+3,cy-11);if(r()<.5)P.ac(pb,cx-4,cy-10);}}
     else if(type===2){pb.box({cx:cx+3,cy:cy-3,hw:9,h:9,L:shopL(9,awning),R:shopR(9,awning),T:roofTop('garden',wall)});
       [[cx-8,cy+1],[cx-2,cy+5]].forEach(([ux,uy],j)=>{for(let i=0;i<4;i++)pb.put(ux,uy-i,col('#6a5a4a'));pb.ell(ux,uy-4,3.2,(dx,dy)=>col(j?aw:'#f7f3ea',dx>.2?-.2:0));});}
     else{pb.box({cx,cy:cy-1,hw:11,h:8,L:shopL(11,(a,b,t)=>col(wall,t-.1)),R:shopR(11,(a,b,t)=>col(wall,t-.1)),T:()=>col(wall)});pb.roof(cx,cy-9,13,5,aw);
-      pb.box({cx:cx-6,cy:cy-6,hw:3,h:5,L:(a,b)=>b>1&&b<4&&a>.5&&a<2.5?[col(neon,-.2),col(neon)]:col('#2a2d3e'),R:()=>col('#1d2030'),T:()=>col('#3a3e52')});}
+      pb.box({cx:cx-6,cy:cy-6,hw:3,h:5,L:(a,b)=>b>1&&b<4&&a>.5&&a<2.5?[col(neon,-.2),col(neon)]:col('#4a5068'),R:()=>col('#363b4f'),T:()=>col('#646a80')});}
     SP.bld[C][1].push(mk(pb,-16,16-H));}
 
   /* commercial L2: offices, billboards, brick blocks */
@@ -826,7 +847,7 @@ function buildSprites(){
     const sh=type%2?grid:ribbon;
     pb.box({cx,cy:cy-1,hw:12,h:hgt,L:sh(0,0),R:sh(-.22,1),T:roofTop(type===3?'garden':'flat',wall)});
     const ty=cy-1-hgt;
-    if(type===1){pb.box({cx:cx-2,cy:ty-1,hw:7,h:6,L:(a,b)=>{const c=['#ff5f7a','#ffd84a','#5fe0ff','#9aff6a'][(Math.floor(a/2)+Math.floor(b/2)+v)%4];return a>.8&&a<6.2&&b>.8&&b<5.2?[col(c,-.1),col(c)]:col('#2a2d3e');},R:()=>col('#1d2030'),T:()=>col('#3a3e52')});}
+    if(type===1){pb.box({cx:cx-2,cy:ty-1,hw:7,h:6,L:(a,b)=>{const c=['#ff5f7a','#ffd84a','#5fe0ff','#9aff6a'][(Math.floor(a/2)+Math.floor(b/2)+v)%4];return a>.8&&a<6.2&&b>.8&&b<5.2?[col(c,-.1),col(c)]:col('#4a5068');},R:()=>col('#363b4f'),T:()=>col('#646a80')});}
     else{P.ac(pb,cx+4,ty-1);if(r()<.6)P.ac(pb,cx-4,ty);}
     SP.bld[C][2].push(mk(pb,-16,16-H));}
 
@@ -1245,11 +1266,26 @@ function buildSprites(){
       lotSet((u,v,x,y)=>col(PAL.asph,hash(x,y,9)<.1?.07:0),()=>col(PAL.curb))];
     SP.consOld=mk1(44,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#7a5233'):null,R:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#5a3a22'):null});for(let k=0;k<5;k++)pb.put(cx+6+(k%2),cy+3-(k>>1),col('#c9a45a'));});
     const vehSet=pal=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}if(pal[k]!=null)pb.put(x,y,pal[k]);}));return mk(pb,-3,-3);});
-    const walker=body=>{const pb=new PB(3,5);pb.put(1,0,col('#2a1d14'));pb.put(1,1,col('#e0b088'));pb.put(0,2,col(body,-.1));pb.put(1,2,col(body));pb.put(2,2,col(body,-.2));pb.put(1,3,col(body,-.1));pb.put(0,4,col('#3a2a20'));pb.put(2,4,col('#3a2a20'));const sp=mk(pb,-1,-5);return[sp,sp,sp,sp];};
-    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(walker),
-      [...['#e8e0c8','#c9b896'].map(walker),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
-      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(walker),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
-      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(walker)],
+    // people: 5x9 figures (hair, face, shirt with arms, trousers, shoes) facing front or back, with a two-step walk
+    const HAIR=['#2a1d14','#4a2e1a','#151318','#7a4a24','#b8863e','#5a5560'],SKIN=['#f0c49a','#e0aa7e','#c98e62','#f6d2b0'];
+    const walker=(body,pants)=>{let hs=0;for(const ch of body)hs=hs*31+ch.charCodeAt(0)|0;hs=Math.abs(hs);
+      const hair=col(HAIR[hs%HAIR.length]),skin=col(SKIN[(hs>>3)%SKIN.length]),skinD=col(SKIN[(hs>>3)%SKIN.length],-.18),sh=col(body),shD=col(body,-.22),shL=col(body,.14),
+        pa=col(pants||(hs&1?'#34405e':'#3e3530')),paD=col(pants||(hs&1?'#34405e':'#3e3530'),-.25),shoe=col('#1e1a1a');
+      const fig=(back,flip,step)=>{const pb=new PB(7,11),P=(x,y,c)=>pb.put(flip?6-x:x,y,c);
+        P(2,1,hair);P(3,1,hair);P(4,1,hair);
+        if(back){P(2,2,hair);P(3,2,hair);P(4,2,hair);P(2,3,hair);P(3,3,col(HAIR[hs%HAIR.length],-.15));P(4,3,hair);}
+        else{P(2,2,hair);P(3,2,skin);P(4,2,skin);P(2,3,skinD);P(3,3,skin);P(4,3,skin);}
+        for(let x=1;x<=5;x++)P(x,4,x===1||x===5?shD:x===2?shL:sh);
+        P(1,5,shD);P(2,5,shL);P(3,5,sh);P(4,5,sh);P(5,5,shD);
+        P(1,6,step?shD:skinD);P(2,6,sh);P(3,6,sh);P(4,6,shD);P(5,6,step?skinD:shD);if(!step){P(1,6,skin);}
+        P(2,7,pa);P(3,7,pa);P(4,7,paD);
+        if(step){P(2,8,pa);P(4,8,paD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,pa);P(2,8,paD);P(3,9,shoe);P(2,9,shoe);}
+        const sp=mk(pb,-3,-10);sp.g=0;return sp;};
+      return[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});};
+    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
+      [...['#e8e0c8','#c9b896'].map(b=>walker(b)),vehSet({t:col('#5a3a22'),l:col('#d9b45a'),d:col('#5a3a22'),w:col('#8a5a34'),h:col('#6a4428')})],
+      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),vehSet({t:col('#4a3020'),l:col('#f2ede0'),d:col('#6a4428'),w:col('#7a4a2a'),h:col('#3a2418')})],
+      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(b=>walker(b))],
       SP.car];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
     SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
@@ -2387,7 +2423,7 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
   const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
-  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}const sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];drawSpr(c,sp,sx,sy);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/190+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
