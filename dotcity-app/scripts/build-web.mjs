@@ -168,7 +168,8 @@ const native = `
           if (!ok) throw new Error(adErr || 'noad');
           adReady = false;
           var earned = false, hs = [];
-          var on = function (ev, fn) { return AM.addListener(ev, fn).then(function (h) { hs.push(h); }); };
+          // window.Capacitor.Plugins.X.addListener returns a plain {remove} handle (no promise) without @capacitor/core
+          var on = function (ev, fn) { return Promise.resolve(AM.addListener(ev, fn)).then(function (h) { hs.push(h); }); };
           var done = function () { hs.forEach(function (h) { try { h.remove(); } catch (e) {} }); loadAd(); };
           return new Promise(function (resolve, reject) {
             Promise.all([
