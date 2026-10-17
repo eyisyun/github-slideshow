@@ -2200,7 +2200,14 @@ function wxAccumulate(wx,dt){const sn=W.snow||0;
 function groundWeather(c,lh){const sn=W.snow||0,wet=wetAmt;if(sn<.03&&wet<.03)return;const w=W;
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0,k=w.kind[i];
     if(wet>.03){c.globalAlpha=wet;c.drawImage(SP.wetG.c,sx-16,sy);const h=hash(x,y,61);if(h<(k===K.ROAD?.3:k===K.NONE?.16:.08)){c.globalAlpha=Math.min(1,wet*1.4);c.drawImage(SP.puddle[(h*30|0)%3].c,sx-16,sy);}c.globalAlpha=1;}
-    if(sn>.03){const lv=sn*(k===K.ROAD?.5:1)*4+hash(x,y,77)*.9-.6;if(lv>=0)c.drawImage(SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0].c,sx-16,sy);}}}
+    if(sn>.03){const rl=k===K.RAIL||w.rail[i],lv=sn*(k===K.ROAD&&!rl?.5:k===K.AIRPORT?.3:1)*4+hash(x,y,77)*.9-.6;
+      if(lv>=0){const sg=SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0];c.drawImage(rl?snowBeside(groundOf(i,x,y),sg):sg.c,sx-16,sy);}}}}   /* rails: snow only on the verge, the track stays clear */
+// snow layer limited to the grassy pixels of a ground tile (so the rails and sleepers of a track tile stay visible)
+const snowBesideC=new Map();
+function snowBeside(g,sg){const key=(g.id||(g.id=++spIds))+'|'+(sg.id||(sg.id=++spIds));let cv=snowBesideC.get(key);if(cv)return cv;
+  const a=g.c.getContext('2d').getImageData(0,0,32,16).data,o=sg.c.getContext('2d').getImageData(0,0,32,16);
+  for(let j=0;j<a.length;j+=4){const r=a[j],gg=a[j+1],b=a[j+2];if(!(gg>r+12&&gg>b+12))o.data[j+3]=0;}
+  cv=document.createElement('canvas');cv.width=32;cv.height=16;cv.getContext('2d').putImageData(o,0,0);snowBesideC.set(key,cv);return cv;}
 function weatherFx(c,lw,lh){const wx=photoWx??(W.wx||0),dt=Math.min(.1,frameDt);wxAccumulate(wx,dt);if(wx!==wxCur){wxp.length=0;wsp.length=0;wxCur=wx;}
   const sn=W.snow||0;if(sn>.03){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(236,242,252,${.12*sn*(1-nightF*.5)})`;c.fillRect(0,0,lw,lh);c.globalCompositeOperation='source-over';}   // frost on roofs and trees
   if(!wx)return;
