@@ -1,4 +1,4 @@
-// Renders store screenshots (iPhone with Dynamic Island 1206x2622, Android 1080x1920) from the built www/.
+// Renders store screenshots in Korean and English (-en) (iPhone with Dynamic Island 1206x2622, Android 1080x1920) from the built www/.
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path');
 const out = path.join(__dirname, '..', 'store', 'screenshots');
@@ -8,9 +8,9 @@ const scenes = [
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  for (const [dev, vp, dpr] of [['ios', { width: 402, height: 874 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
+  for (const lang of ['ko', 'en']) for (const [dev, vp, dpr] of [['ios', { width: 402, height: 874 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
     for (const [name, era, night, shop, feat] of scenes) {
-      const p = await b.newPage({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true });
+      const p = await (await b.newContext({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true, locale: lang === 'ko' ? 'ko-KR' : 'en-US' })).newPage();
       await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForTimeout(900);
       await p.evaluate(([era, night, shop, feat]) => {
         closeEra(); try { localStorage.clear(); } catch (e) {}
@@ -39,7 +39,7 @@ const scenes = [
           for (let y = 17; y <= 20; y++) for (let x = 38; x <= 41; x++) if (!W.kind[idx(x, y)]) { clearTile(x, y); }
           const deco = (L, x, y, r) => { clearTile(x, y); placeRaw(K.DECO, x, y); W.level[idx(x, y)] = L; W.vari[idx(x, y)] = r || 0; };
           deco(8, 33, 33); deco(7, 31, 33); deco(7, 35, 31); deco(9, 31, 31); deco(4, 34, 34, 1); deco(6, 30, 34, 2); deco(11, 29, 31); deco(12, 35, 35);
-          W.labels[idx(33, 33)] = '우리 동네 분수'; W.wx = 3; W.wxEnd = Date.now() + 1e9;
+          W.labels[idx(33, 33)] = LANG === 'en' ? 'Town fountain' : '우리 동네 분수'; W.wx = 3; W.wxEnd = Date.now() + 1e9;
           recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1);
           trains = []; for (let k = 0; k < 400; k++) stepTrains(.1); boats = []; for (let k = 0; k < 300; k++) stepBoats(.3);
           planes.clear(); planes.set(idx(42, 18), { ph: 'land', u: -1.5, alt: 0, dir: 1, e: 4, t: 0 }); stepPlanes(.01);
@@ -52,7 +52,7 @@ const scenes = [
         }
       }, [era, night, shop, feat]);
       await p.waitForTimeout(1500);
-      await p.screenshot({ path: path.join(out, `${dev}-${name}.png`) });
+      await p.screenshot({ path: path.join(out, `${dev}${lang === 'en' ? '-en' : ''}-${name}.png`) }); await p.context().close();
       await p.close();
     }
   }

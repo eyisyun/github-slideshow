@@ -139,6 +139,45 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
   사진 모드(화면 위 카메라 버튼 → 사진 저장)는 iOS 공유 시트를 엽니다. 사진 앱에 저장할 때만 사진 추가 권한을 요청합니다.
   ```
 
+## 5-1. 영어 현지화 (해외용)
+
+게임은 폰 언어가 한국어면 한국어, 그 밖의 언어면 영어로 나옵니다(메뉴 → 언어에서 바꿀 수도 있어요).
+App Store Connect → 1.x 버전 페이지 오른쪽 위 언어 메뉴 → **영어(미국)** 추가 → 아래를 넣습니다.
+스크린샷은 `store/screenshots/ios-en-*.png` (같은 순서: 3, 6, 4, 2, 1, 5).
+
+- 이름: `Dot City: Pixel City Builder` (30자 이내)
+- 부제: `From the Stone Age to the future`
+- 프로모션 텍스트:
+  ```
+  Start with a few huts around a campfire and grow a hanok village, a brick town, a skyline of towers and a future city of flying cars. Build your own pixel city through the ages.
+  ```
+- 설명:
+  ```
+  Start with a Stone Age tribe gathered around a campfire.
+  Lay paths and mark plots, and people move in and build their huts.
+
+  Meet each era's goals and raise its monument to open the next era.
+  Raise a dolmen for the Bronze Age, build a royal tomb for a dynasty of tiled-roof hanok houses,
+  raise the palace gate for the brick and steam of the Modern Age, build a railway station for the skyscrapers of the Present,
+  and raise a space elevator for a Future of flying cars and arcologies.
+
+  • Stone, Bronze, Dynasty, Modern, Present, Future: homes, roads and vehicles change with every era
+  • Old neighbourhoods are rebuilt one house at a time in the new era's style
+  • Bridges from log bridges to sky bridges, boats at the harbor, trains on the rails, planes landing at the airport
+  • Fire engines, police cars and ambulances drive out along the roads when they are needed
+  • Decorate with flower beds, pavilions, playgrounds, cherry trees and fountains, dig ponds and name your buildings
+  • Rain that leaves puddles and snow that settles on roofs, day and night, and a pixel skyline with every window lit
+  • Photo mode to capture and share your city
+  • Different music for every era
+  • Monuments are built in real time, and your city keeps growing while you are away
+  • Plays offline, no forced ads (watch an ad only when you want extra game money)
+  ```
+- 키워드 (100자, 쉼표로 구분):
+  ```
+  city builder,pixel,simulation,tycoon,civilization,history,ages,town,sandbox,offline,isometric,retro
+  ```
+- 지원 URL: `https://eyisyun.github.io/github-slideshow/`
+
 ## 6. 개인정보 · 연령 등급
 
 **앱 개인정보** (광고 SDK 때문에 '수집하지 않음'이 아닙니다)
