@@ -2481,7 +2481,7 @@ function render(){
 const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K.FIRE]:()=>SP.fire,[K.SCHOOL]:()=>SP.school,[K.HALL]:()=>SP.hall,[K.STADIUM]:()=>SP.stadium,[K.TOWER]:()=>SP.tower};
 const isFence=(x,y)=>inb(x,y)&&W.kind[idx(x,y)]===K.DECO&&W.level[idx(x,y)]===1;
 // items that can face different ways: 4 directions for the bench and lamp models, mirrored left/right for the drawn ones
-const DECO_ROT={3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
+const DECO_ROT={1:2,3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
 function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.translate(sp.w,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
   const mx=v=>v&&v.map(a=>[sp.w-1-a[0],...a.slice(1)]);
   const m1=v=>v&&[sp.w-1-v[0],...v.slice(1)];
@@ -2489,8 +2489,8 @@ function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;co
 // 건물 돌리기: any building can be mirrored (W.flip on its anchor tile); multi-tile ground art is mirrored with it
 const anc=i=>W.anchor[i]>=0?W.anchor[i]:i,FL=(sp,i)=>sp&&W.flip[anc(i)]?flipped(sp):sp;
 let buildFlip=0;const canTurn=t=>t&&!t.items&&t.kind>=K.POLICE&&t.kind!==K.WIND&&t.kind!==K.DECO;
-function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];const b=L===1?SP.fence[0]:SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
-function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m];}return SP.deco[L]||SP.deco[0];}
+function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];if(L===1)return SP.fence[r&1?10:5];const b=SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
+function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m||(W.vari[i]&1?10:5)];}return SP.deco[L]||SP.deco[0];}
 function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
@@ -2645,7 +2645,7 @@ function renderSub(){const t=T(tool),bar=$('#subbar');if(!t||!t.items){bar.hidde
   if(t.items==='deco'&&DECO_ROT[subSel.deco]){decoRot%=DECO_ROT[subSel.deco];const two=DECO_ROT[subSel.deco]===2;const r=document.createElement('button');r.className='it';r.setAttribute('aria-label','방향 돌리기');
     r.innerHTML=`<span style="font-size:22px;line-height:1">${two?['⇢','⇠'][decoRot]:['↘','↙','↖','↗'][decoRot]}</span><span>방향 돌리기</span>`;r.addEventListener('click',()=>{decoRot=(decoRot+1)%DECO_ROT[subSel.deco];sfx('click');renderSub();});bar.append(r);}
   ITEMS[t.items].forEach((it,n)=>{if(t.items==='deco'&&(it.era||0)>W.era)return;const b=document.createElement('button');b.className='it';b.setAttribute('aria-pressed',String(subSel[t.items]===n));
-    let ic;if(t.items==='deco')ic=spriteIcon(n===1?SP.fence[5]:decoView(n,n===subSel.deco?decoRot:0),30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
+    let ic;if(t.items==='deco')ic=spriteIcon(decoView(n,n===subSel.deco?decoRot:0),30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
     b.append(ic);b.insertAdjacentHTML('beforeend',`<span>${it.n}</span>${it.c?`<small>${money(Math.max(1,Math.round(it.c*PRICE[W.era])))}</small>`:''}${it.prem?'<span class="star">★</span>':''}`);
     b.addEventListener('click',()=>{subSel[t.items]=n;sfx('click');renderSub();showTarget();});bar.append(b);});}
 function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspect')goalsOpen=false;document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
