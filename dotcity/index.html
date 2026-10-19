@@ -2745,7 +2745,8 @@ function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panni
   if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;goalsOpen=false;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
   else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);
-    if(d.pt==='mouse'&&!(t.id==='deco'&&DECO_ROT[subSel.deco])&&!canTurn(t))applyTool(t,tilesFor(t,d.a,d.a));   // items that can turn ask first, so the ↻ button is there
+    const ki=W.kind[idx(d.a[0],d.a[1])],razing=t.id==='bulldoze'&&ki&&ki!==K.ROAD&&ki!==K.RAIL;   // knocking down a building always asks first
+    if(d.pt==='mouse'&&!razing&&!(t.id==='deco'&&DECO_ROT[subSel.deco])&&!canTurn(t))applyTool(t,tilesFor(t,d.a,d.a));   // items that can turn ask first, so the ↻ button is there
     else if(target&&target.g[0]===d.a[0]&&target.g[1]===d.a[1])commitTarget();
     else{target={g:d.a};sfx('click');showTarget();}}
   updateCost(e);}
