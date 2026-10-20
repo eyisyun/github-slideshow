@@ -222,3 +222,30 @@ App Store Connect → 1.x 버전 페이지 오른쪽 위 언어 메뉴 → **영
 iOS 출시가 끝나면 안드로이드를 진행합니다. README의 Google Play 항목,
 AdMob **Android 앱 ID**(`AndroidManifest.xml`)와 광고 단위(`build-web.mjs`의 Android 쪽) 교체,
 Play Console 인앱 상품 등록, Android 스크린샷 다시 만들기가 남아 있습니다.
+
+
+## 업데이트 기록
+
+### 1.0.1
+Xcode → App 타깃 → General에서 **Version `1.0.1`, Build `3`**으로 바꾼 뒤 `npm run ios` → Archive → 업로드.
+App Store Connect → 앱 → **＋ (iOS 버전 추가) → 1.0.1** → 빌드 3 선택 → "이번 버전의 새로운 기능"에 아래를 넣고 제출.
+영어(미국) 현지화는 위 "5-1. 영어 현지화"를 그대로 넣습니다.
+
+- 이번 버전의 새로운 기능 (한국어):
+  ```
+  • 영어 지원: 폰 언어에 맞춰 바뀌고, 메뉴에서 직접 고를 수도 있어요
+  • 청동기 손수레, 왕조시대 소달구지와 가마가 길을 다녀요
+  • 눈이 와도 철길이 보여요
+  • 울타리도 놓기 전에 방향을 돌릴 수 있어요
+  • 건물 이름 붙이기 창이 새로워졌어요
+  • 건물을 철거할 때 한 번 더 확인해요
+  ```
+- What's New (English):
+  ```
+  • English support: follows your phone's language, or pick it in the menu
+  • Handcarts in the Bronze Age, ox carts and palanquins in the Dynasty
+  • Railway tracks stay visible under snow
+  • Fences can be rotated before you place them
+  • A new box for naming your buildings
+  • Bulldozing a building now asks first
+  ```
