@@ -139,6 +139,45 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
   사진 모드(화면 위 카메라 버튼 → 사진 저장)는 iOS 공유 시트를 엽니다. 사진 앱에 저장할 때만 사진 추가 권한을 요청합니다.
   ```
 
+## 5-1. 영어 현지화 (해외용)
+
+게임은 폰 언어가 한국어면 한국어, 그 밖의 언어면 영어로 나옵니다(메뉴 → 언어에서 바꿀 수도 있어요).
+App Store Connect → 1.x 버전 페이지 오른쪽 위 언어 메뉴 → **영어(미국)** 추가 → 아래를 넣습니다.
+스크린샷은 `store/screenshots/ios-en-*.png` (같은 순서: 3, 6, 4, 2, 1, 5).
+
+- 이름: `Dot City: Pixel City Builder` (30자 이내)
+- 부제: `From the Stone Age to the future`
+- 프로모션 텍스트:
+  ```
+  Start with a few huts around a campfire and grow a hanok village, a brick town, a skyline of towers and a future city of flying cars. Build your own pixel city through the ages.
+  ```
+- 설명:
+  ```
+  Start with a Stone Age tribe gathered around a campfire.
+  Lay paths and mark plots, and people move in and build their huts.
+
+  Meet each era's goals and raise its monument to open the next era.
+  Raise a dolmen for the Bronze Age, build a royal tomb for a dynasty of tiled-roof hanok houses,
+  raise the palace gate for the brick and steam of the Modern Age, build a railway station for the skyscrapers of the Present,
+  and raise a space elevator for a Future of flying cars and arcologies.
+
+  • Stone, Bronze, Dynasty, Modern, Present, Future: homes, roads and vehicles change with every era
+  • Old neighbourhoods are rebuilt one house at a time in the new era's style
+  • Bridges from log bridges to sky bridges, boats at the harbor, trains on the rails, planes landing at the airport
+  • Fire engines, police cars and ambulances drive out along the roads when they are needed
+  • Decorate with flower beds, pavilions, playgrounds, cherry trees and fountains, dig ponds and name your buildings
+  • Rain that leaves puddles and snow that settles on roofs, day and night, and a pixel skyline with every window lit
+  • Photo mode to capture and share your city
+  • Different music for every era
+  • Monuments are built in real time, and your city keeps growing while you are away
+  • Plays offline, no forced ads (watch an ad only when you want extra game money)
+  ```
+- 키워드 (100자, 쉼표로 구분):
+  ```
+  city builder,pixel,simulation,tycoon,civilization,history,ages,town,sandbox,offline,isometric,retro
+  ```
+- 지원 URL: `https://eyisyun.github.io/github-slideshow/`
+
 ## 6. 개인정보 · 연령 등급
 
 **앱 개인정보** (광고 SDK 때문에 '수집하지 않음'이 아닙니다)
@@ -183,3 +222,30 @@ iOS를 먼저 출시하고 안드로이드는 나중에 합니다. 안드로이�
 iOS 출시가 끝나면 안드로이드를 진행합니다. README의 Google Play 항목,
 AdMob **Android 앱 ID**(`AndroidManifest.xml`)와 광고 단위(`build-web.mjs`의 Android 쪽) 교체,
 Play Console 인앱 상품 등록, Android 스크린샷 다시 만들기가 남아 있습니다.
+
+
+## 업데이트 기록
+
+### 1.0.1
+Xcode → App 타깃 → General에서 **Version `1.0.1`, Build `3`**으로 바꾼 뒤 `npm run ios` → Archive → 업로드.
+App Store Connect → 앱 → **＋ (iOS 버전 추가) → 1.0.1** → 빌드 3 선택 → "이번 버전의 새로운 기능"에 아래를 넣고 제출.
+영어(미국) 현지화는 위 "5-1. 영어 현지화"를 그대로 넣습니다.
+
+- 이번 버전의 새로운 기능 (한국어):
+  ```
+  • 영어 지원: 폰 언어에 맞춰 바뀌고, 메뉴에서 직접 고를 수도 있어요
+  • 청동기 손수레, 왕조시대 소달구지와 가마가 길을 다녀요
+  • 눈이 와도 철길이 보여요
+  • 울타리도 놓기 전에 방향을 돌릴 수 있어요
+  • 건물 이름 붙이기 창이 새로워졌어요
+  • 건물을 철거할 때 한 번 더 확인해요
+  ```
+- What's New (English):
+  ```
+  • English support: follows your phone's language, or pick it in the menu
+  • Handcarts in the Bronze Age, ox carts and palanquins in the Dynasty
+  • Railway tracks stay visible under snow
+  • Fences can be rotated before you place them
+  • A new box for naming your buildings
+  • Bulldozing a building now asks first
+  ```
