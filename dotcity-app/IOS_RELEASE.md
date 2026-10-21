@@ -146,7 +146,7 @@ App Store Connect → 1.x 버전 페이지 오른쪽 위 언어 메뉴 → **영
 스크린샷은 `store/screenshots/ios-en-*.png` (같은 순서: 3, 6, 4, 2, 1, 5).
 
 - 이름: `Dot City: Pixel City Builder` (30자 이내)
-- 부제: `From the Stone Age to the future`
+- 부제: `Stone Age to the future`
 - 프로모션 텍스트:
   ```
   Start with a few huts around a campfire and grow a hanok village, a brick town, a skyline of towers and a future city of flying cars. Build your own pixel city through the ages.
