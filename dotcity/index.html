@@ -21,6 +21,19 @@
 }
 [hidden]{display:none!important}
 html,body{height:100%}
+/* loading screen: lines up with the native splash (same square art scaled to cover), then shows real progress */
+#boot{position:fixed;inset:0;z-index:9999;overflow:hidden;background:linear-gradient(180deg,#2b3966,#141a30);transition:opacity .45s ease}
+#boot.out{opacity:0;pointer-events:none}
+.bt-sq{position:absolute;left:50%;top:50%;width:100vmax;height:100vmax;transform:translate(-50%,-50%)}
+@media (orientation:landscape){.bt-sq{width:100vmin;height:100vmin}}
+.bt-sq>i{position:absolute;width:.78%;height:.78%;background:#a9a69d;animation:btTw 2.4s steps(2) infinite}
+.bt-isle{position:absolute;left:50%;top:45.1%;width:18.75%;transform:translate(-50%,-50%);image-rendering:pixelated}
+.bt-title{position:absolute;left:0;right:0;top:68.6%;transform:translateY(-50%);text-align:center;font:6.3vmax/1 var(--f-ui);color:#ffcc4d;letter-spacing:.02em}
+@media (orientation:landscape){.bt-title{font-size:6.3vmin}}
+.bt-bar{position:absolute;left:50%;top:79%;width:min(56vw,240px);height:10px;transform:translateX(-50%);box-shadow:0 0 0 2px #5a5a7a,0 0 0 4px #10142a;background:#10142a}
+.bt-bar>i{display:block;height:100%;width:4%;background:repeating-linear-gradient(90deg,#ffcc4d 0 8px,#e0a82a 8px 10px);transition:width .25s steps(6)}
+.bt-msg{position:absolute;left:0;right:0;top:79%;margin-top:22px;text-align:center;font:15px var(--f-ui);color:#aeb6d8}
+@keyframes btTw{50%{opacity:.35}}
 body{margin:0;overflow:hidden;background:var(--void);background-image:radial-gradient(120% 90% at 50% 38%,var(--sky-a),var(--sky-b) 70%);color:var(--ink);font-family:var(--f-ui);font-size:15px;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(10,12,32,0) 52%,rgba(10,12,32,.42) 100%)}
 #view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;image-rendering:pixelated}
@@ -253,6 +266,8 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
 </style>
 </head>
 <body>
+<div id="boot" role="status" aria-live="polite"><div class="bt-sq"><i style="left:4.3%;top:10.5%;animation-delay:0.00s"></i><i style="left:21.5%;top:12.1%;animation-delay:0.37s"></i><i style="left:38.7%;top:13.7%;animation-delay:0.74s"></i><i style="left:55.8%;top:15.2%;animation-delay:1.11s"></i><i style="left:73.0%;top:16.8%;animation-delay:1.48s"></i><i style="left:90.2%;top:18.3%;animation-delay:1.85s"></i><i style="left:7.4%;top:19.9%;animation-delay:2.22s"></i><i style="left:24.6%;top:21.5%;animation-delay:0.19s"></i><i style="left:41.8%;top:23.0%;animation-delay:0.56s"></i><i style="left:69.9%;top:7.4%;animation-delay:0.93s"></i><i style="left:87.1%;top:9.0%;animation-delay:1.30s"></i><i style="left:28.5%;top:31.6%;animation-delay:1.67s"></i><i style="left:45.7%;top:33.2%;animation-delay:2.04s"></i><i style="left:62.9%;top:34.7%;animation-delay:0.01s"></i><i style="left:80.1%;top:36.3%;animation-delay:0.38s"></i><i style="left:97.3%;top:37.9%;animation-delay:0.75s"></i><i style="left:14.4%;top:39.4%;animation-delay:1.12s"></i><i style="left:31.6%;top:41.0%;animation-delay:1.49s"></i><i style="left:66.0%;top:44.1%;animation-delay:1.86s"></i><i style="left:83.2%;top:45.7%;animation-delay:2.23s"></i><img class="bt-isle" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABRCAYAAABi46DgAAANkUlEQVR4AezZe7CdVXnH8XXOSQ5HroGYBCggQkAqMElpZ2phjDBFh45pq1OgTqWDtZOWOo5TOrUUp7R/lHEAtdp2rJap1HZk+kcoojWdqFFBBrxrEBIChBAJl1zMBfCEkPhm+37WybNdZ2fvzTnJebfOaGZ/9/OsZ6338vut5303CcPpF/zPLw0YdAM8tHZda9DX7He9n5sOuO7ad7fQ72abmBu4AeN79k/SQTSiKEeMm44DN6AU9Kk7Ptvzcbj5w7f1nCvPcbj5z8SAq5b9ZQtu/vyL3pQgxwmnXZAgHwQDNSBEdxPGhEEKj3sYiAGEIy768xQbNYBo9BK88vNf7jWVHlz7/eRY9Fw0AxONGXDPNx+c0kuMCQgthCPG4if++/+mdC5rp0tjBriR45csTpAH//qxWyOdFJnQKfyB2WMJkxbO8KBRA766/pmEZcv+ND148vwp3zrRl7z+t6e8/nAWNmpAtWHrpHtjAjMmFYsB0cQXpVRt2FYOZzxv1ICRM+bXAiabQAEjIMdTC0/t2urEj5wxz5LGaNQAd80Esaq7AfJAN9j17T/46S5X9Y7DmibEO29J4wbExRgB46o2QyypauHGREM+CBo1oOoilChGlHNVLb6XaHOOaYpGDegUWoowF+N+4nvNxbGHGxs1wM2F0KruBqj1o6q7AdY0Ld41GjfARcAIyKvaDLGkqoUbEw35IGjUgKqLUKIYUc5Vtfheos05pikaNaBTaCnCXIz7iZ9/yWtjWSOxUQPccQit6m6AWj+quhtgDfHlfyOozTSNGxA3zAgYV7UZSxaeLG1T1cINdAPkg6BRA6paaCkiRF/ypsXpK19Y3Z6qavGl6LmvmvjPX7tvrr2wgaRRA+x4dcCEEB8amBB5N/Hmqg5j1GaaRg0gOoTacRDgr8iQd7L1K2sT1EtjjJugUQPKG9YNUKsOdIU8qOrdlnvxDUK4a6FRA+x4t51mRFWYUNXiCXdDnnsxMBd5E7FRAzqFlgLMxTjExzgi8U13Q6MGEBJCq3rHodaN2Pmq7gZYMxPinacfjRsQF2cEjKvaDDEgvqqFGxMN+SBo1ICqQ2gIYkQ5V9Xie4k2F8c1ERszYN7cOWnRr76u678JEsIEEf3E/9qSN6YTjj/WskZozIC4WyYwo6q7AVHvFau6G0A08b3WzVS9cQPiRhkB46o2QyypauHGREM+CGbcgIcfXddCr5vXDYyoChOqWjzRdr3Xcc6JXvOHWp9RAx5+dGP7/+F9/o7/6ntPTGAG0cT3W7xx7b3t6Ts//aX2NW75wC2tS9/4tva4vWgayYwa4LrX3nRnWvHdjemyt16e/u7yxek3RtYrHxKOdQ7n+tuPfjH92bX/ns9z1TuuaS19yx9n4fv27k9veMOVh2zEjBrQGhlJcxeekVZ94bv1jY6lG+9YnY0YqsanZQTh57xmQT6W8IfXPJ12rN+Qjpv9w3TnZ5bX505pzpyjcpw9OpyQ6j+6gRl1OuXPjBoQV2UCM7bXN60jUhrLYuxmv0dDq1tjx4m244QT/ap5L2bRu3aNJ8S1IuoEMIMRiLl+8bAM+PSHfq9183uWtnpdgBEwz4joCCLtsjrkaoTbccLVT7voN/Oul4LtPKJGNAiH46A2lW44ZAPu+eTVbeH/+K7eJrgZ3cAIHaEbwgiPRrT6P694KNl1O064XR969O686yE4RDunmkg05CAcatAJMNeNQzIgxL/iiJQWnT2cjqsfx39579LWjV96e7drtGtMYAYjdAQziLbja1bdl1asvCudPOeFRDixiIMJhhqiHpFoEI3OOhMue/PbW4g5cdoGrLr1D9s77wQlix46Ni0471Op9cp/K8sH5YxATNhxLF16edq0YWfa8Mi2vjsfRjieaBANNahBDbt/tC89v2NPWrni9iHzwbQMiJ3ft3dP2rF9Zz7Hcz9qpRdfSmnL9glfTj/wk60bXs4I3TA0a1Y+T3y9+nevSGACiIVdR6xTkxMHOYiGGgjH/V/73yFYUzItAxw4e3Ss/tkZS88fED46e8LQBXOH0t4fWzEZJjBjcvXlRxeftDEt/88/z93Qz4g4E9EgGkTj+vf8TvrA+98dyw6KUzLg0vdd2Ops/Sx4XyvtrfEucGbvAtGjMDoyKm3DCLQLPRJrENNMABNg5xHdQDSIBtEgmvg4T6/Y14B3fOLSFm44+6yuxx939FBCOfnc+MTognVjiQmYqEx864ZS4EQ15ffG8mdviOFBceXnPpR0BRPABIuIBtEg/NyjnzY1JboaQDSO+Pp4+pORX8knml23vmf/L25YkZCLxZd3gHfBaP1Ix6PABOdgAk488ad/r2cCM4iWb3psd/ts71309zk/Zt7ZOZZfugFMUCcadhtqJSeceGb65PuvT9/7xqqJl1Q5WeeTDCAadT3lGx8dSXt2P2+YYUJO6q8QTPSpJw6nY+tu8F7wOMSjUC/LH+eS7Ni2J/3WotdIU2mGwqlnHZmYdPVJ1ximK667Od207A/SR993feplxDXvvDLZbbueD+r4+uxt/5GIf9eNN+aZj9z8wdzReXDgKxtw3efeetDEgfk0Mms00knRO4DYErV4BCxmjljynYeeyEKZESYQjli3devWBCaAEYj5qcQQTvw9d69OiONsMoyH/+jWJa0tW15ICxYcY9yOBnv3VkJ6bufET14evMyX3f/47fcnWHrvikcSnnp8dz53RHObN09016+f9+oEtf/ZepuQYQKuqLsBir06QquXO95N+OpXrnSKNr//Dxe3cgfsrfamTc9sT/4wQwyWf+vJdORRr0ief9z0Vxemf7ruwpieFO04orjhxYlzGp9y5pHJuUXXck11PLHl2fS1Bx6RZpiAPKi/mAAmQDcwop7KH7sNomG3kSfrL8JRp/mz88kfJxgMe/nAwE1B/tLrjhIyTMDu8RezGUR2Iy+uvy5eOD9dcNopdZZSmTs38kT9FdeNTjCHeip/mIA8qL+YACaAEXU5EQ2ioYZnz70v9RK+ZdOehOElT7QS3Awc6CbABKhhxdpt6TMPPJ1Wrtt2EHb7qWpXEq1FeazzqZV48ZXjyE+YN5as97ioMQFyMAFM6CacaOg46+025ERjbM1JafEzKeVHwMTJ6857WSMIivfCaP0L4bgSc9bsvvqUNGvZ/CyinI/cL0GYffv8o6PcjtER80+flc/Rz4hyx4lGnIhoGBMNonHO8c8qTxiw/qXz08IjHsyFfkYsqF+UBOKFC8aSGDw+byiPncTugchdV81P+985R7mN573c/W4mtBfXSRhRp/nz5aHlqeyIqbQ60XCCdTtPEjLDP9jyfFt8aYTHAkTA6vLlxQy1wMuNaO0btVJk1Pz0XbzvzWn1LU9moq4Wea/o/IjWZoIdj7HdhuPtNohGKTp2Xy0/AkxAdIETBEzQFUyAuptgRpjw+LpduVXNRfvKu3HOptenj3z4Y3lqzQdfm6OvqJVGnL5yPM29a08qo7WuD7mfT6JhTDSIhhqIJli+ecd4wpzW+olHQBFMgBw6QmQME5jBBKgzwY1022nzdlsMztp4Ybp79ooY5njuX6/NMb7MhwkbLzsqbX/LWCpjrBOJXvX/j0nzG71TeAjOC+ovggmv0/ZnOLJ9cy6KNDEB7UKdMKEO+UXZaYR6UO7Wvo9vzbsXc4+dfn9iwuK/OS2XQrwYNfPrTj3wjwr1Ki/MOkz6jD89nKBINOw2OkVbQzTknQxvrs7Ptdm77sux/FLrNCLmmQDdgKiXu7X63P1592JOZIJ4xZVvS0RHVCPefPkYeWGaA9GQEw2iQTi0unnEju8aWmh4ENv3nznxCDAB5YpuHRGPRETrmQAmQC2IR6N8FCIn1LqIjo1cvYRoqBGN+B1XC+Eh3m7DHBghBoTDeHjV/XcOScAEyO2+iDBDTUfE42Au6PaOiLlyR7917+Yo5xiGhFm5eOCLaBgSDbuNEGsucqKh1g2iEXP3fvuuofwOYAJiggmIMeGRi0yAHDoiTOlnhLWdQktzzINoyIkG0VCz42JANGIslm1PNNRBOOTZAAmYADmYAHk3CGdEiDeO3GMBrY3y+PJFGT9z5omGnGgQjVJ07Lhap3DHQtsTDWMQDXkwyYAoMgExZgJiHDE6gwkI8TEvMkFXMAFq5YvSz9ya84/p+Va3HkQTLCcaRBpjqjtubUlXA2IBExBjJiDGnZEJiLqOkDOGCcxgAtTRa8fNhWA5CCZc3ok5u42Ys9uIcbfY14A4gAmIMRMQYzFelHImQB4wQc4EMAHaHNocnaIdQzTk3SAaMUc0YtwvTsmAOAETEGMmwDgeB3mg1mlEzDEBRINwaPVYY1cJL9s75kSiIQfRkE+VaRkQJ2UCYswExFjs1hHxSES0DiE8xBMNc2CEGBCNGBONGE8nHpIBcQEmIMZMgLHdFxFmqOmIeBzMoZdwcyVEI2pEI8aHEg/LgLggExBjJiDGhEcuMgFy2G3Ig7LtiUbMEY0YH06cEQPiBpiAGDMBMe6MHoVO4bFG2xONqBGNGM9EnFED4oaYgBgzATGOWHbGoHY8rh2xEQPi5ExAjJmAGJdxUDteXlPeqAEuACZADiZADm0OObQ55E0zEANCBBMQYyZMV3gcO1NxoAbETTMBMbbbiPEg408AAAD//80oMR0AAAAGSURBVAMABk04uU5pnfIAAAAASUVORK5CYII="><div class="bt-title" id="btTitle">도트시티</div><div class="bt-bar"><i id="btFill"></i></div><div class="bt-msg" id="btMsg">도시를 불러오는 중…</div></div></div>
+<script>(()=>{let en;try{const v=localStorage.getItem('dotcity.lang');en=v?v==='en':!/^ko\b/i.test(navigator.language||'ko');}catch(e){en=!/^ko\b/i.test(navigator.language||'ko');}if(en){document.getElementById('btTitle').textContent='Dot City';document.getElementById('btMsg').textContent='Loading your city…';}})();</script>
 
 <canvas id="view" aria-label="도시 지도"></canvas><div id="vig" aria-hidden="true"></div>
 
@@ -382,7 +397,7 @@ const kx=s=>TOUCH?String(s).replace(/ ?\((?:[A-Z0-9]|Esc|Enter)\)/g,''):s;
    Every Korean string shown on screen goes through tr(): exact phrases, numbers normalised to {n}, and patterns where
    {x} stands for an inserted value (translated in turn). A MutationObserver applies it to the page as it changes. */
 const LANG=(()=>{try{const v=localStorage.getItem('dotcity.lang');if(v==='ko'||v==='en')return v;}catch(e){}return /^ko\b/i.test(navigator.language||'ko')?'ko':'en';})();
-const I18N=[["도트시티","Dot City"],["개척지","Frontier"],["기원전 {n}년 {n}월","{n} BC, month {n}"],["인구","Pop."],["자금","Funds"],["전력","Power"],["석기시대","Stone Age"],["주","R"],["상","C"],["공","I"],["세율","Tax"],["수입","Income"],["지출","Costs"],["지도","Map"],["우리 도시 이름을 지어 주세요","Name your city"],["나중에 왼쪽 위 도시 이름을 눌러도 바꿀 수 있어요.","You can rename it later by tapping the city name at the top left."],["시작하기","Start"],["낮","Day"],["노을","Dusk"],["밤","Night"],["맑음","Clear"],["비","Rain"],["눈","Snow"],["꽃잎","Petals"],["자동","Auto"],["사진 저장","Save photo"],["끝내기","Done"],["이미지를 길게 누르거나(휴대폰) 오른쪽 클릭해서(컴퓨터) 저장하세요.","Long-press the image (phone) or right-click it (computer) to save it."],["닫기","Close"],["자금 충전","Top up funds"],["지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.","Paid in the money of your current era. The later the era, the more you get."],["석기시대 움집 마을에서 시작해 청동기, 왕조, 근대, 현대를 거쳐 미래 도시까지 키우세요. 시대마다 목표를 채우고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.","Start with a Stone Age village of huts and grow it through the Bronze Age, the Dynasty, the Modern Age and the Present into a city of the future. Meet each era's goals and raise its monument to open the next era."],["계속하기","Continue"],["새 부족: 석기시대부터","New tribe: from the Stone Age"],["기본","Standard"],["빈 땅: 석기시대","Empty land: Stone Age"],["처음부터 직접","Build from scratch"],["시대 골라 시작","Start in an era"],["그 시대 마을이 지어진 채로 시작해요","Begins with a village of that era already built"],["석기","Stone"],["청동기","Bronze"],["왕조","Dynasty"],["근대","Modern"],["현대","Present"],["미래","Future"],["🚓 경찰 출동 테스트","🚓 Police dispatch test"],["🚑 구급차 출동 테스트","🚑 Ambulance dispatch test"],["🔥 화재 출동 테스트","🔥 Fire dispatch test"],["✈ 공항 테스트","✈ Airport test"],["✈ 우주공항 테스트","✈ Spaceport test"],["소리","Sound"],["위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요","The speaker button at the top mutes everything at once"],["음악 크기","Music volume"],["휴대폰 터치","Touch"],["고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요","The tile you pick turns yellow and a confirm bubble appears. Tap 'Build here' or tap the same tile again to build."],["마우스 클릭","Mouse click"],["표시된 칸에 바로 {n}칸 짓기","Build {n} tile right where it's marked"],["드래그","Drag"],["지도 이동","Move the map"],["두 손가락","Two fingers"],["벌리면 확대 · 오므리면 축소","Spread to zoom in · pinch to zoom out"],["우클릭 드래그","Right-drag"],["지도 이동 · 휴대폰은 두 손가락","Move the map · two fingers on a phone"],["휠 / + -","Wheel / + -"],["확대·축소","Zoom"],["도구 선택 · P V O C T E F L 데이터 보기","Pick tools · P V O C T E F L data views"],["도시 지도","City map"],["도시 이름","City name"],["다음 시대로 가는 조건","What the next era needs"],["게임 속도","Game speed"],["시간대","Time of day"],["사진 모드","Photo mode"],["메뉴","Menu"],["도구","Tools"],["수요와 예산","Demand and budget"],["세율 내리기","Lower tax"],["세율 올리기","Raise tax"],["미니맵","Minimap"],["이름 추천","Suggest a name"],["도시 사진","City photo"],["방향 돌리기","Rotate"],["취소","Cancel"],["한 번 더","Tap again"],["조개","shells"],["사람들이 모닥불 곁에 모여 살기 시작했어요. 흙길을 내고 움집 터를 정해 부족을 키우세요.","People have started living together around the campfire. Lay dirt paths and mark hut plots to grow your tribe."],["모닥불: 반경 {n}칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요","Campfire: shares its fire within {n} tiles. Huts only grow where the fire reaches"],["움집 터 · 교역터 · 채집터","Hut plots · trading posts · foraging grounds"],["선돌: 주변 땅값을 올려요","Standing stone: raises land value nearby"],["약초 움막: 주민의 건강을 돌봐요 (G)","Herb hut: keeps residents healthy (G)"],["목표를 모두 채우고 고인돌을 세우면 청동기시대로!","Meet every goal and raise a dolmen to enter the Bronze Age!"],["청동기시대","Bronze Age"],["청동","bronze"],["청동을 다루고 농사를 짓기 시작했어요. 초가집과 장터, 논밭이 생겨요.","People work bronze and farm the land. Thatched houses, markets and rice fields appear."],["우물: 반경 {n}칸에 물을 대줘요","Well: waters everything within {n} tiles"],["초가집 · 장터 · 논밭 · 청동 공방","Thatched houses · markets · fields · bronze workshops"],["당산나무","Village guardian tree"],["옛 움집은 조금씩 새 시대 양식으로 다시 지어져요","Old huts are slowly rebuilt in the new era's style"],["목표를 모두 채우고 고분을 쌓으면 왕조시대로!","Meet every goal and build a royal tomb to enter the Dynasty!"],["왕조시대","Dynasty"],["엽전","coins"],["왕이 다스리는 나라가 섰어요. 기와지붕 한옥과 저잣거리가 들어서요.","A kingdom has risen. Tiled-roof hanok houses and market streets appear."],["한옥 · 대갓집 ({n}단계까지)","Hanok · grand houses (up to level {n})"],["주막 · 상점 · 객주, 대장간 · 도자기 가마","Taverns · shops · inns, smithies · pottery kilns"],["서당(교육) · 포도청(치안) · 정자","Village school (education) · constabulary (safety) · pavilions"],["혜민서: 대갓집({n}단계)부터는 병원이 가까워야 해요","Clinic: from grand houses (level {n}) up, a hospital must be nearby"],["돌길","Stone road"],["목표를 모두 채우고 궁궐 정문을 세우면 근대로!","Meet every goal and raise the palace gate to enter the Modern Age!"],["원","won"],["증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.","Steam engines and electricity have arrived. Brick buildings, factories and new roads appear."],["증기 발전소: 이제 {n}단계 건물은 전기가 있어야 해요","Steam power plant: level {n} buildings now need electricity"],["양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장","Western houses · colonial houses · banks · modern buildings · brick factories"],["대로 · 소방서 · 학교","Avenues · fire stations · schools"],["이제 화재가 일어날 수 있어요","Fires can now break out"],["목표를 모두 채우고 기차역을 세우면 현대로!","Meet every goal and build the railway station to enter the Present!"],["자동차와 고층 빌딩의 시대가 왔어요.","The age of cars and skyscrapers has come."],["고층 아파트 · 초고층 빌딩 ({n}단계)","High-rise apartments · skyscrapers (level {n})"],["풍력 발전기","Wind turbine"],["시청 · 경기장 · 전파탑 랜드마크","City hall · stadium · TV tower landmarks"],["{n}×{n} 대형 건물","{n}×{n} large buildings"],["목표를 모두 채우고 우주 엘리베이터를 세우면 미래로!","Meet every goal and raise the space elevator to enter the Future!"],["우주 엘리베이터가 하늘 길을 열었어요. 하늘을 나는 차가 다니고 공중 정원과 아콜로지가 솟는 미래 도시를 완성하세요.","The space elevator has opened the road to the sky. Flying cars zip around: finish a future city of sky gardens and arcologies."],["아콜로지 · 공중 타워 ({n}단계), 자동화 공장 ({n}단계)","Arcologies · sky towers (level {n}), automated factories (level {n})"],["핵융합 발전소: 오염 없이 전력 {n}","Fusion power plant: {n} power with no pollution"],["하늘을 나는 차 덕분에 도로가 덜 막혀요","Flying cars ease traffic on the roads"],["공장 오염이 크게 줄어요","Factory pollution drops sharply"],["옛 건물은 조금씩 미래 양식으로 다시 지어져요","Old buildings are slowly rebuilt in the future style"],["마지막 목표를 모두 채워 미래 도시를 완성하세요.","Meet the last goals to complete your city of the future."],["인구 {n}명","Population {n}"],["모닥불 {n}개","{n} campfires"],["선돌 {n}곳","{n} standing stones"],["큰 움집 {n}채","{n} big huts"],["교역터 {n}곳","{n} trading posts"],["약초 움막 {n}곳","{n} herb huts"],["우물 {n}개","{n} wells"],["큰 장터 {n}곳","{n} big markets"],["청동 공방 {n}곳","{n} bronze workshops"],["당산나무·선돌 {n}곳","{n} guardian trees or standing stones"],["약초방 {n}곳","{n} herbalists"],["대갓집 {n}채","{n} grand houses"],["객주 {n}곳","{n} inns"],["서당 {n}곳","{n} village schools"],["포도청 {n}곳","{n} constabularies"],["혜민서 {n}곳","{n} clinics"],["증기 발전소 {n}곳","{n} steam power plants"],["근대 빌딩 {n}채","{n} modern buildings"],["방직 공장 {n}곳","{n} textile mills"],["소방서 {n}곳","{n} fire stations"],["학교 {n}곳","{n} schools"],["적십자 병원 {n}곳","{n} Red Cross hospitals"],["고층 아파트 {n}채","{n} high-rise apartments"],["초고층 빌딩 {n}채","{n} skyscrapers"],["랜드마크 {n}곳","{n} landmarks"],["종합병원 {n}곳","{n} general hospitals"],["핵융합 발전소 {n}곳","{n} fusion power plants"],["아콜로지 {n}채","{n} arcologies"],["공중 타워 {n}채","{n} sky towers"],["자동화 공장 {n}곳","{n} automated factories"],["메디컬 센터 {n}곳","{n} medical centers"],["곧","soon"],["{x}시간{x}","{x}h{x}"],["{x}분","{x} min"],["기원전 {x}년","{x} BC"],["{x}년","{x}"],["새벽시","Dawnville"],["마을","Village"],["소도시","Town"],["도시","City"],["대도시","Big city"],["메트로폴리스","Metropolis"],["미래 도시","Future city"],["모닥불이나 우물이 가까이 있어야 해요","Needs a campfire or a well nearby"],["전기가 필요해요","Needs electricity"],["{n}칸 안에 도로가 필요해요","Needs a road within {n} tiles"],["불타고 있어요!","It's on fire!"],["짓는 중이에요","Under construction"],["최고 단계예요","Top level"],["곧 새 시대 양식으로 다시 지어요","Will soon be rebuilt in the new era's style"],["더 크게 자라려면 다음 시대로 가야 해요","Needs the next era to grow bigger"],["{n}단계부터는 전기가 필요해요. 발전소와 이어주세요","From level {n} it needs electricity. Connect it to a power plant"],["땅값 {x}","Land value {x}"],["인구 {x}명","Population {x}"],["학교(교육 {n})","School (education {n})"],["{x}(건강 {n})","{x} (health {n})"],["오염 줄이기","Reduce pollution"],["범죄 줄이기","Reduce crime"],["교통 체증 해소","Ease traffic"],["다음 단계:","Next level:"],["필요","needed"],["수요가 없어서 멈춰 있어요","Stalled: nobody wants this zone right now"],["곧 다음 단계로 자라요","Growing to the next level soon"],["불이 났지만 소방서가 출동했어요. ({x}, {x})","A fire broke out, but the fire station is on its way. ({x}, {x})"],["화재 발생! ({x}, {x}) 소방서가 없으면 옆 건물로 번집니다.","Fire! ({x}, {x}) Without a fire station it spreads to the next buildings."],["모든 목표 달성! 미래 도시가 완성됐어요.","Every goal reached! Your city of the future is complete."],["먼저 모닥불({n})을 피우세요. 모닥불 {n}칸 안, 길 {n}칸 안에 놓은 움집 터에만 집이 생겨요.","Light a campfire ({n}) first. Houses only grow on hut plots within {n} tiles of a campfire and {n} tiles of a path."],["돈이 다 떨어졌어요. 세율을 올리거나 지출을 줄여 보세요. 자금 옆 ＋에서 충전할 수도 있어요.","You're out of money. Try raising taxes or cutting costs. You can also top up with the ＋ next to your funds."],["{x}을(를) 세울 수 있어요! 완성하면 {x}가 열립니다. (Y)","You can raise the {x}! When it's finished, the {x} begins. (Y)"],["불씨가 닿지 않는 움집 터가 있어요. 모닥불({n})을 가까이 피워주세요.","Some hut plots aren't reached by the fire. Light a campfire ({n}) closer."],["우물이 먼 집이 있어요. 우물({n})을 가까이 파주세요.","Some houses are far from a well. Dig a well ({n}) closer."],["증기 발전소({n})를 지어야 {n}단계 건물이 올라가요.","Build a steam power plant ({n}) so level {n} buildings can rise."],["발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.","There's no power plant. Build a wind or coal plant and connect it by road."],["발전소가 도시와 이어져 있지 않아요. 길이나 건물로 발전소와 마을을 이어주세요.","The power plant isn't connected to the city. Link them with roads or buildings."],["전력이 모자랍니다. 발전소를 더 지으세요.","Not enough power. Build more power plants."],["전기가 닿지 않는 구역이 있어요. 도로로 발전소와 이어주세요.","Some zones get no electricity. Connect them to a power plant by road."],["도로에서 {n}칸 넘게 떨어진 구역은 자라지 않아요.","Zones more than {n} tiles from a road won't grow."],["집이 더 필요해요. {x}을(를) 더 칠해 주세요.","More homes are needed. Zone more {x}."],["사고팔 곳이 부족해요. {x}을(를) 늘려 주세요.","There aren't enough places to shop. Add more {x}."],["일할 곳이 필요해요. {x}을(를) 늘려 주세요.","People need jobs. Add more {x}."],["도로 {x}칸이 꽉 막혔어요. 옆에 길을 더 내거나 대로(U)로 넓히세요.","{x} road tiles are jammed. Add another road beside them or widen them into an avenue (U)."],["소방서가 없어서 불이 나면 옆 건물로 번져요.","There's no fire station, so fires will spread to neighbouring buildings."],["학교가 없어요. 고층 아파트와 초고층 빌딩은 교육받은 주민이 있어야 올라갑니다.","There's no school. High-rise apartments and skyscrapers need educated residents."],["큰 집은 건강해야 올라가요. {x}(G)을(를) 지으세요.","Big houses need healthy residents. Build a {x} (G)."],["범죄가 늘고 있어요. {x}을(를) 지으세요.","Crime is rising. Build a {x}."],["주거지 공기가 탁해요. 공장과 떨어뜨리고 공원과 숲을 늘리세요.","The air in homes is dirty. Keep factories away and add parks and trees."],["새 랜드마크: {x}을(를) 지을 수 있어요!","New landmark: you can build the {x}!"],["인구 {x}명 돌파!","Population passed {x}!"],["자리를 비운 사이 {x}이 흘렀어요 · 인구 {x}{x} · 자금 {x}{x}","While you were away {x} passed · population {x}{x} · funds {x}{x}"],["살펴보기","Inspect"],["건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.","Tap a building to see its info. Drag to move the map."],["철거","Bulldoze"],["길·건물·나무를 없앱니다.","Removes roads, buildings and trees."],["흙길","Dirt path"],["신작로","New road"],["도로","Road"],["스마트 도로","Smart road"],["한 칸씩 깔려요. 집은 길에서 {n}칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수 없고, 대로와도 이어 붙일 수 없어요. 물 위에 깔면 다리가 돼요(길의 {n}배 값, 곧게만).","Laid one tile at a time. Houses grow within {n} tiles of a road. Roads can't run side by side or join avenues. Laid on water it becomes a bridge ({n}× the price, straight only)."],["대로","Avenue"],["넓은 길. 보통 길보다 {n}배 많이 다닐 수 있어요. 도로와는 서로 이어 붙일 수 없어요(대로는 대로끼리). 물 위에 깔면 넓은 다리(대교)가 돼요({n}배 값).","A wide road carrying {n}× more traffic. Avenues and roads can't join (avenues only connect to avenues). On water it becomes a wide bridge ({n}× the price)."],["움집 터","Hut plot"],["초가 마을","Thatched village"],["한옥 마을","Hanok village"],["주거 구역","Residential zone"],["미래 주거 구역","Future residential zone"],["사람들이 모여 살 집을 짓습니다.","Builds homes for people to live in."],["교역터","Trading post"],["장터","Market"],["저잣거리","Market street"],["상업 구역","Commercial zone"],["미래 상업 구역","Future commercial zone"],["물건을 사고파는 곳이 생깁니다.","Creates places to buy and sell."],["채집터","Foraging ground"],["논밭","Fields"],["공방","Workshop"],["공업 구역","Industrial zone"],["스마트 공업 구역","Smart industrial zone"],["일거리를 만듭니다. 근대부터는 공기를 더럽혀요.","Creates jobs. From the Modern Age it pollutes the air."],["선돌","Standing stone"],["정자","Pavilion"],["공원","Park"],["하늘 정원","Sky garden"],["주변 땅값을 올려 더 좋은 집이 들어서게 합니다.","Raises land value nearby so better homes move in."],["모닥불","Campfire"],["반경 {n}칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.","Shares its fire within {n} tiles. Hut plots only grow where the fire reaches."],["우물","Well"],["반경 {n}칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.","Waters everything within {n} tiles. Houses and markets need a well nearby."],["포도청","Constabulary"],["경찰서","Police station"],["치안 센터","Security center"],["반경 {n}칸의 범죄를 줄입니다.","Reduces crime within {n} tiles."],["약초 움막","Herb hut"],["약초방","Herbalist"],["혜민서","Clinic"],["적십자 병원","Red Cross hospital"],["종합병원","General hospital"],["메디컬 센터","Medical center"],["반경 {n}칸 주민의 건강을 돌봐요. {n}단계 이상 큰 집은 건강해야 올라가요. 오염이 심하면 건강이 나빠져요.","Keeps residents within {n} tiles healthy. Big houses of level {n} and up need healthy residents. Heavy pollution hurts health."],["나루터","Ferry landing"],["포구","Harbor"],["항구","Port"],["여객 터미널","Passenger terminal"],["수상 정거장","Water station"],["물가(물과 맞닿은 땅)에만 지을 수 있어요. 배가 한 척씩 오가고, 반경 {n}칸 땅값과 상업 수요가 올라가요.","Only on the shore (land touching water). A boat comes and goes, and land value and shop demand rise within {n} tiles."],["철길","Railway"],["자기부상 궤도","Maglev track"],["기차가 다니는 길. 곧은 도로를 가로질러 건널목을 만들 수 있어요(철길끼리 나란히는 안 돼요). 물 위에는 깔 수 없어요.","Track for trains. It can cross a straight road to make a level crossing (tracks can't run side by side). It can't be laid on water."],["간이역","Halt"],["전철역","Metro station"],["자기부상역","Maglev station"],["철길 바로 옆에 지어요. 역마다 기차 {n}대가 다니고, 반경 {n}칸은 차가 덜 막혀요.","Built right next to the tracks. Each station runs {n} train, and traffic eases within {n} tiles."],["꾸미기","Decorate"],["꽃밭·울타리·장독대·가로등 같은 소품을 한 칸에 놓아요. ★ 소품은 비싸지만 주변 땅값을 크게 올려요.","Place props like flower beds, fences, jar terraces and street lamps on one tile. ★ props are pricey but raise land value a lot."],["땅 바꾸기","Reshape land"],["빈 땅에 물을 파거나 메우고, 모래·풀밭으로 바꾸거나 나무를 심어요.","Dig or fill water on empty land, turn it into sand or grass, or plant trees."],["소방서","Fire station"],["반경 {n}칸의 불을 금방 끄고 번지지 않게 막습니다.","Puts out fires within {n} tiles quickly and stops them spreading."],["서당","Village school"],["학교","School"],["미래 학교","Future school"],["반경 {n}칸 주민을 가르쳐 땅값을 올리고 범죄를 줄입니다. 현대의 고층 건물엔 꼭 필요해요. {n}×{n}.","Teaches residents within {n} tiles, raising land value and cutting crime. Needed for present-day high-rises. {n}×{n}."],["깨끗한 전력 {n}.","Clean power {n}."],["증기 발전소","Steam power plant"],["화력 발전소","Coal power plant"],["핵융합 발전소","Fusion power plant"],["전력 {n}을 만들지만 오염이 심합니다. {n}×{n}.","Makes {n} power but pollutes heavily. {n}×{n}."],["시청","City hall"],["도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. {n}×{n}.","The city's one and only landmark. Raises land value nearby a lot and boosts housing demand. {n}×{n}."],["경기장","Stadium"],["도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. {n}×{n}.","The city's one and only landmark. Raises shop demand and land value over a wide area. {n}×{n}."],["공항","Airport"],["우주공항","Spaceport"],["★ 특별 건물. {n}×{n}(긴 활주로). 비행기가 뜨고 내리고, 관광객 덕분에 상업·주거 수요와 주변 땅값이 크게 올라요. 활주로 근처는 조금 시끄러워요. 인구 {n}명부터.","★ Special building. {n}×{n} (long runway). Planes take off and land, and tourists boost shop and housing demand and nearby land value. A bit noisy near the runway. From population {n}."],["전파탑","TV tower"],["대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.","Symbol of a big city. Raises every demand and land value over a very wide area."],["고인돌","Dolmen"],["부족의 힘을 모아 거대한 돌을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 청동기시대가 열려요. {n}×{n}.","Rally the tribe to raise a giant stone. Construction takes {n} real hours (it continues while the game is closed); when done, the Bronze Age begins. {n}×{n}."],["고분","Royal tomb"],["왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 왕조시대가 열려요. {n}×{n}.","Build the king's tomb and lay the kingdom's foundations. Construction takes {n} real hours (it continues while the game is closed); when done, the Dynasty begins. {n}×{n}."],["궁궐 정문","Palace gate"],["웅장한 성문을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 근대가 열려요. {n}×{n}.","Raise a grand gate. Construction takes {n} real hours (it continues while the game is closed); when done, the Modern Age begins. {n}×{n}."],["기차역","Railway station"],["철도가 들어옵니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 현대가 열려요. {n}×{n}.","The railway arrives. Construction takes {n} real hours (it continues while the game is closed); when done, the Present begins. {n}×{n}."],["우주 엘리베이터","Space elevator"],["하늘 끝까지 닿는 케이블을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 미래가 열려요. {n}×{n}.","Raise a cable that reaches the edge of the sky. Construction takes {n} real hours (it continues while the game is closed); when done, the Future begins. {n}×{n}."],["꽃밭","Flower bed"],["울타리","Fence"],["돌탑","Stone cairn"],["장독대","Jar terrace"],["벤치","Bench"],["솟대","Totem pole"],["가로등","Street lamp"],["벚꽃나무","Cherry tree"],["분수","Fountain"],["동상","Statue"],["시계탑","Clock tower"],["놀이터","Playground"],["물 파기","Dig water"],["땅 메우기","Fill land"],["모래","Sand"],["풀밭","Grass"],["나무 심기","Plant trees"],["전력망","Power grid"],["노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.","Yellow has power, red is cut off."],["땅값","Land value"],["밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.","Brighter is pricier. Water, parks and shops raise it; pollution and crime lower it."],["오염","Pollution"],["공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.","Made by factories and coal plants. Trees reduce it."],["범죄","Crime"],["밀집한 동네에서 생기고 경찰서가 줄입니다.","Grows in crowded neighbourhoods; police stations reduce it."],["교통","Traffic"],["빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.","Red roads are jammed. Jammed areas stop growing and lose land value."],["교육","Education"],["학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.","Where schools teach. Brighter means better educated."],["화재","Fire"],["소방서가 지키는 범위(파란색). 빨간 건물은 불이 나면 옆으로 번질 수 있는 곳, 깜빡이는 곳은 지금 불타는 곳이에요.","Fire station coverage (blue). Red buildings can spread a fire to their neighbours; blinking ones are burning now."],["건강","Health"],["병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.","Where hospitals care for people. Brighter is healthier; heavy pollution darkens it."],["{x}은(는) 인구 {x}명부터 지을 수 있어요 (지금 {x}명).","{x} unlocks at population {x} (now {x})."],["{x}은(는) 근대부터 놓을 수 있어요.","{x} can be placed from the Modern Age."],["물 위에는 소품을 놓을 수 없어요.","Props can't go on water."],["빈 땅에만 놓을 수 있어요.","Only on empty land."],["빈 땅에서만 바꿀 수 있어요. 건물이나 길은 먼저 철거하세요.","Only empty land can be reshaped. Bulldoze buildings or roads first."],["이미 물이에요.","It's already water."],["물이 아니에요.","It isn't water."],["풀밭에서만 모래로 바꿀 수 있어요.","Only grass can become sand."],["모래에서만 풀밭으로 바꿀 수 있어요.","Only sand can become grass."],["물에는 나무를 심을 수 없어요(나무는 한 칸에 {n}그루까지).","Trees can't be planted in water (up to {n} trees per tile)."],["철길은 물 위에 깔 수 없어요.","Tracks can't be laid on water."],["철길을 나란히 붙여 깔 수는 없어요.","Tracks can't run side by side."],["건널목은 곧게 뻗은 보통 도로를 똑바로 가로질러야 만들 수 있어요(대로·교차로·굽은 길은 안 돼요).","A level crossing must cross a straight ordinary road at a right angle (not avenues, junctions or bends)."],["건물이 있는 곳에는 철길을 깔 수 없어요.","Tracks can't go where there's a building."],["역은 철길 바로 옆에 지어야 해요.","Stations must be built right next to the tracks."],["{x} 같은 배터는 물가에만 지을 수 있어요. 물과 맞닿은 땅을 골라 주세요.","Docks like the {x} can only go on the shore. Pick land that touches water."],["도로는 대로에 이어 붙일 수 없어요. 도로는 도로끼리, 대로는 대로끼리만 이어져요.","Roads can't join avenues. Roads connect to roads, avenues to avenues."],["대로는 도로에 이어 붙일 수 없어요. 대로는 대로끼리, 도로는 도로끼리만 이어져요.","Avenues can't join roads. Avenues connect to avenues, roads to roads."],["길을 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)를 따로 깔아 주세요.","Roads can't run side by side. If you need a wide road, lay an avenue (U) instead."],["다리는 물가나 놓인 다리에 이어서, 곧게만 놓을 수 있어요. 물 위에서는 길을 꺾거나 갈라지게 할 수 없어요.","Bridges go straight out from the shore or an existing bridge. They can't turn or branch on water."],["{x}을(를) 짓고 있어요. {x} 남았어요.","Building the {x}. {x} left."],["먼저 이 시대의 목표를 모두 채우세요 ({x}/{x}).","First meet every goal of this era ({x}/{x})."],["{x}은(는) 인구 {x}명이 되면 지을 수 있어요.","{x} unlocks at population {x}."],["{x}은(는) 하나만 지을 수 있어요.","Only one {x} can be built."],["모닥불에서 {n}칸 안이어야 집이 생겨요. 모닥불({n})을 가까이 피워 주세요.","Houses only appear within {n} tiles of a campfire. Light a campfire ({n}) closer."],["우물에서 {n}칸 안이어야 집이 생겨요. 우물({n})을 가까이 파 주세요.","Houses only appear within {n} tiles of a well. Dig a well ({n}) closer."],["전기가 닿지 않아요. 발전소와 길로 이어 주세요.","No electricity reaches here. Connect it to a power plant by road."],["길에서 {n}칸 안이어야 집이 생겨요. 길(R)을 가까이 깔아 주세요.","Houses only appear within {n} tiles of a road. Lay a road (R) closer."],["지금은 이 구역을 원하는 사람이 없어요. 왼쪽 아래 주·상·공 막대가 위로 올라간 구역을 지어 보세요.","Nobody wants this zone right now. Build the zone whose bar (R·C·I, bottom left) is up."],["자금이 부족합니다. {x}이 필요해요.{x}","Not enough funds. You need {x}.{x}"],["{x} 공사를 시작했어요. {x}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.","Construction of the {x} has begun. It finishes in {x} hours, and continues while the game is closed."],["새로운 시대가 열렸어요","A new era has begun"],["목표:","Goals:"],["햇살마을","Sunnyvale"],["별빛시","Starlight"],["무지개시","Rainbow City"],["솔바람시","Pinewind"],["푸른강시","Blue River"],["달빛마을","Moonvale"],["꽃내음시","Blossom City"],["은하시","Galaxy City"],["도토리마을","Acorn Village"],["바람개비시","Pinwheel City"],["구름다리시","Cloud Bridge"],["반짝시","Sparkle City"],["새싹마을","Sprout Village"],["노을시","Sunset City"],["하늘숲시","Sky Woods"],["파도마을","Wave Village"],["초록별시","Green Star"],["방울시","Bubble Town"],["{x}의 역사가 시작돼요!","The story of {x} begins!"],["배경 음악","Music"],["효과음","Sound effects"],["🚒 소방차가 출동했어요! ({x}, {x})","🚒 The fire engine is on its way! ({x}, {x})"],["🚓 경찰차가 출동했어요!","🚓 The police car is on its way!"],["🚓 사건 해결! 경찰이 도둑을 잡았어요.","🚓 Case closed! The police caught the thief."],["도둑이 달아났어요… 경찰서를 가까이 짓고 도로로 이어 주세요.","The thief got away… Build a police station closer and connect it by road."],["도난 사건이 났어요. 경찰서가 있으면 경찰차가 출동해요.","A theft happened. With a police station, a police car will come."],["🚑 구급차가 출동했어요!","🚑 The ambulance is on its way!"],["🚑 환자를 병원으로 무사히 옮겼어요.","🚑 The patient made it safely to hospital."],["환자가 오래 기다렸어요… 병원을 가까이 짓고 도로로 이어 주세요.","The patient waited too long… Build a hospital closer and connect it by road."],["응급 환자가 생겼어요. 병원이 있으면 구급차가 출동해요.","A medical emergency! With a hospital, an ambulance will come."],["날이 개었어요 ☀","The sky has cleared ☀"],["비가 와요 ☔ 불이 덜 나고 논밭이 잘 자라요. 차는 조금 느려져요.","It's raining ☔ Fewer fires and the fields grow well. Cars slow down a little."],["눈이 와요 ❄ 차가 느려지고, 난방 때문에 전기를 조금 더 써요.","It's snowing ❄ Cars slow down, and heating uses a little more power."],["눈이 와요 ❄ 길이 미끄러워 사람들이 천천히 다녀요.","It's snowing ❄ The paths are slippery, so people walk slowly."],["꽃잎이 날려요 🌸 공원·벚꽃나무 주변 땅값이 오르고 나들이 손님이 늘어요.","Petals are falling 🌸 Land near parks and cherry trees gains value and more visitors come."],["☔ 비","☔ Rain"],["❄ 눈","❄ Snow"],["🌸 꽃잎","🌸 Petals"],["불씨","Fire"],["전력 {n}을 오염 없이 만듭니다. 옛 화력 발전소는 저절로 바뀌지 않으니 새로 지어야 해요. {n}×{n}.","Makes {n} power with no pollution. Old coal plants don't change on their own; build a new one. {n}×{n}."],["불씨와 우물이 닿는 곳(노란색)과 닿지 않는 곳(빨간색).","Where fire and wells reach (yellow) and don't (red)."],["목표","Goals"],["데이터 보기","Data views"],["일시정지","Pause"],["보통","Normal"],["빠르게","Fast"],["아주 빠르게","Very fast"],["시간이 흐릅니다.","Time flows."],["한낮으로 고정했어요.","Locked to midday."],["밤으로 고정했어요.","Locked to night."],["한 번 더 누르면 지금 도시를 지웁니다","Tap again to erase this city"],["시간: 자동","Time: auto"],["시간: 낮 고정","Time: day"],["시간: 밤 고정","Time: night"],["소리 켜기","Sound on"],["소리 끄기","Sound off"],["사진을 저장했어요.","Photo saved."],["{x} {x}월{x}","{x} · month {x}{x}"],["다음:","Next:"],["{x} 공사 중 · {x} 남음 (꺼 둬도 진행돼요)","Building the {x} · {x} left (continues while closed)"],["목표 완료! {x}을(를) 세우세요 ({x})","Goals done! Raise the {x} ({x})"],["목표 {x}/{x} · {x} ({x}/{x}) · 눌러서 보기","Goals {x}/{x} · {x} ({x}/{x}) · tap to see"],["마지막 시대","Final era"],["미래 도시 완성!","City of the future complete!"],["목표 {x}/{x} · {x} ({x}/{x})","Goals {x}/{x} · {x} ({x}/{x})"],["빈 터","Empty lot"],["움집","Hut"],["큰 움집","Big hut"],["초가집","Thatched house"],["큰 초가집","Big thatched house"],["노점","Stall"],["청동 공방","Bronze workshop"],["한옥","Hanok"],["대갓집","Grand house"],["주막","Tavern"],["상점","Shop"],["객주","Inn"],["대장간","Smithy"],["도자기 가마","Pottery kiln"],["양옥","Western house"],["적산가옥","Colonial house"],["벽돌 연립","Brick row house"],["근대 상점","Modern shop"],["은행","Bank"],["근대 빌딩","Modern building"],["벽돌 창고","Brick warehouse"],["벽돌 공장","Brick factory"],["방직 공장","Textile mill"],["돔 하우스","Dome house"],["테라스 하우스","Terrace house"],["원통 타워","Cylinder tower"],["정원 타워","Garden tower"],["아콜로지","Arcology"],["홀로그램 상점","Hologram shop"],["유리 드럼","Glass drum"],["트위스트 타워","Twist tower"],["스카이 스파이어","Sky spire"],["공중 타워","Sky tower"],["태양광 단지","Solar farm"],["클린 팩토리","Clean factory"],["로봇 공장","Robot factory"],["자동화 공장","Automated factory"],["빈 주거지","Empty residential"],["단독주택","House"],["연립주택","Row houses"],["아파트","Apartments"],["고층 아파트","High-rise apartments"],["빈 상업지","Empty commercial"],["동네 상점","Corner shop"],["사무 빌딩","Office building"],["오피스 타워","Office tower"],["초고층 빌딩","Skyscraper"],["빈 공업지","Empty industrial"],["창고","Warehouse"],["공장","Factory"],["중공업 단지","Heavy industry"],["{x} 공사 중 · {x} 남음. 게임을 꺼 둬도 공사는 계속돼요.","Building the {x} · {x} left. Construction continues while the game is closed."],["{x} 세우기","Raise the {x}"],["목표를 모두 채우면 {x}을(를) 세울 수 있어요. 공사는 현실 시간으로 {x}시간 걸려요.","Meet every goal to raise the {x}. Construction takes {x} real hours."],["{x} 목표","{x} goals"],["공사 중","Under construction"],["아파트 단지","Apartment complex"],["복합 빌딩","Mixed-use building"],["대형 공장","Large factory"],["· {x}단계","· level {x}"],["· {n}×{n} 대형","· {n}×{n} large"],["주민 {x}명","{x} residents"],["일자리 {x}개","{x} jobs"],["건널목","Level crossing"],["대교","Grand bridge"],["통나무 다리","Log bridge"],["널다리","Plank bridge"],["돌다리","Stone bridge"],["철교","Iron bridge"],["다리","Bridge"],["스카이 브리지","Sky bridge"],["물","Water"],["모래사장","Sandy beach"],["숲","Forest"],["빈 땅","Empty land"],["★ 특별 소품 · 주변 땅값 크게 상승","★ Special prop · raises nearby land value a lot"],["꾸미기 소품","Decoration"],["교통량 {x}%","Traffic {x}%"],["전력 {n} 공급","Supplies {n} power"],["전력 {n} 공급 · 오염 없음","Supplies {n} power · no pollution"],["반경 {n}칸 화재 진압","Puts out fires within {n} tiles"],["반경 {n}칸 건강","Health within {n} tiles"],["배가 오가요 · 반경 {n}칸 땅값·상업 수요","Boats come and go · land value and shop demand within {n} tiles"],["★ 특별 건물 · 비행기가 오가요 · 관광객으로 상업·주거 수요와 땅값 상승","★ Special building · planes come and go · tourists raise shop and housing demand and land value"],["기차가 서요 · 반경 {n}칸 차량 통행 {n}% 감소","Trains stop here · traffic within {n} tiles down {n}%"],["★ 특별 건물 ·","★ Special building ·"],["기차가 다녀요","Trains run here"],["반경 {n}칸 교육","Education within {n} tiles"],["랜드마크","Landmark"],["시대의 기념 건축물","The era's monument"],["반경 {n}칸 불씨","Fire within {n} tiles"],["반경 {n}칸 물","Water within {n} tiles"],["불타는","Burning"],["↻ 건물 방향 돌리기","↻ Rotate building"],["↻ 방향 돌리기","↻ Rotate"],["✎ 이름 {x}","✎ Name {x}"],["이 건물의 이름 ({n}자까지, 비우면 지워져요)","Name this building (up to {n} characters, leave empty to clear)"],["여기엔 지을 수 없어요","Can't build here"],["돈이 모자라요","Not enough money"],["모닥불이 멀어요","The campfire is far"],["우물이 멀어요","The well is far"],["전기가 없어요","No electricity"],["길이 멀어요","The road is far"],["원하는 사람이 없어요","Nobody wants it"],["· 집이 안 생겨요","· no house will grow"],["+{x}% 더","+{x}% more"],["게임머니 +{x} 충전 완료!","Game money +{x} added!"],["광고 보상 게임머니 +{x}!","Ad reward: game money +{x}!"],["광고를 끝까지 보면 받을 수 있어요.","Watch the ad to the end to get it."],["지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.","No ads right now. Please try again in a moment."],["[테스트 빌드: 테스트 광고]","[Test build: test ads]"],["광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.","Ad rewards and purchases only work in the phone app (App Store). This is the web version."],["게임머니 +{x}","Game money +{x}"],["광고 보고 받기 · 오늘 {x}/{x}번 남음","Watch an ad · {x}/{x} left today"],["결제를 마치지 못했어요. 잠시 뒤 다시 해 주세요.","The purchase didn't go through. Please try again in a moment."],["공항 자리를 찾지 못했어요.","Couldn't find a spot for the airport."],["✈ 비행기가 곧 내려와요. 착륙 → 잠깐 대기 → 이륙 → 멀리 날아갔다 다시 돌아와요.","✈ A plane is coming in. Landing → short stop → take-off → it flies far away and comes back."],["사건 장소를 찾지 못했어요.","Couldn't find a spot for the incident."],["🚑 ({x}, {x})에 응급 환자가 생겼어요! 병원에서 구급차가 출동해요.","🚑 Medical emergency at ({x}, {x})! An ambulance leaves the hospital."],["🚨 ({x}, {x})에서 도난 사건이 났어요! 경찰서에서 경찰차가 출동해요.","🚨 A theft at ({x}, {x})! A police car leaves the station."],["불낼 건물을 찾지 못했어요.","Couldn't find a building to set on fire."],["🔥 ({x}, {x}) 건물에 불이 났어요! 소방서에서 소방차가 출동해요.","🔥 Building on fire at ({x}, {x})! A fire engine leaves the station."],["현대 도시 샌드박스입니다.","Present-day city sandbox."],["빈 땅이에요. 먼저 모닥불({n})을 피우고, 그 {n}칸 안에 흙길(R)과 움집 터({n})를 놓으세요.","Empty land. First light a campfire ({n}), then lay dirt paths (R) and hut plots ({n}) within {n} tiles of it."],["{x}에 다시 오신 걸 환영해요.","Welcome back to {x}."],["언어 · Language","Language"],["분","min"],["개월","months"],["일","days"],["자금 칸을 누르면 충전할 수 있어요.","Tap the funds box to top up."],["켜짐","On"],["꺼짐","Off"],["/칸","/tile"],["혼잡","Jammed"],["불씨·우물 가까움","Fire/well nearby"],["전기 들어옴","Powered"],["불씨·우물 멀어요","Fire/well too far"],["전기 끊김","No power"],["길 가까움","Road nearby"],["길 없음","No road"],["소방 보호","Fire-protected"],["소방 없음","No fire cover"],["바꾸기","Change"],["붙이기","Add"],["다리 놓기","Build bridge"],["여기에 짓기","Build here"],["광고 중…","Ad playing…"],["무료","Free"],["내일 다시","Tomorrow"],["결제 중…","Paying…"],["{n}년 {n}월","Year {n}, month {n}"],["{n}개월","{n} months"],["{n}일","{n} days"],["{n}년","{n}"],["기원전 {n}년","{n} BC"],["짓기","Build"],["{x}/칸","{x}/tile"],["{n}단계","level {n}"],["다음 단계: {x} 필요","Next level: {x} needed"],["다음 단계: {x}","Next level: {x}"],["건물 이름","Building name"],["12자까지 쓸 수 있어요. 지도 위에 이름표로 보여요.","Up to 12 characters. It shows as a sign on the map."],["예: 우리 집","e.g. Our house"],["저장","Save"],["이름 지우기","Remove name"],["✎ 이름 바꾸기","✎ Rename"],["✎ 이름 붙이기","✎ Add a name"]];
+const I18N=[["도트시티","Dot City"],["개척지","Frontier"],["기원전 {n}년 {n}월","{n} BC, month {n}"],["인구","Pop."],["자금","Funds"],["전력","Power"],["석기시대","Stone Age"],["주","R"],["상","C"],["공","I"],["세율","Tax"],["수입","Income"],["지출","Costs"],["지도","Map"],["우리 도시 이름을 지어 주세요","Name your city"],["나중에 왼쪽 위 도시 이름을 눌러도 바꿀 수 있어요.","You can rename it later by tapping the city name at the top left."],["시작하기","Start"],["낮","Day"],["노을","Dusk"],["밤","Night"],["맑음","Clear"],["비","Rain"],["눈","Snow"],["꽃잎","Petals"],["자동","Auto"],["사진 저장","Save photo"],["끝내기","Done"],["이미지를 길게 누르거나(휴대폰) 오른쪽 클릭해서(컴퓨터) 저장하세요.","Long-press the image (phone) or right-click it (computer) to save it."],["닫기","Close"],["자금 충전","Top up funds"],["지금 시대 돈으로 바로 들어와요. 시대가 올라가면 받는 양도 커져요.","Paid in the money of your current era. The later the era, the more you get."],["석기시대 움집 마을에서 시작해 청동기, 왕조, 근대, 현대를 거쳐 미래 도시까지 키우세요. 시대마다 목표를 채우고 그 시대의 기념 건축물을 세우면 다음 시대가 열립니다.","Start with a Stone Age village of huts and grow it through the Bronze Age, the Dynasty, the Modern Age and the Present into a city of the future. Meet each era's goals and raise its monument to open the next era."],["계속하기","Continue"],["새 부족: 석기시대부터","New tribe: from the Stone Age"],["기본","Standard"],["빈 땅: 석기시대","Empty land: Stone Age"],["처음부터 직접","Build from scratch"],["시대 골라 시작","Start in an era"],["그 시대 마을이 지어진 채로 시작해요","Begins with a village of that era already built"],["석기","Stone"],["청동기","Bronze"],["왕조","Dynasty"],["근대","Modern"],["현대","Present"],["미래","Future"],["🚓 경찰 출동 테스트","🚓 Police dispatch test"],["🚑 구급차 출동 테스트","🚑 Ambulance dispatch test"],["🔥 화재 출동 테스트","🔥 Fire dispatch test"],["✈ 공항 테스트","✈ Airport test"],["✈ 우주공항 테스트","✈ Spaceport test"],["소리","Sound"],["위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요","The speaker button at the top mutes everything at once"],["음악 크기","Music volume"],["휴대폰 터치","Touch"],["고른 칸이 노란색으로 표시되고 확인 창이 떠요. '여기에 짓기'를 누르거나 같은 칸을 한 번 더 누르면 지어져요","The tile you pick turns yellow and a confirm bubble appears. Tap 'Build here' or tap the same tile again to build."],["마우스 클릭","Mouse click"],["표시된 칸에 바로 {n}칸 짓기","Build {n} tile right where it's marked"],["드래그","Drag"],["지도 이동","Move the map"],["두 손가락","Two fingers"],["벌리면 확대 · 오므리면 축소","Spread to zoom in · pinch to zoom out"],["우클릭 드래그","Right-drag"],["지도 이동 · 휴대폰은 두 손가락","Move the map · two fingers on a phone"],["휠 / + -","Wheel / + -"],["확대·축소","Zoom"],["도구 선택 · P V O C T E F L 데이터 보기","Pick tools · P V O C T E F L data views"],["도시 지도","City map"],["도시 이름","City name"],["다음 시대로 가는 조건","What the next era needs"],["게임 속도","Game speed"],["시간대","Time of day"],["사진 모드","Photo mode"],["메뉴","Menu"],["도구","Tools"],["수요와 예산","Demand and budget"],["세율 내리기","Lower tax"],["세율 올리기","Raise tax"],["미니맵","Minimap"],["이름 추천","Suggest a name"],["도시 사진","City photo"],["방향 돌리기","Rotate"],["취소","Cancel"],["한 번 더","Tap again"],["조개","shells"],["사람들이 모닥불 곁에 모여 살기 시작했어요. 흙길을 내고 움집 터를 정해 부족을 키우세요.","People have started living together around the campfire. Lay dirt paths and mark hut plots to grow your tribe."],["모닥불: 반경 {n}칸에 불씨를 나눠줘요. 움집은 불씨가 닿아야 자라요","Campfire: shares its fire within {n} tiles. Huts only grow where the fire reaches"],["움집 터 · 교역터 · 채집터","Hut plots · trading posts · foraging grounds"],["선돌: 주변 땅값을 올려요","Standing stone: raises land value nearby"],["약초 움막: 주민의 건강을 돌봐요 (G)","Herb hut: keeps residents healthy (G)"],["목표를 모두 채우고 고인돌을 세우면 청동기시대로!","Meet every goal and raise a dolmen to enter the Bronze Age!"],["청동기시대","Bronze Age"],["청동","bronze"],["청동을 다루고 농사를 짓기 시작했어요. 초가집과 장터, 논밭이 생겨요.","People work bronze and farm the land. Thatched houses, markets and rice fields appear."],["우물: 반경 {n}칸에 물을 대줘요","Well: waters everything within {n} tiles"],["초가집 · 장터 · 논밭 · 청동 공방","Thatched houses · markets · fields · bronze workshops"],["당산나무","Village guardian tree"],["옛 움집은 조금씩 새 시대 양식으로 다시 지어져요","Old huts are slowly rebuilt in the new era's style"],["목표를 모두 채우고 고분을 쌓으면 왕조시대로!","Meet every goal and build a royal tomb to enter the Dynasty!"],["왕조시대","Dynasty"],["엽전","coins"],["왕이 다스리는 나라가 섰어요. 기와지붕 한옥과 저잣거리가 들어서요.","A kingdom has risen. Tiled-roof hanok houses and market streets appear."],["한옥 · 대갓집 ({n}단계까지)","Hanok · grand houses (up to level {n})"],["주막 · 상점 · 객주, 대장간 · 도자기 가마","Taverns · shops · inns, smithies · pottery kilns"],["서당(교육) · 포도청(치안) · 정자","Village school (education) · constabulary (safety) · pavilions"],["혜민서: 대갓집({n}단계)부터는 병원이 가까워야 해요","Clinic: from grand houses (level {n}) up, a hospital must be nearby"],["돌길","Stone road"],["목표를 모두 채우고 궁궐 정문을 세우면 근대로!","Meet every goal and raise the palace gate to enter the Modern Age!"],["원","won"],["증기기관과 전기가 들어왔어요. 벽돌 건물과 공장, 신작로가 생겨요.","Steam engines and electricity have arrived. Brick buildings, factories and new roads appear."],["증기 발전소: 이제 {n}단계 건물은 전기가 있어야 해요","Steam power plant: level {n} buildings now need electricity"],["양옥 · 적산가옥 · 은행 · 근대 빌딩 · 벽돌 공장","Western houses · colonial houses · banks · modern buildings · brick factories"],["대로 · 소방서 · 학교","Avenues · fire stations · schools"],["이제 화재가 일어날 수 있어요","Fires can now break out"],["목표를 모두 채우고 기차역을 세우면 현대로!","Meet every goal and build the railway station to enter the Present!"],["자동차와 고층 빌딩의 시대가 왔어요.","The age of cars and skyscrapers has come."],["고층 아파트 · 초고층 빌딩 ({n}단계)","High-rise apartments · skyscrapers (level {n})"],["풍력 발전기","Wind turbine"],["시청 · 경기장 · 전파탑 랜드마크","City hall · stadium · TV tower landmarks"],["{n}×{n} 대형 건물","{n}×{n} large buildings"],["목표를 모두 채우고 우주 엘리베이터를 세우면 미래로!","Meet every goal and raise the space elevator to enter the Future!"],["우주 엘리베이터가 하늘 길을 열었어요. 하늘을 나는 차가 다니고 공중 정원과 아콜로지가 솟는 미래 도시를 완성하세요.","The space elevator has opened the road to the sky. Flying cars zip around: finish a future city of sky gardens and arcologies."],["아콜로지 · 공중 타워 ({n}단계), 자동화 공장 ({n}단계)","Arcologies · sky towers (level {n}), automated factories (level {n})"],["핵융합 발전소: 오염 없이 전력 {n}","Fusion power plant: {n} power with no pollution"],["하늘을 나는 차 덕분에 도로가 덜 막혀요","Flying cars ease traffic on the roads"],["공장 오염이 크게 줄어요","Factory pollution drops sharply"],["옛 건물은 조금씩 미래 양식으로 다시 지어져요","Old buildings are slowly rebuilt in the future style"],["마지막 목표를 모두 채워 미래 도시를 완성하세요.","Meet the last goals to complete your city of the future."],["인구 {n}명","Population {n}"],["모닥불 {n}개","{n} campfires"],["선돌 {n}곳","{n} standing stones"],["큰 움집 {n}채","{n} big huts"],["교역터 {n}곳","{n} trading posts"],["약초 움막 {n}곳","{n} herb huts"],["우물 {n}개","{n} wells"],["큰 장터 {n}곳","{n} big markets"],["청동 공방 {n}곳","{n} bronze workshops"],["당산나무·선돌 {n}곳","{n} guardian trees or standing stones"],["약초방 {n}곳","{n} herbalists"],["대갓집 {n}채","{n} grand houses"],["객주 {n}곳","{n} inns"],["서당 {n}곳","{n} village schools"],["포도청 {n}곳","{n} constabularies"],["혜민서 {n}곳","{n} clinics"],["증기 발전소 {n}곳","{n} steam power plants"],["근대 빌딩 {n}채","{n} modern buildings"],["방직 공장 {n}곳","{n} textile mills"],["소방서 {n}곳","{n} fire stations"],["학교 {n}곳","{n} schools"],["적십자 병원 {n}곳","{n} Red Cross hospitals"],["고층 아파트 {n}채","{n} high-rise apartments"],["초고층 빌딩 {n}채","{n} skyscrapers"],["랜드마크 {n}곳","{n} landmarks"],["종합병원 {n}곳","{n} general hospitals"],["핵융합 발전소 {n}곳","{n} fusion power plants"],["아콜로지 {n}채","{n} arcologies"],["공중 타워 {n}채","{n} sky towers"],["자동화 공장 {n}곳","{n} automated factories"],["메디컬 센터 {n}곳","{n} medical centers"],["곧","soon"],["{x}시간{x}","{x}h{x}"],["{x}분","{x} min"],["기원전 {x}년","{x} BC"],["{x}년","{x}"],["새벽시","Dawnville"],["마을","Village"],["소도시","Town"],["도시","City"],["대도시","Big city"],["메트로폴리스","Metropolis"],["미래 도시","Future city"],["모닥불이나 우물이 가까이 있어야 해요","Needs a campfire or a well nearby"],["전기가 필요해요","Needs electricity"],["{n}칸 안에 도로가 필요해요","Needs a road within {n} tiles"],["불타고 있어요!","It's on fire!"],["짓는 중이에요","Under construction"],["최고 단계예요","Top level"],["곧 새 시대 양식으로 다시 지어요","Will soon be rebuilt in the new era's style"],["더 크게 자라려면 다음 시대로 가야 해요","Needs the next era to grow bigger"],["{n}단계부터는 전기가 필요해요. 발전소와 이어주세요","From level {n} it needs electricity. Connect it to a power plant"],["땅값 {x}","Land value {x}"],["인구 {x}명","Population {x}"],["학교(교육 {n})","School (education {n})"],["{x}(건강 {n})","{x} (health {n})"],["오염 줄이기","Reduce pollution"],["범죄 줄이기","Reduce crime"],["교통 체증 해소","Ease traffic"],["다음 단계:","Next level:"],["필요","needed"],["수요가 없어서 멈춰 있어요","Stalled: nobody wants this zone right now"],["곧 다음 단계로 자라요","Growing to the next level soon"],["불이 났지만 소방서가 출동했어요. ({x}, {x})","A fire broke out, but the fire station is on its way. ({x}, {x})"],["화재 발생! ({x}, {x}) 소방서가 없으면 옆 건물로 번집니다.","Fire! ({x}, {x}) Without a fire station it spreads to the next buildings."],["모든 목표 달성! 미래 도시가 완성됐어요.","Every goal reached! Your city of the future is complete."],["먼저 모닥불({n})을 피우세요. 모닥불 {n}칸 안, 길 {n}칸 안에 놓은 움집 터에만 집이 생겨요.","Light a campfire ({n}) first. Houses only grow on hut plots within {n} tiles of a campfire and {n} tiles of a path."],["돈이 다 떨어졌어요. 세율을 올리거나 지출을 줄여 보세요. 자금 옆 ＋에서 충전할 수도 있어요.","You're out of money. Try raising taxes or cutting costs. You can also top up with the ＋ next to your funds."],["{x}을(를) 세울 수 있어요! 완성하면 {x}가 열립니다. (Y)","You can raise the {x}! When it's finished, the {x} begins. (Y)"],["불씨가 닿지 않는 움집 터가 있어요. 모닥불({n})을 가까이 피워주세요.","Some hut plots aren't reached by the fire. Light a campfire ({n}) closer."],["우물이 먼 집이 있어요. 우물({n})을 가까이 파주세요.","Some houses are far from a well. Dig a well ({n}) closer."],["증기 발전소({n})를 지어야 {n}단계 건물이 올라가요.","Build a steam power plant ({n}) so level {n} buildings can rise."],["발전소가 없습니다. 풍력이나 화력 발전소를 짓고 도로로 이어주세요.","There's no power plant. Build a wind or coal plant and connect it by road."],["발전소가 도시와 이어져 있지 않아요. 길이나 건물로 발전소와 마을을 이어주세요.","The power plant isn't connected to the city. Link them with roads or buildings."],["전력이 모자랍니다. 발전소를 더 지으세요.","Not enough power. Build more power plants."],["전기가 닿지 않는 구역이 있어요. 도로로 발전소와 이어주세요.","Some zones get no electricity. Connect them to a power plant by road."],["도로에서 {n}칸 넘게 떨어진 구역은 자라지 않아요.","Zones more than {n} tiles from a road won't grow."],["집이 더 필요해요. {x}을(를) 더 칠해 주세요.","More homes are needed. Zone more {x}."],["사고팔 곳이 부족해요. {x}을(를) 늘려 주세요.","There aren't enough places to shop. Add more {x}."],["일할 곳이 필요해요. {x}을(를) 늘려 주세요.","People need jobs. Add more {x}."],["도로 {x}칸이 꽉 막혔어요. 옆에 길을 더 내거나 대로(U)로 넓히세요.","{x} road tiles are jammed. Add another road beside them or widen them into an avenue (U)."],["소방서가 없어서 불이 나면 옆 건물로 번져요.","There's no fire station, so fires will spread to neighbouring buildings."],["학교가 없어요. 고층 아파트와 초고층 빌딩은 교육받은 주민이 있어야 올라갑니다.","There's no school. High-rise apartments and skyscrapers need educated residents."],["큰 집은 건강해야 올라가요. {x}(G)을(를) 지으세요.","Big houses need healthy residents. Build a {x} (G)."],["범죄가 늘고 있어요. {x}을(를) 지으세요.","Crime is rising. Build a {x}."],["주거지 공기가 탁해요. 공장과 떨어뜨리고 공원과 숲을 늘리세요.","The air in homes is dirty. Keep factories away and add parks and trees."],["새 랜드마크: {x}을(를) 지을 수 있어요!","New landmark: you can build the {x}!"],["인구 {x}명 돌파!","Population passed {x}!"],["자리를 비운 사이 {x}이 흘렀어요 · 인구 {x}{x} · 자금 {x}{x}","While you were away {x} passed · population {x}{x} · funds {x}{x}"],["살펴보기","Inspect"],["건물을 눌러 정보를 봅니다. 드래그하면 지도가 움직입니다.","Tap a building to see its info. Drag to move the map."],["철거","Bulldoze"],["길·건물·나무를 없앱니다.","Removes roads, buildings and trees."],["흙길","Dirt path"],["신작로","New road"],["도로","Road"],["스마트 도로","Smart road"],["한 칸씩 깔려요. 집은 길에서 {n}칸 안에 있어야 자라요. 도로끼리 나란히 붙일 수 없고, 대로와도 이어 붙일 수 없어요. 물 위에 깔면 다리가 돼요(길의 {n}배 값, 곧게만).","Laid one tile at a time. Houses grow within {n} tiles of a road. Roads can't run side by side or join avenues. Laid on water it becomes a bridge ({n}× the price, straight only)."],["대로","Avenue"],["넓은 길. 보통 길보다 {n}배 많이 다닐 수 있어요. 도로와는 서로 이어 붙일 수 없어요(대로는 대로끼리). 물 위에 깔면 넓은 다리(대교)가 돼요({n}배 값).","A wide road carrying {n}× more traffic. Avenues and roads can't join (avenues only connect to avenues). On water it becomes a wide bridge ({n}× the price)."],["움집 터","Hut plot"],["초가 마을","Thatched village"],["한옥 마을","Hanok village"],["주거 구역","Residential zone"],["미래 주거 구역","Future residential zone"],["사람들이 모여 살 집을 짓습니다.","Builds homes for people to live in."],["교역터","Trading post"],["장터","Market"],["저잣거리","Market street"],["상업 구역","Commercial zone"],["미래 상업 구역","Future commercial zone"],["물건을 사고파는 곳이 생깁니다.","Creates places to buy and sell."],["채집터","Foraging ground"],["논밭","Fields"],["공방","Workshop"],["공업 구역","Industrial zone"],["스마트 공업 구역","Smart industrial zone"],["일거리를 만듭니다. 근대부터는 공기를 더럽혀요.","Creates jobs. From the Modern Age it pollutes the air."],["선돌","Standing stone"],["정자","Pavilion"],["공원","Park"],["하늘 정원","Sky garden"],["주변 땅값을 올려 더 좋은 집이 들어서게 합니다.","Raises land value nearby so better homes move in."],["모닥불","Campfire"],["반경 {n}칸에 불씨를 나눠줍니다. 움집 터는 불씨가 닿아야 자라요.","Shares its fire within {n} tiles. Hut plots only grow where the fire reaches."],["우물","Well"],["반경 {n}칸에 물을 대줍니다. 집과 장터는 우물이 가까워야 자라요.","Waters everything within {n} tiles. Houses and markets need a well nearby."],["포도청","Constabulary"],["경찰서","Police station"],["치안 센터","Security center"],["반경 {n}칸의 범죄를 줄입니다.","Reduces crime within {n} tiles."],["약초 움막","Herb hut"],["약초방","Herbalist"],["혜민서","Clinic"],["적십자 병원","Red Cross hospital"],["종합병원","General hospital"],["메디컬 센터","Medical center"],["반경 {n}칸 주민의 건강을 돌봐요. {n}단계 이상 큰 집은 건강해야 올라가요. 오염이 심하면 건강이 나빠져요.","Keeps residents within {n} tiles healthy. Big houses of level {n} and up need healthy residents. Heavy pollution hurts health."],["나루터","Ferry landing"],["포구","Harbor"],["항구","Port"],["여객 터미널","Passenger terminal"],["수상 정거장","Water station"],["물가(물과 맞닿은 땅)에만 지을 수 있어요. 배가 한 척씩 오가고, 반경 {n}칸 땅값과 상업 수요가 올라가요.","Only on the shore (land touching water). A boat comes and goes, and land value and shop demand rise within {n} tiles."],["철길","Railway"],["자기부상 궤도","Maglev track"],["기차가 다니는 길. 곧은 도로를 가로질러 건널목을 만들 수 있어요(철길끼리 나란히는 안 돼요). 물 위에는 깔 수 없어요.","Track for trains. It can cross a straight road to make a level crossing (tracks can't run side by side). It can't be laid on water."],["간이역","Halt"],["전철역","Metro station"],["자기부상역","Maglev station"],["철길 바로 옆에 지어요. 역마다 기차 {n}대가 다니고, 반경 {n}칸은 차가 덜 막혀요.","Built right next to the tracks. Each station runs {n} train, and traffic eases within {n} tiles."],["꾸미기","Decorate"],["꽃밭·울타리·장독대·가로등 같은 소품을 한 칸에 놓아요. ★ 소품은 비싸지만 주변 땅값을 크게 올려요.","Place props like flower beds, fences, jar terraces and street lamps on one tile. ★ props are pricey but raise land value a lot."],["땅 바꾸기","Reshape land"],["빈 땅에 물을 파거나 메우고, 모래·풀밭으로 바꾸거나 나무를 심어요.","Dig or fill water on empty land, turn it into sand or grass, or plant trees."],["소방서","Fire station"],["반경 {n}칸의 불을 금방 끄고 번지지 않게 막습니다.","Puts out fires within {n} tiles quickly and stops them spreading."],["서당","Village school"],["학교","School"],["미래 학교","Future school"],["반경 {n}칸 주민을 가르쳐 땅값을 올리고 범죄를 줄입니다. 현대의 고층 건물엔 꼭 필요해요. {n}×{n}.","Teaches residents within {n} tiles, raising land value and cutting crime. Needed for present-day high-rises. {n}×{n}."],["깨끗한 전력 {n}.","Clean power {n}."],["증기 발전소","Steam power plant"],["화력 발전소","Coal power plant"],["핵융합 발전소","Fusion power plant"],["전력 {n}을 만들지만 오염이 심합니다. {n}×{n}.","Makes {n} power but pollutes heavily. {n}×{n}."],["시청","City hall"],["도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. {n}×{n}.","The city's one and only landmark. Raises land value nearby a lot and boosts housing demand. {n}×{n}."],["경기장","Stadium"],["도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. {n}×{n}.","The city's one and only landmark. Raises shop demand and land value over a wide area. {n}×{n}."],["공항","Airport"],["우주공항","Spaceport"],["★ 특별 건물. {n}×{n}(긴 활주로). 비행기가 뜨고 내리고, 관광객 덕분에 상업·주거 수요와 주변 땅값이 크게 올라요. 활주로 근처는 조금 시끄러워요. 인구 {n}명부터.","★ Special building. {n}×{n} (long runway). Planes take off and land, and tourists boost shop and housing demand and nearby land value. A bit noisy near the runway. From population {n}."],["전파탑","TV tower"],["대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.","Symbol of a big city. Raises every demand and land value over a very wide area."],["고인돌","Dolmen"],["부족의 힘을 모아 거대한 돌을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 청동기시대가 열려요. {n}×{n}.","Rally the tribe to raise a giant stone. Construction takes {n} real hours (it continues while the game is closed); when done, the Bronze Age begins. {n}×{n}."],["고분","Royal tomb"],["왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 왕조시대가 열려요. {n}×{n}.","Build the king's tomb and lay the kingdom's foundations. Construction takes {n} real hours (it continues while the game is closed); when done, the Dynasty begins. {n}×{n}."],["궁궐 정문","Palace gate"],["웅장한 성문을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 근대가 열려요. {n}×{n}.","Raise a grand gate. Construction takes {n} real hours (it continues while the game is closed); when done, the Modern Age begins. {n}×{n}."],["기차역","Railway station"],["철도가 들어옵니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 현대가 열려요. {n}×{n}.","The railway arrives. Construction takes {n} real hours (it continues while the game is closed); when done, the Present begins. {n}×{n}."],["우주 엘리베이터","Space elevator"],["하늘 끝까지 닿는 케이블을 세웁니다. 공사는 현실 시간 {n}시간(꺼 둬도 진행)이고, 완공되면 미래가 열려요. {n}×{n}.","Raise a cable that reaches the edge of the sky. Construction takes {n} real hours (it continues while the game is closed); when done, the Future begins. {n}×{n}."],["꽃밭","Flower bed"],["울타리","Fence"],["돌탑","Stone cairn"],["장독대","Jar terrace"],["벤치","Bench"],["솟대","Totem pole"],["가로등","Street lamp"],["벚꽃나무","Cherry tree"],["분수","Fountain"],["동상","Statue"],["시계탑","Clock tower"],["놀이터","Playground"],["물 파기","Dig water"],["땅 메우기","Fill land"],["모래","Sand"],["풀밭","Grass"],["나무 심기","Plant trees"],["전력망","Power grid"],["노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.","Yellow has power, red is cut off."],["땅값","Land value"],["밝을수록 비쌉니다. 물가·공원·상권이 올리고 오염·범죄가 내립니다.","Brighter is pricier. Water, parks and shops raise it; pollution and crime lower it."],["오염","Pollution"],["공장과 화력 발전소가 만듭니다. 나무가 줄여줍니다.","Made by factories and coal plants. Trees reduce it."],["범죄","Crime"],["밀집한 동네에서 생기고 경찰서가 줄입니다.","Grows in crowded neighbourhoods; police stations reduce it."],["교통","Traffic"],["빨간 도로는 꽉 막힌 곳. 막힌 동네는 더 자라지 않고 땅값이 떨어집니다.","Red roads are jammed. Jammed areas stop growing and lose land value."],["교육","Education"],["학교가 가르치는 범위. 밝을수록 교육 수준이 높습니다.","Where schools teach. Brighter means better educated."],["화재","Fire"],["소방서가 지키는 범위(파란색). 빨간 건물은 불이 나면 옆으로 번질 수 있는 곳, 깜빡이는 곳은 지금 불타는 곳이에요.","Fire station coverage (blue). Red buildings can spread a fire to their neighbours; blinking ones are burning now."],["건강","Health"],["병원이 돌보는 범위. 밝을수록 건강하고, 오염이 심하면 어두워집니다.","Where hospitals care for people. Brighter is healthier; heavy pollution darkens it."],["{x}은(는) 인구 {x}명부터 지을 수 있어요 (지금 {x}명).","{x} unlocks at population {x} (now {x})."],["{x}은(는) 근대부터 놓을 수 있어요.","{x} can be placed from the Modern Age."],["물 위에는 소품을 놓을 수 없어요.","Props can't go on water."],["빈 땅에만 놓을 수 있어요.","Only on empty land."],["빈 땅에서만 바꿀 수 있어요. 건물이나 길은 먼저 철거하세요.","Only empty land can be reshaped. Bulldoze buildings or roads first."],["이미 물이에요.","It's already water."],["물이 아니에요.","It isn't water."],["풀밭에서만 모래로 바꿀 수 있어요.","Only grass can become sand."],["모래에서만 풀밭으로 바꿀 수 있어요.","Only sand can become grass."],["물에는 나무를 심을 수 없어요(나무는 한 칸에 {n}그루까지).","Trees can't be planted in water (up to {n} trees per tile)."],["철길은 물 위에 깔 수 없어요.","Tracks can't be laid on water."],["철길을 나란히 붙여 깔 수는 없어요.","Tracks can't run side by side."],["건널목은 곧게 뻗은 보통 도로를 똑바로 가로질러야 만들 수 있어요(대로·교차로·굽은 길은 안 돼요).","A level crossing must cross a straight ordinary road at a right angle (not avenues, junctions or bends)."],["건물이 있는 곳에는 철길을 깔 수 없어요.","Tracks can't go where there's a building."],["역은 철길 바로 옆에 지어야 해요.","Stations must be built right next to the tracks."],["{x} 같은 배터는 물가에만 지을 수 있어요. 물과 맞닿은 땅을 골라 주세요.","Docks like the {x} can only go on the shore. Pick land that touches water."],["도로는 대로에 이어 붙일 수 없어요. 도로는 도로끼리, 대로는 대로끼리만 이어져요.","Roads can't join avenues. Roads connect to roads, avenues to avenues."],["대로는 도로에 이어 붙일 수 없어요. 대로는 대로끼리, 도로는 도로끼리만 이어져요.","Avenues can't join roads. Avenues connect to avenues, roads to roads."],["길을 나란히 붙여 깔 수는 없어요. 넓은 길이 필요하면 대로(U)를 따로 깔아 주세요.","Roads can't run side by side. If you need a wide road, lay an avenue (U) instead."],["다리는 물가나 놓인 다리에 이어서, 곧게만 놓을 수 있어요. 물 위에서는 길을 꺾거나 갈라지게 할 수 없어요.","Bridges go straight out from the shore or an existing bridge. They can't turn or branch on water."],["{x}을(를) 짓고 있어요. {x} 남았어요.","Building the {x}. {x} left."],["먼저 이 시대의 목표를 모두 채우세요 ({x}/{x}).","First meet every goal of this era ({x}/{x})."],["{x}은(는) 인구 {x}명이 되면 지을 수 있어요.","{x} unlocks at population {x}."],["{x}은(는) 하나만 지을 수 있어요.","Only one {x} can be built."],["모닥불에서 {n}칸 안이어야 집이 생겨요. 모닥불({n})을 가까이 피워 주세요.","Houses only appear within {n} tiles of a campfire. Light a campfire ({n}) closer."],["우물에서 {n}칸 안이어야 집이 생겨요. 우물({n})을 가까이 파 주세요.","Houses only appear within {n} tiles of a well. Dig a well ({n}) closer."],["전기가 닿지 않아요. 발전소와 길로 이어 주세요.","No electricity reaches here. Connect it to a power plant by road."],["길에서 {n}칸 안이어야 집이 생겨요. 길(R)을 가까이 깔아 주세요.","Houses only appear within {n} tiles of a road. Lay a road (R) closer."],["지금은 이 구역을 원하는 사람이 없어요. 왼쪽 아래 주·상·공 막대가 위로 올라간 구역을 지어 보세요.","Nobody wants this zone right now. Build the zone whose bar (R·C·I, bottom left) is up."],["자금이 부족합니다. {x}이 필요해요.{x}","Not enough funds. You need {x}.{x}"],["{x} 공사를 시작했어요. {x}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.","Construction of the {x} has begun. It finishes in {x} hours, and continues while the game is closed."],["새로운 시대가 열렸어요","A new era has begun"],["목표:","Goals:"],["햇살마을","Sunnyvale"],["별빛시","Starlight"],["무지개시","Rainbow City"],["솔바람시","Pinewind"],["푸른강시","Blue River"],["달빛마을","Moonvale"],["꽃내음시","Blossom City"],["은하시","Galaxy City"],["도토리마을","Acorn Village"],["바람개비시","Pinwheel City"],["구름다리시","Cloud Bridge"],["반짝시","Sparkle City"],["새싹마을","Sprout Village"],["노을시","Sunset City"],["하늘숲시","Sky Woods"],["파도마을","Wave Village"],["초록별시","Green Star"],["방울시","Bubble Town"],["{x}의 역사가 시작돼요!","The story of {x} begins!"],["배경 음악","Music"],["효과음","Sound effects"],["🚒 소방차가 출동했어요! ({x}, {x})","🚒 The fire engine is on its way! ({x}, {x})"],["🚓 경찰차가 출동했어요!","🚓 The police car is on its way!"],["🚓 사건 해결! 경찰이 도둑을 잡았어요.","🚓 Case closed! The police caught the thief."],["도둑이 달아났어요… 경찰서를 가까이 짓고 도로로 이어 주세요.","The thief got away… Build a police station closer and connect it by road."],["도난 사건이 났어요. 경찰서가 있으면 경찰차가 출동해요.","A theft happened. With a police station, a police car will come."],["🚑 구급차가 출동했어요!","🚑 The ambulance is on its way!"],["🚑 환자를 병원으로 무사히 옮겼어요.","🚑 The patient made it safely to hospital."],["환자가 오래 기다렸어요… 병원을 가까이 짓고 도로로 이어 주세요.","The patient waited too long… Build a hospital closer and connect it by road."],["응급 환자가 생겼어요. 병원이 있으면 구급차가 출동해요.","A medical emergency! With a hospital, an ambulance will come."],["날이 개었어요 ☀","The sky has cleared ☀"],["비가 와요 ☔ 불이 덜 나고 논밭이 잘 자라요. 차는 조금 느려져요.","It's raining ☔ Fewer fires and the fields grow well. Cars slow down a little."],["눈이 와요 ❄ 차가 느려지고, 난방 때문에 전기를 조금 더 써요.","It's snowing ❄ Cars slow down, and heating uses a little more power."],["눈이 와요 ❄ 길이 미끄러워 사람들이 천천히 다녀요.","It's snowing ❄ The paths are slippery, so people walk slowly."],["꽃잎이 날려요 🌸 공원·벚꽃나무 주변 땅값이 오르고 나들이 손님이 늘어요.","Petals are falling 🌸 Land near parks and cherry trees gains value and more visitors come."],["☔ 비","☔ Rain"],["❄ 눈","❄ Snow"],["🌸 꽃잎","🌸 Petals"],["불씨","Fire"],["전력 {n}을 오염 없이 만듭니다. 옛 화력 발전소는 저절로 바뀌지 않으니 새로 지어야 해요. {n}×{n}.","Makes {n} power with no pollution. Old coal plants don't change on their own; build a new one. {n}×{n}."],["불씨와 우물이 닿는 곳(노란색)과 닿지 않는 곳(빨간색).","Where fire and wells reach (yellow) and don't (red)."],["목표","Goals"],["데이터 보기","Data views"],["일시정지","Pause"],["보통","Normal"],["빠르게","Fast"],["아주 빠르게","Very fast"],["시간이 흐릅니다.","Time flows."],["한낮으로 고정했어요.","Locked to midday."],["밤으로 고정했어요.","Locked to night."],["한 번 더 누르면 지금 도시를 지웁니다","Tap again to erase this city"],["시간: 자동","Time: auto"],["시간: 낮 고정","Time: day"],["시간: 밤 고정","Time: night"],["소리 켜기","Sound on"],["소리 끄기","Sound off"],["사진을 저장했어요.","Photo saved."],["{x} {x}월{x}","{x} · month {x}{x}"],["다음:","Next:"],["{x} 공사 중 · {x} 남음 (꺼 둬도 진행돼요)","Building the {x} · {x} left (continues while closed)"],["목표 완료! {x}을(를) 세우세요 ({x})","Goals done! Raise the {x} ({x})"],["목표 {x}/{x} · {x} ({x}/{x}) · 눌러서 보기","Goals {x}/{x} · {x} ({x}/{x}) · tap to see"],["마지막 시대","Final era"],["미래 도시 완성!","City of the future complete!"],["목표 {x}/{x} · {x} ({x}/{x})","Goals {x}/{x} · {x} ({x}/{x})"],["빈 터","Empty lot"],["움집","Hut"],["큰 움집","Big hut"],["초가집","Thatched house"],["큰 초가집","Big thatched house"],["노점","Stall"],["청동 공방","Bronze workshop"],["한옥","Hanok"],["대갓집","Grand house"],["주막","Tavern"],["상점","Shop"],["객주","Inn"],["대장간","Smithy"],["도자기 가마","Pottery kiln"],["양옥","Western house"],["적산가옥","Colonial house"],["벽돌 연립","Brick row house"],["근대 상점","Modern shop"],["은행","Bank"],["근대 빌딩","Modern building"],["벽돌 창고","Brick warehouse"],["벽돌 공장","Brick factory"],["방직 공장","Textile mill"],["돔 하우스","Dome house"],["테라스 하우스","Terrace house"],["원통 타워","Cylinder tower"],["정원 타워","Garden tower"],["아콜로지","Arcology"],["홀로그램 상점","Hologram shop"],["유리 드럼","Glass drum"],["트위스트 타워","Twist tower"],["스카이 스파이어","Sky spire"],["공중 타워","Sky tower"],["태양광 단지","Solar farm"],["클린 팩토리","Clean factory"],["로봇 공장","Robot factory"],["자동화 공장","Automated factory"],["빈 주거지","Empty residential"],["단독주택","House"],["연립주택","Row houses"],["아파트","Apartments"],["고층 아파트","High-rise apartments"],["빈 상업지","Empty commercial"],["동네 상점","Corner shop"],["사무 빌딩","Office building"],["오피스 타워","Office tower"],["초고층 빌딩","Skyscraper"],["빈 공업지","Empty industrial"],["창고","Warehouse"],["공장","Factory"],["중공업 단지","Heavy industry"],["{x} 공사 중 · {x} 남음. 게임을 꺼 둬도 공사는 계속돼요.","Building the {x} · {x} left. Construction continues while the game is closed."],["{x} 세우기","Raise the {x}"],["목표를 모두 채우면 {x}을(를) 세울 수 있어요. 공사는 현실 시간으로 {x}시간 걸려요.","Meet every goal to raise the {x}. Construction takes {x} real hours."],["{x} 목표","{x} goals"],["공사 중","Under construction"],["아파트 단지","Apartment complex"],["복합 빌딩","Mixed-use building"],["대형 공장","Large factory"],["· {x}단계","· level {x}"],["· {n}×{n} 대형","· {n}×{n} large"],["주민 {x}명","{x} residents"],["일자리 {x}개","{x} jobs"],["건널목","Level crossing"],["대교","Grand bridge"],["통나무 다리","Log bridge"],["널다리","Plank bridge"],["돌다리","Stone bridge"],["철교","Iron bridge"],["다리","Bridge"],["스카이 브리지","Sky bridge"],["물","Water"],["모래사장","Sandy beach"],["숲","Forest"],["빈 땅","Empty land"],["★ 특별 소품 · 주변 땅값 크게 상승","★ Special prop · raises nearby land value a lot"],["꾸미기 소품","Decoration"],["교통량 {x}%","Traffic {x}%"],["전력 {n} 공급","Supplies {n} power"],["전력 {n} 공급 · 오염 없음","Supplies {n} power · no pollution"],["반경 {n}칸 화재 진압","Puts out fires within {n} tiles"],["반경 {n}칸 건강","Health within {n} tiles"],["배가 오가요 · 반경 {n}칸 땅값·상업 수요","Boats come and go · land value and shop demand within {n} tiles"],["★ 특별 건물 · 비행기가 오가요 · 관광객으로 상업·주거 수요와 땅값 상승","★ Special building · planes come and go · tourists raise shop and housing demand and land value"],["기차가 서요 · 반경 {n}칸 차량 통행 {n}% 감소","Trains stop here · traffic within {n} tiles down {n}%"],["★ 특별 건물 ·","★ Special building ·"],["기차가 다녀요","Trains run here"],["반경 {n}칸 교육","Education within {n} tiles"],["랜드마크","Landmark"],["시대의 기념 건축물","The era's monument"],["반경 {n}칸 불씨","Fire within {n} tiles"],["반경 {n}칸 물","Water within {n} tiles"],["불타는","Burning"],["↻ 건물 방향 돌리기","↻ Rotate building"],["↻ 방향 돌리기","↻ Rotate"],["✎ 이름 {x}","✎ Name {x}"],["이 건물의 이름 ({n}자까지, 비우면 지워져요)","Name this building (up to {n} characters, leave empty to clear)"],["여기엔 지을 수 없어요","Can't build here"],["돈이 모자라요","Not enough money"],["모닥불이 멀어요","The campfire is far"],["우물이 멀어요","The well is far"],["전기가 없어요","No electricity"],["길이 멀어요","The road is far"],["원하는 사람이 없어요","Nobody wants it"],["· 집이 안 생겨요","· no house will grow"],["+{x}% 더","+{x}% more"],["게임머니 +{x} 충전 완료!","Game money +{x} added!"],["광고 보상 게임머니 +{x}!","Ad reward: game money +{x}!"],["광고를 끝까지 보면 받을 수 있어요.","Watch the ad to the end to get it."],["지금은 광고가 없어요. 잠시 뒤 다시 해 주세요.","No ads right now. Please try again in a moment."],["[테스트 빌드: 테스트 광고]","[Test build: test ads]"],["광고 충전과 결제는 휴대폰 앱(App Store)에서만 할 수 있어요. 지금은 웹으로 열려 있어요.","Ad rewards and purchases only work in the phone app (App Store). This is the web version."],["게임머니 +{x}","Game money +{x}"],["광고 보고 받기 · 오늘 {x}/{x}번 남음","Watch an ad · {x}/{x} left today"],["결제를 마치지 못했어요. 잠시 뒤 다시 해 주세요.","The purchase didn't go through. Please try again in a moment."],["공항 자리를 찾지 못했어요.","Couldn't find a spot for the airport."],["✈ 비행기가 곧 내려와요. 착륙 → 잠깐 대기 → 이륙 → 멀리 날아갔다 다시 돌아와요.","✈ A plane is coming in. Landing → short stop → take-off → it flies far away and comes back."],["사건 장소를 찾지 못했어요.","Couldn't find a spot for the incident."],["🚑 ({x}, {x})에 응급 환자가 생겼어요! 병원에서 구급차가 출동해요.","🚑 Medical emergency at ({x}, {x})! An ambulance leaves the hospital."],["🚨 ({x}, {x})에서 도난 사건이 났어요! 경찰서에서 경찰차가 출동해요.","🚨 A theft at ({x}, {x})! A police car leaves the station."],["불낼 건물을 찾지 못했어요.","Couldn't find a building to set on fire."],["🔥 ({x}, {x}) 건물에 불이 났어요! 소방서에서 소방차가 출동해요.","🔥 Building on fire at ({x}, {x})! A fire engine leaves the station."],["현대 도시 샌드박스입니다.","Present-day city sandbox."],["빈 땅이에요. 먼저 모닥불({n})을 피우고, 그 {n}칸 안에 흙길(R)과 움집 터({n})를 놓으세요.","Empty land. First light a campfire ({n}), then lay dirt paths (R) and hut plots ({n}) within {n} tiles of it."],["{x}에 다시 오신 걸 환영해요.","Welcome back to {x}."],["언어 · Language","Language"],["분","min"],["개월","months"],["일","days"],["자금 칸을 누르면 충전할 수 있어요.","Tap the funds box to top up."],["켜짐","On"],["꺼짐","Off"],["/칸","/tile"],["혼잡","Jammed"],["불씨·우물 가까움","Fire/well nearby"],["전기 들어옴","Powered"],["불씨·우물 멀어요","Fire/well too far"],["전기 끊김","No power"],["길 가까움","Road nearby"],["길 없음","No road"],["소방 보호","Fire-protected"],["소방 없음","No fire cover"],["바꾸기","Change"],["붙이기","Add"],["다리 놓기","Build bridge"],["여기에 짓기","Build here"],["광고 중…","Ad playing…"],["무료","Free"],["내일 다시","Tomorrow"],["결제 중…","Paying…"],["{n}년 {n}월","Year {n}, month {n}"],["{n}개월","{n} months"],["{n}일","{n} days"],["{n}년","{n}"],["기원전 {n}년","{n} BC"],["짓기","Build"],["{x}/칸","{x}/tile"],["{n}단계","level {n}"],["다음 단계: {x} 필요","Next level: {x} needed"],["다음 단계: {x}","Next level: {x}"],["건물 이름","Building name"],["12자까지 쓸 수 있어요. 지도 위에 이름표로 보여요.","Up to 12 characters. It shows as a sign on the map."],["예: 우리 집","e.g. Our house"],["저장","Save"],["이름 지우기","Remove name"],["✎ 이름 바꾸기","✎ Rename"],["✎ 이름 붙이기","✎ Add a name"],["한국 한옥 궁궐랜드", "Korea · Hanok Palace Land"],["일본 사쿠라 성 파크", "Japan · Sakura Castle Park"],["중국 용 축제 파크", "China · Dragon Festival Park"],["미국 로켓 어드벤처", "USA · Rocket Adventure"],["영국 시계탑 동화랜드", "UK · Clock Tower Storyland"],["프랑스 철탑 놀이공원", "France · Iron Tower Fair"],["이탈리아 원형경기장 파크", "Italy · Arena Park"],["독일 동화 성 랜드", "Germany · Fairy Castle Land"],["네덜란드 풍차 튤립 파크", "Netherlands · Windmill Tulip Park"],["이집트 피라미드 어드벤처", "Egypt · Pyramid Adventure"],["인도 하얀 궁전 파크", "India · White Palace Park"],["러시아 양파 지붕 랜드", "Russia · Onion Dome Land"],["그리스 신전 워터파크", "Greece · Temple Water Park"],["멕시코 태양 피라미드 축제", "Mexico · Sun Pyramid Fiesta"],["브라질 카니발 정글 파크", "Brazil · Carnival Jungle Park"],["호주 돛 지붕 해변 파크", "Australia · Sail Roof Beach Park"],["태국 황금 사원 파크", "Thailand · Golden Temple Park"],["스페인 첨탑 성당 파크", "Spain · Spire Cathedral Park"],["캐나다 단풍 숲 파크", "Canada · Maple Forest Park"],["튀르키예 열기구 협곡", "Türkiye · Balloon Canyon"],["세계 테마파크", "World Theme Park"],["★ 특별 건물. 3×3. 나라마다 하나씩, 그 나라 명소를 닮은 테마파크를 지어요. 관람차와 롤러코스터가 돌고, 관광객 덕분에 상업 수요와 넓은 지역의 땅값이 크게 올라요. 인구 1,500명부터.", "★ Special building. 3×3. Build one theme park per country, each inspired by that country's famous sights. The ferris wheel and coaster keep running, and tourists raise shop demand and land value over a wide area. Unlocks at population 1,500."],["{x}은(는) 이미 지었어요. 나라마다 하나씩 지을 수 있어요.", "{x} is already built. You can build one park per country."],["3×3 빈 땅이 필요해요(물 위는 안 돼요).", "Needs a free 3×3 area (not on water)."],["★ 특별 건물 · 관람차와 롤러코스터가 돌아요 · 관광객으로 상업 수요와 땅값 상승", "★ Special building · ferris wheel and coaster in motion · tourists raise shop demand and land value"],["✓ 지음", "✓ Built"]];
 const TR_EX=new Map(),TR_PAT=[],TR_CACHE=new Map(),HANGUL=/[가-힣]/;
 (function(){const esc=t=>t.replace(/[.*+?^$()|[\]\\]/g,'\\$&');
   const strip=t=>t.replace(/ ?\((?:[A-Z]|\{n\}|Esc|Enter)\)/g,'');
@@ -402,7 +417,7 @@ function tr(s){if(LANG==='ko'||s==null)return s;s=String(s);if(!HANGUL.test(s))r
   if(out==null&&t.includes(' ')){const ws=t.split(' '),tw=ws.map(w=>HANGUL.test(w)?tr(w):w);if(!tw.some(w=>HANGUL.test(w)))out=tw.join(' ');}
   out=out==null?s:lead+out+tail;TR_CACHE.set(s,out);return out;}
 if(LANG==='en'){document.documentElement.lang='en';
-  const fix=n=>{if(n.nodeType===3){const v=n.nodeValue;if(HANGUL.test(v)){const t=tr(v);if(t!==v)n.nodeValue=t;}return;}
+  const fix=n=>{if((n.nodeType===3?n.parentElement:n)?.closest?.('#boot'))return;if(n.nodeType===3){const v=n.nodeValue;if(HANGUL.test(v)){const t=tr(v);if(t!==v)n.nodeValue=t;}return;}
     if(n.nodeType!==1||n.tagName==='SCRIPT'||n.tagName==='STYLE')return;
     for(const a of['aria-label','title','placeholder','data-warn']){const v=n.getAttribute&&n.getAttribute(a);if(v&&HANGUL.test(v))n.setAttribute(a,tr(v));}
     if(n.tagName==='INPUT'||n.tagName==='TEXTAREA')return;for(const c of n.childNodes)fix(c);};
@@ -414,8 +429,20 @@ if(LANG==='en'){document.documentElement.lang='en';
    DOT CITY — pixel isometric city builder
    ================================================================ */
 const N=64, SLAB=12;
-const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19,ELEV:20,HOSP:21,PORT:22,RAIL:23,DEPOT:24,DECO:25,AIRPORT:26};
-const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2,[K.ELEV]:2,[K.AIRPORT]:5};const sizeOf=k=>SIZE[k]||1;
+const K={NONE:0,ROAD:1,RES:2,COM:3,IND:4,PARK:5,POLICE:6,WIND:7,COAL:8,FIRE:9,SCHOOL:10,HALL:11,STADIUM:12,TOWER:13,FIREPIT:14,WELL:15,DOLMEN:16,MOUND:17,PALACE:18,STATION:19,ELEV:20,HOSP:21,PORT:22,RAIL:23,DEPOT:24,DECO:25,AIRPORT:26,THEME:27};
+const SIZE={[K.COAL]:2,[K.SCHOOL]:2,[K.HALL]:2,[K.STADIUM]:3,[K.DOLMEN]:2,[K.MOUND]:2,[K.PALACE]:2,[K.STATION]:2,[K.ELEV]:2,[K.AIRPORT]:5,[K.THEME]:3};const sizeOf=k=>SIZE[k]||1;
+// world theme parks (★ 3×3): one per country, each with its own landmark, a ferris wheel and a small coaster
+const THEMES=[
+  {n:'한국 한옥 궁궐랜드',l:'kpalace',tc:'#2e6a48',c:['#c8102e','#003478','#ffffff']},{n:'일본 사쿠라 성 파크',l:'jpagoda',tc:'#f2a7c3',c:['#bc002d','#f6b6c8','#ffffff']},
+  {n:'중국 용 축제 파크',l:'cpagoda',c:['#de2910','#ffde00','#de2910']},{n:'미국 로켓 어드벤처',l:'rocket',c:['#b22234','#3c3b6e','#ffffff']},
+  {n:'영국 시계탑 동화랜드',l:'clock',c:['#012169','#c8102e','#ffffff']},{n:'프랑스 철탑 놀이공원',l:'eiffel',c:['#0055a4','#ef4135','#ffffff']},
+  {n:'이탈리아 원형경기장 파크',l:'colosseum',trees:'cypress',c:['#009246','#ce2b37','#ffffff']},{n:'독일 동화 성 랜드',l:'castle',c:['#000000','#dd0000','#ffce00']},
+  {n:'네덜란드 풍차 튤립 파크',l:'windmill',c:['#ae1c28','#21468b','#ffffff']},{n:'이집트 피라미드 어드벤처',l:'pyramid',trees:'palm',ground:'#e2cd9f',c:['#ce1126','#c09a52','#000000']},
+  {n:'인도 하얀 궁전 파크',l:'taj',trees:'cypress',pool:1,c:['#ff9933','#138808','#ffffff']},{n:'러시아 양파 지붕 랜드',l:'onion',c:['#0039a6','#d52b1e','#ffffff']},
+  {n:'그리스 신전 워터파크',l:'temple',trees:'cypress',c:['#0d5eaf','#5fb0e8','#ffffff']},{n:'멕시코 태양 피라미드 축제',l:'mpyramid',tc:'#2f7a3a',c:['#006847','#ce1126','#ffffff']},
+  {n:'브라질 카니발 정글 파크',l:'sugarloaf',trees:'palm',c:['#009c3b','#ffdf00','#002776']},{n:'호주 돛 지붕 해변 파크',l:'opera',tc:'#7aa06a',c:['#00247d','#ffcd00','#ffffff']},
+  {n:'태국 황금 사원 파크',l:'stupa',trees:'palm',c:['#a51931','#2d2a4a','#ffffff']},{n:'스페인 첨탑 성당 파크',l:'spires',c:['#aa151b','#f1bf00','#aa151b']},
+  {n:'캐나다 단풍 숲 파크',l:'maple',tc:'#e05a1e',c:['#d80621','#ffffff','#d80621']},{n:'튀르키예 열기구 협곡',l:'balloon',tc:'#9aa86a',ground:'#e0c8a0',c:['#e30a17','#f2a33a','#ffffff']}].map(t=>({...t,c0:t.c,c:9000,prem:1}));
 const LANDMARK={[K.HALL]:1500,[K.STADIUM]:4000,[K.TOWER]:10000};
 // The city evolves through six eras. Each era caps building levels, swaps art, and ends with a wonder.
 const ERAS=[
@@ -663,7 +690,8 @@ function carFire(){return vehModel([...wheels(1.5,.09,.36,-.32),
 function carHover(c,glow,sir){const g=[col(glow),col(glow,.4)];return vehModel([
   {b:[-.5,.5,-.9,.9,2.6,3.9],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.25?[col('#ffffff'),col('#ffffff')]:f==='-s'&&Math.abs(a-.5)>.25?[col('#ff4a6a'),col('#ff6a8a')]:b<.25&&f!=='top'?g:c},
   {b:[-.28,.26,-.7,.7,3.9,5.1],f:(f,a,b)=>f==='top'?col(GLASS,.15):GLASS}],.46,.075,{shadowGlow:1,siren:sir?[0,5.6]:null});}
-function buildSprites(){
+// built in slices (generator) so the loading screen can paint its progress between them
+function* buildSpritesGen(){
   /* ground ---------------------------------------------------- */
   SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const h=hash(x,y,v*31+7),t=p?.035:0;
     if(h<.055)return col(PAL.g2,t);if(h>.955)return col(PAL.g0,t);if(h<.07)return col(PAL.g3);return col(PAL.g1,t);}));
@@ -673,6 +701,7 @@ function buildSprites(){
   // 4 depths x 3 layouts; blobs follow the tile's own diamond so neighbouring tiles don't repeat the same stripe
   SP.snowG=[0,1,2,3].map(st=>[0,1,2].map(vr=>G((u,w,x,y)=>{const h=sm(u*20,w*10,11+vr)*.62+sm(u*44,w*22,21+vr)*.32+hash(x,y,4+vr)*.06,cov=[.3,.48,.66,1.01][st];if(h>cov)return null;
     const edge=h>cov-.06;return col(edge?'#c9d6ea':hash(x,y,5)<.08?'#dfe8f5':'#f4f8fd',0,edge?200:245);})));
+  ;yield;
   SP.wetG=G(()=>col('#1c2a48',0,46));
   SP.puddle=[0,1,2].map(k=>G((u,w,x,y)=>{const cu=[.42,.6,.35][k],cv=[.5,.38,.62][k],r=[.2,.16,.14][k],d=Math.hypot((u-cu)/r,(w-cv)/(r*.8))+hash(x,y,k+3)*.18;
     if(d>1)return null;return col(d<.35&&hash(x,y,k)<.5?'#c8dcf0':d>.8?'#3c5272':'#5d7aa0',0,d>.8?150:185);}));
@@ -683,6 +712,7 @@ function buildSprites(){
     const edge=((m&1)&&u>.7)||((m&2)&&v>.7)||((m&4)&&u<.3)||((m&8)&&v<.3);
     const h=hash(x>>1,y,f*7+3);if(h<.035)return col(PAL.w3);if(h<.11)return col(PAL.w2);
     return col(edge?PAL.w1:PAL.w1,edge?.06:(hash(x,y,5)<.3?-.08:0));});}
+  ;yield;
   SP.road=[];SP.ave=[];for(const av of[0,1])for(let m=0;m<16;m++){const W=av?.4:.3,cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);
     const inBand=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);
       return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};
@@ -713,6 +743,7 @@ function buildSprites(){
   // wide (avenue) bridges, from the early-modern era on: the avenue's lanes carried over the water
   const aveDeck=(base,edge,line,dash)=>(a,c)=>{const ac=Math.abs(c);if(ac>.4)return col(edge);if(ac<.055&&ac>.012)return col(line,.1);
     if(Math.abs(ac-.21)<.03&&Math.floor(a*6)%2===0)return col(dash,-.12);return col(base,Math.floor(a*16)%7===0?.04:0);};
+  ;yield;
   const BRA=[,,,{...BR[3],w:.46,piers:[.3,.7],deck:aveDeck('#5a5550','#8e887c',PAL.line,PAL.white)},
     {...BR[4],w:.46,piers:[.3,.7],deck:aveDeck('#3f4350','#c8c8c2',PAL.line,PAL.white)},
     {...BR[5],w:.46,deck:aveDeck('#2c3246','#9fdce4','#5fe6f2','#ff6ad5')}];
@@ -731,6 +762,7 @@ function buildSprites(){
         const a=lo2,c=ax?a-.5+X/16:a-.5-X/16;if(Math.abs(c)<=Wd)pb.put(px,py,B.deck(a,c));}
       if(B.rh)for(const c of[-Wd,Wd])for(let i=0;i<=S;i++){const a=i/S,[px,py]=at(a,c,lf(a));for(let k=1;k<=B.rh;k++)pb.put(px,py-k,B.rail(a,k));}
       out[ax*4+ends]=mk(pb,-16,-TOP);}return out;};
+  ;yield;
   SP.bridge=BR.map(mkBridge);SP.bridgeA=BRA.map(mkBridge);
   // boats, one look per era, drawn along either map axis. (s: along the hull -.5..5, t: across -1..1)
   const nGlow=(hex)=>[col(hex),col(hex,.4)];
@@ -743,6 +775,7 @@ function buildSprites(){
     {len:.95,wid:.11,h:2,hull:'#f4f7fa',band:nGlow('#5fe6f2'),deck:'#2c3246',dome:[-.16,.18,.6,3]}];
   // railways (era 3 timber sleepers, era 4 concrete sleepers on ballast, era 5 maglev guideway), by link mask
   const RL=[,,,{bed:'#8a857a',tie:'#6b4a2e',rail:'#c8ccd2'},{bed:'#9a968c',tie:'#c4c0b6',rail:'#dde1e6'},{bed:null,tie:null,rail:'#f2f5f8',glow:'#5fe6f2'}];
+  ;yield;
   const railPix=(R,m,u,v,x,y,ground)=>{const cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),corner=cnt===2&&(m&5)&&(m&10)&&!((m&5)===5)&&!((m&10)===10);
     let along=-1,off=9;                                     // off: distance from the track centre line, along: position along it
     if(corner){const cu=(m&1)?1:0,cv=(m&2)?1:0,d=Math.hypot(u-cu,v-cv);off=Math.abs(d-.5);along=Math.atan2(v-cv,u-cu)*.5;}
@@ -754,6 +787,7 @@ function buildSprites(){
     if(Math.abs(off-.09)<.022)return col(R.rail,off>.09?-.25:0);
     if(off<.15&&Math.floor(along*14)%2===0)return col(R.tie,hash(x,y,71)<.15?-.1:0);
     if(off<.19)return col(R.bed,hash(x,y,72)<.2?-.12:hash(x,y,73)<.1?.08:0);return ground;};
+  ;yield;
   SP.rail=RL.map(R=>R&&Array.from({length:16},(_,m)=>G((u,v,x,y)=>railPix(R,m,u,v,x,y,col(PAL.g1,hash(x,y,74)<.06?-.12:0)))));
   // level crossings: just the rails over the asphalt, drawn on top of the road sprite (ax 0: rails run along u)
   SP.railX=RL.map(R=>R&&[5,10].map(m=>G((u,v,x,y)=>{const off=m===5?Math.abs(v-.5):Math.abs(u-.5);
@@ -763,6 +797,7 @@ function buildSprites(){
   const TR=[,,,{body:'#2e2b33',roof:'#1a1a1e',band:'#a0392b',coach:'#3f6a4a',croof:'#5a5a62',steam:1,H:6},
     {body:'#f0f0ea',roof:'#d8d8d4',band:'#2f6fc0',coach:'#f0f0ea',croof:'#d8d8d4',nose:1,H:7},
     {body:'#f4f7fa',roof:'#e6ecf2',band:'#5fe6f2',coach:'#f4f7fa',croof:'#e6ecf2',nose:1,lift:2,neonBand:1,H:7}];
+  ;yield;
   SP.train=TR.map(R=>R&&[0,1].map(type=>[0,1,2,3].map(d=>{const pb=new PB(48,40),CX=24,CY=30,ax=d&1,sg=d<2?1:-1,A=ax?[-16,8]:[16,8],Pp=ax?[16,8]:[-16,8],len=.92,wid=.17;
     const pos=(s,t)=>[CX+A[0]*s*sg*len+Pp[0]*t*wid,CY+A[1]*s*sg*len+Pp[1]*t*wid];
     const put=(s,t,up,v)=>{const[x,y]=pos(s,t);pb.put(Math.floor(x),Math.floor(y)-up,v);};
@@ -777,6 +812,7 @@ function buildSprites(){
     const meta={};if(eng&&R.steam){for(let d=0;d<3;d++){put(.32,0,R.H-1+d,col('#2e2b33'));put(.35,0,R.H-1+d,col('#1a1a1e'));}const[x,y]=pos(.33,0);meta.em=[[Math.floor(x),Math.floor(y)-R.H-3,'steam']];}
     if(eng&&R.nose){const[x,y]=pos(.48,0);meta.head=[Math.floor(x),Math.floor(y)-2];}
     return mk(pb,-CX,-CY,true,meta);})));
+  ;yield;
   SP.boat=BOAT.map((B,e)=>[0,1].map(ax=>{const pb=new PB(48,34),CX=24,CY=26,A=ax?[-16,8]:[16,8],Pp=ax?[16,8]:[-16,8];
     const pos=(s,t)=>[CX+A[0]*s*B.len+Pp[0]*t*B.wid,CY+A[1]*s*B.len+Pp[1]*t*B.wid];
     const C=v=>typeof v==='string'?col(v):v,wAt=s=>Math.sqrt(Math.max(0,1-(2*s)**2));
@@ -792,6 +828,7 @@ function buildSprites(){
         const hh=Math.round(H*q);for(let d=1;d<=hh;d++)put(s,t,B.h+d,col('#9fdce4',d===hh?.3:0,190));}}
     const meta={};if(B.stack){const[x,y]=pos(B.stack[0],0);meta.em=[[Math.floor(x),Math.floor(y)-B.h-B.stack[1]-4,'smoke']];}
     return mk(pb,-CX,-CY,true,meta);}));
+  ;yield;
   const zoneG=hex=>G((u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
     const h=hash(x,y,17);if(h<.05)return col(mixHex(PAL.g2,hex,.2));return col(mixHex(PAL.g1,hex,.16),.04);});
@@ -803,12 +840,14 @@ function buildSprites(){
     [K.IND]:[0,1].map(v=>G((u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.07)return Math.floor((u+w)*9)%2?col('#e8b53a'):col('#2e2b33');
       return col('#9d978b',hash(x>>1,y,v+8)<.1?-.18:hash(x,y,6)<.1?.06:0);}))
   };
+  ;yield;
   SP.parkG=G((u,v,x,y)=>{const d=Math.hypot(u-.5,v-.5);if(Math.abs(d-.3)<.055)return col('#dccb98',hash(x,y,2)<.2?-.1:0);
     const h=hash(x,y,31);if(h<.03)return col('#ff9fbf');if(h<.05)return col('#fff1a8');if(h<.065)return col('#ffffff');return col('#69b14a',h>.9?-.1:0);});
   SP.dirt=G((u,v,x,y)=>{const h=hash(x,y,44);return col('#8d6b45',h<.12?-.2:h>.9?.1:0);});
   SP.plaza=G((u,v,x,y)=>((Math.floor(u*4)+Math.floor(v*4))&1)?col('#c9c3b5'):col('#bdb6a6'));
   // lips where land meets water, and the diorama slab on the map's front edges
   const face=(isL,h,fn)=>{const pb=new PB(32,16+h);pb.box({cx:16,cy:8+h,hw:16,h,[isL?'L':'R']:(a,b)=>fn(a,b,isL)});return mk(pb,-16,0,false);};
+  ;yield;
   const lipFn=(a,b,isL)=>col(b>=2.2?PAL.g0:PAL.dirt,isL?0:-.22);
   SP.lipL=face(true,3,lipFn);SP.lipR=face(false,3,lipFn);
   const slabFn=top=>(a,b,isL)=>{const t=isL?0:-.22;const hh=SLAB-b;
@@ -816,24 +855,28 @@ function buildSprites(){
     else if(hh<1.6)return col(top==='s'?PAL.sand:PAL.g1,t);else if(hh<2.6)return col(top==='s'?PAL.sand2:PAL.g0,t);
     if(b<2.2)return col(PAL.stone,t);const j=hash(Math.floor(a),Math.floor(b),7);if(j<.08)return col(PAL.stone,t+.1);
     return col(b<6?PAL.dirt2:PAL.dirt,t);};
+  ;yield;
   SP.slab={};for(const k of['g','s','w'])SP.slab[k]=[face(true,SLAB,slabFn(k)),face(false,SLAB,slabFn(k))];
 
   /* overlays & cursors --------------------------------------- */
   SP.hl={};const hl=(k,hex,a)=>SP.hl[k]=G(()=>col(hex,0,a));
   hl('res',PAL.zR,120);hl('com',PAL.zC,120);hl('ind',PAL.zI,120);hl('road',PAL.white,95);hl('bulldoze','#ff7a4a',120);hl('bad','#ff3b3b',120);
   hl('park','#8fe07a',110);SP.tgt={edge:G((u,v)=>{const e=Math.min(u,v,1-u,1-v);return e<.09?col('#ffffff'):e<.15?col('#1a1404'):null;}),ok:G((u,v)=>{const e=Math.min(u,v,1-u,1-v);return e<.09?col('#ffffff'):e<.15?col('#1a1404'):col('#ffd21f',0,235);}),bad:G((u,v)=>{const e=Math.min(u,v,1-u,1-v);return e<.09?col('#ffffff'):e<.15?col('#2a0505'):col('#ff3030',0,235);})};hl('build','#ffe07a',110);hl('pow','#ffd84a',95);hl('nopow','#ff4a4a',120);
+  ;yield;
   SP.outline=G((u,v)=>Math.min(u,v,1-u,1-v)<.06?col('#ffffff',0,220):null);
   SP.sel=G((u,v)=>Math.min(u,v,1-u,1-v)<.07?col('#ffcc4d'):null);
   const ramp=(stops,al=150)=>{const out=[];for(let i=0;i<8;i++){const t=i/7*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t));out.push(G(()=>col(mixHex(stops[k],stops[k+1],t-k),0,al)));}return out;};
   SP.dim=G(()=>col('#0e1226',0,150));
   SP.ramp={firecov:ramp(['#2a3a6a','#3f7fd0','#7fc8ff','#e8f6ff']),health:ramp(['#6a3a4a','#c05a6a','#ff9aa8','#ffe8ec']),education:ramp(['#3a4c9a','#4f8fd8','#6fd0e8','#e8f6ff']),traffic:ramp(['#4fd08a','#d6e04a','#ffab2e','#ff3b2f'],235),value:ramp(['#35407e','#2f8c9a','#8fd05a','#ffe35a']),pollution:ramp(['#6aa35a','#c7b45a','#a0643a','#5a2b3a']),crime:ramp(['#4a7ab0','#e0b84a','#e8663d','#c0304a'])};
   const gl=new PB(30,15);for(let y=0;y<15;y++)for(let x=0;x<30;x++){const d=Math.hypot((x+.5-15)/15,(y+.5-7.5)/7.5);if(d<1)gl.put(x,y,col('#ffb45c',0,d<.3?110:d<.6?60:24));}
+  ;yield;
   SP.glow=mk(gl,-15,1,false);
 
   /* trees ------------------------------------------------------ */
   SP.tree=[];[[0,4],[0,3],[1,3],[1,4],[2,3],[0,5]].forEach(([t,s],i)=>{const pb=new PB(16,22);treeInto(pb,8,19,t,s,i+1);SP.tree.push(mk(pb,-8,-19));});
 
   /* buildings: 8 procedurally varied designs per level ------------------ */
+  ;yield;
   SP.bld={[K.RES]:[null,[],[],[],[]],[K.COM]:[null,[],[],[],[]],[K.IND]:[null,[],[],[]]};
   const WALLS=['#f3e6c9','#eed5b1','#dfe7e4','#f2d9cf','#e6e0f0','#d9e8d2','#f5f0e6','#e9d7bd'];
   const ROOFS=['#c9553f','#4f73a0','#5c8f4e','#94603c','#6b5a8e','#3f4a5a','#b8743a','#8c3f38'];
@@ -844,18 +887,21 @@ function buildSprites(){
     mast:(pb,x,y,n=7)=>{for(let i=0;i<n;i++)pb.put(x,y-i,col('#c9ced6',i>n-3?.2:0));},
     chim:(pb,x,y)=>pb.box({cx:x,cy:y,hw:2,h:5,L:()=>col('#a0503c'),R:()=>col('#a0503c',-.3),T:()=>col('#3e2520')}),
   };
+  ;yield;
   const roofTop=(kind,wall)=>(u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.07)return col(wall,.25);
     if(kind==='solar'&&u>.18&&u<.82&&w>.2&&w<.6)return col('#2b3f6b',(Math.floor(u*14)+Math.floor(w*14))%2?.12:0);
     if(kind==='garden'&&e>.15)return col(PAL.g2,hash(x,y,3)<.25?.15:hash(x,y,4)<.2?-.15:0);
     if(kind==='pool'){const d=Math.max(Math.abs(u-.5),Math.abs(w-.5));if(d<.2)return col(PAL.w2,hash(x,y,5)<.15?.35:0);if(d<.26)return col('#ece8e0');}
     if(kind==='helipad'){const d=Math.hypot(u-.5,w-.5);if(d<.31&&d>.25)return col('#f2cb4b');if(d<.31)return col('#474c55');}
     return col('#8f8984',hash(x,y,1)<.1?-.1:0);};
+  ;yield;
   const glassF=(gl,t,face,s,p=.55,fr='#c9d3da')=>(a,b,hw,h)=>{if(b<4.5)return(a|0)%3===0?col('#d6dde3',t):winC((a|0)+face*30,0,s+2,.9,'#5b86a8');
     if((a|0)%3===0)return col(fr,t-.05);if((b-4.5)%4<.9)return col(gl,t-.35);
     const w=winC(Math.floor(a/3)+face*30,Math.floor((b-4.5)/4),s,p,gl),c=col(gl,t+(((a*.8+(h-b))%17)<2.4?.3:0));return Array.isArray(w)?[c,w[1]]:c;};
   const B=K.RES,C=K.COM,I=K.IND;
 
   /* residential L1: cottages, houses with garages, L-shaped houses, bungalows */
+  ;yield;
   const house=(pb,cx,cy,hw,h,wall,s,door=true)=>pb.box({cx,cy,hw,h,
     L:(a,b)=>{if(door&&a>=hw*.3&&a<hw*.3+2.6&&b<5.4)return col('#7a4a2b',b>4.6?.2:0);if(a>=hw*.7&&a<hw*.7+2.2&&b>=2.4&&b<5.2)return winC(0,0,s,.6);if(b<1)return col(wall,-.14);return col(wall);},
     R:(a,b)=>{if(((a>=2&&a<4.2)||(a>=hw-4&&a<hw-1.8))&&b>=2.4&&b<5.2)return winC(a>=hw-4?2:1,0,s,.5);if(b<1)return col(wall,-.36);return col(wall,-.22);}});
@@ -871,6 +917,7 @@ function buildSprites(){
     SP.bld[B][1].push(mk(pb,-16,16-H));}
 
   /* residential L2: townhouses, terraces, row houses */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*733+7),H=60,pb=new PB(32,H),cx=16,cy=H-8,s=v*37+201,type=v%4;
     const wall=WALLS[(v*5+2)%8],roof=ROOFS[(v*3+4)%8],hgt=13+((r()*4)|0);
     const F=(wl,t,face,door)=>facade({wall:col(wl,t),px:4,ww:2,py:6,wh:3,mx:1.5,my:2.5,mt:1.5,rim:col(wl,t+.3),p:.5,seed:s+face,face,
@@ -884,6 +931,7 @@ function buildSprites(){
     SP.bld[B][2].push(mk(pb,-16,16-H));}
 
   /* residential L3: apartment blocks with varied height, balconies and roofs */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*541+3),H=74,pb=new PB(32,H),cx=16,cy=H-8,s=v*53+401,hgt=24+((r()*11)|0),hw=12+(v&1);
     const wall=['#b8663f','#cfc6b6','#9fb3c2','#c9a27a','#a35a48','#d9d2c0','#8fa49a','#c4b6d6'][v],balc=r()<.5,top=['flat','solar','garden','flat'][v%4];
     const pre=t=>(a,b)=>{if(b<4.5){if(!t&&a>=4&&a<8.5)return winC(a|0,0,s+3,.9,'#4f6f8f');return col(wall,t-.18);}if(balc&&b>6&&((b-6)%5)<1)return col('#f2efe8',t);};
@@ -895,6 +943,7 @@ function buildSprites(){
     SP.bld[B][3].push(mk(pb,-16,16-H));}
 
   /* residential L4: towers with podiums, pools, sloped crowns, helipads */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*211+9),H=98,pb=new PB(32,H),cx=16,cy=H-8,s=v*71+601,hgt=46+((r()*12)|0);
     const wall=['#e9e4d7','#d7e4ea','#efd9c8','#dcd6ea','#e4ecdf','#f0e2d8','#d9dde6','#ece6d2'][v],acc=['#6f8fa8','#b27b5f','#7f9f7a','#8c7fb0','#5f8f8a','#c07a6a','#4f6f98','#a08a5a'][v];
     const tw=t=>(a,b,hw,h)=>{if(b<5)return a>1&&a<hw-1&&(a|0)%3!==0?winC(a|0,0,s+5,.85,'#4d6d8c'):col(wall,t-.2);
@@ -911,6 +960,7 @@ function buildSprites(){
     SP.bld[B][4].push(mk(pb,-16,16-H,true,meta));}
 
   /* commercial L1: awning shops, convenience stores, cafés, diners */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*389+21),H=48,pb=new PB(32,H),cx=16,cy=H-8,s=v*29+801,type=v%4;
     const wall=['#f4f1ea','#f3e3b3','#e6e9ee','#f0d3c2','#eae4f2','#e2efe6','#f7efe0','#e8e8e8'][v],aw=['#d9463b','#2f8f5b','#2f6fc0','#e08a2a','#9a4fb0','#2a9a9a','#c43a6a','#4a6a2a'][v],neon=['#ff5fa2','#5ff0ff','#ffe45f','#8aff6a','#ff9a3a','#c08aff','#5fffc0','#ff6060'][v];
     const shopL=(hw,band)=>(a,b)=>{if(b>=7&&b<9)return band(a,b,0);if(a>=1.5&&a<hw*.72&&b>=1.2&&b<6.4)return(a|0)%4===0?col(wall,-.1):winC(a>>2,0,s,.95,'#5a7ea3');
@@ -928,6 +978,7 @@ function buildSprites(){
     SP.bld[C][1].push(mk(pb,-16,16-H));}
 
   /* commercial L2: offices, billboards, brick blocks */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*613+5),H=64,pb=new PB(32,H),cx=16,cy=H-8,s=v*43+1001,hgt=18+((r()*9)|0),type=v%4;
     const wall=['#e9ecef','#d9d2c3','#c7d3dc','#efe6d8','#b8735a','#dfe6e0','#cfcbd8','#a86a4a'][v],gl=['#3e6a8f','#2f6f73','#4a5a86','#5a6f8a','#3f5f7a','#2f7f86','#5a5f8a','#3e6a8f'][v];
     const ribbon=(t,face)=>(a,b,hw,h)=>{if(b>=h-1.5)return col(wall,t+.2);if(b<5)return(a|0)%4===0?col(wall,t-.1):winC((a>>2)+face*20,0,s+1,.9,gl);
@@ -941,6 +992,7 @@ function buildSprites(){
     SP.bld[C][2].push(mk(pb,-16,16-H));}
 
   /* commercial L3: glass towers with varied crowns */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*457+11),H=82,pb=new PB(32,H),cx=16,cy=H-8,s=v*59+1201,hgt=32+((r()*12)|0),type=v%4;
     const gl=['#3f7fa8','#2f7f86','#6a5f8a','#8a6a4a','#4a8a6a','#3a5f9a','#7a4a5a','#5a7a8a'][v];
     let thw=12,base=cy-1;
@@ -954,6 +1006,7 @@ function buildSprites(){
     SP.bld[C][3].push(mk(pb,-16,16-H));}
 
   /* commercial L4: skyscrapers with stepped, pyramid, twin-mast and drum crowns */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*167+29),H=112,pb=new PB(32,H),cx=16,cy=H-8,s=v*61+1401,hgt=50+((r()*13)|0),type=v%4;
     const gl=['#2d4466','#234448','#3d3358','#2f3d4d','#3a4a3a','#24364f','#4a3a3a','#2a3a5a'][v],fr=['#b8c4d0','#a9c2bf','#c2b5d6','#c9c2b0','#b8c8b0','#a8b8d0','#d0b8b0','#b0c0d8'][v];
     const f=(t,face)=>(a,b,hw,h)=>{if(b<5)return(a|0)%3===0?col(fr,t):winC(a|0,face,s+3,.95,'#5d86a8');
@@ -969,6 +1022,7 @@ function buildSprites(){
     SP.bld[C][4].push(mk(pb,-16,16-H,true,meta));}
 
   /* industrial L1: warehouses, silos, depots */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*271+17),H=46,pb=new PB(32,H),cx=16,cy=H-8,s=v*17+1601;
     const m=['#a7b0b5','#8fa6a0','#b58d6a','#9aa2c0','#c2a878','#7f9aa8','#a88a8a','#98a888'][v],hw=10+((r()*3)|0),h=7+((r()*4)|0);
     if(v%3===1)pb.cyl(cx+8,cy-6,3.5,14,side('#cfc9bc'),()=>col('#e2ddd2'));
@@ -981,6 +1035,7 @@ function buildSprites(){
     SP.bld[I][1].push(mk(pb,-16,16-H));}
 
   /* industrial L2: half the factories smoke, others have silos or roof vents */
+  ;yield;
   for(let v=0;v<8;v++){const r=mulberry(v*331+19),H=68,pb=new PB(32,H),cx=16,cy=H-8,s=v*23+1801,type=v%4;
     const br=['#a4553d','#8c6a52','#6d7a86','#9a7a4a','#7a5a4a','#5f7a7a','#a46a4a','#7a7a8a'][v],meta={};
     if(type===0){pb.cyl(cx+6,cy-6,2.5,28,(dx,b)=>b>22&&b<25?col('#f0ede6',dx>.2?-.25:0):side('#9b4a36')(dx),()=>col('#2a1f22'));meta.em=[[cx+6,cy-35,'smoke']];}
@@ -994,6 +1049,7 @@ function buildSprites(){
     SP.bld[I][2].push(mk(pb,-16,16-H,true,meta));}
 
   /* industrial L3: chemical plant, refinery, silo cluster, steel mill */
+  ;yield;
   for(let v=0;v<4;v++){const H=84,pb=new PB(32,H),cx=16,cy=H-8,s=v*19+2001,meta={};
     const m=['#5f8a8b','#7d8a6a','#6a7896','#8a6a5a'][v];
     const hall=(hc,hw,h,c)=>pb.box({cx:hc[0],cy:hc[1],hw,h,
@@ -1010,6 +1066,7 @@ function buildSprites(){
     SP.bld[I][3].push(mk(pb,-16,16-H,true,meta));}
 
   /* 2x2 merged buildings: apartment complexes, malls, factory halls --------- */
+  ;yield;
   SP.big={[B]:[[],[]],[C]:[[],[]],[I]:[[],[]]};
   for(const tall of[0,1])for(let v=0;v<2;v++){ // residential
     const H=tall?132:100,pb=new PB(64,H),cx=32,cy=H-16,s=3001+v*7+tall*50,wall=v?'#d9d2c0':'#c9a27a',acc=v?'#6f8fa8':'#b27b5f',th=tall?76:46;
@@ -1020,6 +1077,7 @@ function buildSprites(){
       pb.box({cx,cy:cy-7-th+10,hw:3,h:3,L:()=>col(acc),R:()=>col(acc,-.25),T:()=>col(acc,.2)});}
     else{pb.box({cx,cy:cy-7,hw:22,h:th-10,L:tw(0),R:tw(-.22),T:roofTop('garden',wall)});P.stair(pb,cx+8,cy-17-th+10,wall);P.tank(pb,cx-9,cy-16-th+10);}
     SP.big[B][tall].push(mk(pb,-32,32-H));}
+  ;yield;
   for(const tall of[0,1])for(let v=0;v<2;v++){ // commercial
     const H=tall?140:104,pb=new PB(64,H),cx=32,cy=H-16,s=3201+v*7+tall*50,gl=v?'#2f7f86':'#3f6fa8',th=tall?84:52,meta={blink:[]};
     if(v===0){pb.box({cx,cy:cy-1,hw:28,h:10,L:(a,b)=>b>=6.5&&b<8.5?[col('#e04a6a'),col('#ff6a8a')]:b<6&&(a|0)%4?winC(a>>2,0,s,.95,'#5a7ea3'):col('#eceae4'),R:(a,b)=>b>=6.5&&b<8.5?[col('#e04a6a',-.25),col('#ff6a8a')]:b<6&&(a|0)%4?winC((a>>2)+20,0,s,.95,'#5a7ea3'):col('#eceae4',-.22),T:roofTop('garden','#c9d0d6')});
@@ -1028,6 +1086,7 @@ function buildSprites(){
       for(const[dx,dh,g]of[[-11,0,gl],[11,-8,'#4a5a86']]){pb.box({cx:cx+dx,cy:cy-4,hw:9,h:th+dh,L:glassF(g,0,0,s+dx),R:glassF(g,-.22,1,s+dx),T:()=>col('#5c6570')});
         pb.box({cx:cx+dx,cy:cy-4-th-dh,hw:5,h:5,L:()=>col('#b8c4d0'),R:()=>col('#b8c4d0',-.25),T:()=>col('#d8dde3')});P.mast(pb,cx+dx,cy-9-th-dh,7);meta.blink.push([cx+dx,cy-15-th-dh,'#ff4a4a']);}}
     SP.big[C][tall].push(mk(pb,-32,32-H,true,meta));}
+  ;yield;
   for(let v=0;v<2;v++){ // industrial
     const H=96,pb=new PB(64,H),cx=32,cy=H-16,s=3401+v*7,m=v?'#6a7896':'#8c6a52',meta={em:[]};
     if(v===0){for(const[x,y]of[[cx+10,cy-14],[cx-2,cy-18]]){pb.cyl(x,y,3,34,(dx,b)=>b>26&&b<30?col('#f0ede6',dx>.2?-.25:0):side('#9b4a36')(dx),()=>col('#2a1f22'));meta.em.push([x,y-35,'smoke']);}
@@ -1039,6 +1098,7 @@ function buildSprites(){
       pb.box({cx:cx-10,cy:cy+2,hw:14,h:12,L:(a,b)=>b>=6&&b<7?col('#e8b53a'):col(m,(a|0)%2?0:-.07),R:(a,b)=>col(m,(a|0)%2?-.22:-.28),T:(u,w)=>col(m,(Math.floor(u*6)+Math.floor(w*6))%2?.12:.04)});
       for(let x=-4;x<=12;x++)pb.put(cx+x,cy-6+(x>>2),col('#9aa0a6'));}
     SP.big[I][0].push(mk(pb,-32,32-H,true,meta));}
+  ;yield;
   SP.big[I][1]=SP.big[I][0];
 
   /* civic ------------------------------------------------------ */
@@ -1050,12 +1110,14 @@ function buildSprites(){
     pb.box({cx:cx+5,cy:cy-15,hw:2,h:2,L:()=>col('#e04444'),R:()=>col('#3b6de0'),T:()=>col('#e8ecf2')});
     for(let i=0;i<10;i++)pb.put(cx-9,cy-3-i,col('#d0d4da'));for(let i=0;i<3;i++)for(let j=0;j<4;j++)pb.put(cx-8+j,cy-12+i+(j>>1),col(i===1?'#ffffff':'#2c4f9e'));
     SP.police=mk(pb,-16,16-H,true,{siren:[cx+4,cy-16]}); }
+  ;yield;
   SP.park=[];
   { const H=36,pb=new PB(32,H),cx=16,cy=H-8;
     pb.cyl(cx,cy-1,8,2,side('#c9c2b4'),(dx,dy)=>{const r=dx*dx+dy*dy;return r>.65?col('#ddd6c8'):col(PAL.w2,hash(dx*20|0,dy*20|0,3)<.15?.35:0);});
     pb.cyl(cx,cy-3,1.6,4,side('#d4cdbf'),()=>col(PAL.foam));
     [[0,-9],[-1,-10],[1,-10],[-2,-8],[2,-8],[-3,-6],[3,-6],[0,-11]].forEach(([x,y])=>pb.put(cx+x,cy+y,[col('#eaf6ff',0,210),col('#bcd7ff',0,160)]));
     SP.park.push(mk(pb,-16,16-H)); }
+  ;yield;
   { const H=36,pb=new PB(32,H),cx=16,cy=H-8;
     treeInto(pb,cx+5,cy-4,0,4,301);pb.box({cx:cx-3,cy:cy+1,hw:3,h:2,L:()=>col('#8a5a34'),R:()=>col('#8a5a34',-.3),T:(u)=>col('#a8703f',Math.floor(u*4)%2?.1:0)});treeInto(pb,cx-7,cy-1,1,3,302);treeInto(pb,cx+1,cy+5,0,3,303);
     SP.park.push(mk(pb,-16,16-H)); }
@@ -1064,6 +1126,7 @@ function buildSprites(){
     [[-5,0],[5,0],[0,2.5],[0,-2.5]].forEach(([x,y])=>{for(let i=0;i<6;i++)pb.put(cx+x,cy-2+y-i,col('#f2efe8',x>0?-.25:0));});
     pb.roof(cx,cy-9,8,5,'#b5483a');treeInto(pb,cx-11,cy+1,0,3,311);
     SP.park.push(mk(pb,-16,16-H)); }
+  ;yield;
   { const H=64,pb=new PB(32,H),cx=16,cy=H-8;
     pb.box({cx,cy:cy-1,hw:5,h:1,L:()=>col('#c2bdb2'),R:()=>col('#c2bdb2',-.25),T:()=>col('#d6d1c6')});
     pb.cyl(cx,cy-2,1.6,31,side('#f0f2f4'),()=>col('#ffffff'));
@@ -1080,6 +1143,7 @@ function buildSprites(){
     pb.box({cx:cx+17,cy:cy+7,hw:3.5,h:4,L:()=>col('#a3aab0'),R:()=>col('#a3aab0',-.28),T:()=>col('#c6ccd1')});
     pb.box({cx:cx+22,cy:cy+4,hw:2.5,h:3,L:()=>col('#a3aab0'),R:()=>col('#a3aab0',-.28),T:()=>col('#c6ccd1')});
     SP.coal=mk(pb,-32,32-H,true,{em:[[cx+12,cy-40,'steam'],[cx+6,cy-40,'steam'],[cx-15,cy-57,'smoke']]}); }
+  ;yield;
   { // fire station: brick hall, red garage doors, hose tower
     const H=58,pb=new PB(32,H),cx=16,cy=H-8,s=2601,brick='#b0442f',trim='#f2efe8';
     pb.box({cx:cx+5,cy:cy-6,hw:4,h:26,L:(a,b)=>b>=23?col(trim):(a>=1.5&&a<3&&b>15&&b<19)?winC(0,0,s,.6):col(brick,(b|0)%4===0?-.08:0),R:(a,b)=>b>=23?col(trim,-.25):col(brick,-.25),T:()=>col('#5a3a34')});
@@ -1089,6 +1153,7 @@ function buildSprites(){
       T:(u,w)=>Math.min(u,w,1-u,1-w)<.07?col(trim):col('#8a8f96')});
     pb.box({cx:cx-5,cy:cy-14,hw:1.5,h:1.5,L:()=>col('#ff4040'),R:()=>col('#c02020'),T:()=>col('#ff9080')});
     SP.fire=mk(pb,-16,16-H,true,{siren:[cx-7,cy-16]}); }
+  ;yield;
   { // school: long classroom block with clock tower, sports field in front
     const H=74,pb=new PB(64,H),cx=32,cy=H-16,s=2701,wall='#f0e3c3',trim='#d9772f';
     const f=(t,face)=>(a,b,hw,h)=>{if(b>=h-2)return col(trim,t);if(b<1)return col(wall,t-.15);
@@ -1098,6 +1163,7 @@ function buildSprites(){
     pb.roof(cx-6,cy-25,5,5,'#b8573a');
     for(let i=0;i<16;i++)pb.put(cx-24,cy+4-i,col('#d0d4da'));for(let i=0;i<3;i++)for(let j=0;j<5;j++)pb.put(cx-23+j,cy-11+i+(j>>1),col(i===1?'#2c5fbf':'#e0443a'));
     SP.school=mk(pb,-32,32-H); }
+  ;yield;
   SP.field=[];for(let ty=0;ty<2;ty++)for(let tx=0;tx<2;tx++)SP.field.push(G((u,v,x,y)=>{const U=tx+u,V=ty+v,e=Math.hypot((U-1.3)/.62,(V-1.3)/.62);
     if(e<.72)return col('#5bab45',(Math.floor((U+V)*6))%2?0:.07);if(e<.78)return col('#ffffff');if(e<1)return col('#c65b43',Math.floor(e*18)%2?0:.08);
     return col('#c9c3b5',((Math.floor(U*4)+Math.floor(V*4))&1)?0:-.06);}));
@@ -1111,6 +1177,7 @@ function buildSprites(){
     for(let b=0;b<=10;b++){const r=7.5*Math.sqrt(Math.max(0,1-(b/10.5)**2));pb.ell(cx,cy-20-b,Math.max(.8,r),dx=>col(cu,dx<-.4?.18:dx<.2?0:-.25));}
     for(let i=0;i<8;i++)pb.put(cx,cy-31-i,col('#d0d4da'));for(let i=0;i<3;i++)for(let j=0;j<4;j++)pb.put(cx+1+j,cy-38+i+(j>>1),col(i===1?'#ffffff':'#3a6fd0'));
     SP.hall=mk(pb,-32,32-H,true,{lights:[[cx-8,cy+4],[cx+8,cy+4]]}); }
+  ;yield;
   { // stadium: oval bowl with coloured stands, pitch and 4 floodlight towers
     const H=90,pb=new PB(96,H),cx=48,cy=H-24,R0=40,lights=[];
     for(let b=0;b<14;b++)pb.ell(cx,cy-b,R0,(dx,dy,x,y)=>{const arch=b>1&&b<9&&((x>>2)%2===0);return arch?col('#5f6672',dx>.3?-.25:0):col('#d9dde2',dx<-.5?.1:dx<.2?0:dx<.6?-.18:-.3);});
@@ -1121,6 +1188,209 @@ function buildSprites(){
     [[-1,0],[0,-1],[1,0],[0,1]].forEach(([ux,uy])=>{const x=cx+ux*(R0+3),y=cy+uy*(R0/2+2)+(uy?0:-2);for(let i=0;i<28;i++)pb.put(x,y-i,col('#9aa3ad',i%4?0:-.2));
       for(let k=-2;k<=2;k++){pb.put(x+k,y-28,[col('#e8eef4'),col('#fffbe0')]);pb.put(x+k,y-29,col('#6d747e'));}lights.push([x,y-28]);});
     SP.stadium=mk(pb,-48,48-H,true,{lights}); }
+  ;yield;
+  { // world theme parks (★ 3×3): a landscaped plaza with one large, detailed landmark per country
+    const H=150;
+    const build=(th,full)=>{const pb=new PB(96,H),cx=48,cy=H-24,[c1,c2,c3]=th.c0,lights=[],L=th.l,lx=cx,ly=cy-5;
+      const R=(rx,ry)=>[cx+rx,cy+ry],lit=(c,t=0)=>[col(c,t),col('#ffd27a',t*.5)];
+      // iso box; o.f(a,b,face) may return a hex, {w:hex} for a window that lights up at night, or null for a hole
+      const B=(x,y,hw,h,c,o={})=>{const sh=face=>(a,b)=>{let v=o.f?o.f(a,b,face):o.win&&o.win(a,b)?{w:o.wc||'#2c3446'}:c;if(v==null)return null;
+          return typeof v==='object'?lit(v.w,face?-.2:0):col(v,face?-.22:0);};pb.box({cx:x,cy:y,hw,h,L:sh(0),R:sh(1),T:o.T===false?null:()=>col(o.T||c,.12)});};
+      const grid=(sx,w0,w1,b0,bh,by,top=999)=>(a,b)=>a>1&&a%sx>=w0&&a%sx<w1&&b>=b0&&b<top&&(b-b0)%by<bh;
+      const tower=(x,y,r,h,c,o={})=>pb.cyl(x,y,r,h,(dx,b)=>o.win&&o.win(dx,b)?lit(o.wc||'#2c3446',dx>.2?-.2:0):col(o.band&&o.band(b)?o.bc||c:c,dx<-.45?.14:dx<.2?0:-.24),()=>col(o.T||c,.1));
+      const dome=(x,y,r,h,c,o={})=>{for(let b=0;b<=h;b++){const t=b/h,rr=o.onion?r*Math.sin(Math.PI*Math.min(1,t*1.05+.12))*(1.15-t*.45):r*Math.sqrt(Math.max(0,1-t*t));
+          pb.ell(x,y-b,Math.max(.6,rr),dx=>{const cc=o.stripe&&(Math.floor((dx+t*(o.spiral||0))*3+9)%2)?o.stripe:c;return col(cc,dx<-.45?.22:dx<.15?0:dx<.6?-.18:-.32);});}
+        const tp=o.tip??4;for(let i=1;i<=tp;i++)pb.put(x,y-h-i,col(o.tc||'#f2c14b',i===tp?.3:0));};
+      const cone=(x,y,r,h,c,f)=>{for(let b=0;b<h;b++)pb.ell(x,y-b,Math.max(.5,r*(1-b/h)),dx=>col(f?f(b,dx):c,dx<-.4?.15:dx<.2?0:-.28));};
+      // triangular gable standing on a box face (face 0 = left, 1 = right); y is the box centre, h its wall height
+      const gable=(x,y,hw,h,peak,c,face=0,tri)=>{for(let a=0;a<=hw;a++){const t=peak*(1-Math.abs(2*a/hw-1));for(let k=0;k<=t;k++){const px=face?x+a:x-hw+a,py=face?y+hw/2-a/2:y+a/2;
+          pb.put(Math.round(px),Math.round(py-h-k),col(tri&&k<t-1&&k>0?tri:c,k>t-1?.2:face?-.22:0));}}};
+      const tree=(x,y,c,r=5,h=3)=>{for(let i=0;i<h;i++)pb.put(x,y-i,col('#6a4428'));const yc=y-h-r*.8;
+        for(let py=-r;py<=r;py++)for(let px=-r;px<=r;px++){const d=Math.hypot(px,py*1.1);if(d>r-(hash(x+px,y+py,7)<.35?1:0))continue;const l=(-px-py*1.3)/r;
+          pb.put(x+px,Math.round(yc+py),col(c,l>.6?.22:l>-.4?(hash(x+px,y+py,3)<.25?-.12:0):-.3));}};
+      const cypress=(x,y,c='#2e6a48',h=15)=>{for(let b=0;b<h;b++){const rr=2.6*Math.sin(Math.PI*Math.min(1,(b+2)/(h+1)));for(let px=-Math.ceil(rr);px<=rr;px++)pb.put(x+px,y-b,col(c,px<0?.12:px>0?-.22:0));}};
+      const palm=(x,y,h=15)=>{for(let i=0;i<h;i++)pb.put(x+Math.round(Math.sin(i/h*1.3)*2),y-i,col('#8a6a44',i%3?0:-.2));const tx=x+2,ty=y-h;
+        for(const[dx,dy]of[[-7,3],[7,3],[-5,-2],[5,-2],[0,-4],[-8,5],[8,5],[-2,4],[3,4]])pb.line(tx,ty,tx+dx,ty+dy,col('#3f8f45',dy<0?.12:-.1));pb.put(tx,ty+1,col('#6a4a2a'));};
+      const lamp=(x,y)=>{for(let i=0;i<8;i++)pb.put(x,y-i,col('#3a3f48'));pb.put(x,y-8,[col('#f4efe2'),col('#fff1c0')]);pb.put(x,y-9,col('#3a3f48'));lights.push([x,y-8]);};
+      const flag=(x,y,h,cs=[c1,c2,c3])=>{for(let i=0;i<h;i++)pb.put(x,y-i,col('#d0d4da',i%4?0:-.15));for(let i=0;i<4;i++)for(let j=0;j<7;j++)pb.put(x+1+j,y-h+i+(j>>1),col(cs[Math.min(2,i*3>>2)],j>4?-.15:0));};
+      const people=(x,y,n,s)=>{for(let k=0;k<n;k++){const px=x+Math.round((hash(k,s,1)-.5)*16),py=y+Math.round((hash(k,s,2)-.5)*6),c=['#d9463b','#2f6fc0','#f2c140','#4fae45','#f4f1ea','#8a5ac0'][(hash(k,s,3)*6)|0];
+          pb.put(px,py,col('#3a3f48'));pb.put(px,py-1,col(c));pb.put(px,py-2,col(c,-.1));pb.put(px,py-3,col('#e8b890'));}};
+      const kind=th.trees||'round',tc=th.tc||'#3d8143';
+      const plant=(x,y,s=1)=>kind==='palm'?palm(x,y,12+s*3):kind==='cypress'?cypress(x,y,'#2e6a48',12+s*3):tree(x,y,tc,4+s,3);
+      if(full){ // paved plaza with a planted border in the flag colours and a path from the front corner
+        const bed=[c1,c2,c3].map(c=>c==='#ffffff'?'#f6f0e0':c==='#000000'?'#f2c14b':c);
+        pb.diamond(cx,cy,46,(u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
+          if(e<.1){const h=hash(x,y,11);if(h<.2)return col(bed[(hash(x,y,5)*3)|0],h<.07?.25:0);return col(h<.55?'#5aa046':'#4e9440');}
+          if(Math.abs(u-v)<.08&&u+v>1)return th.pool?col('#4a9ad8',((x+y*2)%7===0)?.35:0):col('#e6dcc4',((x+y)&3)===0?-.08:0);
+          if(e<.13)return col('#a8a090');
+          return col(th.ground||'#cfc6b0',((Math.floor(u*16)+Math.floor(v*16))&1)?0:-.05);});
+        plant(...R(-26,-9),1);plant(...R(26,-9),1);plant(...R(-36,-2),0);plant(...R(36,-2),0);}
+      /* ---------------- the landmark ---------------- */
+      if(L==='kpalace'){ // two-tier stone terrace, red-pillared hall with lattice doors and painted brackets, double hip roof
+        B(lx,ly+4,32,3,'#d4cebf',{T:'#e4ded0'});for(let a=0;a<=32;a+=2){pb.put(lx-32+a,ly+4+a/2-4,col('#f4f1ea'));pb.put(lx+a,ly+20-a/2-4,col('#e0dccf'));}
+        B(lx,ly+1,27,3,'#d4cebf',{T:'#e4ded0'});
+        const dan=(a,b,face)=>{if(b>=9)return Math.floor(a/2)%3===0?'#c8282a':Math.floor(a/2)%3===1?'#2e7d5b':'#3a6fd0';const m=a%6;if(m<1.3)return'#a8301f';if(b<1)return'#7a2a20';
+          return(Math.floor(a)+Math.floor(b))%2?{w:'#b89060'}:'#e8d8b0';};
+        B(lx,ly-2,21,11,'#b83a2a',{f:dan});pb.roof(lx,ly-13,29,8,'#3a3f48');
+        B(lx,ly-19,14,5,'#b83a2a',{f:(a,b)=>b>=3?(Math.floor(a/2)%2?'#2e7d5b':'#c8282a'):a%5<1.2?'#a8301f':{w:'#b89060'}});pb.roof(lx,ly-24,20,11,'#3a3f48');
+        pb.line(lx-6,ly-33,lx+6,ly-33,col('#2a2d34'));for(const s of[-1,1]){pb.put(lx+s*7,ly-34,col('#2a2d34'));pb.put(lx+s*30,ly-14,col('#5a606a',.2));pb.put(lx+s*21,ly-25,col('#5a606a',.2));}
+        lights.push([lx-12,ly+6],[lx+12,ly+6]);}
+      else if(L==='jpagoda'){ // battered stone base, white keep with dark tiled roofs, little gables and golden roof fish
+        for(let k=0;k<10;k++)B(lx,ly+3-k,27-k*.7,1,'#8f8a80',{f:(a)=>(Math.floor(a/3)+k)%2?'#9c978c':'#85807a',T:false});pb.diamond(lx,ly-7,20,()=>col('#b8b2a4'));
+        let y=ly-7;for(const[hw,h,rw,rh]of[[18,8,23,5],[14,7,18,5],[10.5,6,14,5],[7.5,6,11,7]]){
+          B(lx,y,hw,h,'#f4f2ec',{win:(a,b)=>b>2&&b<5&&a%5>1.5&&a%5<3,wc:'#2e3440',T:false});pb.roof(lx,y-h,rw,rh,'#3a3f48');
+          if(hw>9)for(const f of[0,1]){const gx=f?lx+rw/2:lx-rw/2,gy=y-h+rw/4-1;for(let k=0;k<4;k++)for(let j=-3+k;j<=3-k;j++)pb.put(gx+j,gy-k,col(k===3-Math.abs(j)||j===-3+k||j===3-k?'#3a3f48':'#f4f2ec'));pb.put(gx,gy-1,col('#e8c070'));}
+          y-=h+rh*.55;}
+        for(const s of[-1,1]){pb.put(lx+s*3,y-1,col('#f2c14b',.2));pb.put(lx+s*3,y-2,col('#e8c070'));}lights.push([lx,ly-12]);}
+      else if(L==='cpagoda'){ // marble platform, seven red storeys with golden doors, yellow glazed eaves and hanging lanterns
+        B(lx,ly+4,28,3,'#efece4',{T:'#f8f6f0'});for(let a=0;a<=28;a+=3){pb.put(lx-28+a,ly+4+a/2-4,col('#ffffff'));pb.put(lx+a,ly+18-a/2-4,col('#e6e2d8'));}
+        let y=ly+1;for(let i=0;i<7;i++){const hw=15-i*1.6,h=6;B(lx,y,hw,h,'#c8282a',{f:(a,b)=>Math.abs(a-hw/2)<1.6&&b<4.5?{w:'#e0a82a'}:a%4<1?'#a01f22':'#c8282a',T:false});
+          pb.roof(lx,y-h,hw+4,3,i%2?'#e0a82a':'#d89a1a');for(const s of[-1,1])pb.put(lx+s*(hw+5),y-h-1,col('#f2c14b',.2));
+          if(i<4){const lxp=lx-hw-1,lyp=y-h+3;pb.put(lxp,lyp,[col('#d9302a'),col('#ff8a5a')]);lights.push([lxp,lyp]);}
+          y-=h+2;}
+        for(let i=0;i<10;i++)pb.put(lx,y-i,col('#f2c14b',i%3?0:.2));for(const r of[2,1.5,1])pb.ell(lx,y-3-r*2,r,()=>col('#e0a82a'));}
+      else if(L==='rocket'){ // pad, lattice gantry with swing arms, a striped rocket with fins and two boosters, low control building
+        B(lx-14,ly+10,10,6,'#dfe3e8',{win:grid(4,1.5,3,2,2,4),wc:'#2c4a7a',T:'#c8ccd2'});
+        B(lx,ly+2,20,3,'#8a9099',{T:'#a8aeb6'});
+        B(lx+12,ly-1,4,74,'#c84a2a',{f:(a,b)=>(b%6<1||Math.floor(a+b)%6<1||Math.floor(a-b+90)%6<1||a<.8||a>3.2)?'#c84a2a':null,T:'#a83a22'});
+        for(const hh of[22,40,58])pb.line(lx+8,ly-1-hh,lx+3,ly-1-hh+2,col('#9a3a22'));
+        for(const s of[-1,1]){tower(lx-3+s*7,ly+1,2.4,26,'#f4f6f8');cone(lx-3+s*7,ly-25,2.4,6,'#f4f6f8');}
+        tower(lx-3,ly,5,58,'#f4f6f8',{band:b=>b<5||(b>=12&&b<26&&b%5<2)||(b>=44&&b<50&&b%3<1.5),bc:'#c8282a'});
+        pb.cyl(lx-3,ly-30,5.2,6,(dx,b,x)=>col((x+b)%3===0?'#ffffff':c2,dx<.2?0:-.25),()=>col(c2));
+        cone(lx-3,ly-58,5,13,'#f4f6f8',(b)=>b>9?'#c8282a':'#f4f6f8');
+        for(const s of[-1,1]){for(let k=0;k<7;k++)pb.line(lx-3+s*5,ly-4-k,lx-3+s*(9-k*.4),ly-k,col(c1,s>0?-.25:0));}
+        lights.push([lx+12,ly-75],[lx-14,ly+6]);}
+      else if(L==='clock'){ // gothic hall with pointed windows and pinnacles, a tall clock tower with four lit faces and a slate spire
+        const gothic=(a,b)=>b>=13?'#e6d6aa':a%4<1?'#c4b07e':b>2&&b<11&&a%4>1.6&&a%4<3?(b>9.5&&a%4>2.6?'#d8c79a':{w:'#3c4658'}):'#d8c79a';
+        B(lx-10,ly+5,22,14,'#d8c79a',{f:gothic});pb.roof(lx-10,ly-9,23,6,'#4a5a5a');for(let a=0;a<=22;a+=4){pb.put(lx-32+a,ly+5+a/2-15,col('#e6d6aa',.2));pb.put(lx-32+a,ly+5+a/2-16,col('#e6d6aa',.2));pb.put(lx-10+a,ly+16-a/2-15,col('#c4b07e'));}
+        B(lx+12,ly-2,6.5,50,'#d8c79a',{f:(a,b)=>b>40?'#d8c79a':a%3<1?'#c4b07e':b%7>2&&b%7<5.5&&a>1&&a<5.5?{w:'#3c4658'}:'#d8c79a'});
+        for(const f of[0,1]){const px=f?lx+12+3.25:lx+12-3.25,py=ly-2+(f?3.25-1.6:1.6)-45;pb.ell(px,py,3.6,(dx,dy)=>Math.hypot(dx,dy)>.8?col('#c8a040'):lit('#fffbe8'));
+          pb.put(px,py,col('#2a2a30'));pb.put(px,py-1,col('#2a2a30'));pb.put(px+1,py,col('#2a2a30'));lights.push([px,py]);}
+        B(lx+12,ly-52,7.5,5,'#e6d6aa',{f:(a,b)=>a%3>1&&b<4?'#4a4a52':'#e6d6aa'});pb.roof(lx+12,ly-57,8,18,'#3c5a4a');
+        for(const s of[-1,1])for(let i=0;i<5;i++)pb.put(lx+12+s*8,ly-57-i,col('#e8c070'));for(let i=0;i<5;i++)pb.put(lx+12,ly-75-i,col('#e8c070',i===4?.3:0));}
+      else if(L==='eiffel'){ // wrought-iron lattice tower: splayed legs with arches, three platforms and a spire
+        const h=88,lc='#7a5a3e';
+        for(let i=0;i<h;i++){const t=i/h,w=Math.round(27*Math.pow(1-t,2.15))+1,arch=i<16?Math.round(w*.55*Math.sqrt(1-(i/16)**2)):0,band=i<32?Math.max(2,Math.round(w*.38)):w;
+          for(let x=-w;x<=w;x++){const ax=Math.abs(x);if(ax<arch)continue;const edge=ax>=w-1||(arch&&ax===arch);const inLeg=i>=32||ax>=w-band;
+            if(edge||(inLeg&&((x+i)%3===0||(x-i)%3===0)))pb.put(lx+x,ly-i,col(lc,x<0?.08:-.22));}}
+        const wAt=i=>Math.round(27*Math.pow(1-i/h,2.15))+1;
+        for(const[i,e]of[[16,3],[32,2],[66,1]]){pb.box({cx:lx,cy:ly-i+wAt(i)/2,hw:Math.round(wAt(i)*.8)+e,h:2,L:(a)=>col(a%2<1?'#6a4a34':'#8a6a4a'),R:(a)=>col(a%2<1?'#4a3426':'#6a4e38')});lights.push([lx-wAt(i),ly-i],[lx+wAt(i),ly-i]);}
+        for(let i=0;i<8;i++)pb.put(lx,ly-h-i,col('#9aa3ad'));lights.push([lx,ly-h-6]);}
+      else if(L==='colosseum'){ // elliptical amphitheatre: three arcaded tiers, an attic storey, the broken back-right rim and the seating bowl
+        const r0=29,hT=28;
+        const ruin=(dx,dy,x,b)=>dx>.12&&dy<.3&&b>hT-Math.round(14*(dx-.12)/.88)-(hash(x,0,9)<.3?2:0);
+        for(let b=0;b<=hT;b++)pb.ell(lx,ly-b,r0,(dx,dy,x)=>{if(ruin(dx,dy,x,b))return null;
+          if(b===hT||(dy<-.2&&b>3))return col('#c8a878',dx<0?.08:-.15);
+          const tier=Math.min(3,Math.floor(b/7.5)),tb=b-tier*7.5,m=((x%4)+4)%4,sh=dx<-.5?.12:dx<.2?0:dx<.6?-.16:-.28;
+          if(tb<1)return col('#b89870',sh);
+          if(tier<3&&tb>1.5&&tb<6.3&&m>=1&&m<=2&&!(tb>5.4&&m!==1.5))return[col('#5a4632',sh*.5),col(tier===0?'#ffb060':'#5a4632',sh*.5)];
+          if(tier===3&&tb>2.5&&tb<4&&m===1)return col('#6a5642');return col(m===0?'#cfae80':'#dcbc8e',sh);});
+        pb.ell(lx,ly-hT,r0-3,(dx,dy,x)=>{if(ruin(dx,dy,x,hT))return null;const r=Math.hypot(dx,dy);if(r<.42)return col('#d8b880',(x%3===0)?-.06:0);if(r<.48)return col('#8a7050');
+          return col('#a88a68',(Math.floor(r*16)%2?-.12:.04)+(dy<0?-.1:0));});
+        lights.push([lx-20,ly+6],[lx+20,ly+6],[lx,ly+12]);}
+      else if(L==='castle'){ // fairy-tale castle on a rock: white palace, slender turrets with blue spires, a crenellated gatehouse
+        B(lx,ly+3,30,5,'#8a8478',{f:(a,b)=>hash(a|0,b|0,4)<.3?'#7a7468':'#8a8478',T:'#7a8a5a'});
+        const wall=(a,b)=>b>2&&(b%6)>2&&(b%6)<5&&a%4>1.2&&a%4<2.8?{w:'#3c4658'}:'#eef0f3';
+        tower(lx-17,ly-1,3.6,30,'#eef0f3',{win:(dx,b)=>b%8>3&&b%8<6&&Math.abs(dx)<.3});cone(lx-17,ly-31,4.6,12,'#4a6fd0');
+        B(lx-2,ly-3,17,24,'#eef0f3',{f:wall,T:false});pb.roof(lx-2,ly-27,18,12,'#5a6a8a');gable(lx-2,ly-3,17,24,9,'#eef0f3',0,'#e4e6ea');
+        tower(lx+10,ly-6,4.4,48,'#eef0f3',{win:(dx,b)=>b%8>3&&b%8<6&&Math.abs(dx)<.35});pb.ell(lx+10,ly-54,5.6,()=>col('#d8dce2'));cone(lx+10,ly-55,5.4,17,'#4a6fd0');
+        tower(lx+21,ly+3,3,24,'#eef0f3',{win:(dx,b)=>b%7>3&&b%7<5&&Math.abs(dx)<.3});cone(lx+21,ly-21,3.8,10,'#4a6fd0');
+        B(lx+2,ly+11,9,9,'#e4e6ea',{f:(a,b,f)=>!f&&Math.abs(a-4.5)<2&&b<6?'#3a3028':b>7&&a%2<1?null:'#e4e6ea',T:false});
+        tower(lx-7,ly+12,2.6,16,'#eef0f3');cone(lx-7,ly-4,3.4,8,'#4a6fd0');
+        flag(lx+10,ly-72,7);lights.push([lx+2,ly+8],[lx-17,ly-20]);}
+      else if(L==='windmill'){ // canal houses with stepped gables, tulip beds and a brick-and-timber smock mill (sails turn)
+        for(const[ox,oy,c,h]of[[-24,-6,'#8a3a2a',16],[-15,-10,'#5a4a3a',19],[-6,-14,'#9a5a3a',15]]){B(lx+ox,ly+oy,5,h,c,{win:(a,b)=>b>2&&b%5>1&&b%5<3.5&&a%2.5>.8,wc:'#f4f1ea'});
+          for(let k=0;k<4;k++)gable(lx+ox,ly+oy-k*0,5,h+k*2,1.6,c,1);gable(lx+ox,ly+oy,5,h,6,c,0);}
+        for(const[ox,oy,hw]of[[-20,9,12],[22,7,11]])pb.diamond(lx+ox,ly+oy,hw,(u,v)=>col(['#e4002b','#ffcc00','#ff7f00','#e05fa0'][Math.min(3,u*4|0)],(v*10|0)%2?-.14:.05));
+        const mx=lx+8;tower(mx,ly+1,9,10,'#8a3a2a',{win:(dx,b)=>b>3&&b<7&&Math.abs(dx+.3)<.2,band:b=>b%2<1,bc:'#7a3022'});
+        pb.ell(mx,ly-9,12,(dx,dy)=>col('#5a4030',Math.hypot(dx,dy)>.85?-.2:0));
+        for(let b=0;b<24;b++)pb.ell(mx,ly-9-b,8-b*.16,(dx,dy,x)=>b%8>3&&b%8<6&&Math.abs(dx+.2)<.15?lit('#2c3446'):col(Math.abs(dx)>.92?'#3a4a38':'#56664e',(x%3===0?-.08:0)+(dx<-.4?.12:dx<.2?0:-.24)));
+        for(let k=0;k<7;k++)pb.ell(mx,ly-33-k,4.6*(1-k/8)+.5,dx=>col('#6a5040',dx<0?.1:-.2));pb.put(mx-3,ly-24,lit('#2c3446'));lights.push([mx-4,ly-12]);}
+      else if(L==='pyramid'){ // the great pyramid with stone courses and a gilded cap, a crouching sphinx and an obelisk
+        const n=46;for(let i=0;i<n;i++){const hw=32*(1-i/n)+.5;pb.box({cx:lx-2,cy:ly+2-i,hw,h:2,L:()=>col(i>n-6?'#f2c14b':'#e2c27a',i%3===0?-.1:0),R:()=>col(i>n-6?'#d8a83a':'#c09a52',i%3===0?-.1:0)});}
+        const sx=lx+20,sy=ly+12;B(sx,sy,8,4,'#d4b070',{T:'#dcbc80'});B(sx-6,sy-2,3,7,'#d4b070',{T:'#c8a060'});for(let k=0;k<3;k++)pb.put(sx-8+k,sy-7,col('#3a6fd0',-.1));pb.put(sx-7,sy-5,col('#3a3028'));
+        B(lx-22,ly+12,1.6,22,'#d8c098',{T:false});cone(lx-22,ly-10,1.8,4,'#f2c14b');
+        palm(lx-30,ly+6,14);palm(lx+30,ly+2,13);lights.push([lx-2,ly-40]);}
+      else if(L==='mpyramid'){ // nine stepped terraces with stair ramps on both faces and a temple on top, jungle around
+        for(let k=0;k<9;k++){const hw=27-k*2.3;B(lx,ly+3-k*4,hw,4,'#b8b09a',{f:(a,b)=>Math.abs(a-hw/2)<2.2?(Math.floor(b*2)%2?'#d4ccb4':'#bcb49c'):b<1?'#8a8270':a%4<1?'#a8a08a':'#b8b09a',T:k===8?'#c8c0a8':'#a8a08a'});}
+        const ty=ly+3-36;B(lx,ty,6,8,'#b8b09a',{f:(a,b)=>Math.abs(a-3)<1.2&&b<5?'#3a3028':b>6?'#c65b43':'#b8b09a',T:'#c8c0a8'});
+        for(const s of[-1,1])for(let i=0;i<4;i++)pb.put(lx+s*(i+1),ty-8-(i%2),col('#c65b43'));lights.push([lx,ty-3]);}
+      else if(L==='taj'){ // white marble mausoleum: great arched iwans, chhatris, a bulbous dome, four minarets, a reflecting pool
+        B(lx,ly+3,30,3,'#f4f1ea',{T:'#fbfaf6'});
+        for(const[ox,oy]of[[-26,3],[0,-10]]){tower(lx+ox,ly+oy,1.9,34,'#f4f1ea',{band:b=>b===12||b===24,bc:'#d8d4cc'});pb.ell(lx+ox,ly+oy-12,2.8,()=>col('#e8e4dc'));pb.ell(lx+ox,ly+oy-24,2.8,()=>col('#e8e4dc'));dome(lx+ox,ly+oy-34,2.4,3,'#f6f4ee',{onion:1,tip:2});}
+        const iw=(a,b,f)=>{const hw=16,d=Math.abs(a-hw/2);if(d<4&&b<13-d*d*.18)return d<2.5&&b<6?{w:'#8a7a60'}:'#c8c2b4';if(d<5&&b<14.5)return'#e0dacc';if(b>2&&b<6&&a%5>1.5&&a%5<3.5)return'#d4cec0';return b>14?'#ffffff':'#f6f4ee';};
+        B(lx,ly,16,16,'#f6f4ee',{f:iw});for(const[ox,oy]of[[-11,-16],[11,-16],[0,-21]]){tower(lx+ox,ly+oy,2.6,3,'#f6f4ee');dome(lx+ox,ly+oy-3,3.2,4,'#f6f4ee',{onion:1,tip:2});}
+        tower(lx,ly-16,8.5,4,'#f6f4ee');dome(lx,ly-20,11,21,'#f6f4ee',{onion:1,tip:6});
+        tower(lx+26,ly+3,1.9,34,'#f4f1ea',{band:b=>b===12||b===24,bc:'#d8d4cc'});pb.ell(lx+26,ly-9,2.8,()=>col('#e8e4dc'));pb.ell(lx+26,ly-21,2.8,()=>col('#e8e4dc'));dome(lx+26,ly-31,2.4,3,'#f6f4ee',{onion:1,tip:2});
+        lights.push([lx,ly+8]);}
+      else if(L==='onion'){ // red-brick cathedral base with white arcades, a tented central spire and swirling striped onion domes
+        B(lx,ly+3,24,10,'#b8442e',{f:(a,b)=>b>8?'#f4f1ea':a%5<1?'#f4f1ea':b>2&&b<7&&a%5>1.8&&a%5<3.4?{w:'#5a3028'}:'#b8442e',T:'#a83a26'});
+        const drum=(x,y,h,c,s,r=4.6)=>{tower(x,y,r-1,h,'#c85a3a',{band:b=>b%5<1,bc:'#f4f1ea',win:(dx,b)=>b%5>1.5&&b%5<3.5&&Math.abs(dx)<.25,wc:'#4a2a22'});dome(x,y-h,r,11,c,{onion:1,stripe:s,spiral:1.4,tip:4});};
+        drum(lx,ly-12,10,'#2f8f5b','#f2c14b');
+        tower(lx,ly-6,5,16,'#e8dcc8',{band:b=>b%4<1,bc:'#c85a3a'});cone(lx,ly-22,6,24,'#e8dcc8',(b,dx)=>(Math.floor(b/3)+Math.floor(dx*3+3))%2?'#2f8f5b':'#f2c14b');dome(lx,ly-46,2.4,5,'#f2c14b',{onion:1,tip:3});
+        drum(lx-13,ly-4,9,'#d52b1e','#f4f1ea');drum(lx+13,ly-4,9,'#0039a6','#f4f1ea');
+        drum(lx-7,ly+6,6,'#e0a82a','#2f8f5b',4);drum(lx+7,ly+6,6,'#e05f2a','#2f8f5b',4);lights.push([lx,ly+10]);}
+      else if(L==='temple'){ // marble temple with fluted columns, triglyph frieze and pediment, beside a pool with a twisting slide
+        pb.diamond(lx+20,ly+11,14,(u,v,x,y)=>col((x+y*2)%9===0?'#bfe6f8':'#5fb0e8',(u<.1||v<.1||u>.9||v>.9)?.4:0));
+        for(let k=0;k<3;k++)B(lx-8,ly+2-k,25-k,1,'#ece8de',{T:'#f6f4ee'});
+        const colm=(a,b)=>b>=13?(b>=15?'#f4f1ea':(Math.floor(a)%3===0?'#8a8478':'#e8e4da')):a%4<1.6?(a%4<.7?'#ffffff':'#e8e4da'):'#6a6458';
+        B(lx-8,ly-1,22,16,'#f4f1ea',{f:colm});pb.roof(lx-8,ly-17,23,4,'#e8e4da');gable(lx-8,ly-1,22,16,6,'#f4f1ea',1,'#d8d4ca');
+        const tx=lx+28,tyy=ly+2;B(tx,tyy,2.5,22,c1,{T:'#f4f1ea'});
+        for(let k=0;k<64;k++){const q=k/64,a=q*Math.PI*4,x=tx+Math.cos(a)*5-q*8,y=tyy-22+q*20+Math.sin(a)*2.5;pb.put(Math.round(x),Math.round(y),col('#f2c14b',Math.sin(a)<0?-.25:.1));pb.put(Math.round(x),Math.round(y)+1,col('#d89a1a',-.2));}
+        cypress(lx-30,ly+4);cypress(lx+2,ly+14,'#4a7a3a',10);lights.push([lx-8,ly+4],[lx+20,ly+11]);}
+      else if(L==='sugarloaf'){ // two jungle-clad granite peaks joined by a cable car, a carnival stage at their feet
+        const peak=(x,y,r,h)=>{for(let b=0;b<h;b++){const t=b/h,rr=r*Math.pow(1-t,.55)*(t<.1?1:1);pb.ell(x,y-b,Math.max(.8,rr),(dx,dy,px)=>{const rock=t>.38+hash(px,b,3)*.25;
+            return col(rock?(hash(px,b,5)<.2?'#6a6a62':'#8a8478'):(hash(px,b,6)<.35?'#2f7a3a':'#3f8f45'),dx<-.4?.14:dx<.2?0:-.26);});}};
+        peak(lx+8,ly,22,54);peak(lx-18,ly+6,11,24);
+        for(const[x,y]of[[lx+8,ly-54],[lx-18,ly-18]])B(x,y,3,3,'#e8e4da',{win:(a,b)=>b>1&&a%2<1});
+        pb.line(lx-18,ly-22,lx+8,ly-57,col('#3a3f48'));
+        B(lx-14,ly+13,9,5,c2,{f:(a,b)=>b>3?(Math.floor(a)%2?c1:c3):c2,T:c1});for(let i=0;i<18;i++)pb.put(lx-24+i,ly+2+(i%6<3?i%3:3-i%3),col([c1,c2,'#e05fa0','#4fb0e0'][i%4]));
+        lights.push([lx-14,ly+8]);}
+      else if(L==='opera'){ // granite podium with wide steps, ribbed white sail shells over lit glass walls, a harbour edge
+        pb.diamond(lx+22,ly+13,13,(u,v,x,y)=>col('#3a7ac0',(x+y*3)%11===0?.4:0));
+        B(lx-2,ly+4,28,6,'#c89a70',{f:(a,b)=>b<3&&Math.floor(b*2)%2?'#b8865a':'#c89a70',T:'#d8aa80'});
+        const shell=(x,y,s,lean)=>{for(let k=-2;k<=2;k++)for(let i=0;i<3;i++)pb.put(x+k+Math.round(s*.25),y-i,lit('#3c4658'));
+          for(let i=0;i<s;i++){const w=Math.round((s-i)*.6);for(let k=-w;k<=w;k++){const px=x+k+Math.round(i*lean),py=y-i;pb.put(px,py,col(k<0?'#fbfaf6':'#e2e0d8',(i%3===0?-.08:0)+(Math.abs(k)===w?-.15:0)+((k+i)%4===0?-.04:0)));}}};
+        for(const[ox,oy,s,l]of[[2,-3,23,.4],[-8,0,19,.38],[10,0,16,.38],[-16,4,13,.35],[17,4,10,.35]])shell(lx+ox,ly+oy,s,l);
+        lights.push([lx-6,ly+4],[lx+6,ly+4]);}
+      else if(L==='stupa'){ // Thai ordination hall with layered red-and-green roofs and gold finials, behind it a gilded bell chedi
+        const cx2=lx+10,cy2=ly-4;for(const[hw,h]of[[13,3],[11,3],[9,2]]){B(cx2,cy2+2-(13-hw)*1.2,hw,h,'#f4efe2',{T:'#fbfaf6'});}
+        for(let b=0;b<16;b++){const t=b/16,r=9*Math.sin((.25+t*.75)*Math.PI*.55+.6)*(1-t*.45);pb.ell(cx2,cy2-7-b,Math.max(.8,r),dx=>col('#e8b830',dx<-.4?.22:dx<.2?0:-.24));}
+        for(let i=0;i<9;i++)pb.ell(cx2,cy2-23-i*1.6,Math.max(.6,3.6-i*.38),dx=>col(i%2?'#f2c14b':'#d8a020',dx<0?.15:-.2));for(let i=0;i<12;i++)pb.put(cx2,cy2-37-i,col('#f6d860',i%3?0:.25));
+        const hx=lx-10,hy=ly+8;B(hx,hy,13,8,'#f4efe2',{win:(a,b)=>b>1&&b<6&&a%4>1.3&&a%4<2.7,wc:'#c8901a'});
+        pb.roof(hx,hy-8,16,6,'#c8282a');pb.roof(hx,hy-12,12,7,'#2a8a6a');pb.roof(hx,hy-16,8,7,'#c8282a');
+        for(const s of[-1,1]){pb.put(hx+s*17,hy-9,col('#f2c14b'));pb.put(hx+s*13,hy-13,col('#f2c14b'));pb.put(hx+s*9,hy-17,col('#f2c14b'));pb.put(hx+s*9,hy-18,col('#f2c14b',.2));}
+        lights.push([hx,hy-2],[cx2,cy2-20]);}
+      else if(L==='spires'){ // sandstone basilica: a sculpted portal with a rose window, honeycombed bell towers with coloured finials
+        const stone='#c8b08a';
+        tower(lx+4,ly-10,4.2,64,stone,{win:(dx,b)=>b%4<1&&Math.abs(dx)<.6,wc:'#7a6648'});dome(lx+4,ly-74,3.6,7,'#d8c098',{tip:4,tc:'#f2c14b'});
+        B(lx,ly+2,18,22,stone,{f:(a,b)=>{const d=Math.abs(a-9);if(d<4&&b<14-d*.8)return d<2.2&&b<8?'#4a3a2a':'#a89070';if(d<3&&b>16&&b<21)return{w:'#c8402a'};return(Math.floor(a*1.5)+Math.floor(b))%5===0?'#b89e76':stone;}});
+        gable(lx,ly+2,18,22,7,stone,0,'#b89e76');
+        const fin=[c1,'#f2c14b','#3a8fd0','#2a8a4a'];
+        [[-15,4,40],[-10,7,48],[-4,10,50],[1,13,42]].forEach(([ox,oy,h],k)=>{const x=lx+ox,y=ly+oy-8;tower(x,y,2.3,h,stone,{win:(dx,b)=>b%3<1&&Math.abs(dx)<.5,wc:'#7a6648'});
+          cone(x,y-h,2.3,8,stone);for(let i=0;i<3;i++)pb.put(x+(i-1),y-h-8,col(fin[(k+i)%4]));pb.put(x,y-h-9,col(fin[k]));pb.put(x,y-h-10,col('#ffffff'));});
+        lights.push([lx-5,ly+8]);}
+      else if(L==='maple'){ // log lodge with a stone chimney among blazing maples, a slender observation tower with a saucer pod
+        const tx=lx+14,ty=ly-8;tower(tx,ty,2.6,62,'#d8d4cc',{band:b=>b%10<1,bc:'#c8c4bc'});
+        for(let b=0;b<6;b++)pb.ell(tx,ty-50-b,b<1||b>4?7.5:8,(dx)=>b>1&&b<4?lit('#3c4658',dx>.2?-.2:0):col('#e8e4dc',dx<0?.1:-.2));
+        for(let i=0;i<12;i++)pb.put(tx,ty-56-i,col(i%4<2?'#d80621':'#ffffff'));lights.push([tx,ty-53]);
+        tree(lx-20,ly-6,'#e05a1e',7,4);tree(lx+30,ly+2,'#f0a020',6,3);
+        const hx=lx-6,hy=ly+5;B(hx,hy,15,10,'#8a5a34',{f:(a,b)=>b>2&&b<7&&a%6>2&&a%6<4.5?{w:'#3a2a1e'}:Math.floor(b)%2?'#7a4e2c':'#946238'});
+        pb.roof(hx,hy-10,18,9,'#a83a2a');B(hx-8,hy-6,2,14,'#8a8478',{T:'#6a6a62'});
+        tree(lx-28,ly+10,'#d80621',5,3);tree(lx+20,ly+14,'#e8481e',5,3);lights.push([hx,hy+4]);}
+      else if(L==='balloon'){ // a valley of fairy chimneys: banded tuff cones with dark basalt caps and cave windows
+        [[-14,-8,32,7],[-2,-12,40,8],[11,-6,34,7],[21,3,24,6],[-21,5,22,6],[4,7,18,5]].forEach(([ox,oy,h,r],k)=>{const x=lx+ox,y=ly+oy;
+          for(let b=0;b<h;b++){const t=b/h,rr=r*(1-t*.55)+(t<.15?1.2*(1-t/.15):0);pb.ell(x,y-b,Math.max(.8,rr),(dx,dy,px)=>{
+            if(Math.abs(dx+.25)<.18&&b%9>3&&b%9<6&&b<h-4)return hash(k,b,2)<.5?lit('#3a2a22'):col('#3a2a22');return col(Math.floor(b/3)%2?'#e0c098':'#d4b088',dx<-.4?.14:dx<.2?0:-.26);});}
+          for(let i=0;i<6;i++)pb.ell(x,y-h-i,Math.max(.6,(r*.45+1.6)*(1-i/6)),dx=>col('#6a5040',dx<0?.1:-.22));});
+        lights.push([lx-2,ly-14]);}
+      if(full){lamp(...R(-9,14));lamp(...R(9,14));flag(...R(-40,4),16);flag(...R(33,4),16);plant(...R(-24,11),0);plant(...R(24,11),0);
+        people(...R(0,17),5,th.l.length);people(...R(-14,6),3,th.l.length+3);}
+      return mk(pb,-48,48-H,true,{lights});};
+    SP.theme=THEMES.map(th=>{const sp=build(th,true),ic=build(th,false);sp.th=th;
+      const c=document.createElement('canvas');c.width=ic.w;c.height=ic.h;const g=c.getContext('2d');g.drawImage(ic.c,0,0);themeAnimDraw(g,th,1,48,H-24,0,false);sp.icon={c,w:ic.w,h:ic.h};return sp;});
+  }
+  ;yield;
   { // airports (5x5): terminal, tower and apron at the back, a taxiway, and a 5-tile runway along the front. [0] 공항, [1] 우주공항
     const ng=(h,t=0)=>[col(h,t),col(h,.4)],AS=5;
     SP.tarmac=[0,1].map(f=>{const out=[];for(let ty=0;ty<AS;ty++)for(let tx=0;tx<AS;tx++)out.push(G((u,v,x,y)=>{const U=tx+u,V=ty+v;
@@ -1191,6 +1461,7 @@ function buildSprites(){
         if((x>0&&solid(k-1))||(x<W0-1&&solid(k+1))||(y>0&&solid(k-W0))||(y<H0-1&&solid(k+W0)))out.push(k);}
       for(const k of out)pb.put(k%W0,k/W0|0,col('#3c4352',0,170));
       const nx=CX+(.5*L*sg)*16,ny=CY+(.5*L*sg)*8-zcAt(.5);return mk(pb,-CX,-CY,true,{nose:[Math.round(nx),Math.round(ny)]});}));}
+  ;yield;
   { // broadcast tower
     const H=104,pb=new PB(32,H),cx=16,cy=H-8;
     pb.box({cx,cy:cy-1,hw:6,h:3,L:()=>col('#c9ccd2'),R:()=>col('#c9ccd2',-.25),T:()=>col('#dfe2e6')});
@@ -1198,6 +1469,7 @@ function buildSprites(){
     for(let b=0;b<9;b++){const r=b<3?3+b*1.6:b<6?7.6:7.6-(b-5)*1.8;pb.ell(cx,cy-60-b,r,(dx,dy,x)=>b>=3&&b<5?winC(x,0,2901,.85,'#3e6a8f'):col('#dfe3e8',dx<-.3?.12:dx<.3?0:-.25));}
     for(let i=0;i<18;i++)pb.put(cx,cy-69-i,col('#d8dde3'));
     SP.tower=mk(pb,-16,16-H,true,{blink:[[cx,cy-87,'#ff4a4a']],lights:[[cx,cy-64]]}); }
+  ;yield;
   { const H=58,pb=new PB(32,H),cx=16,cy=H-8,o=col('#e8912d'),od=col('#b86a1e'),yl=col('#f2c230'),yd=col('#c8961a');
     pb.box({cx,cy:cy-1,hw:10,h:4,L:()=>col('#b8b2a8'),R:()=>col('#b8b2a8',-.25),T:()=>col('#cfc9bf')});
     pb.box({cx,cy:cy-1,hw:10,h:14,L:(a,b)=>b>=4&&(a<1||a>=9||b%4<.9)?o:null,R:(a,b)=>b>=4&&(a<1||a>=9||b%4<.9)?od:null});
@@ -1207,6 +1479,7 @@ function buildSprites(){
     SP.cons=mk(pb,-16,16-H); }
 
   /* cars: 4 directions × 7 colours, head/tail lights glow in the night layer */
+  ;yield;
   const carX=["tl....","dwll..",".ddwll","...ddh"],carY=["....lt","..llwd","llwdd.","hdd..."];
   const CARS=['#e84f4f','#f2f2f2','#3f7fe0','#f2c140','#57b86a','#39404f','#e8884a'];
   SP.carOld=CARS.map(c=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);
@@ -1215,6 +1488,7 @@ function buildSprites(){
     return mk(pb,-3,-3);}));
   // modern traffic: sedans in many colours, a taxi, a city bus and a delivery truck
   const halo=hex=>{const pb=new PB(13,7);for(let y=0;y<7;y++)for(let x=0;x<13;x++){const d=Math.hypot((x+.5-6.5)/6.5,(y+.5-3.5)/3.5);if(d<1)pb.put(x,y,col(hex,0,Math.round(150*(1-d)**1.5)));}return mk(pb,0,0,false);};
+  ;yield;
   SP.sirR=halo('#ff3a3a');SP.sirB=halo('#3a7dff');
   SP.emer=[null,null,null,[carPolice(),carAmbulance(),carFire()],[carPolice(),carAmbulance(),carFire()],
     [carHover('#1e2a4a','#4a7dff',1),carHover('#f6f6f2','#ff4a4a',1),carHover('#d8302a','#ffb040',1)]];   // [era][police, ambulance, fire]
@@ -1244,6 +1518,7 @@ function buildSprites(){
     for(let v=0;v<3;v++)add(0,I,1,mk1(40,(pb,cx,cy)=>{cone(pb,cx+6,cy-2,4,8,['#7a5a3a','#8a6a48','#6a4a30'][v]);posts(pb,[[cx-8,cy+1],[cx-1,cy-3]],8,'#5a3a22');pb.line(cx-8,cy-7,cx-1,cy-10,col('#5a3a22'));
       for(let k=0;k<3;k++){const x=cx-7+k*2,y=cy-7-k;for(let j=1;j<4;j++)pb.put(x,y+j,col(['#9a6a40','#c9a070','#7a4a2a'][(k+v)%3]));}
       pb.ell(cx-2,cy+4,2.5,dx=>col('#9a958c',dx>0?-.2:0));pb.ell(cx-2,cy+3,1.5,()=>col('#b0aba0'));}));
+    ;yield;
     SP.firepit=mk1(36,(pb,cx,cy)=>{for(let k=0;k<12;k++){const a=k/12*6.283,x=Math.round(cx+Math.cos(a)*5),y=Math.round(cy+Math.sin(a)*2.5);pb.put(x,y,col('#8f8a80',Math.sin(a)>0?-.15:.1));}
       pb.ell(cx,cy,3.5,()=>col('#2a2420'));[[cx-10,cy+1],[cx+9,cy-1],[cx-1,cy+6]].forEach(([x,y])=>{for(let i=-2;i<=2;i++)pb.put(x+i,y,col('#7a5233',i&1?-.15:0));});},(cx,cy)=>({em:[[cx,cy-6,'smoke']]}));
     SP.parkE=[[],[],[]];
@@ -1270,6 +1545,7 @@ function buildSprites(){
       posts(pb,[[cx-1,cy-1]],9,'#6a4428');pb.line(cx-4,cy-6,cx+2,cy-6,col('#6a4428'));pb.put(cx-1,cy-10,col('#c0503a'));pb.put(cx,cy-10,col('#c0503a'));}));
     for(let v=0;v<3;v++)add(1,I,2,mk1(48,(pb,cx,cy)=>{choga(pb,cx+3,cy-3,7,5,'#b89a70');pb.roof(cx+3,cy-8,9,5,STRAW[v]);
       pb.cyl(cx-6,cy+1,3,7,side('#a0623a'),()=>[col('#3a2a20'),col('#ff9a3a')]);pb.box({cx:cx-1,cy:cy+5,hw:1.5,h:2,L:()=>col('#555'),R:()=>col('#444'),T:()=>col('#777')});},(cx,cy)=>({em:[[cx-6,cy-7,'smoke']]})));
+    ;yield;
     SP.well=mk1(42,(pb,cx,cy)=>{pb.cyl(cx,cy-1,4.5,3,side(STONE),(dx,dy)=>dx*dx+dy*dy>.55?col('#c9c4ba'):col(PAL.w1,-.2));posts(pb,[[cx-5,cy-1],[cx+5,cy-1]],9);
       pb.line(cx-5,cy-9,cx+5,cy-9,col('#6a4428'));pb.roof(cx,cy-11,7,4,STRAW[0]);for(let i=0;i<3;i++)pb.put(cx+1,cy-8+i,col('#8a7a6a'));pb.put(cx+1,cy-5,col('#6a4428'));});
     SP.parkE[1].push(mk1(52,(pb,cx,cy)=>{treeInto(pb,cx,cy+1,0,7,77);pb.box({cx:cx-6,cy:cy+3,hw:3,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});
@@ -1285,6 +1561,7 @@ function buildSprites(){
           if(b>=1.5&&b<h-1.5&&(a|0)%5>=1&&(a|0)%5<4)return[col('#efe2c0',-.05),col('#ffcf7a')];return col(HW);},
         R:(a,b)=>{if((a|0)%5===0||b<1||b>=h-1)return col(WOOD,-.25);if(b>=1.5&&b<h-1.5&&(a|0)%5>=2&&(a|0)%5<4)return[col('#efe2c0',-.3),col('#ffcf7a')];return col(HW,-.22);}});};
     const giwa=(pb,cx,cy,hw,rh,hex=TILE)=>{pb.roof(cx,cy,hw,rh,hex);pb.put(cx-hw,cy-1,col(hex,.12));pb.put(cx-hw+1,cy-1,col(hex,.05));pb.put(cx+hw-1,cy-1,col(hex,-.15));pb.put(cx+hw-2,cy-1,col(hex,-.15));};
+    ;yield;
     SP.E[2][R][1]=SP.E[1][R][1];
     for(let v=0;v<4;v++)add(2,R,2,mk1(48,(pb,cx,cy)=>{hanok(pb,cx,cy-1,10,6,v*7);giwa(pb,cx,cy-8,13,7);if(v===1)pots(pb,cx+9,cy+4,3,'#4a2e22');if(v===2)treeInto(pb,cx-12,cy+2,1,3,v+120);}));
     for(let v=0;v<3;v++)add(2,R,3,mk1(52,(pb,cx,cy)=>{hanok(pb,cx+4,cy-4,8,6,v*11);giwa(pb,cx+4,cy-11,10,6);hanok(pb,cx-6,cy+1,6,5,v*11+3);giwa(pb,cx-6,cy-5,8,6);
@@ -1297,6 +1574,7 @@ function buildSprites(){
     SP.E[2][I][1]=SP.E[1][I][2];
     for(let v=0;v<3;v++)add(2,I,2,mk1(48,(pb,cx,cy)=>{for(let k=0;k<4;k++)dome(pb,cx-9+k*5,cy+3-k*2.5,3.6,3,'#9a5a3a');
       pb.cyl(cx+11,cy-7,1.6,6,side('#7a4a2a'),()=>col('#2a1a12'));for(let k=0;k<3;k++)pb.box({cx:cx-8+k,cy:cy-5-k,hw:1.5,h:2,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col('#a07a50')});},(cx,cy)=>({em:[[cx+11,cy-14,'smoke']]})));
+    ;yield;
     SP.police2=mk1(52,(pb,cx,cy)=>{hanok(pb,cx+3,cy-3,8,6,41);giwa(pb,cx+3,cy-10,10,6);posts(pb,[[cx-10,cy+1],[cx-4,cy+4]],12,'#c0392b');
       pb.line(cx-10,cy-10,cx-4,cy-7,col('#c0392b'));for(let k=0;k<4;k++)pb.put(cx-9+k*1.6|0,cy-11+k*.8|0,col('#c0392b',.2));});
     SP.seodang=mk2(64,(pb,cx,cy)=>{hanok(pb,cx+6,cy-6,14,7,51);giwa(pb,cx+6,cy-14,17,8);
@@ -1329,6 +1607,7 @@ function buildSprites(){
     for(let v=0;v<3;v++)add(3,C,3,mk1(78,(pb,cx,cy)=>{const wall=BR[(v+1)%4];const f=t=>(a,b,hw,h)=>{if((b|0)%6===0)return col('#efe8d8',t);if(b<5)return(a|0)%3===0?col('#efe8d8',t):winC(a|0,0,v*43+440,.9,'#5a7ea3');
         if((a|0)%4>=1&&(a|0)%4<3&&(b%6)>=1.5&&(b%6)<4.5)return winC(Math.floor(a/4)+(t?40:0),Math.floor(b/6),v*43+440,.55,'#4f6f8f');return brick(wall,t)(a,b);};
       pb.box({cx,cy:cy-1,hw:12,h:24,L:f(0),R:f(-.24),T:()=>col('#6a6a70')});pb.box({cx,cy:cy-25,hw:3,h:7,L:(a,b)=>b>2&&b<5&&a>.8&&a<2.4?[col('#ffffff'),col('#fff6c0')]:col('#efe8d8'),R:()=>col('#efe8d8',-.25)});pb.roof(cx,cy-32,4,4,'#3f4a5a');}));
+    ;yield;
     SP.E[3][I]=SP.bld[I];
     SP.station=mk2(92,(pb,cx,cy)=>{const fac=t=>(a,b,hw,h)=>{if(b>=h-1.5||(b|0)===5)return col('#efe8d8',t);if(b>=1.5&&b<4.5&&(a|0)%4>=1&&(a|0)%4<3)return winC(a>>2,0,4001,.85,'#4f6f8f');
         if(b>=7&&b<h-3&&(a|0)%4>=1&&(a|0)%4<3)return winC(a>>2,1,4001,.7,'#4f6f8f');return brick('#a8553d',t)(a,b);};
@@ -1343,6 +1622,7 @@ function buildSprites(){
       dirt:[0,1].map(v=>G((u,w,x,y)=>col('#9a7a50',hash(x,y,v+75)<.12?-.15:0)))};
     const roadSet=fn=>{const out=[];for(let m=0;m<16;m++){const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};out.push(G((u,v,x,y)=>fn(inB,u,v,x,y)));}return out;};
     const dirtRoad=(base,edge,w0)=>roadSet((inB,u,v,x,y)=>{if(inB(u,v,w0))return col(base,hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0);if(inB(u,v,w0+.08))return col(edge,hash(x,y,83)<.4?0:-.1);return col(PAL.g1,hash(x,y,84)<.06?.1:0);});
+    ;yield;
     SP.roadE=[dirtRoad('#a8865a','#7a8a44',.2),dirtRoad('#b0905e','#8a8a4a',.24),
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.27))return col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04);if(inB(u,v,.33))return col('#8a8478');return col(PAL.g1,hash(x,y,85)<.06?.1:0);}),
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.3))return col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04);if(inB(u,v,.37))return col('#a9a49a',hash(x,y,86)<.1?-.1:0);return col(PAL.side,hash(x,y,87)<.1?-.06:0);})];
@@ -1371,6 +1651,7 @@ function buildSprites(){
         if(step){P(2,8,pa);P(4,8,paD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,pa);P(2,8,paD);P(3,9,shoe);P(2,9,shoe);}
         const sp=mk(pb,-3,-10);sp.g=0;return sp;};
       return[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});};
+    ;yield;
     SP.walker=walker;
     SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
       [...['#e8e0c8','#c9b896'].map(b=>walker(b)),handCart(),handCart('#c9b896')],
@@ -1443,6 +1724,7 @@ function buildSprites(){
     for(let v=0;v<2;v++)add(5,I,4,mk1(80,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f6f9fc',t);const k=b%5;if(k<1)return col(SH,t);if((a|0)%3===0)return col(SH,t-.05);
         return k<2.2?col(LEAF,t+(hash(a|0,b|0,v)<.3?.15:0)):[col('#9fe0e8',t),col('#ff8ad8',.1)];};
       pb.box({cx,cy:cy-1,hw:11,h:36,L:f(0),R:f(-.24),T:fRoof});for(const x of[-5,4])pb.cyl(cx+x,cy-38+(x>0?2:0),2,5,side('#c9d2dc'),()=>neon(NEON));}));
+    ;yield;
     SP.parkF=[mk1(48,(pb,cx,cy)=>{pb.ell(cx,cy+2,6,()=>col('#1c2a3a',0,70));pb.cyl(cx,cy+1,4,1,()=>neon(NEON),()=>neon(NEON));
         for(let b=0;b<6;b++)pb.ell(cx,cy-8+b,8-b*1.2,(dx)=>col('#8a7a6a',dx>.2?-.25:.05));pb.ell(cx,cy-9,8,(dx,dy,x,y)=>col(LEAF,hash(x,y,3)<.2?.15:0));
         treeInto(pb,cx-2,cy-9,0,4,901);treeInto(pb,cx+4,cy-8,0,2,902);}),
@@ -1467,6 +1749,7 @@ function buildSprites(){
       map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}
         pb.put(x,y,k==='l'?col(c,.15):k==='d'?col(c,-.25):k==='w'?neon('#7fd7ff',-.1):k==='h'?[col('#ffffff'),col('#ffffff')]:[col(c,-.4),col('#ff4a6a')]);
         if(y===3)pb.put(x,4,neon(glow));}));return mk(pb,-3,-9);});
+    ;yield;
     SP.veh[5]=[carHover('#f4f7fa',NEON),carHover('#f4f7fa',PINK),carHover('#ff6a8a',NEON),carHover('#5f8fe0',NEON),carHover('#2f3448',PINK),walker('#e9eef4'),walker('#5fe6f2')];
     // fusion plant (2x2): a white torus around a glowing core
     SP.fusion=mk2(88,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:28,h:3,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:fRoof});
@@ -1483,6 +1766,7 @@ function buildSprites(){
       for(let y=cy-43;y>=0;y--){pb.put(cx-1,y,col('#e6ecf2'));pb.put(cx,y,col('#aab4c2'));if((y&7)===0)pb.put(cx+1,y,neon(NEON));}
       for(const yy of[cy-110,cy-170])pb.box({cx,cy:yy,hw:3,h:4,L:()=>col(SH),R:()=>col(SH,-.25),T:()=>neon(PINK)});},
       (cx,cy)=>({lights:[[cx,cy-6],[cx,cy-40],[cx,cy-112]],blink:[[cx,2,'#ff4a6a'],[cx,cy-172,'#ffffff']]}));
+    ;yield;
     SP.elev=elevSp(230);SP.elevIco=elevSp(84);
     // civic buildings, future style
     const BLUE='#4a8cff',RED='#ff4a3a';
@@ -1497,6 +1781,7 @@ function buildSprites(){
         R:(a,b,hw,h)=>{if(((a>=1.5&&a<5.5)||(a>=6.5&&a<10.5))&&b<7.5)return[col('#ff6a4a',(b|0)%2?-.1:-.2),col('#ffb070')];return f(-.24)(a,b,hw,h);},T:fRoof});
       pb.box({cx:cx-5,cy:cy-14,hw:2,h:1,L:()=>neon(RED),R:()=>neon(RED,-.2),T:()=>neon('#ffd25f')});},
       (cx,cy)=>({siren:[cx-7,cy-16]}));
+    ;yield;
     SP.schoolF=mk2(84,(pb,cx,cy)=>{pb.box({cx:cx+7,cy:cy-9,hw:21,h:12,L:ftw(0,5301,'#3f6a96',6,'#ffd25f'),R:ftw(-.24,5301,'#3f6a96',6,'#ffd25f'),T:fGarden});
       for(let k=0;k<4;k++)treeInto(pb,cx-2+k*6,cy-22+k*3,0,2,5310+k);
       pb.box({cx:cx+7,cy:cy-22,hw:4,h:1,L:()=>col('#2b3b66'),R:()=>col('#2b3b66',-.2),T:(u)=>col('#3b5aa0',Math.floor(u*4)%2?.25:0)});
@@ -1533,6 +1818,7 @@ function buildSprites(){
 
     // ports (나루터 -> 수상 정거장): built on the shore, boats come and go from them
     const deck=(pb,cx,cy,hw,h,hex,plank=7)=>pb.box({cx,cy,hw,h,L:()=>col(hex,-.12),R:()=>col(hex,-.32),T:(u,v,x,y)=>col(hex,(Math.floor(u*plank)%2?-.08:.05)+(hash(x,y,61)<.1?-.08:0))});
+    ;yield;
     SP.port=[
       mk1(36,(pb,cx,cy)=>{deck(pb,cx,cy+1,12,1,'#9a7448');posts(pb,[[cx-11,cy+1],[cx+11,cy+1],[cx,cy+7],[cx,cy-5]],5,WOOD);
         pb.ell(cx+4,cy+2,2.2,(dx,dy)=>col('#c9a46a',dx*dx+dy*dy<.3?-.3:0));pb.line(cx-6,cy+1,cx-1,cy+3,col('#5a3a22'));pb.line(cx-6,cy,cx-1,cy+2,col('#7a5232'));}),
@@ -1556,6 +1842,7 @@ function buildSprites(){
         for(let i=0;i<8;i++)pb.put(cx,cy-12-i,col('#f6f9fc'));pb.put(cx,cy-20,neon('#ff6ad5'));},(cx,cy)=>({blink:[[cx,cy-21,'#5fe6f2']],lights:[[cx,cy-4]]}))];
     // decorations (꾸미기). index matches DECO[]; the fence (1) is built per link mask in SP.fence
     const flower=['#ff6a8a','#ffd84a','#ffffff','#c28bff','#ff9a3a'];
+    ;yield;
     SP.deco=[
       mk1(28,(pb,cx,cy)=>{for(let k=0;k<26;k++){const a=hash(k,3,11)*6.283,r=Math.sqrt(hash(k,4,11))*9,x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r*.5);
         pb.put(x,y,col('#3d8143'));pb.put(x,y-1,col(flower[k%5]));if(k%3===0)pb.put(x+1,y-1,col(flower[(k+2)%5],-.1));}}),
@@ -1585,6 +1872,7 @@ function buildSprites(){
     // benches and street lamps can face any of the four ways (vari&3); small box models like the cars
     SP.benchD=vehModel([{b:[-.46,-.34,-.6,.6,0,1.7],c:'#3a3f4a'},{b:[.34,.46,-.6,.6,0,1.7],c:'#3a3f4a'},
       {b:[-.5,.5,-.75,.75,1.7,2.3],f:(f,a,b)=>f==='top'&&(b*4|0)%2?col('#a37b4c',-.08):'#a37b4c'},{b:[-.5,.5,-1,-.72,2.3,4.4],f:(f,a,b)=>(b*3|0)%2?col('#8a6238',-.1):'#8a6238'}],.34,.07);
+    ;yield;
     SP.lampD=vehModel([{b:[-.45,.45,-.45,.45,0,1],c:'#4a4f5a'},{b:[-.14,.14,-.14,.14,1,19],c:'#3a3f4a'},{b:[0,.8,-.12,.12,18,19],c:'#3a3f4a'},{b:[.62,.72,-.12,.12,17,18],c:'#3a3f4a'},
       {b:[.55,.95,-.6,.6,16,17.4],f:(f,a,b)=>f==='top'?'#3a3f4a':[col('#e8e4d4'),col('#fff2c0')]}],.32,.06,{h:28,light:[.75,15.5]});
     for(const sp of[...SP.benchD,...SP.lampD]){sp.g=0;sp.gp=1;}
@@ -1601,6 +1889,7 @@ function buildSprites(){
       pb.box({cx:cx+5,cy:cy-2,hw:3,h:7,L:()=>col(R),R:()=>col(R,-.25),T:()=>col(Y)});for(let k=0;k<7;k++)pb.put(cx+2-k%2,cy-1-k,col('#9aa3ad'));
       for(let k=0;k<8;k++){pb.put(cx+7+k,cy-8+k,col(Y));pb.put(cx+7+k,cy-7+k,col(Y,-.2));}pb.roof(cx+5,cy-9,4,3,'#3a7dd8');
       pb.box({cx:cx-4,cy:cy+4,hw:4,h:1,L:()=>col(WOOD),R:()=>col(WOOD,-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.15?col(WOOD,.1):col(PAL.sand,hash(x,y,3)<.2?-.1:0)});});
+    ;yield;
     SP.fence=Array.from({length:16},(_,m)=>mk1(26,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
       for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#a37b4c'));pb.put(x,y-4,col('#b8905e'));if(k%4===0){for(let h=0;h<6;h++)pb.put(x,y-h,col('#6e4e2c',h===5?.15:0));}}}
       for(let h=0;h<6;h++)pb.put(cx,cy-h,col('#6e4e2c',h===5?.15:0));}));
@@ -1619,9 +1908,11 @@ function buildSprites(){
         const gl=t=>(a,b,hw,h)=>(a|0)%3===0||b>=h-1?col('#f6f9fc',t):col('#9fdce4',t+(b>h/2?.15:0),210);
         pb.box({cx:cx-1,cy:cy-1,hw:9,h:7,L:gl(0),R:gl(-.2),T:(u,v)=>Math.min(u,v,1-u,1-v)<.08?neon('#5fe6f2'):col('#f6f9fc',-.04)});for(let i=0;i<10;i++)pb.put(cx-9,cy-1-i,col('#f6f9fc'));pb.put(cx-9,cy-11,neon('#5fe6f2'));},(cx,cy)=>({blink:[[cx-9,cy-12,'#ff6ad5']],lights:[[cx,cy-3]]}))];
   }
+  ;yield;
   SP.icoPow=mk(bitmapPB(["..##",".##.","####",".##.","##..","#..."],{'#':'#ffd23f'},'#2a1d05'),-3,0,false);
   SP.icoRoad=mk(bitmapPB(["##","##","##","..","##"],{'#':'#ff8a4a'},'#2a1005'),-2,0,false);
 }
+function buildSprites(){for(const _ of buildSpritesGen());}
 
 /* ---------------- world ---------------- */
 let W=null;
@@ -1750,6 +2041,7 @@ function recompute(){const w=W,S=w.st,NN=N*N;
       case K.FIRE:fires++;stamp(w.fcov,cx,cy,12,1.4);break;
       case K.SCHOOL:if(w.anchor[i]===i){schools++;stamp(w.edu,x+1,y+1,14,1.4);}break;
       case K.HALL:if(w.anchor[i]===i){halls++;stamp(tmpG,x+1,y+1,9,.2);}break;
+      case K.THEME:if(w.anchor[i]===i){stamp(tmpG,x+1.5,y+1.5,14,.2);stamp(tmpD,x+1.5,y+1.5,10,.1);}break;
       case K.STADIUM:if(w.anchor[i]===i){stadiums++;stamp(tmpG,x+1.5,y+1.5,12,.18);}break;
       case K.TOWER:towers++;stamp(tmpG,cx,cy,15,.14);break;
       case K.DOLMEN:case K.MOUND:case K.PALACE:case K.STATION:case K.ELEV:if(w.anchor[i]===i)stamp(tmpG,x+1,y+1,10,.2);break;}
@@ -1916,6 +2208,7 @@ const TOOLS=[
   {id:'hall',name:'시청',era:4,key:'H',cost:4000,kind:K.HALL,size:2,hl:'build',landmark:1500,desc:'도시에 하나뿐인 랜드마크. 주변 땅값을 크게 올리고 주거 수요를 늘립니다. 2×2.'},
   {id:'stadium',name:'경기장',era:4,key:'J',cost:12000,kind:K.STADIUM,size:3,hl:'build',landmark:4000,desc:'도시에 하나뿐인 랜드마크. 상업 수요와 넓은 지역의 땅값을 올립니다. 3×3.'},
   {id:'airport',names:['','','','','공항','우주공항'],era:4,key:'',cost:7000,prem:{4:3,5:3},kind:K.AIRPORT,size:5,popReq:3000,hl:'build',desc:'★ 특별 건물. 5×5(긴 활주로). 비행기가 뜨고 내리고, 관광객 덕분에 상업·주거 수요와 주변 땅값이 크게 올라요. 활주로 근처는 조금 시끄러워요. 인구 3,000명부터.'},
+  {id:'theme',name:'세계 테마파크',era:3,key:'',cost:0,items:'theme',kind:K.THEME,size:3,popReq:1500,hl:'build',desc:'★ 특별 건물. 3×3. 나라마다 하나씩, 그 나라 명소를 닮은 테마파크를 지어요. 관람차와 롤러코스터가 돌고, 관광객 덕분에 상업 수요와 넓은 지역의 땅값이 크게 올라요. 인구 1,500명부터.'},
   {id:'tower',name:'전파탑',era:4,key:'K',cost:20000,kind:K.TOWER,hl:'build',landmark:10000,desc:'대도시의 상징. 모든 수요와 아주 넓은 지역의 땅값을 올립니다.'},
   {id:'w0',name:'고인돌',wonder:0,era:0,until:0,key:'Y',fixed:3000,kind:K.DOLMEN,size:2,hl:'build',desc:'부족의 힘을 모아 거대한 돌을 세웁니다. 공사는 현실 시간 2시간(꺼 둬도 진행)이고, 완공되면 청동기시대가 열려요. 2×2.'},
   {id:'w1',name:'고분',wonder:1,era:1,until:1,key:'Y',fixed:8000,kind:K.MOUND,size:2,hl:'build',desc:'왕의 무덤을 쌓아 나라의 기틀을 세웁니다. 공사는 현실 시간 6시간(꺼 둬도 진행)이고, 완공되면 왕조시대가 열려요. 2×2.'},
@@ -1932,7 +2225,8 @@ const DECO=[{n:'꽃밭',c:15},{n:'울타리',c:8},{n:'돌탑',c:25},{n:'장독�
   {n:'벚꽃나무',c:800,prem:1},{n:'분수',c:2500,prem:1},{n:'동상',c:4000,prem:1},{n:'시계탑',c:6000,prem:1,era:3},
   {n:'정자',c:250,lv:[5,.1]},{n:'놀이터',c:350,era:3,lv:[5,.12]}];
 const LAND=[{n:'물 파기',c:50},{n:'땅 메우기',c:80},{n:'모래',c:10},{n:'풀밭',c:10},{n:'나무 심기',c:15}];
-const ITEMS={deco:DECO,land:LAND},subSel={deco:0,land:0};
+const ITEMS={deco:DECO,land:LAND,theme:THEMES},subSel={deco:0,land:0,theme:0};
+const themeBuilt=n=>{for(let i=0;i<N*N;i++)if(W.kind[i]===K.THEME&&W.anchor[i]===i&&W.level[i]===n)return true;return false;};
 const curItem=t=>t.items?ITEMS[t.items][subSel[t.items]]:null;
 const premNow=t=>!!(t.prem&&t.prem[W.era])||!!(t.items&&curItem(t).prem);
 const costOf=t=>{if(t.items){const it=curItem(t);return it.c?Math.max(1,Math.round(it.c*PRICE[W.era])):0;}
@@ -1964,6 +2258,7 @@ function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],t
     case'rail':{railWhy='';if(!toolOn(t))return false;if(W.rail[i])return true;if(ter===1){railWhy='water';return false;}
       if(railWouldPave(x,y)){railWhy='pave';return false;}if(k===0)return true;
       if(k===K.ROAD){if(W.level[i]||!crossOk(x,y,true)){railWhy='cross';return false;}return true;}railWhy='busy';return false;}
+    case'theme':if(!toolOn(t)||W.st.pop<t.popReq||themeBuilt(subSel.theme))return false;{const sz=t.size;for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}}return true;
     case'bulldoze':return k!==0||W.trees[i]>0;
     case'road':{const nk=k===0||(k===K.RAIL&&crossOk(x,y,false));mixBlocked=nk&&mixBad(x,y,false);roadBlocked=nk&&!mixBlocked&&roadWouldPave(x,y);bridgeBlocked=k===0&&!mixBlocked&&!roadBlocked&&bridgeBad(x,y);return k===K.ROAD||(nk&&!mixBlocked&&!roadBlocked&&!bridgeBlocked);}
     case'avenue':mixBlocked=(k===0||k===K.ROAD&&!W.level[i])&&mixBad(x,y,true);roadBlocked=k===0&&!mixBlocked&&roadWouldPave(x,y);bridgeBlocked=k===0&&!mixBlocked&&!roadBlocked&&bridgeBad(x,y);
@@ -1972,7 +2267,7 @@ function validAt(t,x,y){if(!inb(x,y))return false;const i=idx(x,y),k=W.kind[i],t
       for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++){if(!inb(x+dx,y+dy))return false;const j=idx(x+dx,y+dy);if(W.kind[j]!==0||W.terrain[j]===1)return false;}
       portDry=t.kind===K.PORT&&!nearWater(x,y);if(portDry)return false;if(t.kind===K.DEPOT&&!DIRS.some(([dx,dy])=>isRail(x+dx,y+dy))){railWhy='depot';return false;}return true;}}}
 function builtCount(k){return W.st.cnt[k]||0;}
-function whyNot(t){if(t.popReq&&W.st.pop<t.popReq)return`${tn(t)}은(는) 인구 ${fmt(t.popReq)}명부터 지을 수 있어요 (지금 ${fmt(W.st.pop)}명).`;if(t.items&&(target||hover)&&inb(...(target?target.g:hover))){const[x,y]=target?target.g:hover,i=idx(x,y),it=curItem(t);
+function whyNot(t){if(t.popReq&&W.st.pop<t.popReq)return`${tn(t)}은(는) 인구 ${fmt(t.popReq)}명부터 지을 수 있어요 (지금 ${fmt(W.st.pop)}명).`;if(t.id==='theme')return themeBuilt(subSel.theme)?`${tr(curItem(t).n)}은(는) 이미 지었어요. 나라마다 하나씩 지을 수 있어요.`:'3×3 빈 땅이 필요해요(물 위는 안 돼요).';if(t.items&&(target||hover)&&inb(...(target?target.g:hover))){const[x,y]=target?target.g:hover,i=idx(x,y),it=curItem(t);
     if(t.id==='deco')return(it.era||0)>W.era?`${it.n}은(는) 근대부터 놓을 수 있어요.`:W.terrain[i]===1?'물 위에는 소품을 놓을 수 없어요.':'빈 땅에만 놓을 수 있어요.';
     if(t.id==='land')return W.kind[i]?'빈 땅에서만 바꿀 수 있어요. 건물이나 길은 먼저 철거하세요.':['이미 물이에요.','물이 아니에요.','풀밭에서만 모래로 바꿀 수 있어요.','모래에서만 풀밭으로 바꿀 수 있어요.','물에는 나무를 심을 수 없어요(나무는 한 칸에 5그루까지).'][subSel.land];}if((t.id==='rail'||t.kind===K.DEPOT)&&railWhy)return{water:'철길은 물 위에 깔 수 없어요.',pave:'철길을 나란히 붙여 깔 수는 없어요.',cross:'건널목은 곧게 뻗은 보통 도로를 똑바로 가로질러야 만들 수 있어요(대로·교차로·굽은 길은 안 돼요).',busy:'건물이 있는 곳에는 철길을 깔 수 없어요.',depot:'역은 철길 바로 옆에 지어야 해요.'}[railWhy];if(t.kind===K.PORT&&portDry)return`${tn(t)} 같은 배터는 물가에만 지을 수 있어요. 물과 맞닿은 땅을 골라 주세요.`;if(t.id==='road'&&mixBlocked)return'도로는 대로에 이어 붙일 수 없어요. 도로는 도로끼리, 대로는 대로끼리만 이어져요.';
   if(t.id==='avenue'&&mixBlocked)return'대로는 도로에 이어 붙일 수 없어요. 대로는 대로끼리, 도로는 도로끼리만 이어져요.';
@@ -2005,6 +2300,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
     else if(t.id==='land'){const i=idx(x,y),s=subSel.land;if(s===0){W.terrain[i]=1;W.trees[i]=0;}else if(s===1)W.terrain[i]=0;else if(s===2)W.terrain[i]=2;else if(s===3)W.terrain[i]=0;else W.trees[i]=Math.min(5,W.trees[i]+2);
       derive(W);if(puffs++<12)dust(x,y,s===0?'#4a8ccb':'#9a8a74');}
     else if(t.id==='rail'){const i=idx(x,y);if(!W.rail[i]){if(W.kind[i]===0)placeRaw(K.RAIL,x,y);W.rail[i]=1;}}
+    else if(t.id==='theme'){placeRaw(K.THEME,x,y);W.level[idx(x,y)]=subSel.theme;dust(x+1,y+1,'#d8cfc0');}
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(canTurn(t))W.flip[idx(x,y)]=buildFlip;if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
   if(t.wonder!=null){const tt=tiles.find(([x,y])=>W.kind[idx(x,y)]===t.kind)||tiles[0];W.wb={a:W.anchor[idx(tt[0],tt[1])],k:t.kind,start:Date.now(),dur:ERAS[W.era].build*3600000};toast(`${tn(t)} 공사를 시작했어요. ${ERAS[W.era].build}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.`,'good');save();setTool('inspect');}
@@ -2456,7 +2752,7 @@ function render(){
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){const sp=FL(SP.tower,i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
-    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);}}}
+    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a],w.level[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]])drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);if(k===K.THEME)themeAnim(c,a,asx,asy+24);}}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;castSh=false;capA=0;
@@ -2501,7 +2797,7 @@ const anc=i=>W.anchor[i]>=0?W.anchor[i]:i,FL=(sp,i)=>sp&&W.flip[anc(i)]?flipped(
 let buildFlip=0;const canTurn=t=>t&&!t.items&&t.kind>=K.POLICE&&t.kind!==K.WIND&&t.kind!==K.DECO;
 function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];if(L===1)return SP.fence[r&1?10:5];const b=SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
 function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m||(W.vari[i]&1?10:5)];}return SP.deco[L]||SP.deco[0];}
-function civSprite(k,e){e=Math.min(5,e);if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
+function civSprite(k,e,lv){e=Math.min(5,e);if(k===K.THEME)return SP.theme[lv??subSel.theme]||SP.theme[0];if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
@@ -2509,6 +2805,16 @@ function bldSprite(i){const e=Math.min(5,W.te[i]),k=W.kind[i],set=SP.E[e][k];con
 function parkSprite(i){const e=Math.min(5,W.te[i]),arr=e<3?SP.parkE[e]:e>=5?SP.parkF:SP.park;return arr[W.vari[i]%arr.length];}
 function campfire(c,sx,sy){const f=now/110|0,ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.3+nightF*.6;c.drawImage(SP.glow.c,sx-15,sy+2);c.globalCompositeOperation='source-over';c.globalAlpha=ga;
   for(let k=0;k<9;k++){const fx=sx-2+((hash(k,1,f)*5)|0),fy=sy+7-((hash(k,2,f)*6)|0);c.fillStyle=k%3===0?'#fff1a0':k%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,1,2);}}
+// theme park motion (bx,by = footprint centre on screen, f = -1 when mirrored): windmill sails, the cable car, drifting balloons, a sparkling iron tower at night
+function themeAnimDraw(c,th,f,bx,by,t,night){const P=(x,y,cl,w=1,h=1)=>{c.fillStyle=cl;c.fillRect(Math.round(bx+f*x-(f<0?w-1:0)),Math.round(by+y),w,h);};
+  if(th.l==='windmill'){const hx=4,hy=-41;for(let k=0;k<4;k++){const q=t*.8+k*Math.PI/2,cs=Math.cos(q),sn=Math.sin(q);
+      for(let j=2;j<19;j++){const x=hx+cs*j*.8,y=hy+sn*j;P(x,y,'#5a4030');if(j>5){P(x-sn*1.4,y+cs*1.1,j%3?'#efe6d2':'#8a6a4a');P(x-sn*2.6,y+cs*2.1,j%3?'#e2d8c2':'#8a6a4a');}}}P(hx,hy,'#2a2a30',2,2);}
+  if(th.l==='sugarloaf'){const q=(Math.sin(t*.22)+1)/2,x=-18+26*q,y=-27-35*q;P(x-1,y+1,'#3a3f48',1,2);P(x-2,y+3,'#f2c14b',4,3);P(x-1,y+4,night?'#ffe7ad':'#3c4658',2,1);}
+  if(th.l==='balloon')for(let k=0;k<3;k++){const x=-16+k*15+Math.sin(t*.3+k*2)*3,y=-62-k*7+Math.sin(t*.5+k)*3,cc=[th.c0[0],'#f2c14b','#3a8fd0'][k];
+    for(let dy=-4;dy<=3;dy++){const w=Math.round(Math.sqrt(Math.max(0,16-dy*dy))*(dy>0?.8:1));P(x-w,y+dy,cc,w*2+1,1);if(w>1)P(x-w+1,y+dy,'#ffffff40',1,1);}P(x-1,y+3,'#ffffff',3,1);P(x-1,y+6,'#7a5038',3,2);}
+  if(th.l==='eiffel'&&night)for(let k=0;k<10;k++){const fr=Math.floor(t*6);if(hash(k,fr,5)<.5)continue;const i=Math.floor(hash(k,fr,7)*84),w=Math.round(27*Math.pow(1-i/88,2.15))+1;
+    P((hash(k,fr,9)*2-1)*w,-5-i,'#fff6c0');}}
+function themeAnim(c,a,bx,by){themeAnimDraw(c,THEMES[W.level[a]]||THEMES[0],W.flip[a]?-1:1,bx,by,now/1000,nightF>.4);}
 function extras(c,sp,x,y,blinkOn){if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(x+sp.ox+bx,y+sp.oy+by,1,1);}
   if(sp.lights&&nightF>.05){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.9;for(const[lx,ly]of sp.lights)c.drawImage(SP.glow.c,x+sp.ox+lx-15,y+sp.oy+ly-4);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}
 function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?bldSprite(i):null,top=sp?sy+sp.top+4:sy-6,span=Math.max(6,sy+10-top),f=now/90|0;
@@ -2595,7 +2901,7 @@ function buildTools(){
   const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon((E>=5?SP.aveF:SP.ave)[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
-    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),port:()=>spriteIcon(civSprite(K.PORT,E)),depot:()=>spriteIcon(civSprite(K.DEPOT,E)),airport:()=>spriteIcon(SP.airport[E>=5?1:0],40),rail:()=>spriteIcon(SP.rail[Math.max(3,E)][5],30),hall:()=>spriteIcon(SP.hall,38),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
+    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),port:()=>spriteIcon(civSprite(K.PORT,E)),depot:()=>spriteIcon(civSprite(K.DEPOT,E)),airport:()=>spriteIcon(SP.airport[E>=5?1:0],40),rail:()=>spriteIcon(SP.rail[Math.max(3,E)][5],30),hall:()=>spriteIcon(SP.hall,38),theme:()=>spriteIcon(SP.theme[0].icon,30),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
     deco:()=>spriteIcon(SP.deco[0]),land:()=>spriteIcon(SP.water[0][0],30),
     w0:()=>spriteIcon(SP.dolmen,40),w1:()=>spriteIcon(SP.mound,40),w2:()=>spriteIcon(SP.palace,40),w3:()=>spriteIcon(SP.station,40),w4:()=>spriteIcon(SP.elevIco,40)};
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
@@ -2624,7 +2930,7 @@ function buildUI(){
   $('#menuBtn').innerHTML=svg('menu',2);$('#menuBtn').addEventListener('click',openMenu);
   $('#taxDn').addEventListener('click',()=>{W.tax=clamp(W.tax-1,0,20);recompute();updateHud(true);sfx('click');});
   $('#taxUp').addEventListener('click',()=>{W.tax=clamp(W.tax+1,0,20);recompute();updateHud(true);sfx('click');});
-  for(const b of document.querySelectorAll('[data-lang]')){b.setAttribute('aria-pressed',b.dataset.lang===LANG);b.addEventListener('click',()=>{if(b.dataset.lang===LANG)return;try{localStorage.setItem('dotcity.lang',b.dataset.lang);}catch(e){}save();location.reload();});}
+  for(const b of document.querySelectorAll('[data-lang]')){b.setAttribute('aria-pressed',b.dataset.lang===LANG);b.addEventListener('click',()=>{if(b.dataset.lang===LANG)return;try{localStorage.setItem('dotcity.lang',b.dataset.lang);}catch(e){}save();bootShow(b.dataset.lang==='en'?'Loading your city…':'도시를 불러오는 중…');$('#btTitle').textContent=b.dataset.lang==='en'?'Dot City':'도트시티';requestAnimationFrame(()=>setTimeout(()=>location.reload(),60));});}
   $('#cityName').addEventListener('change',e=>{W.name=e.target.value.trim()||tr('새벽시');e.target.value=W.name;save();});
   $('#cityName').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();e.stopPropagation();});
   $('#mResume').addEventListener('click',closeMenu);
@@ -2655,8 +2961,8 @@ function renderSub(){const t=T(tool),bar=$('#subbar');if(!t||!t.items){bar.hidde
   if(t.items==='deco'&&DECO_ROT[subSel.deco]){decoRot%=DECO_ROT[subSel.deco];const two=DECO_ROT[subSel.deco]===2;const r=document.createElement('button');r.className='it';r.setAttribute('aria-label','방향 돌리기');
     r.innerHTML=`<span style="font-size:22px;line-height:1">${two?['⇢','⇠'][decoRot]:['↘','↙','↖','↗'][decoRot]}</span><span>방향 돌리기</span>`;r.addEventListener('click',()=>{decoRot=(decoRot+1)%DECO_ROT[subSel.deco];sfx('click');renderSub();});bar.append(r);}
   ITEMS[t.items].forEach((it,n)=>{if(t.items==='deco'&&(it.era||0)>W.era)return;const b=document.createElement('button');b.className='it';b.setAttribute('aria-pressed',String(subSel[t.items]===n));
-    let ic;if(t.items==='deco')ic=spriteIcon(decoView(n,n===subSel.deco?decoRot:0),30);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
-    b.append(ic);b.insertAdjacentHTML('beforeend',`<span>${it.n}</span>${it.c?`<small>${money(Math.max(1,Math.round(it.c*PRICE[W.era])))}</small>`:''}${it.prem?'<span class="star">★</span>':''}`);
+    let ic;if(t.items==='deco')ic=spriteIcon(decoView(n,n===subSel.deco?decoRot:0),30);else if(t.items==='theme')ic=spriteIcon(SP.theme[n].icon,34);else if(t.items==='land')ic=spriteIcon([SP.water[0][0],SP.grass[0],SP.sand[0],SP.grass[2],SP.tree[0]][n],n===4?30:26);
+    b.append(ic);b.insertAdjacentHTML('beforeend',`<span>${it.n}</span>${it.c?`<small>${money(Math.max(1,Math.round(it.c*PRICE[W.era])))}</small>`:''}${it.prem?'<span class="star">★</span>':''}${t.items==='theme'&&themeBuilt(n)?'<small>✓ 지음</small>':''}`);
     b.addEventListener('click',()=>{subSel[t.items]=n;sfx('click');renderSub();showTarget();});bar.append(b);});}
 function setTool(id){tool=id;clearTarget();setTimeout(renderSub);if(id!=='inspect')goalsOpen=false;document.querySelectorAll('#tools .tb').forEach(b=>{if(TOOLS.some(t=>t.id===b.dataset.id))b.setAttribute('aria-pressed',b.dataset.id===id);});
   view.classList.toggle('pan',id==='inspect');if(id!=='inspect'){selected=null;$('#info').hidden=true;}}
@@ -2713,10 +3019,10 @@ function renderGoals(){const gl=goalList(),e=ERAS[W.era],wt=TOOLS.find(t=>t.wond
 function renderInfo(){const[x,y]=selected,i=idx(x,y),w=W,k=w.kind[i],L=w.level[i];let title,sub='',extra='',need='';
   if(k>=K.RES&&k<=K.IND){const big=L>=2&&!w.build[i]&&bigAt(x,y)>=0;title=w.build[i]>0?'공사 중':big?['','','아파트 단지','복합 빌딩','대형 공장'][k]:(w.te[i]>=5?NAMES_F[k][L]:w.te[i]<4?NAMES_E[w.te[i]][k][Math.min(L,NAMES_E[w.te[i]][k].length-1)]:NAMES[k][L]);sub=tn(T(['','','res','com','ind'][k]))+(L?` · ${L}단계`:'')+(big?' · 2×2 대형':'');
     extra=k===K.RES?`주민 ${POP[L]}명`:`일자리 ${k===K.COM?JC[L]:JI[L]}개`;need=nextNeed(k,i);}
-  else title={[K.ROAD]:w.rail[i]?'건널목':L?(w.terrain[i]===1?'대교':'대로'):w.terrain[i]===1?['통나무 다리','널다리','돌다리','철교','다리','스카이 브리지'][Math.min(5,w.te[i])]:T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.AIRPORT]:T('airport').names[Math.max(4,Math.min(5,w.te[w.anchor[i]>=0?w.anchor[i]:i]))],[K.RAIL]:T('rail').names[Math.max(3,Math.min(5,w.te[i]))],[K.DEPOT]:T('depot').names[Math.max(3,Math.min(5,w.te[i]))],[K.PORT]:T('port').names[Math.min(5,w.te[i])],[K.HOSP]:T('hosp').names[Math.min(5,w.te[i])],[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑'}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
+  else title={[K.ROAD]:w.rail[i]?'건널목':L?(w.terrain[i]===1?'대교':'대로'):w.terrain[i]===1?['통나무 다리','널다리','돌다리','철교','다리','스카이 브리지'][Math.min(5,w.te[i])]:T('road').names[Math.min(5,w.te[i])],[K.PARK]:T('park').names[Math.min(5,w.te[i])],[K.POLICE]:T('police').names[Math.max(2,Math.min(5,w.te[i]))],[K.FIREPIT]:'모닥불',[K.WELL]:'우물',[K.DOLMEN]:'고인돌',[K.MOUND]:'고분',[K.PALACE]:'궁궐 정문',[K.STATION]:'기차역',[K.ELEV]:'우주 엘리베이터',[K.AIRPORT]:T('airport').names[Math.max(4,Math.min(5,w.te[w.anchor[i]>=0?w.anchor[i]:i]))],[K.RAIL]:T('rail').names[Math.max(3,Math.min(5,w.te[i]))],[K.DEPOT]:T('depot').names[Math.max(3,Math.min(5,w.te[i]))],[K.PORT]:T('port').names[Math.min(5,w.te[i])],[K.HOSP]:T('hosp').names[Math.min(5,w.te[i])],[K.WIND]:'풍력 발전기',[K.COAL]:w.te[w.anchor[i]]>=5?'핵융합 발전소':w.te[w.anchor[i]]<4?'증기 발전소':'화력 발전소',[K.FIRE]:'소방서',[K.SCHOOL]:w.te[w.anchor[i]]<3?'서당':'학교',[K.HALL]:'시청',[K.STADIUM]:'경기장',[K.TOWER]:'전파탑',[K.THEME]:(THEMES[w.level[w.anchor[i]>=0?w.anchor[i]:i]]||THEMES[0]).n}[k]||(w.terrain[i]===1?'물':w.terrain[i]===2?'모래사장':w.trees[i]?'숲':'빈 땅');
   if(k===K.DECO){title=(DECO[L]||DECO[0]).n;extra=(DECO[L]||DECO[0]).prem?'★ 특별 소품 · 주변 땅값 크게 상승':'꾸미기 소품';}
   {const an=w.anchor[i]>=0?w.anchor[i]:i;if(w.labels[an]){sub=title+(sub?' · '+sub:'');title=w.labels[an];}}
-  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra=w.te[w.anchor[i]]>=5?'전력 8,000 공급 · 오염 없음':'전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.HOSP)extra='반경 10칸 건강';if(k===K.PORT)extra=`배가 오가요 · 반경 8칸 땅값·상업 수요`;if(k===K.AIRPORT)extra='★ 특별 건물 · 비행기가 오가요 · 관광객으로 상업·주거 수요와 땅값 상승';if(k===K.DEPOT)extra='기차가 서요 · 반경 9칸 차량 통행 40% 감소';if((k===K.DEPOT||k===K.PORT)&&w.te[i]>=4)extra='★ 특별 건물 · '+extra;if(k===K.RAIL)extra='기차가 다녀요';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN&&k<K.HOSP)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
+  if(k===K.ROAD)extra=`교통량 ${Math.round(w.traf[i]*100)}%`;if(k===K.WIND)extra='전력 60 공급';if(k===K.COAL)extra=w.te[w.anchor[i]]>=5?'전력 8,000 공급 · 오염 없음':'전력 1,600 공급';if(k===K.FIRE)extra='반경 12칸 화재 진압';if(k===K.HOSP)extra='반경 10칸 건강';if(k===K.PORT)extra=`배가 오가요 · 반경 8칸 땅값·상업 수요`;if(k===K.AIRPORT)extra='★ 특별 건물 · 비행기가 오가요 · 관광객으로 상업·주거 수요와 땅값 상승';if(k===K.DEPOT)extra='기차가 서요 · 반경 9칸 차량 통행 40% 감소';if((k===K.DEPOT||k===K.PORT)&&w.te[i]>=4)extra='★ 특별 건물 · '+extra;if(k===K.RAIL)extra='기차가 다녀요';if(k===K.THEME)extra='★ 특별 건물 · 관람차와 롤러코스터가 돌아요 · 관광객으로 상업 수요와 땅값 상승';if(k===K.SCHOOL)extra='반경 14칸 교육';if(k>=K.HALL&&k<=K.TOWER)extra='랜드마크';if(k>=K.DOLMEN&&k<K.HOSP)extra='시대의 기념 건축물';if(k===K.FIREPIT)extra='반경 5칸 불씨';if(k===K.WELL)extra='반경 7칸 물';if(w.fire[i])title='불타는 '+title;
   const m=(lab,v,colr)=>`<div class="kv"><span>${lab}</span><div class="m"><i style="width:${Math.round(v*100)}%;background:${colr}"></i></div><span class="px">${Math.round(v*100)}</span></div>`;
   const fl=(ok,a,b)=>`<span class="flag ${ok?'ok':'no'}">${ok?a:b}</span>`;
   const zone=k>=K.RES&&k<=K.IND;
@@ -2787,7 +3093,7 @@ function updateCost(e){const el=$('#cost'),t=T(tool);if(!costOf(t)||!hover&&!dra
   const tiles=drag&&drag.mode==='build'?tilesFor(t,drag.a,drag.b):hover?(t.drag==='rect'?tilesFor(t,hover,hover):[hover]):[];const{c,n}=planCost(t,tiles);if(!n){el.hidden=true;return;}
   el.hidden=false;el.textContent=`${money(c)}${n>1?` · ${n}칸`:''}`;el.classList.toggle('bad',c>W.funds);el.style.left=(e.clientX+16)+'px';el.style.top=(e.clientY+18)+'px';}
 view.addEventListener('wheel',e=>{e.preventDefault();wheelAcc+=e.deltaY;if(Math.abs(wheelAcc)>=50){zoomTo(cam.s+(wheelAcc<0?1:-1),e.clientX,e.clientY);wheelAcc=0;}},{passive:false});
-window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
+window.addEventListener('keydown',e=>{if(!W||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(!$('#eraModal').hidden){if(k==='enter'||k==='escape'||k===' '){e.preventDefault();closeEra();}return;}
   if(!$('#menu').hidden){if(k==='escape')closeMenu();return;}
   if(!$('#shop').hidden){if(k==='escape')closeShop();return;}
@@ -2800,7 +3106,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
 window.addEventListener('resize',resize);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else if(W)catchUp(W.savedAt);});
+document.addEventListener('visibilitychange',()=>{if(!W)return;if(document.hidden)save();else catchUp(W.savedAt);});
 
 $('#fundsBtn').addEventListener('click',()=>{openShop();sfx('click');});$('#shopClose').addEventListener('click',closeShop);$('#shop').addEventListener('click',e=>{if(e.target.id==='shop')closeShop();});
 $('#tcOk').addEventListener('click',()=>commitTarget());$('#tcRot').addEventListener('click',()=>{const t=T(tool);if(canTurn(t))buildFlip^=1;else{const n=DECO_ROT[subSel.deco]||1;decoRot=(decoRot+1)%n;renderSub();}sfx('click');showTarget();});$('#tcX').addEventListener('click',()=>{clearTarget();sfx('click');});
@@ -2883,7 +3189,15 @@ function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[]
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
   if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);
   if(mode==='empty')toast('빈 땅이에요. 먼저 모닥불(6)을 피우고, 그 5칸 안에 흙길(R)과 움집 터(1)를 놓으세요.','info');}
-function start(data){resize();buildSprites();
+const BOOT_STEPS=(buildSpritesGen.toString().match(/\byield\b/g)||[]).length+1;
+function bootProg(f){const e=$('#btFill');if(e)e.style.width=Math.round(4+96*f)+'%';}
+function bootDone(){bootProg(1);const b=$('#boot');if(!b)return;setTimeout(()=>{b.classList.add('out');setTimeout(()=>{b.hidden=true;},500);},Math.max(250,900-performance.now()));}
+function bootShow(msg){const b=$('#boot');if(!b)return;b.hidden=false;b.classList.remove('out');bootProg(0);if(msg)$('#btMsg').textContent=msg;}
+function start(data){resize();const gen=buildSpritesGen();let n=0;
+  const step=()=>{const t0=performance.now();let r;do{r=gen.next();n++;}while(!r.done&&performance.now()-t0<30);bootProg(Math.min(.92,n/BOOT_STEPS));
+    if(r.done)setTimeout(()=>start2(data));else requestAnimationFrame(()=>setTimeout(step));};
+  requestAnimationFrame(()=>setTimeout(step));}
+function start2(data){
   for(const sp of SP.tree){sp.g=0;sp.still=true;}for(const set of[SP.car,...SP.veh,...SP.boat,...SP.emer.filter(Boolean)])for(const a of set)for(const sp of[].concat(a))sp.g=0;
   for(const e of SP.train)if(e)for(const t of e)for(const sp of t)sp.g=0;for(const set of[...SP.bridge,...SP.bridgeA])if(set)for(const sp of set)sp.noSh=true;
   let loaded=false;
@@ -2895,7 +3209,7 @@ function start(data){resize();buildSprites();
   updateHud(true);drawMini();
   if(loaded){toast(`${W.name}에 다시 오신 걸 환영해요.`,'info');catchUp(W.savedAt);}else showEra(false);
   try{window.claude?.hot?.snapshot?.(()=>({save:serialize(),cam:{...cam}}));}catch(e){}
-  requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);bootDone();}
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 </script>
 </body>
