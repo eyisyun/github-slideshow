@@ -4,18 +4,19 @@ const fs = require('fs'), path = require('path');
 const out = path.join(__dirname, '..', 'store', 'screenshots');
 const scenes = [
   ['1-stone', 0, false], ['2-dynasty', 2, false], ['3-modern-night', 4, true], ['4-future', 5, false], ['5-shop', 1, false, true], ['6-airport', 4, false, false, true],
+  ['7-themeparks', 4, false, false, 'parks'], ['8-themeparks-night', 4, true, false, 'parks'],
 ];
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   for (const lang of ['ko', 'en']) for (const [dev, vp, dpr] of [['ios', { width: 402, height: 874 }, 3], ['android', { width: 360, height: 640 }, 3]]) {
-    for (const [name, era, night, shop, feat] of scenes) {
+    for (const [name, era, night, shop, feat] of scenes.filter(s => !process.env.ONLY || s[0].includes(process.env.ONLY))) {
       const p = await (await b.newContext({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true, locale: lang === 'ko' ? 'ko-KR' : 'en-US' })).newPage();
-      await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForTimeout(900);
+      await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForFunction(() => { const b = document.getElementById('boot'); return !b || b.hidden; }, null, { timeout: 30000 });
       await p.evaluate(([era, night, shop, feat]) => {
         closeEra(); try { localStorage.clear(); } catch (e) {}
         W = blankWorld(77); genTerrain(W); W.era = era;
-        for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < (feat ? 20 : 13)) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
+        for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < (feat === true ? 20 : 13)) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
         const road = (x, y) => { if (inb(x, y) && W.terrain[idx(x, y)] !== 1 && W.kind[idx(x, y)] !== K.ROAD) placeRaw(K.ROAD, x, y); };
         const R = era === 0 ? 5 : 9;
         for (let c = 32 - R; c <= 32 + R; c++) for (let k = 32 - R; k <= 32 + R; k++) { if ((c - 32) % 4 === 0) road(c, k); if ((k - 32) % 4 === 0) road(k, c); }
@@ -29,7 +30,14 @@ const scenes = [
         recompute(); for (let i = 0; i < N * N; i++) W.fire[i] = 0;
         cars = []; for (let k = 0; k < 140; k++) spawnCar(); buildTools(); setTool('inspect'); updateHud(true);
         W.powered.fill(1); W.grid.fill(1); W.road.fill(1);
-        if (feat) { // the newer things: an airport with a plane landing, a railway with a train, a harbour, decorations and a name tag
+        if (feat === 'parks') { // world theme parks filling the 3×3 blocks between the roads, with the country picker open by day
+          const spots = [[33, 33, 0], [29, 29, 5], [33, 29, 7], [29, 33, 1], [37, 29, 3], [33, 25, 10], [25, 33, 6], [37, 33, 11], [29, 37, 12], [33, 37, 2], [25, 29, 9], [29, 25, 4]];
+          for (const [x, y, n] of spots) { for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) clearTile(x + dx, y + dy); placeRaw(K.THEME, x, y); W.level[idx(x, y)] = n; }
+          for (let i = 0; i < N * N; i++) if (W.kind[i] >= K.RES && W.kind[i] <= K.IND) W.level[i] = Math.min(W.level[i], 2); // low-rise around the parks so they stand out
+          recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1); cars = []; for (let k = 0; k < 140; k++) spawnCar();
+          if (!night) { W.st.pop = Math.max(W.st.pop, 2000); setTool('theme'); subSel.theme = 0; }
+        }
+        if (feat === true) { // the newer things: an airport with a plane landing, a railway with a train, a harbour, decorations and a name tag
           for (let y = 18; y <= 22; y++) for (let x = 42; x <= 46; x++) clearTile(x, y);
           placeRaw(K.AIRPORT, 42, 18);
           for (let x = 22; x <= 41; x++) { clearTile(x, 21); placeRaw(K.RAIL, x, 21); W.rail[idx(x, 21)] = 1; }
@@ -44,7 +52,7 @@ const scenes = [
           trains = []; for (let k = 0; k < 400; k++) stepTrains(.1); boats = []; for (let k = 0; k < 300; k++) stepBoats(.3);
           planes.clear(); planes.set(idx(42, 18), { ph: 'land', u: -1.5, alt: 0, dir: 1, e: 4, t: 0 }); stepPlanes(.01);
         }
-        cam.x = feat ? 330 : 0; cam.y = feat ? 500 : 32 * 16 + 20; if (feat) cam.s = 3; if (night) { dayMode = 'night'; W.tod = 22; paintDayBtn(); } setSpeed(0); document.querySelectorAll('.toast').forEach(t => t.remove());
+        cam.x = feat === true ? 330 : feat ? 0 : 0; cam.y = feat === true ? 500 : feat ? 31 * 16 + 30 : 32 * 16 + 20; if (feat === true) cam.s = 3; if (feat === 'parks') cam.s = 3.3; if (night) { dayMode = 'night'; W.tod = 22; paintDayBtn(); } setSpeed(0); document.querySelectorAll('.toast').forEach(t => t.remove());
         if (shop) { // the top-up screen with store-style prices (the real app shows the App Store's own prices)
           window.DotIAP = { products: () => Promise.resolve([['dotcity.coins.small', 2200], ['dotcity.coins.medium', 5500], ['dotcity.coins.large', 13000]]
             .map(([identifier, price]) => ({ identifier, price, priceString: '₩' + price.toLocaleString('ko-KR') }))), buy: () => new Promise(() => {}) };
