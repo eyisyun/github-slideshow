@@ -2808,7 +2808,7 @@ function campfire(c,sx,sy){const f=now/110|0,ga=c.globalAlpha;c.globalCompositeO
 // theme park motion (bx,by = footprint centre on screen, f = -1 when mirrored): windmill sails, the cable car, drifting balloons, a sparkling iron tower at night
 function themeAnimDraw(c,th,f,bx,by,t,night){const P=(x,y,cl,w=1,h=1)=>{c.fillStyle=cl;c.fillRect(Math.round(bx+f*x-(f<0?w-1:0)),Math.round(by+y),w,h);};
   if(th.l==='windmill'){const hx=4,hy=-41;for(let k=0;k<4;k++){const q=t*.8+k*Math.PI/2,cs=Math.cos(q),sn=Math.sin(q);
-      for(let j=2;j<19;j++){const x=hx+cs*j*.8,y=hy+sn*j;P(x,y,'#5a4030');if(j>5){P(x-sn*1.4,y+cs*1.1,j%3?'#efe6d2':'#8a6a4a');P(x-sn*2.6,y+cs*2.1,j%3?'#e2d8c2':'#8a6a4a');}}}P(hx,hy,'#2a2a30',2,2);}
+      for(let j=2;j<21;j+=.5){const x=hx+cs*j*.8,y=hy+sn*j;if(j>5)for(let w=.8;w<=4.2;w+=.7)P(x-sn*w*.8,y+cs*w,(j*2|0)%5===0||w>3.9?'#6a5038':w<2.4?'#f4ecd8':'#e2d6be');P(x,y,'#4a3424');}}P(hx-1,hy-1,'#2a2a30',3,3);}
   if(th.l==='sugarloaf'){const q=(Math.sin(t*.22)+1)/2,x=-18+26*q,y=-27-35*q;P(x-1,y+1,'#3a3f48',1,2);P(x-2,y+3,'#f2c14b',4,3);P(x-1,y+4,night?'#ffe7ad':'#3c4658',2,1);}
   if(th.l==='balloon')for(let k=0;k<3;k++){const x=-16+k*15+Math.sin(t*.3+k*2)*3,y=-62-k*7+Math.sin(t*.5+k)*3,cc=[th.c0[0],'#f2c14b','#3a8fd0'][k];
     for(let dy=-4;dy<=3;dy++){const w=Math.round(Math.sqrt(Math.max(0,16-dy*dy))*(dy>0?.8:1));P(x-w,y+dy,cc,w*2+1,1);if(w>1)P(x-w+1,y+dy,'#ffffff40',1,1);}P(x-1,y+3,'#ffffff',3,1);P(x-1,y+6,'#7a5038',3,2);}

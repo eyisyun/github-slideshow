@@ -52,3 +52,27 @@ Build your own pixel city through the ages. Fire trucks, trains, planes, snow on
 ```
 
 다시 만들기: 스크래치 스크립트로 만들었습니다. 게임이 바뀌어 새로 만들 때는 Claude에게 요청하세요.
+
+## 테마파크 업데이트 (1.0.2) · `dotcity-themeparks-ko.mp4` / `dotcity-themeparks-en.mp4`
+
+**한국어**
+```
+🎡 도트시티 NEW 업데이트! 세계 테마파크 20종 등장 🌏
+피라미드, 시계탑, 철탑, 풍차, 열기구까지…
+나라마다 하나씩, 내 도시에 세계 명소를 모아 보세요 ✨
+밤이 되면 불빛이 반짝반짝 🌙
+
+App Store에서 무료 · "도트시티" 검색
+#도트시티 #픽셀아트 #도시건설 #인디게임 #모바일게임 #테마파크
+```
+
+**English**
+```
+🎡 Dot City update: 20 World Theme Parks are here! 🌏
+Pyramids, clock towers, windmills, hot-air balloons…
+Collect a landmark park from every country in your own pixel city ✨
+And watch it all sparkle at night 🌙
+
+Free on the App Store · search "Dot City"
+#DotCity #pixelart #citybuilder #indiegame #mobilegame #themepark
+```
