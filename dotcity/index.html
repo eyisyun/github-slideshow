@@ -2574,25 +2574,26 @@ function trainCars(tr){const out=[];for(let k=0;k<tr.trail.length;k++){const[fx,
     const dx=to[0]-fx,dy=to[1]-fy,d=dx>0?0:dy>0?1:dx<0?2:3;out.push({gx:fx+.5+dx*tr.t,gy:fy+.5+dy*tr.t,d,type:k?1:0,e:tr.e});}return out;}
 function drawTrainCar(c,tc){const sp=SP.train[Math.max(3,Math.min(5,tc.e))][tc.type][tc.d],sx=Math.round((tc.gx-tc.gy)*16-X0),sy=Math.round((tc.gx+tc.gy)*8-Y0);
   drawSpr(c,sp,sx,sy);if(tc.type===0){emit(sp,sx,sy);if(sp.head&&nightF>.05){c.fillStyle=`rgba(255,240,190,${nightF})`;c.fillRect(sx+sp.ox+sp.head[0],sy+sp.oy+sp.head[1],2,1);}}}
-// planes: one per airport. Lands heading +x along the runway, waits, takes off back the other way, flies off, returns
-const planes=new Map();
+// planes: one per airport. Comes in from far away (FAR tiles out, fading in) heading +x along the runway, lands, waits, takes off back the other way,
+// climbs to cruise height and flies far off (fading out) before the next arrival
+const planes=new Map(),FAR=40,planeCap=e=>e>=5?130:95;
 function stepPlanes(dt){const list=W.st.apts||[];for(const a of[...planes.keys()])if(!list.includes(a))planes.delete(a);
   for(const a of list){let p=planes.get(a);if(!p){p={ph:'wait',t:2+Math.random()*4,u:0,alt:0,dir:1,e:W.era};planes.set(a,p);}
     p.t-=dt;
-    if(p.ph==='wait'&&p.t<=0){p.ph='land';p.u=-7;p.dir=1;p.e=W.era;}
-    else if(p.ph==='land'){const v=p.u<.8?1.8:Math.max(.3,1.8-(p.u-.8)*.55);p.u+=v*dt;p.alt=Math.max(0,(.8-p.u)*7);if(p.u>=3.7){p.u=3.7;p.ph='park';p.t=4+Math.random()*3;}}
+    if(p.ph==='wait'&&p.t<=0){p.ph='land';p.u=-FAR;p.dir=1;p.e=W.era;p.alt=planeCap(p.e);}
+    else if(p.ph==='land'){const v=p.u<-8?3.2:p.u<.8?1.8:Math.max(.3,1.8-(p.u-.8)*.55);p.u+=v*dt;p.alt=Math.min(planeCap(p.e),Math.max(0,(.8-p.u)*7));if(p.u>=3.7){p.u=3.7;p.ph='park';p.t=4+Math.random()*3;}}
     else if(p.ph==='park'&&p.t<=0){p.ph='takeoff';p.dir=-1;p.v=.2;}
-    else if(p.ph==='takeoff'){p.v=Math.min(2.8,p.v+dt*(p.e>=5?1.4:.9));p.u-=p.v*dt;p.alt=Math.max(0,(2.0-p.u)*(p.e>=5?11:8));if(p.u<-8){p.ph='wait';p.t=7+Math.random()*8;}}}}
+    else if(p.ph==='takeoff'){p.v=Math.min(p.u<-8?3.6:2.8,p.v+dt*(p.e>=5?1.4:.9));p.u-=p.v*dt;p.alt=Math.min(planeCap(p.e)+20,Math.max(0,(2.0-p.u)*(p.e>=5?11:8)));if(p.u<-FAR){p.ph='wait';p.t=4+Math.random()*6;}}}}
 function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const ax=a%N,ay=a/N|0,fa=W.flip[a],gx=fa?ax+4.52:ax+p.u,gy=fa?ay+p.u:ay+4.52,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0),alt=Math.round(p.alt);
-    const sp0=SP.plane[p.e>=5?1:0][p.dir>0?0:1],sp=fa?flipped(sp0):sp0;    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
-    {const ga=c.globalAlpha;c.globalAlpha=.28*(1-Math.min(.8,alt/70))*(1-nightF*.7);c.drawImage(sp.sil,sx+sp.ox+Math.round(alt*.35),sy+sp.oy+3+Math.round(alt*.15));c.globalAlpha=ga;}   // its shadow on the ground
+    const sp0=SP.plane[p.e>=5?1:0][p.dir>0?0:1],sp=fa?flipped(sp0):sp0,fade=Math.max(0,Math.min(1,(p.u+FAR)/10)),ga0=c.globalAlpha;c.globalAlpha=ga0*fade;    if(!sp.sil){const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#121630';g.fillRect(0,0,sp.w,sp.h);sp.sil=cv;}
+    {const ga=c.globalAlpha;c.globalAlpha=.28*(1-Math.min(.8,alt/70))*(1-nightF*.7)*fade;c.drawImage(sp.sil,sx+sp.ox+Math.round(alt*.35),sy+sp.oy+3+Math.round(alt*.15));c.globalAlpha=ga;}   // its shadow on the ground
     if(p.e>=5&&p.ph==='takeoff'&&p.v>.6){const nx=sp.ox+sp.nose[0],ny=sp.oy+sp.nose[1],tx=sx-nx*.92,ty=sy-alt-ny*.92-8,dx=fa?p.dir*2:-p.dir*2,dy=-p.dir;   // rocket exhaust
-      const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.55;c.drawImage(SP.glow.c,Math.round(tx+dx*3)-15,Math.round(ty+dy*3)-7);
-        const fl=10+Math.random()*4;for(let k=0;k<fl;k++){c.globalAlpha=(1-k/fl)*(.75+.25*Math.random());c.fillStyle=k<2?'#ffffff':k<5?'#bff6ff':k<8?'#5fe6f2':'#ff6ad5';
+      const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.55*fade;c.drawImage(SP.glow.c,Math.round(tx+dx*3)-15,Math.round(ty+dy*3)-7);
+        const fl=10+Math.random()*4;for(let k=0;k<fl;k++){c.globalAlpha=(1-k/fl)*(.75+.25*Math.random())*fade;c.fillStyle=k<2?'#ffffff':k<5?'#bff6ff':k<8?'#5fe6f2':'#ff6ad5';
         const w=k<2?3:k<6?4:3;c.fillRect(Math.round(tx+dx*k)-(w>>1),Math.round(ty+dy*k)-1,w,k<7?3:2);}c.globalCompositeOperation='source-over';c.globalAlpha=ga;
       if(SPEEDS[speed]&&Math.random()<.5&&parts.length<700)parts.push({x:tx+dx*7+X0,y:ty+dy*7+Y0,vx:dx*4,vy:-2,life:0,max:1.4,sz:2,kind:'steam',g:0});}
     drawSpr(c,sp,sx,sy-alt);if((now/400|0)%2){c.fillStyle='#ff4a4a';c.fillRect(sx+sp.ox+sp.nose[0],sy-alt+sp.oy+sp.nose[1],1,1);}
-    if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}}}
+    if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}c.globalAlpha=ga0;}}
 function drawBoat(c,b){const gx=b.x+.5+DIRS[b.d][0]*b.t,gy=b.y+.5+DIRS[b.d][1]*b.t,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0+Math.sin(now/600+b.ph)*.6),sp=SP.boat[Math.min(5,b.e)][b.d&1];
   const bx=-DIRS[b.d][0],by=-DIRS[b.d][1],fx=(bx-by)*16,fy=(bx+by)*8;c.fillStyle=nightCss('#e2f3fb',nightF*.7,.55);   // wake behind the stern
   for(let k=1;k<=3;k++){const q=.12+k*.07,ox=Math.round(fx*q),oy=Math.round(fy*q);c.fillRect(sx+ox-k,sy+oy,1,1);c.fillRect(sx+ox+k,sy+oy,1,1);}
