@@ -1640,16 +1640,15 @@ function* buildSpritesGen(){
     const walker=(body,pants)=>{let hs=0;for(const ch of body)hs=hs*31+ch.charCodeAt(0)|0;hs=Math.abs(hs);
       const hair=col(HAIR[hs%HAIR.length]),skin=col(SKIN[(hs>>3)%SKIN.length]),skinD=col(SKIN[(hs>>3)%SKIN.length],-.18),sh=col(body),shD=col(body,-.22),shL=col(body,.14),
         pa=col(pants||(hs&1?'#34405e':'#3e3530')),paD=col(pants||(hs&1?'#34405e':'#3e3530'),-.25),shoe=col('#1e1a1a');
-      const fig=(back,flip,step)=>{const pb=new PB(7,11),P=(x,y,c)=>pb.put(flip?6-x:x,y,c);
-        P(2,1,hair);P(3,1,hair);P(4,1,hair);
-        if(back){P(2,2,hair);P(3,2,hair);P(4,2,hair);P(2,3,hair);P(3,3,col(HAIR[hs%HAIR.length],-.15));P(4,3,hair);}
-        else{P(2,2,hair);P(3,2,skin);P(4,2,skin);P(2,3,skinD);P(3,3,skin);P(4,3,skin);}
-        for(let x=1;x<=5;x++)P(x,4,x===1||x===5?shD:x===2?shL:sh);
-        P(1,5,shD);P(2,5,shL);P(3,5,sh);P(4,5,sh);P(5,5,shD);
-        P(1,6,step?shD:skinD);P(2,6,sh);P(3,6,sh);P(4,6,shD);P(5,6,step?skinD:shD);if(!step){P(1,6,skin);}
-        P(2,7,pa);P(3,7,pa);P(4,7,paD);
-        if(step){P(2,8,pa);P(4,8,paD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,pa);P(2,8,paD);P(3,9,shoe);P(2,9,shoe);}
-        const sp=mk(pb,-3,-10);sp.g=0;return sp;};
+      // a 5×8 figure (about car height): hair, face, shirt with swinging arms, legs that alternate between the two steps
+      const fig=(back,flip,step)=>{const pb=new PB(5,8),P=(x,y,c)=>pb.put(flip?4-x:x,y,c);
+        P(1,0,hair);P(2,0,hair);P(3,0,hair);
+        if(back){P(1,1,hair);P(2,1,col(HAIR[hs%HAIR.length],-.15));P(3,1,hair);}else{P(1,1,hair);P(2,1,skin);P(3,1,skin);}
+        P(0,2,step?shD:skinD);P(1,2,shL);P(2,2,sh);P(3,2,shD);P(4,2,step?skinD:shD);
+        P(1,3,sh);P(2,3,sh);P(3,3,shD);if(step)P(4,3,skinD);else P(0,3,skin);
+        P(1,4,pa);P(2,4,pa);P(3,4,paD);
+        if(step){P(1,5,pa);P(3,5,paD);P(1,6,shoe);P(3,6,shoe);}else{P(2,5,pa);P(1,5,paD);P(1,6,shoe);P(2,6,shoe);}
+        const sp=mk(pb,-2,-7);sp.g=0;return sp;};
       return[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});};
     ;yield;
     SP.walker=walker;
