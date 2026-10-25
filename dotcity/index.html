@@ -2151,8 +2151,11 @@ function simDay(quiet){const w=W;w.day++;autoWeather(w,quiet);if(!quiet)maybeInc
     for(let i=0;i<N*N;i++){const k=w.kind[i];if(k<K.RES||k>K.IND||w.level[i]||w.build[i]||w.fire[i]||!w.powered[i]||!w.road[i])continue;
       const d=k===K.RES?w.st.dR:k===K.COM?w.st.dC:w.st.dI;if(d>0&&Math.random()<.35+d*.4){w.level[i]=1;w.te[i]=w.era;w.build[i]=5+(Math.random()*5|0);w.vari[i]=Math.random()*256|0;}}}
   if(w.day>=30){w.day=0;w.month++;monthEnd(quiet);}}
-function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]);
-  const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul;return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
+// a game month passes every 30*DAY seconds (under 5 s), so later eras, where big populations pile up money, scale both sides of the budget down
+// by ECON: buildings cost real thought and a top-up pack is worth minutes of play. Early eras keep their pace (wonders there are bought with savings).
+const ECON=[1,1,.7,.5,.4,.4];
+function budget(){const S=W.st;const income=Math.round((S.pop+(S.jobsC+S.jobsI)*.9)*W.tax/100*1.1*[.4,.5,.65,.85,1,1.2][W.era]*ECON[W.era]);
+  const expense=(S.roads*.4+S.avenues*.8+S.police*45+S.wind*6+S.coal*70+S.parks*2+S.fires*40+(S.hosp||0)*20+S.schools*60+S.halls*30+S.stadiums*80+S.towers*20)*ERAS[W.era].costMul*ECON[W.era];return{income,expense:Math.round(expense),net:income-Math.round(expense)};}
 function monthEnd(quiet){const b=budget();W.funds+=b.net;W.lastNet=b.net;if(W.funds<0)W.funds=0;   // no debt: an empty purse just stays empty
   if(!quiet&&W.era===5&&!W.adv.done&&goalsDone()){W.adv.done=1;toast('모든 목표 달성! 미래 도시가 완성됐어요.','good');fireworks();sfx('win');}
   if(quiet)return;advisor();milestone();save();}
@@ -3172,7 +3175,7 @@ function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;
   w.month=0;w.day=0;w.funds=[300,3000,8000,20000,40000,80000][e];w.lastNet=0;w.adv={};w.wb=null;const p=w.st.pop;w.ms=MS.filter(m=>p>=m[0]).length;}
 /* ---------------- fund packs (in-app purchase; the native app provides window.DotIAP) ---------------- */
 const PACKS=[{id:'dotcity.coins.small',mul:1},{id:'dotcity.coins.medium',mul:3},{id:'dotcity.coins.large',mul:8}];
-const PACK_BASE=[100,800,2000,5000,10000,20000]; // per era: a small top-up, not a skip (stone: 100 shells ≈ 8 hut lots)
+const PACK_BASE=[200,1600,5000,15000,30000,60000]; // per era: the small pack is several minutes of income (modern: 30,000 ≈ 6 min)
 const packAmount=p=>p.mul*PACK_BASE[W.era];
 let shopBusy=false,shopPrices={},shopPriceNum={};
 // how much more game money per won than the basic pack, from the live store prices
@@ -3180,7 +3183,7 @@ const packBonus=p=>{const a=shopPriceNum[PACKS[0].id],b=shopPriceNum[p.id];if(!a
 function grantPack(id){const p=PACKS.find(q=>q.id===id);if(!p||!W)return;const a=packAmount(p);W.funds+=a;save();updateHud(true);toast(`게임머니 +${money(a)} 충전 완료!`,'good');sfx('win');renderShop();}
 window.dotGrantPack=grantPack;
 // rewarded ad: half the basic pack, three times a day (counted per device, resets at local midnight)
-const AD_DAILY=3,adAmount=()=>Math.round(PACK_BASE[W.era]*.5);
+const AD_DAILY=3,AD_BASE=[60,500,1500,5000,10000,20000],adAmount=()=>AD_BASE[W.era];
 const today=()=>{const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
 function adsLeft(){try{const o=JSON.parse(localStorage.getItem('dotcity.ads')||'{}');return o.d===today()?Math.max(0,AD_DAILY-(o.n|0)):AD_DAILY;}catch(e){return AD_DAILY;}}
 function useAd(){try{const o=JSON.parse(localStorage.getItem('dotcity.ads')||'{}');const n=o.d===today()?(o.n|0)+1:1;localStorage.setItem('dotcity.ads',JSON.stringify({d:today(),n}));}catch(e){}}
