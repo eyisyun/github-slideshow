@@ -764,15 +764,6 @@ function* buildSpritesGen(){
       out[ax*4+ends]=mk(pb,-16,-TOP);}return out;};
   ;yield;
   SP.bridge=BR.map(mkBridge);SP.bridgeA=BRA.map(mkBridge);
-  // boats, one look per era, drawn along either map axis. (s: along the hull -.5..5, t: across -1..1)
-  const nGlow=(hex)=>[col(hex),col(hex,.4)];
-  const BOAT=[
-    {len:.8,wid:.07,h:1,hull:'#7a5232',deck:'#5a3a22',top:(P)=>{P(0,0,1,'#c98d5a');P(0,0,2,'#c98d5a');P(0,0,3,'#2a1d14');P(.12,.9,1,'#9a7448');P(.2,1.4,0,'#9a7448');}},
-    {len:.85,wid:.09,h:2,hull:'#8a6238',deck:'#a37b4c',top:(P)=>{for(let r=1;r<=11;r++)P(.06,0,r,'#5a3e22');for(let r=3;r<=11;r++){const w=.36*(1-(r-3)/9);for(let q=0;q<=8;q++)P(.04-w*q/8,0,r,q%4===0?'#d8ccb0':'#f0e8d4');}}},
-    {len:.95,wid:.1,h:2,hull:'#6e4e2c',deck:'#8a6238',top:(P)=>{for(let r=1;r<=12;r++)P(0,0,r,'#4a3420');for(let r=3;r<=12;r++)for(let q=-6;q<=6;q++)P(q*.03,0,r,r%3===0?'#a87a2a':'#d9a94a');P(-.22,0,1,'#4a3420');P(-.22,0,2,'#e0503a');}},
-    {len:1.05,wid:.11,h:3,hull:'#2e2b33',band:'#a0392b',deck:'#8a7a64',cab:[-.24,.14,.55,3,'#efe8d8','#3e577c'],stack:[.04,6,'#c0392b']},
-    {len:1.2,wid:.12,h:3,hull:'#f0f0ea',band:'#2f6fc0',deck:'#d8d8d4',cab:[-.3,.2,.6,5,'#f6f6f2','#3e577c'],top2:'#2f6fc0'},
-    {len:.95,wid:.11,h:2,hull:'#f4f7fa',band:nGlow('#5fe6f2'),deck:'#2c3246',dome:[-.16,.18,.6,3]}];
   // railways (era 3 timber sleepers, era 4 concrete sleepers on ballast, era 5 maglev guideway), by link mask
   const RL=[,,,{bed:'#8a857a',tie:'#6b4a2e',rail:'#c8ccd2'},{bed:'#9a968c',tie:'#c4c0b6',rail:'#dde1e6'},{bed:null,tie:null,rail:'#f2f5f8',glow:'#5fe6f2'}];
   ;yield;
@@ -813,21 +804,69 @@ function* buildSpritesGen(){
     if(eng&&R.nose){const[x,y]=pos(.48,0);meta.head=[Math.floor(x),Math.floor(y)-2];}
     return mk(pb,-CX,-CY,true,meta);})));
   ;yield;
-  SP.boat=BOAT.map((B,e)=>[0,1].map(ax=>{const pb=new PB(48,34),CX=24,CY=26,A=ax?[-16,8]:[16,8],Pp=ax?[16,8]:[-16,8];
-    const pos=(s,t)=>[CX+A[0]*s*B.len+Pp[0]*t*B.wid,CY+A[1]*s*B.len+Pp[1]*t*B.wid];
-    const C=v=>typeof v==='string'?col(v):v,wAt=s=>Math.sqrt(Math.max(0,1-(2*s)**2));
-    const put=(s,t,up,v)=>{const[x,y]=pos(s,t);pb.put(Math.floor(x),Math.floor(y)-up,C(v));};
-    for(let d=0;d<B.h;d++)for(let i=0;i<=80;i++)for(let j=0;j<=20;j++){const s=-.5+i/80,t=(-1+j/10)*wAt(s);put(s,t,d,d===0&&B.band?B.band:col(B.hull,t>0?-.25:-.05));}
-    for(let i=0;i<=80;i++)for(let j=0;j<=20;j++){const s=-.5+i/80,t=(-1+j/10)*wAt(s);put(s,t,B.h,Math.abs(t)>.78*wAt(s)?col(B.hull,.08):col(B.deck,hash(i,j,5)<.1?-.06:0));}
-    const P=(s,t,up,v)=>put(s,t*.6,B.h+up,v);
-    if(B.top)B.top(P);
-    if(B.cab){const[s0,s1,tw,H,wall,glass]=B.cab;for(let d=1;d<=H;d++)for(let i=0;i<=30;i++)for(let j=0;j<=10;j++){const s=s0+(s1-s0)*i/30,t=(-1+j/5)*tw;
-        put(s,t,B.h+d,d===H?col(B.top2||wall,.05):d===H-1&&i%4<2?[col(glass),col('#ffd27a')]:col(wall,t>0?-.2:0));}}
-    if(B.stack){const[s0,H,c0]=B.stack;for(let d=1;d<=H;d++){put(s0,0,B.h+3+d,d===H?'#1a1a1a':c0);put(s0+.03,0,B.h+3+d,d===H?'#1a1a1a':col(c0,-.25));}}
-    if(B.dome){const[s0,s1,tw,H]=B.dome;for(let i=0;i<=30;i++)for(let j=0;j<=10;j++){const s=s0+(s1-s0)*i/30,t=(-1+j/5)*tw,q=Math.sqrt(Math.max(0,1-((2*(s-(s0+s1)/2)/(s1-s0))**2)-t*t/(tw*tw)));
-        const hh=Math.round(H*q);for(let d=1;d<=hh;d++)put(s,t,B.h+d,col('#9fdce4',d===hh?.3:0,190));}}
-    const meta={};if(B.stack){const[x,y]=pos(B.stack[0],0);meta.em=[[Math.floor(x),Math.floor(y)-B.h-B.stack[1]-4,'smoke']];}
-    return mk(pb,-CX,-CY,true,meta);}));
+  // boats, one model per era, built in 3D (s along the hull -.5..5 bow forward, t across, z up in pixels) for the four sailing
+  // directions with a depth buffer and per-face light. The hull's bottom pixel row is tinted by the water so it sits in it.
+  const nGlow=(hex)=>[col(hex),col(hex,.4)];
+  const WATER='#2a66a0',LGT=[-.35,-.55,.76];
+  const boatModel=(L,Wd,build,H0=50,W0=60)=>[0,1,2,3].map(d=>{const CX=W0/2,CY=H0-14,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9),meta={};
+    const hx=DIRS[d][0],hy=DIRS[d][1],lx=-hy,ly=hx;
+    const scr=(s,t,z)=>{const X=s*L*hx+t*Wd*lx,Y=s*L*hy+t*Wd*ly;return[CX+(X-Y)*16,CY+(X+Y)*8-z,(X+Y)*8+z];};
+    const plot=(s,t,z,c,n=[0,0,1])=>{if(c==null)return;const[fx,fy,dep]=scr(s,t,z),px=Math.round(fx),py=Math.round(fy);if(px<0||py<0||px>=W0||py>=H0)return;
+      const k=py*W0+px;if(dep<zb[k])return;zb[k]=dep;if(Array.isArray(c)||typeof c==='number'){pb.put(px,py,c);return;}
+      const nX=n[0]*hx+n[1]*lx,nY=n[0]*hy+n[1]*ly,nl=Math.hypot(nX,nY,n[2])||1,v=(nX*LGT[0]+nY*LGT[1]+n[2]*LGT[2])/nl;pb.put(px,py,col(c,Math.max(-.34,Math.min(.2,(v-.25)*.55))));};
+    const ds=1/(L*44),dt=1/(Wd*40);
+    // hull: pointed bow, fuller stern with a transom; o.band = [z0,z1,hex], o.deck(s,t) deck colour, o.rim sheer-strake colour
+    const hull=o=>{const wf=s=>s>0?Math.sqrt(Math.max(0,1-Math.pow(s/.5,o.sharp||2.2))):Math.sqrt(Math.max(0,1-Math.pow(-s/.5,6)));
+      for(let s=-.5;s<=.5;s+=ds){const w=wf(s)*(o.w||1);if(w<.02)continue;for(const sg of[-1,1])for(let z=o.z0||0;z<=o.z1;z+=.5){
+          let c=z<1?mixHex(o.col,WATER,.55):o.band&&z>=o.band[0]&&z<o.band[1]?o.band[2]:(o.rim&&z>o.z1-1?o.rim:o.col);plot(s,sg*w,z,c,[s>.3?.6:0,sg,0]);}
+        for(let t=-w;t<=w;t+=dt)plot(s,t,o.z1,Math.abs(t)>w-.12?(o.rim||o.col):o.deck(s,t),[0,0,1]);}
+      const w0=wf(-.5)*(o.w||1);for(let t=-w0;t<=w0;t+=dt)for(let z=o.z0||0;z<=o.z1;z+=.5)plot(-.5,t,z,z<1?mixHex(o.col,WATER,.55):o.col,[-1,0,0]);};
+    // box with per-face colour f(face,a,b) or a hex
+    const box=(s0,s1,t0,t1,z0,z1,f)=>{const C=(fc,a,b)=>typeof f==='function'?f(fc,a,b):f;const ns=Math.max(3,Math.ceil((s1-s0)*L*40)),nt=Math.max(3,Math.ceil((t1-t0)*Wd*40)),nz=Math.max(2,Math.ceil((z1-z0)*2));
+      for(let i=0;i<=ns;i++)for(let j=0;j<=nt;j++)plot(s0+(s1-s0)*i/ns,t0+(t1-t0)*j/nt,z1,C('top',i/ns,j/nt),[0,0,1]);
+      for(let i=0;i<=ns;i++)for(let j=0;j<=nz;j++){const z=z0+(z1-z0)*j/nz;plot(s0+(s1-s0)*i/ns,t1,z,C('side',i/ns,j/nz),[0,1,0]);plot(s0+(s1-s0)*i/ns,t0,z,C('side',i/ns,j/nz),[0,-1,0]);}
+      for(let i=0;i<=nt;i++)for(let j=0;j<=nz;j++){const z=z0+(z1-z0)*j/nz;plot(s1,t0+(t1-t0)*i/nt,z,C('front',i/nt,j/nz),[1,0,0]);plot(s0,t0+(t1-t0)*i/nt,z,C('back',i/nt,j/nz),[-1,0,0]);}};
+    const pole=(s,t,z0,z1,c)=>{for(let z=z0;z<=z1;z+=.5)plot(s,t,z,c,[0,-1,0]);};
+    // a seated or standing person: legs, shirt, head
+    const person=(s,t,z,shirt,stand)=>{const hz=stand?3.5:2.2;for(let z2=0;z2<hz;z2+=.5)plot(s,t,z+z2,z2<(stand?1.5:.6)?'#34405e':shirt,[0,-1,0]);plot(s,t,z+hz,'#e8b890');plot(s,t,z+hz+1,'#2a1d14');};
+    // flat sail panel: across the hull (fore-aft=false) or along it; shape(a,b) -> colour or null, a,b in 0..1
+    const sail=(s,tc,z0,z1,span,along,shape)=>{const n=40;for(let i=0;i<=n;i++)for(let z=z0;z<=z1;z+=.5){const a=i/n,b=(z-z0)/(z1-z0),c=shape(a,b);if(c==null)continue;
+        if(along)plot(s-span/2+span*a,tc,z,c,[0,1,0]);else plot(s,tc-span/2+span*a,z,c,[1,0,0]);}};
+    const at=(s,t,z)=>{const[x,y]=scr(s,t,z);return[Math.round(x),Math.round(y)];};
+    build({hull,box,pole,person,sail,plot,at,meta});
+    const sp=mk(pb,-CX,-CY,true,meta);sp.noSh=true;sp.len=L;return sp;});
+  const plank=(a,b)=>(s,t)=>col(Math.floor((t+1)*4)%2?a:b,hash(Math.floor(s*30),0,3)<.15?-.08:0);
+  SP.boat=[
+    // stone age: a dugout canoe with two paddlers
+    boatModel(.78,.1,P=>{P.hull({col:'#7a5232',z1:2.5,deck:(s,t)=>Math.abs(t)<.55?'#4a3020':'#8a6238',rim:'#9a7448',sharp:1.6});
+      P.person(-.22,0,1.6,'#c9a070');P.person(.14,0,1.6,'#b8865a');for(const[s0,sg]of[[.14,1],[-.22,-1]])for(let k=0;k<10;k++)P.plot(s0-k*.012,sg*(.5+k*.13),3.6-k*.38,'#d9a060',[0,sg,0]);}),
+    // bronze age: a plank boat with a striped square sail and a steersman
+    boatModel(.78,.11,P=>{P.hull({col:'#8a6238',z1:2.5,deck:plank('#a37b4c','#946a40'),rim:'#c9a070'});
+      P.pole(.06,0,2.5,15,'#5a3e22');P.pole(.06,0,14.5,14.5,'#5a3e22');
+      P.sail(.08,0,5,14,1.9,false,(a,b)=>Math.floor(a*6)%2?'#f0e8d4':'#b8553d');P.person(-.36,0,2.5,'#e8e0c8',true);
+      for(let k=0;k<6;k++)P.plot(-.42-k*.015,.2+k*.1,4-k*.6,'#6a4428',[0,1,0]);}),
+    // dynasty: a yellow-sailed river junk with a thatched cabin and a rudder oar
+    boatModel(.9,.13,P=>{P.hull({col:'#6e4e2c',z1:3,deck:plank('#8a6238','#7a5434'),rim:'#a8784a',band:[2,2.6,'#4a3420']});
+      P.box(-.34,-.06,-.62,.62,3,6,(f)=>f==='top'?'#c9a45a':'#a87a4a');P.box(-.36,-.04,-.7,.7,6,7,(f,a,b)=>f==='top'?(Math.floor(a*8)%2?'#d9b45a':'#c9a04a'):'#b88a3a');
+      P.pole(.1,0,3,19,'#4a3420');P.sail(.18,0,6,18,.42,true,(a,b)=>{if(a>1-b*.25)return null;return Math.floor(b*9)%2?'#d9a94a':'#a87a2a';});
+      P.plot(.1,0,19.5,'#e0503a');P.plot(.12,0,19.5,'#e0503a');P.person(-.44,0,3,'#3a5a8a',true);for(let k=0;k<6;k++)P.plot(-.5-k*.02,0,5-k*.8,'#4a3420',[0,1,0]);}),
+    // early modern: a black steam ferry with a white deckhouse, a red funnel, lifeboats and smoke
+    boatModel(1.05,.13,P=>{P.hull({col:'#2e2b33',z1:3.5,deck:(s,t)=>'#9a8a70',rim:'#efe8d8',band:[1,1.8,'#a0392b'],sharp:2.6});
+      P.box(-.32,.18,-.68,.68,3.5,7,(f,a,b)=>f==='top'?'#d8d0bc':(b>.3&&b<.7&&Math.floor(a*12)%2)?['#3e577c','#ffd27a'].map(h=>col(h)):'#efe8d8');
+      P.box(-.2,.04,-.5,.5,7,9,(f,a,b)=>f==='top'?'#c8c0ac':(b>.3&&Math.floor(a*8)%2)?[col('#3e577c'),col('#ffd27a')]:'#efe8d8');
+      for(let z=9;z<=15;z+=.5)for(let q=0;q<8;q++){const ang=q/8*6.283;P.plot(-.06+Math.cos(ang)*.035,Math.sin(ang)*.28,z,z>14?'#1a1a1a':'#c0392b',[Math.cos(ang),Math.sin(ang),0]);}
+      for(const sg of[-1,1])P.box(-.24,-.06,sg*.72-.08,sg*.72+.08,6.5,7.6,'#f4f1ea');P.pole(.36,0,3.5,12,'#4a4a52');
+      const[x,y]=P.at(-.06,0,16);P.meta.em=[[x,y,'smoke']];}),
+    // modern: a white two-deck ferry with a blue stripe, dark window bands, a radar mast, a flag and passengers
+    boatModel(1.2,.15,P=>{P.hull({col:'#f0f0ea',z1:3.5,deck:(s,t)=>'#d8d8d4',rim:'#ffffff',band:[1.5,2.4,'#2f6fc0'],sharp:2.8});
+      const win=(f,a,b)=>f==='top'?'#e8e8e4':(b>.35&&b<.75)?[col('#2f4a6a'),col('#ffe6a0')]:'#f6f6f2';
+      P.box(-.36,.22,-.7,.7,3.5,6.5,win);P.box(-.26,.08,-.55,.55,6.5,9,win);P.box(-.3,.12,-.62,.62,9,9.5,'#2f6fc0');
+      P.pole(-.1,0,9.5,14,'#c8ccd2');for(let t=-.3;t<=.3;t+=.05)P.plot(-.1,t,13,'#c8ccd2');P.pole(-.48,0,3.5,8,'#c8ccd2');P.plot(-.47,0,8,'#e0302a');P.plot(-.46,0,8,'#ffffff');
+      P.person(.34,-.2,3.5,'#e05a3a',true);P.person(.4,.25,3.5,'#3a8fd0',true);const[x,y]=P.at(-.1,0,14);P.meta.blink=[[x,y,'#ff4a6a']];}),
+    // future: a white hydrofoil with a neon waterline, a glass canopy and glowing fins
+    boatModel(1.0,.13,P=>{P.hull({col:'#f4f7fa',z1:3,deck:(s,t)=>'#2c3246',rim:'#ffffff',band:[1,1.8,'#5fe6f2'],sharp:3});
+      for(let s=-.22;s<=.28;s+=.01)for(let t=-.6;t<=.6;t+=.05){const q=1-((s-.03)/.25)**2-(t/.6)**2;if(q<=0)continue;const h=3+4*Math.sqrt(q);P.plot(s,t,h,[col('#9fdce4',(t<0?.2:-.1)),col('#bff6ff')]);}
+      for(const sg of[-1,1])for(let k=0;k<5;k++)P.plot(-.4+k*.02,sg*(1.05+k*.05),1.5,nGlow('#ff6ad5'),[0,sg,0]);P.pole(-.4,0,3,6,'#c8ccd2');const[x,y]=P.at(-.4,0,6);P.meta.blink=[[x,y,'#5fe6f2']];})];
   ;yield;
   const zoneG=hex=>G((u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
@@ -2550,18 +2589,22 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
 
-// boats: sail tile to tile over water (under bridges too), three for each port
+// boats: sail over water from tile to tile (under bridges too), one for each port
 const isWater=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]===1;
 function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boat per port
   if(boats.length<target&&Math.random()<.04){const ps=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.PORT)ps.push(i);
     const p0=ps[(Math.random()*ps.length)|0],px=p0%N,py=p0/N|0,ws=DIRS.map(([dx,dy])=>[px+dx,py+dy]).filter(([x,y])=>isWater(x,y));
     if(ws.length){const[x,y]=ws[(Math.random()*ws.length)|0],opts=[0,1,2,3].filter(d=>isWater(x+DIRS[d][0],y+DIRS[d][1]));
-      if(opts.length)boats.push({x,y,d:opts[(Math.random()*opts.length)|0],t:0,e:W.era,sp:(W.era<3?.22:.34)+Math.random()*.12,ph:Math.random()*6});}}
+      if(opts.length){const d=opts[(Math.random()*opts.length)|0];
+        boats.push({fx:x+.5,fy:y+.5,tx:x+DIRS[d][0],ty:y+DIRS[d][1],d,hd:Math.atan2(DIRS[d][1],DIRS[d][0]),e:W.era,sp:(W.era<3?.22:.34)+Math.random()*.12,ph:Math.random()*6,wake:[],wt:0});}}}
   if(boats.length>target)boats.shift();
-  for(let n=boats.length-1;n>=0;n--){const b=boats[n];if(!isWater(b.x,b.y)){boats.splice(n,1);continue;}b.t+=dt*b.sp;
-    while(b.t>=1){b.t-=1;const nx=b.x+DIRS[b.d][0],ny=b.y+DIRS[b.d][1];if(!isWater(nx,ny)){b.d=(b.d+2)%4;continue;}b.x=nx;b.y=ny;
-      const opts=[0,1,2,3].filter(d=>d!==(b.d+2)%4&&isWater(b.x+DIRS[d][0],b.y+DIRS[d][1]));
-      b.d=opts.length?(opts.includes(b.d)&&Math.random()<.8?b.d:opts[(Math.random()*opts.length)|0]):(b.d+2)%4;}}}
+  // steer smoothly toward the next tile centre: turn at a limited rate, ease off in the turn, pick the next tile shortly before arriving
+  for(let n=boats.length-1;n>=0;n--){const b=boats[n];if(b.fx==null||!isWater(Math.floor(b.fx),Math.floor(b.fy))){boats.splice(n,1);continue;}
+    if(Math.hypot(b.tx+.5-b.fx,b.ty+.5-b.fy)<.32){const back=(b.d+2)%4,opts=[0,1,2,3].filter(d=>d!==back&&isWater(b.tx+DIRS[d][0],b.ty+DIRS[d][1]));
+      b.d=opts.length?(opts.includes(b.d)&&Math.random()<.8?b.d:opts[(Math.random()*opts.length)|0]):back;b.tx+=DIRS[b.d][0];b.ty+=DIRS[b.d][1];}
+    let df=Math.atan2(b.ty+.5-b.fy,b.tx+.5-b.fx)-b.hd;df=Math.atan2(Math.sin(df),Math.cos(df));
+    b.hd+=Math.max(-2.4*dt,Math.min(2.4*dt,df));const v=b.sp*(1-Math.min(.65,Math.abs(df)/2));b.fx+=Math.cos(b.hd)*v*dt;b.fy+=Math.sin(b.hd)*v*dt;
+    if((b.wt+=dt)>.12){b.wt=0;b.wake.unshift([b.fx,b.fy,b.hd]);if(b.wake.length>16)b.wake.pop();}}}
 // trains: an engine and coaches following the engine's trail along the rails; they halt at stations
 function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.DEPOT&&DIRS.some(([dx,dy])=>isRail(i%N+dx,(i/N|0)+dy)))ds.push(i);
   const target=W.era<3||(S.rails||0)<2?0:Math.min(12,ds.length);   // one train per station
@@ -2602,10 +2645,16 @@ function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const 
       if(SPEEDS[speed]&&Math.random()<.5&&parts.length<700)parts.push({x:tx+dx*7+X0,y:ty+dy*7+Y0,vx:dx*4,vy:-2,life:0,max:1.4,sz:2,kind:'steam',g:0});}
     drawSpr(c,sp,sx,sy-alt);if((now/400|0)%2){c.fillStyle='#ff4a4a';c.fillRect(sx+sp.ox+sp.nose[0],sy-alt+sp.oy+sp.nose[1],1,1);}
     if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}c.globalAlpha=ga0;}}
-function drawBoat(c,b){const gx=b.x+.5+DIRS[b.d][0]*b.t,gy=b.y+.5+DIRS[b.d][1]*b.t,sx=Math.round((gx-gy)*16-X0),sy=Math.round((gx+gy)*8-Y0+Math.sin(now/600+b.ph)*.6),sp=SP.boat[Math.min(5,b.e)][b.d&1];
-  const bx=-DIRS[b.d][0],by=-DIRS[b.d][1],fx=(bx-by)*16,fy=(bx+by)*8;c.fillStyle=nightCss('#e2f3fb',nightF*.7,.55);   // wake behind the stern
-  for(let k=1;k<=3;k++){const q=.12+k*.07,ox=Math.round(fx*q),oy=Math.round(fy*q);c.fillRect(sx+ox-k,sy+oy,1,1);c.fillRect(sx+ox+k,sy+oy,1,1);}
-  {const r=((now/110+b.ph*20)%14);c.fillStyle=nightCss('#e2f3fb',nightF*.7,.35*(1-r/14));for(let k=0;k<14;k++){const a=k/14*6.283;c.fillRect(Math.round(sx+Math.cos(a)*(r+4)),Math.round(sy+Math.sin(a)*(r+4)*.5),1,1);}}
+function drawBoat(c,b){const sx=Math.round((b.fx-b.fy)*16-X0),sy=Math.round((b.fx+b.fy)*8-Y0),q=Math.round(b.hd/(Math.PI/2)),sp=SP.boat[Math.min(5,b.e)][((q%4)+4)%4],L=sp.len||1;
+  // the wake: two lines of foam spreading behind the stern and fading out
+  for(let k=0;k<b.wake.length;k++){const[wx,wy,wh]=b.wake[k],age=(k+1)/b.wake.length,spr=.05+k*.03,nx=-Math.sin(wh),ny=Math.cos(wh);c.fillStyle=nightCss('#e2f3fb',nightF*.7,.6*(1-age));
+    for(const sg of[-1,1]){const gx=wx+nx*spr*sg,gy=wy+ny*spr*sg;c.fillRect(Math.round((gx-gy)*16-X0),Math.round((gx+gy)*8-Y0),1,1);}}
+  // the hull's shade in the water right under it (no cast shadow: the boat sits in the water, not above it)
+  const vx=(Math.cos(b.hd)-Math.sin(b.hd))*16,vy=(Math.cos(b.hd)+Math.sin(b.hd))*8;c.save();c.fillStyle=`rgba(8,24,48,${.25*(1-nightF*.5)})`;c.beginPath();
+  c.ellipse(sx,sy+1,Math.hypot(vx,vy)*L*.55,3.2,Math.atan2(vy,vx),0,6.283);c.fill();c.restore();
+  // a little bow wave that flickers
+  const bx=b.fx+Math.cos(b.hd)*L*.5,by=b.fy+Math.sin(b.hd)*L*.5,fl=(now/180+b.ph*7|0)%2;c.fillStyle=nightCss('#ffffff',nightF*.7,.75);
+  c.fillRect(Math.round((bx-by)*16-X0)-1-fl,Math.round((bx+by)*8-Y0),2+fl*2,1);
   drawSpr(c,sp,sx,sy);emit(sp,sx,sy);}
 
 /* ---------------- name tags over buildings the player has named ---------------- */
@@ -2769,7 +2818,7 @@ function render(){
   if(selected)tileSp(SP.sel,selected[0],selected[1]);
   // objects, back to front
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
-  const bbk=new Map();for(const b of boats){const k=idx(Math.floor(b.x+.5+DIRS[b.d][0]*b.t),Math.floor(b.y+.5+DIRS[b.d][1]*b.t));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
+  const bbk=new Map();for(const b of boats){if(b.fx==null)continue;const k=idx(Math.floor(b.fx),Math.floor(b.fy));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
   const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh;
