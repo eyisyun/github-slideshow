@@ -2447,7 +2447,7 @@ const CP_MEL=[
   [[0,78,4],[4,75,4],[8,72,4],[12,70,4]],[[0,69,4],[4,72,2],[6,75,2],[8,77,4],[12,80,4]],
   [[0,77,12],[12,73,2],[14,75,2]],[[0,77,4],[4,80,4],[8,82,6]]];
 const CP={bpm:100,swing:.14};
-let mBus=null,mLP=null,mNoise=null,mRev=null,mDly=null,mStep=0,mNext=0;
+let mBus=null,mLP=null,mNoise=null,mRev=null,mStep=0,mNext=0;
 function audioCtx(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
 // one voice: oscillator -> optional low-pass -> envelope -> bus (+ reverb / echo sends)
 function note(t,f,dur,o){const a=AC,os=a.createOscillator(),g=a.createGain(),v=o.v||.05;os.type=o.w||'triangle';os.frequency.setValueAtTime(f,t);if(o.det)os.detune.value=o.det;
@@ -2455,7 +2455,7 @@ function note(t,f,dur,o){const a=AC,os=a.createOscillator(),g=a.createGain(),v=o
   let end;if(o.pluck){g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+o.pluck);end=t+o.pluck;}
   else{const at=o.a??.015,r=o.r??.15;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+at);g.gain.setValueAtTime(v,t+Math.max(at,dur));g.gain.linearRampToValueAtTime(0,t+Math.max(at,dur)+r);end=t+Math.max(at,dur)+r;}
   let src=os;if(o.lp){const f2=a.createBiquadFilter();f2.type='lowpass';f2.frequency.setValueAtTime(o.lp,t);if(o.lpEnv){f2.frequency.setValueAtTime(o.lp*o.lpEnv,t);f2.frequency.exponentialRampToValueAtTime(o.lp,t+.12);}f2.Q.value=o.q||.7;src=os.connect(f2);}
-  src.connect(g).connect(mBus);if(o.rev)g.connect(mRev.send(o.rev));if(o.dly)g.connect(mDly.send(o.dly));os.start(t);os.stop(end+.05);}
+  src.connect(g).connect(mBus);if(o.rev)g.connect(mRev.send(o.rev));os.start(t);os.stop(end+.05);}
 // electric piano: a sine carrier with a decaying FM bell, a soft tremolo comes from the two slightly detuned partials
 function ep(t,m,dur,v){const a=AC,f=mtof(m),c=a.createOscillator(),md=a.createOscillator(),mg=a.createGain(),g=a.createGain();c.type='sine';md.type='sine';
   c.frequency.value=f;md.frequency.value=f*1.001;mg.gain.setValueAtTime(f*1.6,t);mg.gain.exponentialRampToValueAtTime(f*.15,t+.6);md.connect(mg).connect(c.frequency);
@@ -2465,14 +2465,13 @@ function noiseHit(t,dur,v,type,freq,rev){if(!mNoise){const n=AC.sampleRate,b=AC.
   const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=mNoise;f.type=type;f.frequency.value=freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   s.connect(f).connect(g).connect(mBus);if(rev)g.connect(mRev.send(rev));s.start(t,Math.random()*.5);s.stop(t+dur+.02);}
 function drumTone(t,f0,f1,dur,v){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(mBus);o.start(t);o.stop(t+dur+.02);}
-const kick=(t,v)=>drumTone(t,110,44,.25,v),snare=(t,v)=>{noiseHit(t,.16,v,'bandpass',1800,.5);drumTone(t,190,140,.07,v*.5);},
-  hat=(t,v,open)=>noiseHit(t,open?.16:.035,v,'highpass',8200),clap=(t,v)=>{noiseHit(t,.03,v,'bandpass',1300);noiseHit(t+.012,.03,v*.8,'bandpass',1300);noiseHit(t+.024,.14,v*.7,'bandpass',1200,.6);};
-// shared room reverb and a dotted-8th echo, each with a send() that hands out a gain node into it
+const kick=(t,v)=>drumTone(t,110,44,.25,v),snare=(t,v)=>{noiseHit(t,.12,v,'bandpass',1800,.3);drumTone(t,190,140,.07,v*.5);},
+  hat=(t,v,open)=>noiseHit(t,open?.09:.022,v,'bandpass',9000),clap=(t,v)=>{noiseHit(t,.03,v,'bandpass',1300);noiseHit(t+.012,.03,v*.8,'bandpass',1300);noiseHit(t+.024,.1,v*.6,'bandpass',1200,.25);};
+// shared room reverb with a send() that hands out a gain node into it (no feedback loops: an idle delay loop hissed)
 function makeBuses(){const a=AC,n=a.sampleRate*1.8|0,ir=a.createBuffer(2,n,a.sampleRate);for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.6);}
   const cv=a.createConvolver();cv.buffer=ir;const rg=a.createGain();rg.gain.value=.55;cv.connect(rg).connect(mBus);
-  const dl=a.createDelay(1),fb=a.createGain(),df=a.createBiquadFilter();dl.delayTime.value=60/CP.bpm*.75;fb.gain.value=.3;df.type='lowpass';df.frequency.value=2200;dl.connect(df).connect(fb).connect(dl);df.connect(mBus);
   const sender=node=>{const cache=new Map();return{send:v=>{let g=cache.get(v);if(!g){g=a.createGain();g.gain.value=v;g.connect(node);cache.set(v,g);}return g;}};};
-  mRev=sender(cv);mDly=sender(dl);}
+  mRev=sender(cv);}
 // soft weather ambience under the music (rain hiss, winter wind); follows the effects (효과음) switch
 let wxSrc=null,wxG=null,wxF=null;
 function wxAmbience(){const wx=photoWx??(W.wx||0),on=SND.sfx&&!muted&&!document.hidden&&AC.state==='running'&&(wx===1||wx===2);
@@ -2492,7 +2491,7 @@ function scheduleMusic(until){const st=60/CP.bpm/4*(1+.08*nightF),night=nightF>.
       [voic,root]=CH[name],change=p%4===0&&(p===0||name!==prevName),t=mNext+(p%2?st*CP.swing:0);
     // drums: kick on 1 and the "and" of 3 (+ the 2-and in B), snare/clap on 2 and 4, swung hats with an open hat before the bar
     if(p===0||p===10||(bar>=8&&p===7))kick(t,.1);if(p===4||p===12){snare(t,.05);if(!night)clap(t,.022);}
-    if(!night||p%2===0)hat(t,p===14?.016:p%4===2?.012:.007,p===14);
+    if(p%2===0)hat(t,p===14?.006:p%4===2?.0055:.0035,p===14);else if(!night&&p%4===3)hat(t,.0018);
     if(bar%8===7&&p>=12&&!night)snare(t,.018+(p-12)*.006);
     // bass: root, octave pop, ghost, fifth/seventh pickup, following the chord of the beat
     const bl=[[0,0,3],[3,12,1],[6,0,1],[7,7,1],[8,0,2],[11,12,1],[14,10,1],[15,7,1]].find(x=>x[0]===p);
@@ -2504,8 +2503,9 @@ function scheduleMusic(until){const st=60/CP.bpm/4*(1+.08*nightF),night=nightF>.
     if(change&&!night)for(const m of voic.slice(0,3))note(t,mtof(m),st*4*.9,{w:'sawtooth',v:.006,det:(m%2?7:-7),lp:1400,a:.25,r:.5,rev:.5});
     // muted guitar cuts on the backbeat's 16th after
     if((p===5||p===13)&&!night)for(const m of voic.slice(1))note(t,mtof(m+12),.05,{w:'square',v:.0045,pluck:.06,lp:3200});
-    // lead: synth brass with a dotted-8th echo
-    for(const[sp,m,len]of CP_MEL[bar])if(sp===p){const d=st*len*.95;note(t,mtof(m),d,{w:'sawtooth',v:.022,lp:2600,a:.03,r:.12,vib:.006,rev:.35,dly:.4});note(t,mtof(m),d,{w:'square',v:.012,det:8,lp:1800,a:.03,r:.12});}
+    // lead: synth brass, echoed by two softer, darker repeats a dotted 8th apart
+    for(const[sp,m,len]of CP_MEL[bar])if(sp===p){const d=st*len*.95;note(t,mtof(m),d,{w:'sawtooth',v:.022,lp:2600,a:.03,r:.12,vib:.006,rev:.35});
+      if(!night)for(const[k,v]of[[1,.007],[2,.003]])note(t+st*3*k,mtof(m),Math.min(d,st*2.5),{w:'sawtooth',v,lp:1500,a:.02,r:.1});note(t,mtof(m),d,{w:'square',v:.012,det:8,lp:1800,a:.03,r:.12});}
     mStep++;mNext+=st;}}
 setInterval(musicTick,120);
 ['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,()=>{try{const a=audioCtx();if(a.state==='suspended'&&!document.hidden)a.resume();}catch(e){}},{passive:true}));
