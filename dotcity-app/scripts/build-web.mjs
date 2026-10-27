@@ -79,6 +79,10 @@ const native = `
   }
   window.addEventListener('pagehide', persist);
 
+  // Store rating prompt (SKStoreReviewController / Play In-App Review). The OS decides whether the sheet actually shows
+  // (Apple: at most 3 times a year); the game only asks at happy moments.
+  if (P.InAppReview) window.DotReview = { request: function () { return P.InAppReview.requestReview().catch(function () {}); } };
+
   // In-app purchase (consumable fund packs) through @capgo/native-purchases (StoreKit 2 / Play Billing).
   // Every transaction id is recorded on the device so a pack is never granted twice.
   var NP = P.NativePurchases;

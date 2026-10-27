@@ -2341,7 +2341,7 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
     else if(t.id==='land'){const i=idx(x,y),s=subSel.land;if(s===0){W.terrain[i]=1;W.trees[i]=0;}else if(s===1)W.terrain[i]=0;else if(s===2)W.terrain[i]=2;else if(s===3)W.terrain[i]=0;else W.trees[i]=Math.min(5,W.trees[i]+2);
       derive(W);if(puffs++<12)dust(x,y,s===0?'#4a8ccb':'#9a8a74');}
     else if(t.id==='rail'){const i=idx(x,y);if(!W.rail[i]){if(W.kind[i]===0)placeRaw(K.RAIL,x,y);W.rail[i]=1;}}
-    else if(t.id==='theme'){placeRaw(K.THEME,x,y);W.level[idx(x,y)]=subSel.theme;dust(x+1,y+1,'#d8cfc0');}
+    else if(t.id==='theme'){placeRaw(K.THEME,x,y);W.level[idx(x,y)]=subSel.theme;dust(x+1,y+1,'#d8cfc0');askReview(3000);}
     else if(t.id==='avenue'){if(W.kind[idx(x,y)]!==K.ROAD)placeRaw(K.ROAD,x,y);W.level[idx(x,y)]=1;}
     else{placeRaw(t.kind,x,y);if(canTurn(t))W.flip[idx(x,y)]=buildFlip;if(puffs++<12&&!t.drag)dust(x+((t.size||1)-1)/2,y+((t.size||1)-1)/2,'#d8cfc0');}}
   if(t.wonder!=null){const tt=tiles.find(([x,y])=>W.kind[idx(x,y)]===t.kind)||tiles[0];W.wb={a:W.anchor[idx(tt[0],tt[1])],k:t.kind,start:Date.now(),dur:ERAS[W.era].build*3600000};toast(`${tn(t)} 공사를 시작했어요. ${ERAS[W.era].build}시간 뒤 완공돼요. 게임을 꺼 둬도 공사는 계속돼요.`,'good');save();setTool('inspect');}
@@ -2351,13 +2351,18 @@ function applyTool(t,tiles){const{c,n}=planCost(t,tiles);if(!n){const why=whyNot
     if(why)toast(ZONE_MSG[why],'warn');recompute();}
   sfx(t.id==='bulldoze'?'boom':'place');updateHud(true);}
 let prevSpeed=1;
-function advanceEra(quiet){if(W.era>=5)return;W.era++;W.eraStart=W.month;W.wb=null;cars=[];boats=[];trains=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
+function advanceEra(quiet){if(W.era>=5)return;if(!quiet)reviewAfterEra=true;W.era++;W.eraStart=W.month;W.wb=null;cars=[];boats=[];trains=[];recompute();if(quiet)return;selected=null;goalsOpen=false;$('#info').hidden=true;buildTools();setTool('inspect');fireworks();sfx('win');showEra(true);save();updateHud(true);}
 function showEra(adv){const e=ERAS[W.era];$('#emEye').textContent=adv?'새로운 시대가 열렸어요':'도트시티';$('#emTitle').textContent=e.name;$('#emYear').textContent=yearStr(e.year);$('#emDesc').textContent=kx(e.story);
   $('#emList').innerHTML='';for(const u of e.unlock){const li=document.createElement('li');li.textContent=kx(u);$('#emList').append(li);}$('#emGoal').textContent=kx(tr(e.goal)+' '+tr('목표:')+' '+GOALS[W.era].map(g=>tr(g.t)).join(' · '));const nb=$('#emNameBox');nb.hidden=adv;if(!adv)$('#emName').value=W.name&&W.name!=='새벽시'&&W.name!==tr('새벽시')?W.name:randomCityName();
   $('#eraModal').hidden=false;prevSpeed=speed||1;setSpeed(0);(!adv&&matchMedia('(pointer:fine)').matches?$('#emName'):$('#emGo')).focus();}
 const CITY_NAMES=['햇살마을','별빛시','무지개시','솔바람시','푸른강시','달빛마을','꽃내음시','은하시','도토리마을','바람개비시','구름다리시','반짝시','새싹마을','노을시','하늘숲시','파도마을','초록별시','방울시'];
 function randomCityName(){const cur=$('#emName').value;let n;do n=tr(CITY_NAMES[(Math.random()*CITY_NAMES.length)|0]);while(n===cur);return n;}
-function closeEra(){if(!$('#emNameBox').hidden){$('#emName').blur();const n=$('#emName').value.trim().slice(0,12)||randomCityName();W.name=n;$('#cityName').value=n;$('#emNameBox').hidden=true;save();toast(`${n}의 역사가 시작돼요!`,'good');}
+// ask for a store rating at a happy moment (a new era just opened, a theme park just went up), at most once every 30 days
+// and only in the app; the OS may still decide not to show the sheet
+let reviewAfterEra=false;
+function askReview(delay=1200){if(!window.DotReview)return;let last=0;try{last=+localStorage.getItem('dotcity.review')||0;}catch(e){}
+  if(Date.now()-last<30*864e5)return;try{localStorage.setItem('dotcity.review',String(Date.now()));}catch(e){}setTimeout(()=>window.DotReview.request(),delay);}
+function closeEra(){if(reviewAfterEra){reviewAfterEra=false;askReview();}if(!$('#emNameBox').hidden){$('#emName').blur();const n=$('#emName').value.trim().slice(0,12)||randomCityName();W.name=n;$('#cityName').value=n;$('#emNameBox').hidden=true;save();toast(`${n}의 역사가 시작돼요!`,'good');}
   $('#eraModal').hidden=true;setSpeed(prevSpeed);}
 
 /* ---------------- particles ---------------- */
