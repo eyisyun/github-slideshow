@@ -1699,8 +1699,28 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     const CLOTH=['#c0503a','#3a6fa0','#d9a43a','#5a8a4a'];
     for(let v=0;v<3;v++)add(1,C,1,mk1(42,(pb,cx,cy)=>{stall(pb,cx+1,cy-1,CLOTH[v],v);pots(pb,cx-10,cy+2,2,'#8a5a38');}));
     for(let v=0;v<3;v++)add(1,C,2,mk1(44,(pb,cx,cy)=>{stall(pb,cx+5,cy-3,CLOTH[v],v);stall(pb,cx-5,cy+1,CLOTH[(v+1)%4],v+1);goods(pb,cx+7,cy+4,3,v);}));
-    for(let v=0;v<3;v++)add(1,I,1,mk1(40,(pb,cx,cy)=>{cone(pb,cx+5,cy-2,3.5,6,'#d9b45a');cone(pb,cx-6,cy+2,3,5,'#cfa84e');if(v!==1)cone(pb,cx+9,cy+2,2.5,4,'#d9b45a');
-      posts(pb,[[cx-1,cy-1]],9,'#6a4428');pb.line(cx-4,cy-6,cx+2,cy-6,col('#6a4428'));pb.put(cx-1,cy-10,col('#c0503a'));pb.put(cx,cy-10,col('#c0503a'));}));
+    // 논밭: flooded paddies in rows behind earth ridges (논두렁), young green rice (v0), ripe gold rice (v1), half-harvested with sheaves (v2),
+    // a scarecrow in a straw hat and a patched coat, and a white heron wading in the water
+    const fieldAt=(cx,cy,u,v)=>[Math.round(cx+(u-v)*15.5),Math.round(cy+(u+v-1)*7.75)];
+    const scarecrow=(pb,x,y)=>{for(let i=0;i<11;i++)pb.put(x,y-i,col('#6a4428',i%3?0:-.12));
+      for(let k=-4;k<=4;k++)pb.put(x+k,y-8+(Math.abs(k)>3?1:0),col('#6a4428'));
+      for(let r=0;r<4;r++)for(let k=-2;k<=2;k++)pb.put(x+k,y-8+r,col(r===2&&k===1?'#c0503a':'#6a7aa8',(k<0?.1:-.12)+(r===3?-.1:0)));   // coat with a red patch
+      for(const sg of[-1,1]){pb.put(x+sg*5,y-7,col('#d9b45a'));pb.put(x+sg*5,y-6,col('#c9a04a'));pb.put(x+sg*4,y-9,col('#e05a3a'));}          // straw cuffs, ribbons to scare birds
+      pb.put(x,y-10,col('#e8c890'));pb.put(x-1,y-10,col('#e8c890'));pb.put(x+1,y-10,col('#e8c890'));pb.put(x-1,y-11,col('#e8c890'));pb.put(x+1,y-11,col('#e8c890'));pb.put(x,y-11,col('#2a1d14'));
+      for(let k=-3;k<=3;k++)pb.put(x+k,y-12,col('#d9b45a',k<0?.12:-.08));for(let k=-1;k<=1;k++){pb.put(x+k,y-13,col('#e0c060'));pb.put(x+k,y-14,col('#c9a04a'));}};
+    const heron=(pb,x,y)=>{pb.put(x,y,col('#e8e4d4'));pb.put(x,y-1,col('#6a6458'));pb.put(x,y-2,col('#f4f1ea'));pb.put(x+1,y-2,col('#f4f1ea'));pb.put(x-1,y-2,col('#dcd8cc'));
+      pb.put(x+1,y-3,col('#f4f1ea'));pb.put(x+1,y-4,col('#f4f1ea'));pb.put(x+2,y-4,col('#e0a020'));};
+    for(let v=0;v<3;v++)add(1,I,1,mk1(40,(pb,cx,cy)=>{const ripe=v>0;
+      pb.diamond(cx,cy,15.5,(u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.07)return col('#8a6a44',(x+y)%3===0?-.1:0);            // earth ridge round the field
+        if(Math.abs(u-.5)<.035)return col('#7a5a3a',.05);                                                                             // the middle ridge
+        if(v===2&&u>.5)return col('#8a7a4a',hash(x,y,4)<.3?-.15:(x+y)%3===0?.08:0);                                                                  // the harvested half: stubble
+        return col(ripe?'#8ab0a0':'#6aa8c0',(x*2+y)%9===0?.3:hash(x,y,5)<.1?-.08:0);});                                                // water with sky glints
+      for(let i=1;i<8;i++)for(let j=1;j<8;j++){const u=i/8,w=j/8;if(Math.abs(u-.5)<.07||(v===2&&u>.5))continue;const[x,y]=fieldAt(cx,cy,u,w);
+        const c=ripe?(hash(i,j,v)<.5?'#e0c060':'#d0a840'):(hash(i,j,v)<.5?'#5fae4a':'#4a9a3e');pb.put(x,y,col(c,-.15));pb.put(x,y-1,col(c));if(ripe){pb.put(x,y-2,col('#f0d878'));pb.put(x+1,y-2,col('#e8c860'));}else pb.put(x+(i&1?1:-1),y-1,col(c,.12));}
+      if(v===2)for(const[u,w]of[[.62,.25],[.8,.45],[.64,.6],[.82,.8]]){const[x,y]=fieldAt(cx,cy,u,w);   // standing sheaves (볏단) tied at the waist
+        for(let r=0;r<6;r++){const hw=r<2?2:r===2?1:r<5?2:1;for(let k=-hw;k<=hw;k++)pb.put(x+k,y-r,col(r===2?'#6a4a1a':'#f4d870',(k<0?.15:k>0?-.2:0)+(r>4?.12:0)));}}
+      if(v<2){const[x,y]=fieldAt(cx,cy,.5,.62);scarecrow(pb,x,y);}
+      if(v!==1){const[x,y]=fieldAt(cx,cy,.25,.3);heron(pb,x,y);}}));
     for(let v=0;v<3;v++)add(1,I,2,mk1(48,(pb,cx,cy)=>{choga(pb,cx+3,cy-3,7,5,'#b89a70');pb.roof(cx+3,cy-8,9,5,STRAW[v]);
       pb.cyl(cx-6,cy+1,3,7,side('#a0623a'),()=>[col('#3a2a20'),col('#ff9a3a')]);pb.box({cx:cx-1,cy:cy+5,hw:1.5,h:2,L:()=>col('#555'),R:()=>col('#444'),T:()=>col('#777')});},(cx,cy)=>({em:[[cx-6,cy-7,'smoke']]})));
     ;yield;
