@@ -3385,7 +3385,7 @@ function buildTools(){
     if(!isOv&&o.prem&&o.prem[E])b.insertAdjacentHTML('beforeend','<span class="star">★</span>');
     const lk=o.landmark?(o.landmark>=1000?o.landmark/1000+'K':o.landmark):o.wonder!=null?'목표':'';if(lk)b.insertAdjacentHTML('beforeend',`<span class="lk">${lk}</span>`);
     b.insertAdjacentHTML('beforeend',`<span class="k">${o.key}</span>`);if(o.sw)b.insertAdjacentHTML('beforeend',`<i class="sw" style="background:${o.sw}"></i>`);
-    b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
+    b.addEventListener('click',()=>{isOv?setOverlay(overlay===o.id?null:o.id):setTool(o.id);sfx('click');if(TOUCH||matchMedia('(max-width:760px)').matches)showTip(b,o,isOv,true);});
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(b,o,isOv);});b.addEventListener('pointerleave',hideTip);(isOv?og:tg).appendChild(b);};
   TOOLS.filter(toolOn).forEach(t=>mkBtn(t,false));OVERLAYS.filter(o=>!o.era||W.era>=o.era).forEach(o=>mkBtn(o,true));tools.append(tg);
   tools.insertAdjacentHTML('beforeend','<div class="sep">데이터 보기</div>');tools.append(og);}
