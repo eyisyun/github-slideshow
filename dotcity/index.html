@@ -383,9 +383,9 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
       <button class="btn" id="mNewEmpty">빈 땅: 석기시대 <small>처음부터 직접</small></button>
     </div>
     <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
-    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn" data-test="police" data-warn="한 번 더">🚓 경찰 출동 테스트</button><button class="btn" data-test="med" data-warn="한 번 더">🚑 구급차 출동 테스트</button><button class="btn" data-test="fire" data-warn="한 번 더">🔥 화재 출동 테스트</button><button class="btn" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button></div>
-    <h3 class="msub">축제·재난 미리보기 <small>바로 열어 볼 수 있어요 · 보상 없음</small></h3>
-    <div class="eras" id="mFest"><button class="btn" data-fest="fire">불의 축제</button><button class="btn" data-fest="harvest">풍년제</button><button class="btn" data-fest="lantern">연등회</button><button class="btn" data-fest="expo">만국 박람회</button><button class="btn" data-fest="firework">불꽃 축제</button><button class="btn" data-fest="drone">드론 라이트쇼</button><button class="btn" data-fest="kite">설날 연날리기</button><button class="btn" data-fest="petal">벚꽃 축제</button><button class="btn" data-fest="xmas">크리스마스</button><button class="btn" data-dis="quake">지진</button><button class="btn" data-dis="typhoon">태풍</button></div>
+    <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn devonly" data-test="police" data-warn="한 번 더">🚓 경찰 출동 테스트</button><button class="btn devonly" data-test="med" data-warn="한 번 더">🚑 구급차 출동 테스트</button><button class="btn devonly" data-test="fire" data-warn="한 번 더">🔥 화재 출동 테스트</button><button class="btn devonly" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn devonly" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button></div>
+    <h3 class="msub devonly">축제·재난 미리보기 <small>바로 열어 볼 수 있어요 · 보상 없음</small></h3>
+    <div class="eras devonly" id="mFest"><button class="btn" data-fest="fire">불의 축제</button><button class="btn" data-fest="harvest">풍년제</button><button class="btn" data-fest="lantern">연등회</button><button class="btn" data-fest="expo">만국 박람회</button><button class="btn" data-fest="firework">불꽃 축제</button><button class="btn" data-fest="drone">드론 라이트쇼</button><button class="btn" data-fest="kite">설날 연날리기</button><button class="btn" data-fest="petal">벚꽃 축제</button><button class="btn" data-fest="xmas">크리스마스</button><button class="btn" data-dis="quake">지진</button><button class="btn" data-dis="typhoon">태풍</button></div>
     <h3 class="msub">언어 · Language</h3>
     <div class="sndrow"><button class="btn" id="mLangKo" data-lang="ko">한국어</button><button class="btn" id="mLangEn" data-lang="en">English</button></div>
     <h3 class="msub" id="sndHead">소리 <small>위쪽 스피커 버튼은 모든 소리를 한 번에 꺼요</small></h3>
@@ -409,6 +409,9 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
 <script>
 'use strict';
 // phones and the app have no keyboard: hide shortcut letters there
+// test buttons in the menu (festival/disaster previews, emergency-call and airport tests) are for the web build only, never the store app
+const NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+if(NATIVE)document.querySelectorAll('.devonly').forEach(e=>e.remove());
 const TOUCH=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())||matchMedia('(hover:none) and (pointer:coarse)').matches;
 if(TOUCH)document.documentElement.classList.add('touch');
 const kx=s=>TOUCH?String(s).replace(/ ?\((?:[A-Z0-9]|Esc|Enter)\)/g,''):s;
