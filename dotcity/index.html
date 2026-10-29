@@ -2806,7 +2806,7 @@ function fireworks(){const zs=[];for(let i=0;i<N*N;i++)if(W.kind[i]>=K.RES&&W.ki
 // Events run on a play clock (W.ev.c, seconds of unpaused play). A festival comes round every 7-10 minutes and lasts a minute: the season
 // and the era pick which one, the town dresses up for it, tourists lift the tax take by a quarter, and when it ends its takings wait to be
 // collected (doubled for watching an ad). A disaster (earthquake, or a typhoon where there is water; can be switched off in the menu) comes
-// at most every 12-18 minutes: hit buildings drop a level and go under scaffolding, and the town rebuilds on its own (twice as fast inside
+// about every 20 minutes (18-22): hit buildings drop a level and go under scaffolding, and the town rebuilds on its own (twice as fast inside
 // fire-station cover) or with an emergency budget. Getting through it pays a rebuilding grant.
 const FEST={lantern:['연등회','수많은 연등이 하늘로 떠올라요'],
   expo:['풍선 축제','알록달록한 풍선이 하늘을 수놓아요'],firework:['불꽃 축제','밤하늘에 불꽃이 터져요'],
@@ -2816,7 +2816,7 @@ const DIS={quake:['지진','땅이 흔들려요!'],typhoon:['태풍','강풍과 
 const disOn=()=>{try{return localStorage.getItem('dotcity.dis')!=='off';}catch(e){return true;}};
 // stone age: none; bronze age: only the New Year kites
 function festKind(){const m=W.cm%12,e=W.era;if(m<=1&&e>=1)return'kite';if(m===11&&e>=3)return'xmas';return FEST_ERA[e];}
-function evState(){const w=W;if(!w.ev||typeof w.ev.c!=='number')w.ev={c:0,nf:150+Math.random()*90,nd:480+Math.random()*240,fest:null,dis:null};if(w.ev.fest&&!FEST[w.ev.fest.k])w.ev.fest=null;return w.ev;}
+function evState(){const w=W;if(!w.ev||typeof w.ev.c!=='number')w.ev={c:0,nf:150+Math.random()*90,nd:1080+Math.random()*240,fest:null,dis:null};if(w.ev.fest&&!FEST[w.ev.fest.k])w.ev.fest=null;return w.ev;}
 const festOn=()=>{const f=W.ev&&W.ev.fest;return!!(f&&!f.done&&!f.pv);};
 const storming=()=>{const d=W.ev&&W.ev.dis;return!!(d&&d.k==='typhoon'&&d.ph==='hit');};
 let shakeT=0,evPaintT=0,festSrc=null,festFxs=[],festAcc=0,evBusy=false;
@@ -2851,7 +2851,7 @@ function startDis(){const ev=evState(),bl=[];for(let i=0;i<N*N;i++)if(isBld(i))b
   const mo=W.cm%12,k=W.terrain.includes(1)&&mo>=6&&mo<=8&&Math.random()<.7?'typhoon':'quake';   // typhoon season is July-September
   ev.dis={k,ph:k==='typhoon'?'warn':'hit',t:ev.c+(k==='typhoon'?15:0),tiles:[],n:0};
   if(k==='typhoon'){toast('태풍 경보! 15초 뒤 강풍과 폭우가 몰려와요. 물가 건물이 특히 위험해요.','warn');sfx('err');}
-  ev.nd=ev.c+720+Math.random()*360;paintEv();}
+  ev.nd=ev.c+1080+Math.random()*240;paintEv();}
 function damage(i){const w=W,d=W.ev.dis;if(!isBld(i)||d.tiles.includes(i)||d.tiles.length>=28)return false;
   if(w.kind[i]===K.RES&&w.level[i]>1)w.level[i]--;else if(w.level[i]>1&&Math.random()<.6)w.level[i]--;
   w.build[i]=140+(Math.random()*120|0);d.tiles.push(i);dust(i%N+.5,(i/N|0)+.5,'#8a7a66');return true;}
