@@ -2848,7 +2848,7 @@ function festAd(){const ads=window.DotAds,f=W.ev&&W.ev.fest;if(!ads||evBusy||!f|
 // disasters
 function nearWaterR(i,r){const x=i%N,y=i/N|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&W.terrain[idx(xx,yy)]===1)return true;}return false;}
 function startDis(){const ev=evState(),bl=[];for(let i=0;i<N*N;i++)if(isBld(i))bl.push(i);if(bl.length<8){ev.nd=ev.c+120;return;}
-  const k=W.terrain.includes(1)&&Math.random()<.5?'typhoon':'quake';
+  const mo=W.cm%12,k=W.terrain.includes(1)&&mo>=6&&mo<=8&&Math.random()<.7?'typhoon':'quake';   // typhoon season is July-September
   ev.dis={k,ph:k==='typhoon'?'warn':'hit',t:ev.c+(k==='typhoon'?15:0),tiles:[],n:0};
   if(k==='typhoon'){toast('태풍 경보! 15초 뒤 강풍과 폭우가 몰려와요. 물가 건물이 특히 위험해요.','warn');sfx('err');}
   ev.nd=ev.c+720+Math.random()*360;paintEv();}
@@ -3232,12 +3232,13 @@ const WX_NAME=['','☔ 비','❄ 눈','🌸 꽃잎'];
 let photoWx=null;const wxNow=()=>W.wx||0;
 // gameplay weights: [car speed, traffic, fire, power use]
 const wxCar=()=>[1,.82,.62,1][wxNow()],wxTraf=()=>[1,1.08,1.16,1][wxNow()];
-function autoWeather(w,quiet){const t=Date.now();const m=w.cm%12,fit=[[0,1,2],[0,1,2],[0,1,2,3],[0,1,3],[0,1,3],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1,2]][m];
-  if(w.wx&&!fit.includes(w.wx)&&!(W.ev&&W.ev.fest&&!W.ev.fest.done&&W.ev.fest.k==='xmas')&&!storming())w.wxEnd=Math.min(w.wxEnd||t,t+20000);   // out of season: clears within 20 s
+function autoWeather(w,quiet){const t=Date.now();const m=w.cm%12,fit=[[0,2],[0,2],[0,1],[0,1,3],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,2]][m];
+  if(w.wx&&!fit.includes(w.wx)&&!(W.ev&&W.ev.fest&&!W.ev.fest.done&&W.ev.fest.k==='xmas')&&!storming())w.wxEnd=Math.min(w.wxEnd||t,t+5000);   // out of season: clears within a few seconds
   if(w.wxEnd&&t<w.wxEnd)return;const r=Math.random();
-  // winter: snow (rain only late in it), spring: petals in Mar-May, otherwise rain; never straight from one kind of weather to another
-  const nx=(m===11||m<=1)?(r<.45?2:0):m===2?(r<.25?1:r<.4?2:0):(m<=4)?(r<.3?3:r<.5?1:0):(m<=7)?(r<.4?1:0):(r<.3?1:0);
-  const before=w.wx||0;w.wx=before?0:nx;w.wxEnd=t+(w.wx?90+Math.random()*120:120+Math.random()*180)*1000;
+  // a Korean year: snow only in Dec-Feb, spring showers in March, cherry petals in April, the monsoon (장마) in June-August
+  // with July the wettest, a dry clear autumn; never straight from one kind of weather to another
+  const nx=[r<.45?2:0,r<.45?2:0,r<.25?1:0,r<.45?3:r<.6?1:0,r<.25?1:0,r<.4?1:0,r<.55?1:0,r<.4?1:0,r<.2?1:0,r<.15?1:0,r<.2?1:0,r<.4?2:0][m];
+  const before=w.wx||0;w.wx=before?0:nx;w.wxEnd=t+(w.wx?60+Math.random()*90:50+Math.random()*100)*1000;   // spells of 1-2.5 min against a ~1.5 min month
   if(!quiet&&w===W&&w.wx!==before&&(w.wx||before)){const m2=WX_MSG[w.wx];toast(m2[w.wx===2&&w.era<3?1:0],'info');recompute();updateHud(true);}}
 
 /* ---------------- sky: drifting cloud shadows and birds (drones in the future era) ---------------- */
