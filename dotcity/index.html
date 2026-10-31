@@ -1963,7 +1963,54 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       lotSet((u,v,x,y)=>col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04),()=>col('#8a8478')),
       lotSet((u,v,x,y)=>col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04),(x,y)=>col('#a9a49a',hash(x,y,86)<.1?-.1:0)),
       lotSet((u,v,x,y)=>col(PAL.asph,hash(x,y,9)<.1?.07:0),()=>col(PAL.curb))];
-    SP.consOld=mk1(44,(pb,cx,cy)=>{pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#7a5233'):null,R:(a,b)=>(a<1||a>=8.2||(b|0)%4===0)?col('#5a3a22'):null});for(let k=0;k<5;k++)pb.put(cx+6+(k%2),cy+3-(k>>1),col('#c9a45a'));});
+    // construction sites. From the early modern era: a hoarded lot with a concrete frame going up floor by floor (dark openings,
+    // rebar starts, plywood formwork for the next slab), pipe scaffolding with planks and a safety net, a tower crane (lattice
+    // mast, cab, jib and counter-jib with ballast, trolley and a load on the hook), materials and workers in hard hats.
+    // Before that: a timber frame on a dirt yard, half the walls plastered, rafters up, a ladder, a log or straw pile, stones and a builder.
+    const cLF=(cx,cy,hw,a,b)=>[Math.round(cx-hw+a),Math.round(cy+a/2-b)],cRF=(cx,cy,hw,a,b)=>[Math.round(cx+a),Math.round(cy+hw/2-a/2-b)];
+    const worker=(pb,x,y,vest,hat)=>{pb.put(x,y,col('#2a3040'));pb.put(x,y-1,col(vest));pb.put(x+1,y-1,col(vest,-.2));pb.put(x,y-2,col('#e8b890'));pb.put(x,y-3,col(hat));pb.put(x+1,y-3,col(hat,-.15));};
+    const consMod=v=>mk1(66,(pb,cx,cy)=>{const yl='#f2c230',st='#b9b4aa',fl=v===2?3:2;
+      pb.box({cx,cy,hw:14,h:1,L:()=>col('#8a7a62'),R:()=>col('#8a7a62',-.25),T:(u,w,x,y)=>col(hash(x,y,9)<.3?'#9a8a70':'#a8987a',hash(x,y,3)<.12?-.1:0)});   // packed dirt and gravel
+      const H=fl*5;
+      pb.box({cx:cx-1,cy:cy-1,hw:8,h:H,L:(a,b)=>(a|0)%4===0||a>7.4?col(st,.04):(b|0)%5===0?col('#cfcac0'):col('#3a3632',(b|0)%5===4?-.1:0),
+        R:(a,b)=>(a|0)%4===0||a>7.4?col(st,-.24):(b|0)%5===0?col('#cfcac0',-.25):col('#2e2a27'),T:()=>col('#c8c3b8')});                                       // concrete frame
+      for(let a=0;a<=8;a+=4){for(const f of[cLF,cRF]){const[x,y]=f(cx-1,cy-1,8,a,H);for(let k=1;k<=3;k++)pb.put(x,y-k,col('#8a4a2a',k===3?.15:0));}}            // rebar starts
+      for(let a=1;a<5;a++)for(let b=0;b<3;b++){const[x,y]=cLF(cx-1,cy-1,8,a,H+1+b);pb.put(x,y,col('#c9a060',(a+b)%3?0:-.12));}                                  // plywood formwork
+      pb.box({cx:cx-1,cy:cy-1,hw:10,h:H+3,L:(a,b)=>(a|0)%3===0?col('#8a8f96',.1):(b|0)%4===0?col('#9aa0a6'):(b|0)%4===1&&a>.5?col('#c9a060',-.05):null,             // scaffolding with planks
+        R:(a,b)=>{if(v===1&&b>2)return((a*2|0)+(b*2|0))%2?col('#2f7f4a',0,150):col('#3f9f5a',0,120);                                                        // or a green safety net
+          return(a|0)%3===0?col('#8a8f96',-.15):(b|0)%4===0?col('#9aa0a6',-.2):(b|0)%4===1&&a>.5?col('#c9a060',-.25):null;}});
+      // hoarding along the two front edges, with an open gate on the left
+      for(let a=0;a<=13;a+=.5){for(const[f,sh]of[[cLF,0],[cRF,-.22]]){if(f===cLF&&a>4&&a<8)continue;for(let b=0;b<3;b++){const[x,y]=f(cx,cy,13,a,b+.5);pb.put(x,y,col(b===1?(v===1?'#2f6fb0':'#e8912d'):'#eef0f2',sh));}}}
+      // materials, a portable toilet and workers
+      for(let r=0;r<3;r++)pb.line(cx-9+r,cy+3-r,cx-5+r,cy+5-r,col('#8a4a2a',r===2?.15:0));
+      pb.box({cx:cx+6,cy:cy+4,hw:2,h:2,L:(a,b)=>col('#b5543a',(a+b|0)%2?-.1:0),R:()=>col('#b5543a',-.3),T:()=>col('#c96a4a')});
+      pb.box({cx:cx+11,cy:cy+1,hw:1.5,h:4,L:()=>col('#3a7ad0'),R:()=>col('#3a7ad0',-.3),T:()=>col('#5a9ae0')});
+      worker(pb,cx-2,cy+6,'#f28a1a',yl);worker(pb,cx+3,cy+2,'#f28a1a','#ffffff');if(v!==1)worker(pb,cx-6,cy-H-1,'#f28a1a',yl);
+      // tower crane
+      const mx=v===1?cx-9:cx+9,top=cy-56,dir=v===1?1:-1;
+      for(let y=cy-4;y>top;y--){pb.put(mx,y,col(yl,(y&3)<2?0:-.2));pb.put(mx+1,y,col(yl,(y&3)<2?-.2:-.35));}
+      for(let y=cy-6;y>top;y-=4){pb.put(mx,y-1,col('#c8961a'));pb.put(mx+1,y-2,col('#c8961a'));}                                                                 // lattice
+      pb.box({cx:mx+.5,cy:cy-3,hw:2.5,h:2,L:()=>col('#8a8f96'),R:()=>col('#6a6f76'),T:()=>col('#9aa0a6')});                                                       // base
+      for(let x=-24;x<=8;x++){const xx=mx+(dir>0?-x:x)+(dir>0?1:0);if(xx<0||xx>31)continue;pb.put(xx,top,col(yl,x&1?-.15:0));pb.put(xx,top+1,col(yl,(x&1)?0:-.3));}
+      for(let k=0;k<4;k++)pb.put(mx+(dir>0?-6-k:6+k)+(dir>0?1:0),top+2,col('#7a7f86',k&1?-.15:0));for(let k=0;k<4;k++)pb.put(mx+(dir>0?-6-k:6+k)+(dir>0?1:0),top+3,col('#6a6f76'));   // ballast
+      for(let y=1;y<=5;y++)pb.put(mx+(dir>0?1:0),top-y,col(yl,-.1));pb.line(mx,top-5,mx+dir*18,top,col('#5a5f66',.2));pb.line(mx,top-5,mx-dir*7,top,col('#5a5f66',.2));// cat head and ties
+      pb.box({cx:mx+.5-dir*1.5,cy:top+5,hw:1.5,h:3,L:()=>col('#eef0f2'),R:()=>col('#c9ccd2'),T:()=>col('#ffffff')});pb.put(mx-dir,top+3,[col('#5a8ad0'),col('#ffe2a0')]);// cab
+      const tx=mx+dir*(v===2?12:17),hk=top+(v===2?20:14);pb.put(tx,top+2,col('#3a3f48'));for(let y=top+3;y<hk;y++)pb.put(tx,y,col('#3a3f48',.2));pb.put(tx,hk,col('#e04a3a'));
+      if(v===2){for(let k=-2;k<=2;k++){pb.put(tx+k,hk+2,col('#c9a060'));pb.put(tx+k,hk+3,col('#a37b4c'));}pb.line(tx,hk,tx-2,hk+2,col('#3a3f48'));pb.line(tx,hk,tx+2,hk+2,col('#3a3f48'));}
+      else{for(let k=-3;k<=3;k++){pb.put(tx+k,hk+2,col('#9a3a2a'));pb.put(tx+k,hk+3,col('#7a2a20'));}pb.line(tx,hk,tx-3,hk+2,col('#3a3f48'));pb.line(tx,hk,tx+3,hk+2,col('#3a3f48'));}
+    },(cx,cy)=>{const mx=v===1?cx-9:cx+9,dir=v===1?1:-1;return{blink:[[mx,cy-62,'#ff4a4a'],[Math.max(0,Math.min(31,mx+dir*23)),cy-56,'#ff4a4a']],lights:[[cx-9,cy-14]]};});
+    const consOldV=v=>mk1(44,(pb,cx,cy)=>{const wd='#7a5233';
+      pb.ell(cx,cy+1,12,(dx,dy,x,y)=>col('#9a8a64',0,hash(x,y,3)<.5?150:110));for(let k=0;k<9;k++)pb.put(cx-8+((hash(k,v,1)*16)|0),cy-1+((hash(k,v,2)*6)|0),col('#d8b878'));   // yard and wood chips
+      pb.box({cx,cy:cy-1,hw:9,h:9,L:(a,b)=>(a<1||a>=8.2||(a|0)===4||(b|0)%4===0)?col(wd):b<3.5&&a<5?col('#b89a6a',((a|0)+(b|0))%3?0:-.08):null,
+        R:(a,b)=>(a<1||a>=8.2||(a|0)===4||(b|0)%4===0)?col('#5a3a22'):b<3.5&&a>4?col('#b89a6a',-.25):null});                                                   // timber frame, walls going up
+      for(const t of[0,.5,1]){const ex=cx-9+9*t,ey=cy-10+4.5*t,rx=ex+4.5,ry=ey-2.25-6;pb.line(ex+9,ey-4.5,rx,ry,col('#6a4428'));pb.line(ex,ey,rx,ry,col('#8a6238',.05));}   // rafters
+      pb.line(cx-4.5,cy-18.25,cx+4.5,cy-13.75,col('#9a7448',.12));                                                                                              // ridge beam
+      for(let k=0;k<10;k++){pb.put(cx+10+(k>>2),cy-k,col('#a37b4c'));pb.put(cx+13+(k>>2),cy-1-k,col('#a37b4c',-.2));if(k%3===1)pb.line(cx+10+(k>>2),cy-k,cx+13+(k>>2),cy-1-k,col('#a37b4c',.1));}// ladder
+      if(v===0)for(const[dx,dy]of[[0,0],[2,1],[1,-1]])pb.cyl(cx-10+dx,cy+4+dy,1.1,4,()=>col('#8a5a34'),()=>col('#d8b878'));                                        // logs
+      else for(let k=0;k<3;k++)pb.ell(cx-10+k*2,cy+4-k,2,dx=>col('#d8b450',dx>0?-.2:.05));                                                                         // straw bundles
+      for(const[dx,dy]of[[0,0],[2,0],[1,-1],[3,1]])pb.box({cx:cx+6+dx,cy:cy+5+dy,hw:1,h:1,L:()=>col('#9a958a'),R:()=>col('#7a756a'),T:()=>col('#b8b3a8')});        // stones
+      worker(pb,cx-3,cy+6,'#8a6a44','#2a1d14');if(v)worker(pb,cx+2,cy-10,'#a8865a','#e8e0c8');});
+    SP.consV=[0,1,2].map(consMod);SP.cons=SP.consV[0];SP.consOldV=[0,1].map(consOldV);SP.consOld=SP.consOldV[0];
     const vehSet=pal=>[0,1,2,3].map(d=>{const map=d%2?carY:carX,rev=d>=2;const pb=new PB(6,4);map.forEach((r2,y)=>[...r2].forEach((ch,x)=>{if(ch==='.')return;let k=ch;if(rev){if(ch==='h')k='t';else if(ch==='t')k='h';}if(pal[k]!=null)pb.put(x,y,pal[k]);}));return mk(pb,-3,-3);});
     // people: 5x9 figures (hair, face, shirt with arms, trousers, shoes) facing front or back, with a two-step walk
     const HAIR=['#2a1d14','#4a2e1a','#151318','#7a4a24','#b8863e','#5a5560'],SKIN=['#f0c49a','#e0aa7e','#c98e62','#f6d2b0'];
@@ -3369,7 +3416,7 @@ function render(){
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const sw=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45)*(stormy?2.4:.75));for(const[u,v,s]of pts){swayDX=s&1?sw:0;drawSpr(c,SP.tree[s],sx+(u-v)*16+swayDX,sy+(u+v)*8);}swayDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
-      else if(w.build[i]>0){sp=w.te[i]<3?SP.consOld:SP.cons;drawSpr(c,sp,sx,sy);}
+      else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
       else if(L>0){sp=FL(bldSprite(i),i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK)drawSpr(c,FL(parkSprite(i),i),sx,sy);
