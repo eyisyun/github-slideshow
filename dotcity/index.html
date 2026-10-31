@@ -2299,6 +2299,90 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       pb.box({cx:cx+5,cy:cy-2,hw:3,h:7,L:()=>col(R),R:()=>col(R,-.25),T:()=>col(Y)});for(let k=0;k<7;k++)pb.put(cx+2-k%2,cy-1-k,col('#9aa3ad'));
       for(let k=0;k<8;k++){pb.put(cx+7+k,cy-8+k,col(Y));pb.put(cx+7+k,cy-7+k,col(Y,-.2));}pb.roof(cx+5,cy-9,4,3,'#3a7dd8');
       pb.box({cx:cx-4,cy:cy+4,hw:4,h:1,L:()=>col(WOOD),R:()=>col(WOOD,-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.15?col(WOOD,.1):col(PAL.sand,hash(x,y,3)<.2?-.1:0)});});
+    // detailed decorations (redrawn over the first, plainer set above)
+    const dLF=(cx,cy,hw,a,b)=>[Math.round(cx-hw+a),Math.round(cy+a/2-b)],dRF=(cx,cy,hw,a,b)=>[Math.round(cx+a),Math.round(cy+hw/2-a/2-b)];
+    const pave=(pb,cx,cy,hw,hex)=>pb.box({cx,cy:cy+1,hw,h:1,L:()=>col(hex,-.1),R:()=>col(hex,-.32),T:(u,v,x,y)=>col(hex,(((u*hw/2|0)+(v*hw/2|0))&1?-.05:.04)+(hash(x,y,41)<.08?-.08:0))});
+    const pot=(pb,x,y,fc)=>{pb.put(x,y,col('#b0643a'));pb.put(x+1,y,col('#8a4a2a'));pb.put(x,y-1,col('#c8784a'));pb.put(x+1,y-1,col('#a05a34'));
+      pb.put(x,y-2,col('#3f8a3e'));pb.put(x+1,y-2,col('#2f6f30'));pb.put(x,y-3,col(fc,.1));pb.put(x+1,y-3,col(fc,-.1));pb.put(x-1,y-2,col(fc,-.05));pb.put(x+2,y-2,col(fc,-.2));};
+    // 꽃밭: a raised bed edged in timber, rows of tulips in colour bands, leaves between, a butterfly
+    SP.deco[0]=mk1(30,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:10,h:2,L:(a)=>col('#8a6238',(a|0)%3?0:-.12),R:(a)=>col('#6a4428',(a|0)%3?0:-.1),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.1?col('#a37b4c'):col('#5a3e2a',hash(x,y,5)<.25?-.12:0)});
+      const rows=['#ff5a7a','#ffd84a','#ffffff','#c28bff','#ff8a3a'];
+      for(let i=0;i<5;i++)for(let j=0;j<6;j++){const x=cx+Math.round((j-i)*1.9-1),y=cy-2+Math.round((i+j)*.95)-2;if(Math.abs(x-cx)/9+Math.abs(y-cy+1)/4.5>.95)continue;
+        pb.put(x,y,col('#2f7a34'));pb.put(x+1,y,col('#3f9a44',-.05));pb.put(x,y-1,col('#3f8a3e'));const c=rows[i];pb.put(x,y-2,col(c,.08));pb.put(x+1,y-2,col(c,-.15));pb.put(x,y-3,col(c,.2));}
+      pb.put(cx+5,cy-9,col('#f2c140'));pb.put(cx+7,cy-9,col('#f2c140'));pb.put(cx+6,cy-9,col('#2a1d14'));pb.put(cx+5,cy-10,col('#ffe27a'));pb.put(cx+7,cy-10,col('#ffe27a'));});
+    // 돌탑: a cairn of flat stones, each with a lit top and a shadowed rim, on a bed of pebbles, with two little stacks beside it
+    const cairn=(pb,x,y,n,r0,s)=>{let r=r0;for(let k=0;k<n;k++){const jx=(hash(k,s,1)-.5)*1.6,hx=['#a9a49a','#9a958a','#b8b2a6','#8f897d','#c2bcae'][(k+s)%5];
+        pb.ell(x+jx,y-k*2.2,r,(dx,dy)=>col(hx,dy<-.2?.12:dy>.45?-.3:dx>.5?-.15:0));pb.ell(x+jx,y-k*2.2-1,r*.82,(dx,dy)=>col(hx,dy<0?.18:.05));r=Math.max(1.4,r-.55-hash(k,s,2)*.4);}};
+    SP.deco[2]=mk1(40,(pb,cx,cy)=>{for(let k=0;k<22;k++){const a=hash(k,7,3)*6.28,r=4+hash(k,8,3)*7;pb.put(Math.round(cx+Math.cos(a)*r),Math.round(cy+1+Math.sin(a)*r*.5),col(hash(k,9,3)<.5?'#a9a49a':'#8f897d',hash(k,1,4)<.4?.12:0));}
+      cairn(pb,cx+7,cy+1,4,2.6,3);cairn(pb,cx-7,cy+2,3,2.4,5);cairn(pb,cx,cy,9,5.2,1);});
+    // 장독대: a dressed-stone terrace with glazed jars of three sizes (lids, rims, a glint of glaze), a small dipper on one lid
+    const onggi=(pb,x,y,s,lid)=>{const H=Math.round(6*s);for(let b=0;b<H;b++){const t=(b+.5)/H,r=(1.3+Math.sin(t*Math.PI*.95+.1)*1.9)*s;
+        pb.ell(x,y-b,r,(dx)=>dx<-.75?col('#3a2016'):dx<-.35?col('#7a4a30',.06):dx<.1?col('#62382a'):dx<.6?col('#4e2c20'):col('#341c14'));}
+      for(let b=1;b<H-1;b++)pb.put(Math.round(x-1.1*s),y-b,col('#b8826a',b===Math.round(H*.6)?.25:0,b%2?150:220));                                          // glaze highlight
+      pb.ell(x,y-H,1.5*s,(dx,dy)=>dx*dx+dy*dy>.45?col('#6a3e2c',.1):col('#1e100a'));                                                                         // rim and mouth
+      if(lid){pb.ell(x,y-H-.6,1.9*s,(dx,dy)=>col('#7a6a5a',dy<-.1?.2:dy>.4?-.25:0));pb.put(x,Math.round(y-H-1.6),col('#9a8a7a',.1));}};
+    SP.deco[3]=mk1(34,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:11,h:3,L:(a,b)=>col(STONE,(((a|0)>>1)+(b|0))%2?-.06:.04),R:(a,b)=>col(STONE,-.28+((((a|0)>>1)+(b|0))%2?-.05:0)),T:(u,v,x,y)=>col('#c9c3b6',hash(x,y,7)<.12?-.08:0)});
+      for(const[dx,dy,s,l]of[[-4,-4,1.2,1],[3,-4,1.1,0],[8,-1,.85,1],[-8,0,.85,1],[0,1,.95,1],[5,3,.7,0]])onggi(pb,cx+dx,cy-1+dy,s,l);});
+    // 솟대: three poles of different heights topped with carved ducks, a band of five-colour cloth tied round the tallest, a stone base
+    const duck=(pb,x,y,d)=>{for(let k=-2;k<=1;k++){pb.put(x+k*d,y,col('#7a5233',k<0?.1:-.1));pb.put(x+k*d,y-1,col('#8a6238',.12));}pb.put(x+2*d,y-2,col('#8a6238',.15));pb.put(x+2*d,y-1,col('#7a5233'));pb.put(x+3*d,y-2,col('#d9a03a'));pb.put(x-3*d,y-2,col('#6a4428'));};
+    SP.deco[5]=mk1(44,(pb,cx,cy)=>{pb.ell(cx,cy+1,7,(dx,dy,x,y)=>col(hash(x,y,3)<.5?'#a9a49a':'#9a958a',dy<0?.08:-.12));
+      for(const[dx,dy,h,d]of[[0,0,28,1],[-4,2,21,-1],[4,2,17,1]]){const x=cx+dx,y=cy+dy;for(let i=0;i<h;i++){pb.put(x,y-i,col('#8a6a48',(i%5?0:-.12)+(i%2?.04:0)));}duck(pb,x,y-h-1,d);}
+      ['#e04a3a','#f2c140','#3a6fd0','#ffffff','#2a2a30'].forEach((c,k)=>{pb.put(cx+1,cy-9+k,col(c));pb.put(cx+2,cy-8+k,col(c,-.15));});});
+    // 벚꽃나무 ★: a forked trunk with bark, branches, five layered blossom clouds (light tops, deep pink undersides, white sparkles), a carpet of petals
+    SP.deco[7]=mk1(58,(pb,cx,cy)=>{for(let k=0;k<40;k++){const a=hash(k,3,9)*6.28,r=Math.sqrt(hash(k,4,9))*12;pb.put(Math.round(cx+Math.cos(a)*r),Math.round(cy+1+Math.sin(a)*r*.5),col(hash(k,5,9)<.5?'#f7a8c8':'#ffd6e6'));}
+      for(let i=0;i<14;i++){pb.put(cx,cy-i,col('#5a3a2a',i%4?.04:-.12));pb.put(cx+1,cy-i,col('#3a2418'));}pb.put(cx-1,cy,col('#5a3a2a'));pb.put(cx+2,cy,col('#3a2418'));
+      for(const[x1,y1]of[[-8,-22],[8,-24],[-3,-28],[4,-19],[-10,-16]])pb.line(cx,cy-12,cx+x1,cy+y1,col('#5a3a2a'));
+      for(const[x,y,r]of[[cx-1,cy-24,9],[cx-8,cy-21,6],[cx+8,cy-22,6.5],[cx-3,cy-30,5.5],[cx+4,cy-29,5]])
+        pb.ell(x,y,r,(dx,dy,xx,yy)=>{const h=hash(xx,yy,8);return col(h<.12?'#ffffff':dy<-.3?'#ffd6e6':dy>.4||dx>.6?'#e27aa8':h<.5?'#f7a8c8':'#f4b8d2',0);});
+      for(let k=0;k<7;k++)pb.put(cx-10+((hash(k,6,9)*20)|0),cy-12-((hash(k,7,9)*8)|0),col('#f7a8c8'));},(cx,cy)=>({lights:[[cx,cy-22]]}));
+    // 분수 ★: a round paved plaza, a stone basin with a carved rim, rippling water lit from below at night, a two-tier fountain
+    // (pedestal, wide lower bowl, stem, small upper bowl, finial) with water sheeting off both bowls and a jet arcing from the top
+    SP.deco[8]=mk1(54,(pb,cx,cy)=>{pb.ell(cx,cy+2,15,(dx,dy,x,y)=>col('#d8d0c0',(((x>>1)+y)&3)===0?-.07:0));
+      const water=(dx,dy,x,y)=>{const r=Math.sqrt(dx*dx+dy*dy),w=Math.sin(r*13)>.6;return[col('#3f86c8',w?.22:hash(x,y,3)<.1?.3:0),col('#2f7ad0',w?.5:.25)];};
+      pb.cyl(cx,cy+1,12,3,(dx,b)=>col('#c9c3b5',(dx<-.4?.1:dx>.45?-.28:0)+(b<1?-.12:b>2?.08:0)),(dx,dy,x,y)=>dx*dx+dy*dy>.8?col('#e8e2d4',dy<0?.06:-.08):water(dx,dy,x,y));
+      pb.cyl(cx,cy-1,2.4,4,side('#bdb6a6'),()=>col('#d4cfc2'));
+      pb.cyl(cx,cy-5,6.5,2,(dx,b)=>col('#c9c3b5',(dx<-.4?.1:dx>.45?-.28:0)+(b<1?-.15:0)),(dx,dy,x,y)=>dx*dx+dy*dy>.7?col('#e8e2d4',dy<0?.06:-.08):water(dx,dy,x,y));
+      pb.cyl(cx,cy-7,1.2,4,side('#bdb6a6'),()=>col('#d4cfc2'));
+      pb.cyl(cx,cy-11,3.6,1,(dx)=>col('#c9c3b5',dx<-.4?.1:dx>.45?-.28:0),(dx,dy,x,y)=>dx*dx+dy*dy>.6?col('#e8e2d4'):water(dx,dy,x,y));
+      pb.put(cx,cy-13,col('#d4cfc2'));pb.put(cx,cy-14,col('#e8e2d4'));
+      const fall=(x,y0,y1)=>{for(let y=y0;y<=y1;y++)pb.put(x,y,[col('#bfe4ff',0,(y-y0)%3?200:150),col('#8fd0ff',0,190)]);};
+      for(const dx of[-3,-1,1,3])fall(cx+dx,cy-10+(Math.abs(dx)>2?0:1),cy-6);for(const dx of[-6,-4,4,6])fall(cx+dx,cy-4+(Math.abs(dx)>5?0:1),cy+1);
+      for(let k=1;k<=5;k++){const y=cy-15-Math.round(Math.sin(k/5*Math.PI)*3)-(5-k);pb.put(cx-k,y+k,[col('#dff2ff'),col('#bfe8ff')]);pb.put(cx+k,y+k,[col('#dff2ff'),col('#bfe8ff')]);}
+      for(const[dx,dy]of[[-8,1],[7,2],[-3,3],[9,0],[-10,0]])pb.put(cx+dx,cy+dy,col('#ffffff',0,200));},
+      (cx,cy)=>({em:[[cx,cy-17,'steam']],lights:[[cx,cy-1],[cx,cy-6]]}));
+    // 동상 ★: granite steps and a tall pedestal with a bronze plaque and a cornice; a bronze figure in a long robe raising a torch
+    // (lit at night), a book under the other arm; flower pots at the corners
+    SP.deco[9]=mk1(64,(pb,cx,cy)=>{pave(pb,cx,cy,13,'#c9c3b5');
+      const gr='#a8a39a';pb.box({cx,cy,hw:9,h:2,L:()=>col(gr,-.02),R:()=>col(gr,-.3),T:()=>col(gr,.12)});pb.box({cx,cy:cy-2,hw:7,h:2,L:()=>col(gr,.02),R:()=>col(gr,-.28),T:()=>col(gr,.14)});
+      pb.box({cx,cy:cy-4,hw:5,h:9,L:(a,b)=>a>1&&a<4&&b>4&&b<7.5?(a<1.5||a>3.5||b<4.5||b>7?col('#c9a050',.1):((b*2|0)%2&&(a*2|0)%3)?col('#d9b060',.15):col('#5a4a32')):col(gr,.04+((b|0)===8?.12:(b|0)===1?-.06:0)),
+        R:(a,b)=>col(gr,-.26+((b|0)===8?.08:0)),T:()=>col(gr,.16)});pb.box({cx,cy:cy-13,hw:5.8,h:1,L:()=>col(gr,.14),R:()=>col(gr,-.18),T:()=>col(gr,.22)});
+      const BR='#6f5a3a',hi='#b8955a',pat='#5f8a78',y0=cy-15;
+      // the figure: a robe flaring to the hem, a belted waist, chest and shoulders, neck and head with a crown of hair
+      const W2=[3,3,2.6,2.4,2.2,2,1.8,1.6,1.5,1.8,2.1,2.3,2.6];
+      for(let r=0;r<W2.length;r++){const w=W2[r];for(let dx=-Math.ceil(w);dx<=Math.ceil(w);dx++){if(Math.abs(dx)>w+.2)continue;const t=dx/Math.max(1,w);
+          pb.put(cx+dx,y0-r,col(t<-.5?hi:t<0?'#9a7a4a':t<.55?'#7a6038':BR,(r<8&&(dx+r)%3===0)?-.08:r===8?-.15:0));}}                                          // robe folds, belt
+      pb.put(cx,y0-13,col('#8a6f45'));pb.ell(cx,y0-15.5,2,(dx,dy)=>col(dx<-.3?'#c9a66a':dx<.3?'#9a7a4a':BR,dy<-.4?-.15:0));pb.put(cx-1,y0-17,col('#5a4630'));pb.put(cx,y0-17,col('#5a4630'));pb.put(cx+1,y0-17,col('#4a3a24'));
+      for(let k=0;k<6;k++){pb.put(cx+3+(k>3?1:0),y0-11-k,col(BR,.08));pb.put(cx+4+(k>3?1:0),y0-11-k,col('#4a3a24'));}                                          // raised arm
+      pb.put(cx+4,y0-18,col('#c9a050'));pb.put(cx+4,y0-19,[col('#f2c140'),col('#ffd27a')]);pb.put(cx+4,y0-20,[col('#ffe27a'),col('#fff2c0')]);pb.put(cx+5,y0-19,[col('#f2a040'),col('#ffb04a')]);   // torch
+      pb.put(cx-3,y0-11,col(hi));pb.put(cx-3,y0-10,col(hi));pb.put(cx-2,y0-9,col(hi,-.05));pb.put(cx-3,y0-9,col('#3a4a6a'));pb.put(cx-4,y0-9,col('#2a3a5a'));pb.put(cx-3,y0-8,col('#3a4a6a'));   // arm and book
+      for(const[dx,dy]of[[-1,-2],[1,-5],[-2,-6],[1,-10],[0,-14]])pb.put(cx+dx,y0+dy,col(pat,.1));                                                               // patina streaks
+      pot(pb,cx-12,cy+1,'#e04a3a');pot(pb,cx+11,cy+1,'#e04a3a');pot(pb,cx-1,cy+6,'#ffd84a');},(cx,cy)=>({lights:[[cx+4,cy-34]]}));
+    // 시계탑 ★: a stone plinth with an arched door, a brick shaft with stone quoins and slit windows, a clock stage with a face on
+    // each side (ticks, hands, lit at night), an arcaded belfry with a gold bell, a copper-green spire with a gold finial and a weathervane
+    SP.deco[10]=mk1(80,(pb,cx,cy)=>{pave(pb,cx,cy,10,'#c9c3b5');const st='#d8cfbc',hw=5.5;
+      pb.box({cx,cy:cy-1,hw:7,h:4,L:(a,b)=>a>2.2&&a<4.6&&b<3.6&&!(b>3&&(a<2.6||a>4.2))?col('#3a2a22'):col(st,(b|0)===3?.1:0),R:()=>col(st,-.26),T:()=>col(st,.12)});
+      pb.box({cx,cy:cy-5,hw,h:26,L:(a,b)=>a<1||a>hw-1?col(st,((b|0)>>1)%2?.06:-.04):a>2&&a<3.4&&((b>6&&b<10)||(b>15&&b<19))?[col('#2e2b33'),col('#ffd27a')]:brick('#a0523a',0)(a,b),
+        R:(a,b)=>a<1||a>hw-1?col(st,-.24+(((b|0)>>1)%2?.05:0)):a>2&&a<3.4&&b>11&&b<15?[col('#241f26'),col('#ffcf7a')]:brick('#a0523a',-.25)(a,b),T:()=>col(st)});
+      pb.box({cx,cy:cy-31,hw:6.5,h:9,L:()=>col(st,.06),R:()=>col(st,-.22),T:()=>col(st,.12)});
+      const face=(x0,y0,sl)=>{for(let dy=-3;dy<=3;dy++)for(let dx=-2;dx<=2;dx++){const d=dx*dx*1.6+dy*dy;if(d>9.5)continue;const x=x0+dx,y=Math.round(y0+dy+dx*sl);
+          pb.put(x,y,d>5.5?col('#c9a050',dy<0?.15:-.1):[col('#f6f2e4'),col('#fff2c0')]);}
+        pb.put(x0,Math.round(y0),col('#2e2b33'));pb.put(x0,Math.round(y0-1),col('#2e2b33'));pb.put(x0+1,Math.round(y0+sl),col('#2e2b33'));};
+      {const[x,y]=dLF(cx,cy-31,6.5,3.2,4.5);face(x,y,.5);}{const[x,y]=dRF(cx,cy-31,6.5,3.6,4.5);face(x,y,-.5);}
+      pb.box({cx,cy:cy-40,hw:5.5,h:6,L:(a,b)=>(a|0)%2===1&&b>.8&&b<5?(a>2&&a<3.5&&b<3.4?col('#f2c140',b<2?-.1:.1):col('#2e2b33')):col(st,.04),R:(a,b)=>(a|0)%2===1&&b>.8&&b<5?col('#241f26'):col(st,-.24),T:()=>col(st)});
+      pb.box({cx,cy:cy-46,hw:6.2,h:1,L:()=>col(st,.15),R:()=>col(st,-.2),T:()=>col(st,.2)});
+      pb.roof(cx,cy-47,6.5,14,'#4a8a76');for(let i=0;i<5;i++)pb.put(cx,cy-61-i,col('#d9a03a',i%2?-.1:.1));pb.put(cx,cy-66,col('#f2c140',.2));
+      pb.line(cx-2,cy-65,cx+2,cy-65,col('#2e2b33'));pb.put(cx+3,cy-66,col('#2e2b33'));pb.put(cx+3,cy-64,col('#2e2b33'));},
+      (cx,cy)=>({lights:[[cx-3,cy-34],[cx+3,cy-34]]}));
     ;yield;
     SP.fence=Array.from({length:16},(_,m)=>mk1(26,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
       for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#a37b4c'));pb.put(x,y-4,col('#b8905e'));if(k%4===0){for(let h=0;h<6;h++)pb.put(x,y-h,col('#6e4e2c',h===5?.15:0));}}}
