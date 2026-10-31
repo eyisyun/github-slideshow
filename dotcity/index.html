@@ -3237,7 +3237,7 @@ function roadPath(src,ti){const w=W,fx=ti%N,fy=ti/N|0,prev=new Int32Array(N*N).f
   return null;}
 function sendCar(path,em,extra){const x0=path[0]%N,y0=path[0]/N|0,nx=path.length>1?path[1]:path[0],d=path.length>1?DIRS.findIndex(([dx,dy])=>x0+dx===nx%N&&y0+dy===(nx/N|0)):0;
   cars.push(Object.assign({x:x0,y:y0,e:W.era,d:Math.max(0,d),t:0,c:0,em,sp:em===2?2.6:2.8,path,pi:0,st:path.length>1?'go':'work',wt:0},extra));}
-function dispatchFire(){const w=W;if(w.era<3||!w.st.fires)return;const assigned=new Set(cars.filter(c=>c.fire!=null&&c.st!=='back').map(c=>c.fire));
+function dispatchFire(){const w=W;if(w.era<3||!w.st.fires)return;const assigned=new Set(cars.filter(c=>c.fire!=null&&c.st!=='ret').map(c=>c.fire));
   for(let i=0;i<N*N;i++){if(!w.fire[i]||assigned.has(i)||(fireTry.get(i)||0)>now)continue;
     const path=roadPath(K.FIRE,i);if(!path){fireTry.set(i,now+5000);continue;}sendCar(path,2,{fire:i});assigned.add(i);
     if(now>dispMsg){dispMsg=now+8000;toast(`🚒 소방차가 출동했어요! (${i%N}, ${i/N|0})`,'info');}}}
@@ -3255,21 +3255,27 @@ function dispatchPolice(dt){const w=W;for(let n=incidents.length-1;n>=0;n--){con
     const has=cars.some(c=>c.inc===o);if(!has&&o.t>40){incidents.splice(n,1);toast(I.lost,'warn');continue;}
     if(has||!w.st[I.cnt]||w.era<3||(o.retry||0)>now)continue;const path=roadPath(I.src,o.i);if(!path){o.retry=now+5000;continue;}
     sendCar(path,I.em,{inc:o});if(now>polMsg){polMsg=now+6000;toast(`${I.call} (${o.i%N}, ${o.i/N|0})`,'info');}}}
+// after the job a vehicle switches its lights off and drives back the way it came, at an easy pace, and goes in at its station
+function goHome(c){const p=c.path?c.path.slice(0,c.pi+1).reverse():null;if(!p||p.length<2){c.gone=true;return;}
+  c.path=p;c.pi=0;c.t=0;c.st='ret';c.quiet=true;c.sp*=.7;const k=p[1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}
 function stepTruck(c,dt){
+  if(c.st==='ret'){c.t+=dt*c.sp*wxCar();while(c.t>=1&&c.pi<c.path.length-1){c.t-=1;c.pi++;const j=c.path[c.pi];c.x=j%N;c.y=j/N|0;
+      if(c.pi<c.path.length-1){const k=c.path[c.pi+1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}}
+    if(c.pi>=c.path.length-1)c.gone=true;return;}
   const live=c.fire!=null?W.fire[c.fire]>0:c.inc?!c.inc.done:false;
-  if(c.st==='go'&&!live){c.st='back';c.path=null;c.ttl=10;return;}
+  if(c.st==='go'&&!live){goHome(c);return;}
   if(c.st==='go'){c.t+=dt*c.sp;while(c.t>=1&&c.pi<c.path.length-1){c.t-=1;c.pi++;const j=c.path[c.pi];c.x=j%N;c.y=j/N|0;
       if(c.pi<c.path.length-1){const k=c.path[c.pi+1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}else{c.st='work';c.t=0;}}
     if(c.pi>=c.path.length-1){c.st='work';c.t=0;}return;}
   if(c.st==='work'){c.t=0;c.wt+=dt;
     if(c.inc&&c.wt>4&&!c.inc.done){c.inc.done=true;if(now>polMsg-4000){polMsg=now+4000;toast(INC[c.inc.type||'theft'].done,'good');}}
-    if(!live||c.wt>45){c.st='back';c.path=null;c.ttl=10;}}}
+    if(!live||c.wt>45)goHome(c);}}
 function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24));
   dispAcc+=dt;if(dispAcc>.5){dispAcc=0;dispatchFire();}
   dispatchPolice(dt);fightSet.clear();for(const c of cars)if(c.st==='work'&&c.fire!=null)fightSet.add(c.fire);
   if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target)for(let n=cars.length-1;n>=0;n--)if(!cars[n].path){cars.splice(n,1);break;}
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}
-    if(c.path){stepTruck(c,dt);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
+    if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
     c.t+=dt*c.sp*wxCar()/(1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
@@ -3650,7 +3656,7 @@ function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
-  if(sp.siren){const ph=(now/160+car.x+car.y|0)%2,[px,py]=sp.siren;c.fillStyle=ph?'#ff3a3a':'#3a7dff';c.fillRect(sx+sp.ox+px-1,sy+sp.oy+py,1,1);c.fillStyle=ph?'#3a7dff':'#ff3a3a';c.fillRect(sx+sp.ox+px+1,sy+sp.oy+py,1,1);
+  if(sp.siren&&!car.quiet){const ph=(now/160+car.x+car.y|0)%2,[px,py]=sp.siren;c.fillStyle=ph?'#ff3a3a':'#3a7dff';c.fillRect(sx+sp.ox+px-1,sy+sp.oy+py,1,1);c.fillStyle=ph?'#3a7dff':'#ff3a3a';c.fillRect(sx+sp.ox+px+1,sy+sp.oy+py,1,1);
     if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.5;c.drawImage(ph?SP.sirR.c:SP.sirB.c,sx+sp.ox+px-6,sy+sp.oy+py-3);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
 function emit(sp,sx,sy){if(!sp.em||!SPEEDS[speed])return;const r=frameDt*Math.min(2.2,SPEEDS[speed]);
   for(const[ex,ey,kind]of sp.em)if(Math.random()<r*(kind==='steam'?5:3.2)&&parts.length<700)
