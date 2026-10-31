@@ -2304,12 +2304,16 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     const pave=(pb,cx,cy,hw,hex)=>pb.box({cx,cy:cy+1,hw,h:1,L:()=>col(hex,-.1),R:()=>col(hex,-.32),T:(u,v,x,y)=>col(hex,(((u*hw/2|0)+(v*hw/2|0))&1?-.05:.04)+(hash(x,y,41)<.08?-.08:0))});
     const pot=(pb,x,y,fc)=>{pb.put(x,y,col('#b0643a'));pb.put(x+1,y,col('#8a4a2a'));pb.put(x,y-1,col('#c8784a'));pb.put(x+1,y-1,col('#a05a34'));
       pb.put(x,y-2,col('#3f8a3e'));pb.put(x+1,y-2,col('#2f6f30'));pb.put(x,y-3,col(fc,.1));pb.put(x+1,y-3,col(fc,-.1));pb.put(x-1,y-2,col(fc,-.05));pb.put(x+2,y-2,col(fc,-.2));};
-    // 꽃밭: a raised bed edged in timber, rows of tulips in colour bands, leaves between, a butterfly
-    SP.deco[0]=mk1(30,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:10,h:2,L:(a)=>col('#8a6238',(a|0)%3?0:-.12),R:(a)=>col('#6a4428',(a|0)%3?0:-.1),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.1?col('#a37b4c'):col('#5a3e2a',hash(x,y,5)<.25?-.12:0)});
-      const rows=['#ff5a7a','#ffd84a','#ffffff','#c28bff','#ff8a3a'];
-      for(let i=0;i<5;i++)for(let j=0;j<6;j++){const x=cx+Math.round((j-i)*1.9-1),y=cy-2+Math.round((i+j)*.95)-2;if(Math.abs(x-cx)/9+Math.abs(y-cy+1)/4.5>.95)continue;
-        pb.put(x,y,col('#2f7a34'));pb.put(x+1,y,col('#3f9a44',-.05));pb.put(x,y-1,col('#3f8a3e'));const c=rows[i];pb.put(x,y-2,col(c,.08));pb.put(x+1,y-2,col(c,-.15));pb.put(x,y-3,col(c,.2));}
-      pb.put(cx+5,cy-9,col('#f2c140'));pb.put(cx+7,cy-9,col('#f2c140'));pb.put(cx+6,cy-9,col('#2a1d14'));pb.put(cx+5,cy-10,col('#ffe27a'));pb.put(cx+7,cy-10,col('#ffe27a'));});
+    // 꽃밭: a round park bed in a raised stone ring, a band of marigolds round the edge, red flowers inside, tall lavender in the middle
+    // a mounded bush: stacked ellipses (dark below, lit on top) with flowers scattered over the dome
+    const bloom=(pb,x,y,r,h,c,s,c2)=>{for(let b=0;b<=h;b++){const rr=r*Math.sqrt(Math.max(.05,1-(b/(h+.6))**2));pb.ell(x,y-b,rr,(dx,dy,xx,yy)=>col('#3f8a3e',(b/h-.55)*.35+(dx>.45?-.15:dx<-.4?.06:0)+(hash(xx,yy,b+s)<.15?-.08:0)));}
+      const n=Math.round(r*r*3+4);for(let k=0;k<n;k++){const a=hash(k,s,1)*6.28,q=Math.sqrt(hash(k,s,2))*.95,fx=Math.round(x+Math.cos(a)*q*r),fy=Math.round(y+Math.sin(a)*q*r*.5-h*Math.sqrt(1-q*q)-.5);
+        const cc=c2&&hash(k,s,5)<.35?c2:c;pb.put(fx,fy,col(cc,hash(k,s,3)<.3?.22:Math.cos(a)>.5?-.15:0));}};
+    SP.deco[0]=mk1(36,(pb,cx,cy)=>{pb.cyl(cx,cy+1,11.5,2,(dx,b)=>col('#b8b2a6',(dx<-.4?.1:dx>.45?-.28:0)+(b<1?-.1:0)),(dx,dy,x,y)=>dx*dx+dy*dy>.86?col('#d4cfc2',dy<0?.08:-.08):col('#5a3e2a'));
+      for(let k=0;k<18;k++){const a=k/18*6.28,x=cx+Math.cos(a)*8.2,y=cy-1+Math.sin(a)*4.1;bloom(pb,x,y,1.6,2,'#ffb03a',20+k,'#ffd84a');}
+      for(let k=0;k<11;k++){const a=k/11*6.28+.3,x=cx+Math.cos(a)*5,y=cy-1+Math.sin(a)*2.5;bloom(pb,x,y,1.7,3,'#e0443a',40+k,'#ff7a6a');}
+      for(let k=0;k<12;k++){const a=hash(k,9,1)*6.28,q=Math.sqrt(hash(k,9,2))*2.4,x=Math.round(cx+Math.cos(a)*q),y=Math.round(cy-1+Math.sin(a)*q*.5);
+        for(let h=0;h<7;h++)pb.put(x,y-h,h<2?col('#3f8a3e'):col('#9a6ad8',h>=5?.2:(h&1)?.05:-.12));}});
     // 돌탑: a cairn of flat stones, each with a lit top and a shadowed rim, on a bed of pebbles, with two little stacks beside it
     const cairn=(pb,x,y,n,r0,s)=>{let r=r0;for(let k=0;k<n;k++){const jx=(hash(k,s,1)-.5)*1.6,hx=['#a9a49a','#9a958a','#b8b2a6','#8f897d','#c2bcae'][(k+s)%5];
         pb.ell(x+jx,y-k*2.2,r,(dx,dy)=>col(hx,dy<-.2?.12:dy>.45?-.3:dx>.5?-.15:0));pb.ell(x+jx,y-k*2.2-1,r*.82,(dx,dy)=>col(hx,dy<0?.18:.05));r=Math.max(1.4,r-.55-hash(k,s,2)*.4);}};
