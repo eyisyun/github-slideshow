@@ -2347,9 +2347,8 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       pb.put(cx,cy-13,col('#d4cfc2'));pb.put(cx,cy-14,col('#e8e2d4'));
       const fall=(x,y0,y1)=>{for(let y=y0;y<=y1;y++)pb.put(x,y,[col('#bfe4ff',0,(y-y0)%3?200:150),col('#8fd0ff',0,190)]);};
       for(const dx of[-3,-1,1,3])fall(cx+dx,cy-10+(Math.abs(dx)>2?0:1),cy-6);for(const dx of[-6,-4,4,6])fall(cx+dx,cy-4+(Math.abs(dx)>5?0:1),cy+1);
-      for(let k=1;k<=5;k++){const y=cy-15-Math.round(Math.sin(k/5*Math.PI)*3)-(5-k);pb.put(cx-k,y+k,[col('#dff2ff'),col('#bfe8ff')]);pb.put(cx+k,y+k,[col('#dff2ff'),col('#bfe8ff')]);}
       for(const[dx,dy]of[[-8,1],[7,2],[-3,3],[9,0],[-10,0]])pb.put(cx+dx,cy+dy,col('#ffffff',0,200));},
-      (cx,cy)=>({em:[[cx,cy-17,'steam']],lights:[[cx,cy-1],[cx,cy-6]]}));
+      (cx,cy)=>({fount:[cx,cy],lights:[[cx,cy-1],[cx,cy-6]]}));
     // 동상 ★: granite steps and a tall pedestal with a bronze plaque and a cornice; a bronze figure in a long robe raising a torch
     // (lit at night), a book under the other arm; flower pots at the corners
     SP.deco[9]=mk1(64,(pb,cx,cy)=>{pave(pb,cx,cy,13,'#c9c3b5');
@@ -3531,7 +3530,7 @@ function render(){
     else if(k===K.PARK)drawSpr(c,FL(parkSprite(i),i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
     else if(k===K.WELL)drawSpr(c,FL(SP.well,i),sx,sy);
-    else if(k===K.DECO){const sp=decoSprite(i),oy=sp.gp?8:0;drawSpr(c,sp,sx,sy+oy);extras(c,sp,sx,sy+oy,blinkOn);emit(sp,sx,sy+oy);}
+    else if(k===K.DECO){const sp=decoSprite(i),oy=sp.gp?8:0;drawSpr(c,sp,sx,sy+oy);extras(c,sp,sx,sy+oy,blinkOn);emit(sp,sx,sy+oy);if(sp.fount)fountAnim(c,sp,sx,sy+oy,i);}
     else if((k===K.DEPOT||k===K.PORT)&&w.anchor[i]<0){const e=Math.min(5,w.te[i]),sp=FL(k===K.DEPOT?SP.depot[Math.max(3,e)]:SP.port[e],i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
@@ -3602,6 +3601,18 @@ function themeAnimDraw(c,th,f,bx,by,t,night){const P=(x,y,cl,w=1,h=1)=>{c.fillSt
 function themeAnim(c,a,bx,by){themeAnimDraw(c,THEMES[W.level[a]]||THEMES[0],W.flip[a]?-1:1,bx,by,now/1000,nightF>.4);}
 // a tower crane slews its jib round the mast (the iso view squashes the circle to half height), runs the trolley in and out and
 // lowers and raises its load, each crane on its own rhythm; the warning light rides the jib tip
+// the fountain's water, drawn live: jets arcing up from the finial and falling into the upper bowl, drops running off both bowls'
+// rims (front half only), rings spreading where they land in the basin, and a little spray
+function fountAnim(c,sp,x0,y0,i){const X=x0+sp.ox+sp.fount[0],Y=y0+sp.oy+sp.fount[1],t=now/1000,nf=nightF;
+  const W1=nightCss('#ffffff',nf*.4,.95),W2=nightCss('#bfe4ff',nf*.4,.85),W3=nightCss('#8fcfff',nf*.3,.7),px=(x,y,f)=>{c.fillStyle=f;c.fillRect(Math.round(x),Math.round(y),1,1);};
+  for(let k=0;k<8;k++){const a=k/8*6.283+t*.25,ca=Math.cos(a),sa=Math.sin(a)*.5;
+    for(let j=0;j<4;j++){const p=(t*1.3+j/4+k*.37)%1,h=8*4*p*(1-p);px(X+ca*3.6*p,Y-14+sa*3.6*p-h+p*3,p<.15?W1:j%2?W2:W1);}}
+  const drip=(r0,y0,r1,y1,n,sp2)=>{for(let k=0;k<n;k++){const a=k/n*3.1416+.15,ca=Math.cos(a),sa=Math.sin(a)*.5;for(let j=0;j<2;j++){const p=(t*sp2+j/2+k*.29)%1;
+      px(X+ca*(r0+(r1-r0)*p),Y+y0+sa*r0+(y1-y0)*p*p,j?W3:W2);}}};
+  drip(3.6,-11,4.2,-6,6,1.6);drip(6.5,-5,7.2,1,8,1.3);
+  for(let k=0;k<3;k++){const slot=Math.floor(t*1.2+k*.33),f=(t*1.2+k*.33)%1,a=hash(slot,k,i%97)*3.1416,r=8+hash(slot,k+5,i%97)*2.5,rx=X+Math.cos(a)*r,ry=Y+1+Math.sin(a)*r*.5,rr=f*2.5;
+    const al=nightCss('#dff2ff',nf*.4,(1-f)*.8);px(rx-rr,ry,al);px(rx+rr,ry,al);px(rx,ry-rr*.5,al);px(rx,ry+rr*.5,al);}
+  for(let k=0;k<3;k++){const p=(t*2.2+k/3)%1;px(X+(hash(Math.floor(t*2.2+k/3),k,3)-.5)*5,Y-11-p*2,nightCss('#ffffff',nf*.4,(1-p)*.6));}}
 function craneAnim(c,sp,x0,y0,i,blinkOn){const k=sp.crane,bx=x0+sp.ox+k.x+(k.dir>0?1:0),by=y0+sp.oy+k.y,t=now/1000,s=hash(i%N,i/N|0,31)*6.28;
   const th=(k.dir>0?0:Math.PI)+Math.sin(t/9+s)*1.2,cs=Math.cos(th),sn=Math.sin(th)*.5,nf=nightF*.8;
   const yl=nightCss('#f2c230',nf),yd=nightCss('#c8961a',nf),gr=nightCss('#7a7f86',nf),gd=nightCss('#5a5f66',nf),ln=nightCss('#3a3f48',nf*.7);
