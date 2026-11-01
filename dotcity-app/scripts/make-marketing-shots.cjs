@@ -6,13 +6,16 @@ const dir = path.join(__dirname, '..', 'store', 'screenshots'), out = path.join(
 const fonts = 'file://' + path.join(__dirname, '..', 'www', 'fonts.css');
 // [plain shot, ko title, ko line, en title, en line]
 const SHOTS = [
+  ['10-fireworks', '밤하늘의 불꽃 축제', '시대마다 다른 축제가 열려요', 'Fireworks Over Your City', 'Every era throws its own festival'],
   ['7-themeparks', '세계 테마파크 20종', '나라마다 하나씩, 세계 명소를 모아 보세요', '20 World Theme Parks', 'Collect a landmark park from every country'],
+  ['9-lantern-festival', '연등회가 열리는 밤', '한옥 지붕 위로 연등회가 열려요', 'A Lantern Festival Night', 'Lanterns drift up over the hanok roofs'],
+  ['12-decor', '분수와 시계탑 꾸미기', '벚꽃, 동상, 정자로 나만의 광장을', 'Decorate Your Plaza', 'Fountains, clock towers, statues and blossoms'],
+  ['11-cranes', '지진을 이겨내는 도시', '크레인이 움직이며 다시 일어서요', 'Rebuild After the Quake', 'Cranes swing into action across town'],
   ['4-future', '네온이 빛나는 미래 도시', '캡슐 하우스부터 메가 아콜로지까지', 'A Neon Future City', 'From capsule homes to mega arcologies'],
   ['3-modern-night', '불빛 가득한 밤의 대도시', '밤이 되면 창문마다 불이 켜져요', 'A City That Glows at Night', 'Every window lights up after dark'],
   ['6-airport', '기차, 배, 비행기까지', '공항과 철도, 항구를 지어 보세요', 'Trains, Ships & Planes', 'Build airports, railways and harbours'],
   ['1-stone', '석기시대 움집에서 시작', '모닥불 곁 작은 마을이 대도시가 되기까지', 'Start in the Stone Age', 'Grow a campfire village into a big city'],
-  ['2-dynasty', '한옥 마을로 성장', '시대를 건널 때마다 도시가 바뀌어요', 'Grow a Hanok Village', 'Your city changes with every era'],
-  ['8-themeparks-night', '밤에 더 빛나는 테마파크', '명소마다 불빛이 반짝여요', 'Theme Parks That Sparkle', 'Every landmark lights up at night'],
+  ['13-postcard', '내 도시를 엽서로', '사진 모드에서 친구에게 보내 보세요', 'Send Your City as a Postcard', 'Make one in photo mode and share it'],
 ];
 const DEV = { ios: { w: 402, h: 874, dpr: 3, t: 33, s: 17, top: 21, iw: 84, r: 26 }, ipad: { w: 1032, h: 1376, dpr: 2, t: 62, s: 30, top: 19, iw: 80, r: 34 } };
 (async () => {
@@ -34,7 +37,8 @@ const DEV = { ios: { w: 402, h: 874, dpr: 3, t: 33, s: 17, top: 21, iw: 84, r: 2
         .s{margin-top:${Math.round(d.s * .55)}px;font-size:${d.s}px;color:#d6dcf5}
         .shot{position:absolute;left:${(100 - d.iw) / 2}%;width:${d.iw}%;top:${d.top}%;border-radius:${d.r}px;overflow:hidden;border:${d.dpr === 3 ? 5 : 8}px solid #0c1024;box-shadow:0 18px 50px rgba(0,0,0,.55)}
         .shot img{display:block;width:100%}
-      </style></head><body>${stars}<div class="cap"><div class="t">${lang === 'ko' ? kt : et}</div><div class="s">${lang === 'ko' ? ks : es}</div></div><div class="shot"><img src="${img}"></div></body></html>`);
+        .shot.card{border-radius:6px;border-width:0;top:${d.top + 9}%;transform:rotate(-2deg)}
+      </style></head><body>${stars}<div class="cap"><div class="t">${lang === 'ko' ? kt : et}</div><div class="s">${lang === 'ko' ? ks : es}</div></div><div class="shot${name === '13-postcard' ? ' card' : ''}"><img src="${img}"></div></body></html>`);
       await p.evaluate(() => document.fonts.ready);
       await p.screenshot({ path: path.join(out, `${dev}${lang === 'en' ? '-en' : ''}-${String(n + 1).padStart(2, '0')}.png`) });
     }
