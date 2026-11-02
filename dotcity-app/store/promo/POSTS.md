@@ -164,3 +164,73 @@ Free on the App Store · search "Dot City"
 - **꾸준히:** 일주일에 2~3번, 같은 영상도 다른 음악과 문구로 다시 올려도 괜찮아요.
 - **댓글에 답하기:** "어떤 시대가 제일 예뻐요?"처럼 질문으로 끝내면 댓글이 늘고 노출도 늘어요.
 - **프로필 링크:** 인스타는 본문 링크가 안 눌려서, 프로필에 App Store 링크(https://apps.apple.com/app/id6822133637)를 걸어 두세요.
+
+## 1.0.5 short videos, English (`dotcity-eras-en.mp4` · `dotcity-festivals-en.mp4` · `dotcity-life-en.mp4`)
+
+Same timing as the Korean set: the era timelapse can go up now, the festivals and living-city clips after 1.0.5 is live.
+
+### ① Era timelapse
+**TikTok**
+```
+From a few huts to a neon future city 🏕️➡️🏯➡️🌃➡️🚀
+I made this pixel city builder solo. Which era looks best? 👇
+#pixelart #indiegame #citybuilder #mobilegame #cozygames #gamedev #fyp
+```
+**Instagram (Reels)**
+```
+Start with a few huts by a campfire, grow a thatched village, a hanok town, a brick city and a city of lights, all the way to a neon future 🏕️➡️🏯➡️🌃➡️🚀
+
+Dot City is a pixel city builder I've been drawing pixel by pixel on my own. Homes, roads and vehicles change with every era.
+
+📱 Search "Dot City" on the App Store (free · link in bio)
+
+#pixelart #pixelartist #indiegame #indiedev #solodev #citybuilder #mobilegame #cozygames #simulationgame #gamedev
+```
+
+### ② Festivals
+**TikTok**
+```
+Festival night in my pixel city 🎆🏮🎈🪁🎄 Which one's your favourite? 👇
+#pixelart #indiegame #citybuilder #cozygames #fireworks #fyp
+```
+**Instagram (Reels)**
+```
+New in Dot City 🎉 every era throws its own festival!
+
+🎆 Fireworks over the skyline
+🏮 A lantern festival over the hanok roofs
+🎈 A sky full of balloons
+🪁 Kites for the New Year
+🎄 Christmas lights on every building
+
+📱 Search "Dot City" on the App Store (free · link in bio)
+
+#pixelart #indiegame #citybuilder #mobilegame #cozygames #festival #lanternfestival #gamedev
+```
+
+### ③ A living city
+**TikTok**
+```
+Cranes swing, an earthquake hits, and the town builds itself back up 🏗️ Then you can turn it into a postcard 💌
+#pixelart #indiegame #citybuilder #cozygames #gamedev #fyp
+```
+**Instagram (Reels)**
+```
+A pixel city that comes alive 🏙️
+
+🏗️ Tower cranes swing round as buildings go up
+🌋 When an earthquake hits, the citizens pull together and rebuild
+⛲ Decorate a plaza with fountains, a clock tower, statues and cherry blossoms
+💌 Turn your city into a postcard and send it to a friend
+
+📱 Search "Dot City" on the App Store (free · link in bio)
+
+#pixelart #indiegame #indiedev #solodev #citybuilder #mobilegame #cozygames #gamedev
+```
+
+### Reddit (r/PixelArt, r/CityBuilders, r/IndieGaming, r/iosgaming)
+Post the era timelapse video with a plain, non-salesy title, and put the link in a comment if the subreddit allows it:
+```
+Title: I've been drawing a pixel city builder on my own — here's one town from the Stone Age to a neon future
+Comment: It's called Dot City (free on iOS). Every era redraws the homes, roads and vehicles; the next update adds festivals, earthquakes you rebuild from, and postcards. Happy to answer questions about the pixel art!
+```
