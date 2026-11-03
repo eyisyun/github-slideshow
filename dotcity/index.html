@@ -3310,7 +3310,7 @@ function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boa
       b.d=opts.length?(opts.includes(b.d)&&Math.random()<.8?b.d:opts[(Math.random()*opts.length)|0]):back;b.tx+=DIRS[b.d][0];b.ty+=DIRS[b.d][1];}
     let df=Math.atan2(b.ty+.5-b.fy,b.tx+.5-b.fx)-b.hd;df=Math.atan2(Math.sin(df),Math.cos(df));
     b.hd+=Math.max(-2.4*dt,Math.min(2.4*dt,df));const v=b.sp*(1-Math.min(.65,Math.abs(df)/2));b.fx+=Math.cos(b.hd)*v*dt;b.fy+=Math.sin(b.hd)*v*dt;
-    if((b.wt+=dt)>.12){b.wt=0;b.wake.unshift([b.fx,b.fy,b.hd]);if(b.wake.length>16)b.wake.pop();}}}
+    if((b.wt+=dt)>.1){b.wt=0;b.wake.unshift([b.fx,b.fy,b.hd,v]);if(b.wake.length>44)b.wake.pop();}}}
 // trains: an engine and coaches following the engine's trail along the rails; they halt at stations
 function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.DEPOT&&isRoot(i)&&aroundOf(i).some(([x,y])=>isRail(x,y)))ds.push(i);
   const target=W.era<3||(S.rails||0)<2?0:Math.min(12,ds.length);   // one train per station
@@ -3352,15 +3352,26 @@ function drawPlanes(c){for(const[a,p]of planes){if(p.ph==='wait')continue;const 
     drawSpr(c,sp,sx,sy-alt);if((now/400|0)%2){c.fillStyle='#ff4a4a';c.fillRect(sx+sp.ox+sp.nose[0],sy-alt+sp.oy+sp.nose[1],1,1);}
     if(nightF>.1){c.fillStyle=`rgba(255,246,210,${nightF})`;c.fillRect(sx+sp.ox+sp.nose[0]+(p.dir>0?1:-1),sy-alt+sp.oy+sp.nose[1]+1,1,1);}c.globalAlpha=ga0;}}
 function drawBoat(c,b){const sx=Math.round((b.fx-b.fy)*16-X0),sy=Math.round((b.fx+b.fy)*8-Y0),q=Math.round(b.hd/(Math.PI/2)),fm=b.port!=null?fleetAt(b.port):null,sp=(fm!=null&&SP.fleetB[fm]?SP.fleetB[fm]:SP.boat[Math.min(5,b.e)])[((q%4)+4)%4],L=sp.len||1;
-  // the wake: two lines of foam spreading behind the stern and fading out
-  for(let k=0;k<b.wake.length;k++){const[wx,wy,wh]=b.wake[k],age=(k+1)/b.wake.length,spr=.05+k*.03,nx=-Math.sin(wh),ny=Math.cos(wh);c.fillStyle=nightCss('#e2f3fb',nightF*.7,.6*(1-age));
-    for(const sg of[-1,1]){const gx=wx+nx*spr*sg,gy=wy+ny*spr*sg;c.fillRect(Math.round((gx-gy)*16-X0),Math.round((gx+gy)*8-Y0),1,1);}}
+  // the wake (Kelvin pattern): two arms of foam opening out behind the stern at about 20° and fading, little transverse crests between
+  // them, churned white water from the screw right behind the stern, and a lighter, flattened lane where the hull has passed
+  const big=b.e>=3,W2=b.wake,nW=W2.length,P=(gx,gy)=>[Math.round((gx-gy)*16-X0),Math.round((gx+gy)*8-Y0)],nf=nightF*.7;
+  for(let k=nW-1;k>=0;k--){const[wx,wy,wh,wv]=W2[k],age=(k+1)/nW,fade=Math.pow(1-age,1.4)*Math.min(1,(wv||.3)/.25),nx=-Math.sin(wh),ny=Math.cos(wh),spr=.03+k*(big?.0135:.01);   // ~20° half-angle at cruising speed
+    if(fade<.03)continue;
+    if(k<nW*.7){const[lx,ly]=P(wx,wy);c.fillStyle=nightCss('#9fd2ee',nf,.22*fade);c.fillRect(lx-1,ly,3,1);}                                          // the lane
+    for(const sg of[-1,1]){const[ax,ay]=P(wx+nx*spr*sg,wy+ny*spr*sg);c.fillStyle=nightCss('#f2fbff',nf,.8*fade);c.fillRect(ax,ay,2,1);
+      c.fillStyle=nightCss('#bfe4f5',nf,.45*fade);c.fillRect(ax-sg,ay+1,2,1);}                                                                             // the arms
+    if(k%4===2&&k<nW*.8)for(let q=-2;q<=2;q++){const t=q/2.5,[tx,ty]=P(wx+nx*spr*t*.8-Math.cos(wh)*.04*(1-t*t),wy+ny*spr*t*.8-Math.sin(wh)*.04*(1-t*t));
+      c.fillStyle=nightCss('#dff2fb',nf,.4*fade);c.fillRect(tx,ty,1,1);}                                                                                   // transverse crests
+    if(k<(big?6:3))for(let q=0;q<(big?4:2);q++){const h1=hash(k,q,(now/90|0)%13),h2=hash(q,k,(now/90|0)%11),[cx2,cy2]=P(wx+nx*(h1-.5)*.14,wy+ny*(h1-.5)*.14);
+      c.fillStyle=nightCss(h2<.5?'#ffffff':'#d8eefa',nf,.9*(1-k/(big?6:3)));c.fillRect(cx2+Math.round((h2-.5)*3),cy2,1+(h2>.7),1);}}                  // churned water
   // the hull's shade in the water right under it (no cast shadow: the boat sits in the water, not above it)
   const vx=(Math.cos(b.hd)-Math.sin(b.hd))*16,vy=(Math.cos(b.hd)+Math.sin(b.hd))*8;c.save();c.fillStyle=`rgba(8,24,48,${.25*(1-nightF*.5)})`;c.beginPath();
   c.ellipse(sx,sy+1,Math.hypot(vx,vy)*L*.55,3.2,Math.atan2(vy,vx),0,6.283);c.fill();c.restore();
-  // a little bow wave that flickers
-  const bx=b.fx+Math.cos(b.hd)*L*.5,by=b.fy+Math.sin(b.hd)*L*.5,fl=(now/180+b.ph*7|0)%2;c.fillStyle=nightCss('#ffffff',nightF*.7,.75);
-  c.fillRect(Math.round((bx-by)*16-X0)-1-fl,Math.round((bx+by)*8-Y0),2+fl*2,1);
+  // the bow wave: water piling up white at the stem and peeling off both sides, with a fleck of spray now and then
+  {const v0=W2.length?W2[0][3]||.3:.3,bx=b.fx+Math.cos(b.hd)*L*.5,by=b.fy+Math.sin(b.hd)*L*.5,nx=-Math.sin(b.hd),ny=Math.cos(b.hd),fl=(now/150+b.ph*7|0)%2,str=Math.min(1,v0/.3);
+    const[px0,py0]=P(bx,by);c.fillStyle=nightCss('#ffffff',nf,.85*str);c.fillRect(px0-1,py0,2+fl,1);
+    for(const sg of[-1,1])for(let q=1;q<=(big?4:2);q++){const[qx,qy]=P(bx-Math.cos(b.hd)*.05*q+nx*sg*.045*q,by-Math.sin(b.hd)*.05*q+ny*sg*.045*q);c.fillStyle=nightCss(q<3?'#ffffff':'#dff2fb',nf,(.8-q*.14)*str);c.fillRect(qx,qy,1+(q===1),1);}
+    if(big&&str>.6&&hash(b.ph*99|0,(now/120|0)%17,3)<.35){c.fillStyle=nightCss('#ffffff',nf,.7);c.fillRect(px0+((hash(b.ph*99|0,now/120|0,4)*5|0)-2),py0-1-(fl),1,1);}}
   drawSpr(c,sp,sx,sy);emit(sp,sx,sy);}
 
 /* ---------------- name tags over buildings the player has named ---------------- */
