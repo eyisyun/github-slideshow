@@ -2546,10 +2546,24 @@ function genTerrain(w){const r=mulberry(w.seed);const n1=vnoise(r,16),n2=vnoise(
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;if(w.terrain[i]!==0)continue;const f=nf(x,y),core=Math.hypot(x-N/2,y-N/2)<12;
     if(f>.56&&!(core&&f<.7))w.trees[i]=1+(f>.62)+(f>.7);else if(r()<.03)w.trees[i]=1;}
   derive(w);}
+// water tiles: shaded by depth (interpolated from the four corner depths, so it runs smoothly from the turquoise shallows to the deep
+// blue and dithered into pixel shades), a slow seamless swell (whole-number frequencies across the tile) and foam lapping in and out
+// along the shore; 8 frames, built as they are first needed. Glints and ripples are drawn over it per tile at random (see render).
+const WD_PAL=['#62bccf','#4198c4','#3079b0','#29639e','#214f88'],BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],waterC=new Map();
+function waterSpr(f,lm,c0,c1,c2,c3){const key=f*16+lm+'|'+c0+c1*9+c2*81+c3*729;let sp=waterC.get(key);if(sp)return sp;const ph=f/8*6.2832;
+  sp=G((u,v,x,y)=>{
+    for(const[b,e,a]of[[1,u,v],[2,v,u],[4,1-u,v],[8,1-v,u]]){if(!(lm&b))continue;const fw=.07+.07*(.5+.5*Math.sin(ph+6.2832*2*a));
+      if(e>1-fw)return col(hash(x,y,f+20)<.75?PAL.foam:'#bfe2f2');if(e>1-fw-.1&&e<1-fw-.05&&Math.sin(ph+6.2832*a)>.2)return col('#a9d6ee');}
+    const d=((c0*(1-u)+c1*u)*(1-v)+(c2*(1-u)+c3*u)*v)/2,sw=Math.sin(6.2832*(2*u+v)+ph)+.6*Math.sin(6.2832*(u-2*v)-ph+1.3);
+    const e2=Math.max(0,Math.min(4,d+sw*.18)),lo=Math.floor(e2),k=(e2-lo)*16>BAYER[(x&3)+(y&3)*4]?Math.min(4,lo+1):lo;return col(WD_PAL[k],sw<-1.3?-.08:0);});
+  waterC.set(key,sp);return sp;}
 function derive(w){ // terrain-derived caches
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;let wm=0,lm=0;
     [[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dy],b)=>{const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=N||yy>=N)return;if(w.terrain[yy*N+xx]===1)wm|=1<<b;else lm|=1<<b;});
     w.wmask[i]=wm;w.lmask[i]=lm;w.gv[i]=(hash(x,y,99)*4|0)*2+((x+y)&1);}
+  {const dep=new Uint8Array(N*N),q2=[];for(let i=0;i<N*N;i++)if(w.terrain[i]!==1)q2.push(i);else dep[i]=99;   // water depth: steps from the nearest land, up to 4
+    for(let h=0;h<q2.length;h++){const i=q2[h],x=i%N,y=i/N|0;for(const[dx,dy]of[[1,0],[0,1],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=N||yy>=N)continue;const j=yy*N+xx;if(dep[j]>dep[i]+1){dep[j]=Math.min(4,dep[i]+1);q2.push(j);}}}
+    const M=N+1;w.wcv=new Uint8Array(M*M);for(let Y=0;Y<M;Y++)for(let X=0;X<M;X++){let s2=0;for(const[dx,dy]of[[-1,-1],[0,-1],[-1,0],[0,0]]){const x=Math.min(N-1,Math.max(0,X+dx)),y=Math.min(N-1,Math.max(0,Y+dy));s2+=dep[y*N+x]===99?4:dep[y*N+x];}w.wcv[Y*M+X]=Math.round(s2/2);}}
   w.wd.fill(9);const q=[];for(let i=0;i<N*N;i++)if(w.terrain[i]===1){w.wd[i]=0;q.push(i);}
   for(let h=0;h<q.length;h++){const i=q[h],x=i%N,y=i/N|0,d=w.wd[i];if(d>=8)continue;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=N||yy>=N)continue;const j=yy*N+xx;if(w.wd[j]>d+1){w.wd[j]=d+1;q.push(j);}}}}
 const inb=(x,y)=>x>=0&&y>=0&&x<N&&y<N;
@@ -3479,14 +3493,15 @@ function render(){
   if(wc.width!==lw||wc.height!==lh){wc.width=lw;wc.height=lh;}
   const ox=cam.x-view.width/s/2,oy=cam.y-view.height/s/2;X0=Math.floor(ox);Y0=Math.floor(oy);const fx=ox-X0,fy=oy-Y0;
   c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';c.globalAlpha=1;c.imageSmoothingEnabled=false;c.clearRect(0,0,lw,lh);
-  const w=W,wf=Math.floor(now/450)%4;
+  const w=W,wf=Math.floor(now/450)%4,wf8=Math.floor(now/230)%8,M1=N+1;
   visN=0;for(let d=0;d<2*N-1;d++){const sy=d*8-Y0;if(sy>lh+110)break;if(sy<-16-SLAB)continue;const xa=Math.max(0,d-N+1),xb=Math.min(N-1,d);
     for(let x=xa;x<=xb;x++){const y=d-x,sx=(x-y)*16-X0;if(sx<-48||sx>lw+48)continue;visBuf[visN++]=y*N+x;visBuf[visN++]=sx;visBuf[visN++]=sy;}}
   // water, then land (+ lips + slab)
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]!==1)continue;
-    c.drawImage(SP.water[wf][w.lmask[i]].c,sx-16,sy);const x=i%N,y=i/N|0;
-    {const gh=hash(x,y,91);if(gh<.4){const ph=(now/1900+gh*11)%1;if(ph<.2){const a=Math.sin(ph/.2*Math.PI)*(nightF>.5?.45:.8),gx=sx-7+((hash(x,y,92)*14)|0),gy=sy+5+((hash(x,y,93)*6)|0);
-      c.fillStyle=nightF>.5?`rgba(200,220,255,${a})`:`rgba(255,255,255,${a})`;c.fillRect(gx,gy,2,1);if(a>.55){c.fillRect(gx+2,gy,1,1);c.fillRect(gx-1,gy,1,1);}}}}if(x===N-1)c.drawImage(SP.slab.w[1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab.w[0].c,sx-16,sy);}
+    const x=i%N,y=i/N|0;c.drawImage((w.wcv?waterSpr(wf8,w.lmask[i],w.wcv[y*M1+x],w.wcv[y*M1+x+1],w.wcv[(y+1)*M1+x],w.wcv[(y+1)*M1+x+1]):SP.water[wf][w.lmask[i]]).c,sx-16,sy);
+    for(let g=0;g<2;g++){const gh=hash(x,y,91+g*7);if(gh>.55)continue;const ph=(now/(2300+g*700)+gh*11)%1;if(ph>.3)continue;   // ripples catching the light, drifting with the swell
+      const q=ph/.3,a=Math.sin(q*Math.PI)*(nightF>.5?.4:.75),L=1+Math.round(Math.sin(q*Math.PI)*3),gx=sx-9+((hash(x,y,92+g)*18)|0)+Math.round(q*3),gy=sy+4+((hash(x,y,93+g)*8)|0);
+      c.fillStyle=nightF>.5?`rgba(200,220,255,${a})`:`rgba(235,248,255,${a})`;c.fillRect(gx,gy,L,1);if(L>2){c.fillStyle=nightF>.5?`rgba(200,220,255,${a*.4})`:`rgba(235,248,255,${a*.4})`;c.fillRect(gx+1,gy-1,L-2,1);}}if(x===N-1)c.drawImage(SP.slab.w[1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab.w[0].c,sx-16,sy);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
     c.drawImage(groundOf(i,x,y).c,sx-16,sy);if(w.rail[i]&&w.kind[i]===K.ROAD)c.drawImage(SP.railX[Math.max(3,Math.min(5,w.te[i]))][(railMask(x,y)&5)?0:1].c,sx-16,sy);const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
