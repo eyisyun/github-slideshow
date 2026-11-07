@@ -3069,28 +3069,32 @@ const RAID_TOWER=13;   // index of the watchtower in DECO
 // modern era), and a two-masted pirate ship with black sails and a skull
 let RSP=null;
 function raidSprites(){if(RSP)return RSP;
-  const fig=(o,step,swing)=>{const pb=new PB(13,16),P=(x,y,c)=>pb.put(x,y,c);
-    const sk=col(o.skin),skD=col(o.skin,-.2),sh=o.shirt,pa=col(o.pants),paD=col(o.pants,-.25);
-    // legs and boots
-    if(step){P(4,13,paD);P(4,14,col('#2a1d14'));P(7,12,pa);P(7,13,pa);P(8,14,col('#2a1d14'));P(7,14,col('#2a1d14'));}
-    else{P(5,12,paD);P(5,13,paD);P(5,14,col('#2a1d14'));P(4,14,col('#2a1d14'));P(7,12,pa);P(7,13,pa);P(7,14,col('#2a1d14'));P(8,14,col('#2a1d14'));}
-    for(let x=4;x<=7;x++)P(x,11,x<6?paD:pa);P(4,12,paD);P(6,12,pa);
-    // body
+  // poses: 0 stand, 1 step, 2 wind-up (weapon drawn back), 3 strike (sword swung through / spear thrust out, leaning in)
+  const fig=(o,pose)=>{const pb=new PB(19,18),X=3,Y=2,P=(x,y,c)=>pb.put(x+X+(pose===3?1:0)*(y<11?1:0),y+Y,c),Q=(x,y,c)=>pb.put(x+X,y+Y,c);
+    const sk=col(o.skin),skD=col(o.skin,-.2),sh=o.shirt,pa=col(o.pants),paD=col(o.pants,-.25),bt=col('#2a1d14'),slv=col(o.sleeve||'#c0302a'),slvD=col(o.sleeve||'#c0302a',-.18);
+    // legs: a stride when stepping or lunging
+    if(pose===1||pose===3){Q(3,13,paD);Q(3,14,bt);Q(2,14,bt);Q(7,12,pa);Q(8,13,pa);Q(9,14,bt);Q(8,14,bt);Q(4,12,paD);}
+    else if(pose===2){Q(4,12,paD);Q(3,13,paD);Q(3,14,bt);Q(2,14,bt);Q(7,12,pa);Q(7,13,pa);Q(7,14,bt);Q(8,14,bt);}
+    else{Q(5,12,paD);Q(5,13,paD);Q(5,14,bt);Q(4,14,bt);Q(7,12,pa);Q(7,13,pa);Q(7,14,bt);Q(8,14,bt);}
+    for(let x=4;x<=7;x++)Q(x,11,x<6?paD:pa);
+    // body (leans forward on the strike)
     for(let y=6;y<=10;y++)for(let x=4;x<=7;x++)P(x,y,sh(x,y));if(o.belt)for(let x=4;x<=7;x++)P(x,10,col(o.belt));
-    if(o.coat){P(3,8,col(o.coat,-.2));P(3,9,col(o.coat,-.2));P(3,10,col(o.coat,-.25));P(8,9,col(o.coat,-.1));P(8,10,col(o.coat,-.15));}
-    // arms: back arm down, front arm holding the weapon
-    P(3,7,col(o.sleeve||'#c0302a',-.15));P(3,8,skD);
-    if(swing){P(8,6,col(o.sleeve||'#c0302a'));P(9,5,sk);}else{P(8,7,col(o.sleeve||'#c0302a'));P(8,8,sk);}
-    // head
-    for(let y=2;y<=5;y++)for(let x=4;x<=7;x++)P(x,y,x===4?skD:sk);P(7,3,col('#1a1a20'));if(o.beard){P(5,5,col(o.beard));P(6,5,col(o.beard));P(7,5,col(o.beard,-.1));P(7,4,col(o.beard,-.1));}
-    if(o.patch){P(6,3,col('#1a1a20'));P(5,2,col('#1a1a20'));}
+    if(o.coat){P(3,8,col(o.coat,-.2));P(3,9,col(o.coat,-.2));Q(3,10,col(o.coat,-.25));Q(3,11,col(o.coat,-.3));P(8,9,col(o.coat,-.1));Q(8,10,col(o.coat,-.15));}
+    for(let y=2;y<=5;y++)for(let x=4;x<=7;x++)P(x,y,x===4?skD:sk);P(7,3,col('#1a1a20'));if(pose>=2)P(6,3,col('#1a1a20'));   // a frown when fighting
+    if(o.beard){P(5,5,col(o.beard));P(6,5,col(o.beard));P(7,5,col(o.beard,-.1));P(7,4,col(o.beard,-.1));}if(o.patch){P(6,3,col('#1a1a20'));P(5,2,col('#1a1a20'));}
     o.hat(P);
-    // weapon
-    if(o.spear){const x0=swing?10:9;for(let y=swing?0:1;y<=12;y++)P(x0,y,col('#8a6238',y%3?0:-.1));P(x0,swing?-1:0,col('#d8d4cc'));P(x0,swing?0:1,col('#e8eaee'));if(!swing)P(x0-1,1,col('#c9ccd2'));}
-    else if(swing){P(10,4,col('#c9ccd2'));P(11,3,col('#e8eaee'));P(12,2,col('#ffffff'));P(10,5,col('#d9a03a'));}
-    else{P(9,8,col('#d9a03a'));P(10,7,col('#c9ccd2'));P(11,6,col('#e8eaee'));P(12,5,col('#ffffff'));}
-    const sp=mk(pb,-6,-15);sp.g=0;return sp;};
-  const set=o=>{const a=[fig(o,0,0),fig(o,1,0),fig(o,0,1)];return{r:a,l:a.map(flipped)};};
+    const W2=col('#c9ccd2'),W3=col('#e8eaee'),W4=col('#ffffff'),HD=col('#d9a03a'),SH=col('#8a6238');
+    if(o.spear){   // spear: upright at rest, levelled and pulled back, then thrust out
+      if(pose===2){P(3,7,slvD);P(8,7,slv);P(8,8,sk);for(let x=-2;x<=9;x++)P(x,8,SH);P(10,8,W2);P(11,8,W3);P(10,7,W2);}
+      else if(pose===3){P(3,7,slvD);P(8,7,slv);P(9,7,slv);P(10,8,sk);for(let x=1;x<=13;x++)P(x,8,SH);P(14,8,W2);P(15,8,W4);P(14,7,W3);P(14,9,W2);}
+      else{P(3,7,slvD);P(3,8,skD);P(8,7,slv);P(8,8,sk);for(let y=-1;y<=12;y++)P(9,y,col('#8a6238',y%3?0:-.1));P(9,-2,W3);P(9,-3,W4);P(8,-1,W2);}}
+    else{   // cutlass: at the hip, raised high behind the head, swung down in front
+      P(3,7,slvD);P(3,8,skD);
+      if(pose===2){P(7,5,slv);P(6,4,sk);P(5,3,HD);P(4,2,W2);P(3,1,W3);P(2,0,W4);P(2,1,W2);}
+      else if(pose===3){P(8,7,slv);P(9,8,slv);P(10,8,sk);P(11,8,HD);P(12,9,W2);P(13,10,W3);P(14,11,W4);P(13,9,W2);}
+      else{P(8,7,slv);P(8,8,sk);P(9,8,HD);P(10,7,W2);P(11,6,W3);P(12,5,W4);}}
+    const sp=mk(pb,-9,-17);sp.g=0;return sp;};
+  const set=o=>{const a=[0,1,2,3].map(k=>fig(o,k));return{r:a,l:a.map(flipped)};};
   const stripes=(a,b)=>(x,y)=>col(y%2?a:b,x===4?-.15:0);
   const tri=P=>{for(let x=3;x<=8;x++)P(x,1,col('#1e1a1e'));for(let x=4;x<=7;x++)P(x,0,col('#2a2428'));P(3,0,col('#1e1a1e'));P(8,0,col('#1e1a1e'));P(5,1,col('#d9a03a'));P(6,1,col('#ffffff'));};
   const band=c=>P=>{for(let x=4;x<=7;x++){P(x,1,col(c));P(x,2,col(c,-.1));}P(3,2,col(c,-.2));P(3,3,col(c,-.25));};
@@ -3158,23 +3162,22 @@ function raidTick(dt){const r=raid;if(!r)return;r.t+=dt;if(r.flash>0)r.flash-=dt
   for(let n=r.balls.length-1;n>=0;n--){const b=r.balls[n];if((b.t+=dt)<b.m)continue;r.balls.splice(n,1);r.fx.push({ty:'boom',fx:b.tx,fy:b.ty,t:0,m:.6});shakeT=Math.max(shakeT,.25);
     for(let k=0;k<6;k++)dust(b.tx+(Math.random()-.5)*.6,b.ty+(Math.random()-.5)*.6,'#6a5a4a');if(Math.random()<.3)raidWreck(b.i);}
   const live=r.foes.filter(f=>f.wait<=0);
-  // pirates: go for a guard who is close, otherwise the nearest building, and wreck it
-  for(let n=r.foes.length-1;n>=0;n--){const f=r.foes[n];if(f.hit>0)f.hit-=dt;if(f.wait>0){f.wait-=dt;continue;}
+  // pirates: take on a guard who comes close, otherwise hack at the nearest building until it gives
+  for(let n=r.foes.length-1;n>=0;n--){const f=r.foes[n];fighterTick(f,dt);if(f.wait>0){f.wait-=dt;continue;}
     let foe=null,bd=1.4;for(const g of r.guards){if(g.wait>0)continue;const d=rdist(f,g);if(d<bd){bd=d;foe=g;}}
-    if(foe){f.fight=foe;const d=rdist(f,foe);if(d>.35){const v=.8*dt;f.fx+=(foe.fx-f.fx)/d*v;f.fy+=(foe.fy-f.fy)/d*v;f.dir=(foe.fx-foe.fy)-(f.fx-f.fy)>0?1:-1;}
-      else if((f.at+=dt)>1.3){f.at=0;f.sw=.2;raidHit(foe,1,true);}continue;}
+    if(foe){f.fight=foe;duel(f,foe,dt,.8);continue;}
     f.fight=null;
     if(f.tgt<0||!isBld(f.tgt)){let bd2=1e9;f.tgt=-1;for(let i=0;i<N*N;i++){if(!isBld(i))continue;const d=Math.hypot(i%N+.5-f.fx,(i/N|0)+.5-f.fy);if(d<bd2){bd2=d;f.tgt=i;}}f.at=0;}
     if(f.tgt<0)continue;const tx=f.tgt%N+.5,ty=(f.tgt/N|0)+.5,d=Math.hypot(tx-f.fx,ty-f.fy);
-    if(d>.55){const v=.75*dt;f.fx+=(tx-f.fx)/d*v;f.fy+=(ty-f.fy)/d*v;f.dir=(tx-ty)-(f.fx-f.fy)>0?1:-1;f.at=0;}
-    else{if(((f.at+=dt)*3|0)!==((f.at-dt)*3|0))f.sw=.15;if(f.at>4){f.at=0;raidWreck(f.tgt);f.tgt=-1;sfx('err');}}}
+    if(d>.55){if(f.act==='idle'){walk(f,tx,ty,.75,dt);}f.at=0;}
+    else{f.dir=(tx-ty)-(f.fx-f.fy)>0?1:-1;f.at+=dt;if(f.act==='idle'&&f.pt<=0)swingStart(f,.45);
+      if(f.act==='strike'&&!f.done1){f.done1=1;r.fx.push({ty:'chip',fx:tx-(tx-f.fx)*.4,fy:ty-(ty-f.fy)*.4,t:0,m:.5});}
+      if(f.at>4){f.at=0;raidWreck(f.tgt);f.tgt=-1;sfx('err');}}}
   // guards: march out after a moment, take on the nearest pirate, go home when it is over
-  for(let n=r.guards.length-1;n>=0;n--){const g=r.guards[n];if(g.hit>0)g.hit-=dt;if(g.sw>0)g.sw-=dt;if(g.wait>0){g.wait-=dt;continue;}
+  for(let n=r.guards.length-1;n>=0;n--){const g=r.guards[n];fighterTick(g,dt);if(g.wait>0){g.wait-=dt;continue;}
     let foe=null,bd=1e9;for(const f of live){const d=rdist(f,g);if(d<bd){bd=d;foe=f;}}
-    const tgt=foe||{fx:g.home[0],fy:g.home[1]},d=rdist(g,tgt);
-    if(foe&&d<.4){if((g.at+=dt)>1){g.at=0;g.sw=.2;raidHit(foe,1,true);}}
-    else if(d>.15){const v=(foe?.95:.6)*dt;g.fx+=(tgt.fx-g.fx)/d*v;g.fy+=(tgt.fy-g.fy)/d*v;g.dir=(tgt.fx-tgt.fy)-(g.fx-g.fy)>0?1:-1;g.at=.5;}}
-  for(const f of r.foes)if(f.sw>0)f.sw-=dt;
+    if(foe&&bd<1.4){duel(g,foe,dt,.95);continue;}
+    const tgt=foe||{fx:g.home[0],fy:g.home[1]};if(g.act==='idle'&&rdist(g,tgt)>.15)walk(g,tgt.fx,tgt.fy,foe?1:.6,dt);}
   for(const t of r.towers){if((t[3]-=dt)>0)continue;let tg=null,bd=t[2];
     for(const f of live){const d=Math.hypot(f.fx-t[0],f.fy-t[1]);if(d<bd){bd=d;tg=f;}}
     for(const s of r.ships){if(s.done||s.delay>0)continue;const d=Math.hypot(s.fx-t[0],s.fy-t[1]);if(d<bd){bd=d;tg=s;}}
@@ -3183,13 +3186,32 @@ function raidTick(dt){const r=raid;if(!r)return;r.t+=dt;if(r.flash>0)r.flash-=dt
   for(let n=r.fx.length-1;n>=0;n--){const e=r.fx[n];if((e.t+=dt)>=e.m)r.fx.splice(n,1);}
   if(!r.end&&!r.foes.length&&r.ships.every(s=>s.done)){r.end=1;raidEnd(true);}
   else if(!r.end&&r.t>80){r.end=1;raidEnd(false);}}
-function raidHit(u,dmg,melee){const r=raid;if(!r||u.hp<=0)return;u.hp-=dmg;u.hit=.15;
-  r.fx.push({ty:'num',fx:u.fx,fy:u.fy,t:0,m:.7,v:'-'+dmg,dx:(Math.random()-.5)*6});if(melee)r.fx.push({ty:'spark',fx:u.fx,fy:u.fy,t:0,m:.25});
+// melee: fighters close to arm's length, then go through wind-up -> strike -> recovery; on the strike the blow lands unless the
+// other one, standing ready, parries it (a clang and both are pushed apart). A blow knocks the target back a step.
+function fighterTick(u,dt){if(u.hit>0)u.hit-=dt;if(u.kb){const k=Math.min(1,dt*10);u.fx+=u.kb[0]*k;u.fy+=u.kb[1]*k;u.kb[0]*=1-k;u.kb[1]*=1-k;if(Math.abs(u.kb[0])+Math.abs(u.kb[1])<.002)u.kb=null;}
+  if(u.act==null){u.act='idle';u.pt=0;}u.pt-=dt;
+  if(u.act==='wind'&&u.pt<=0){u.act='strike';u.pt=.16;u.done1=0;const t=u.fight||u.foe;if(t){const d=Math.max(.01,rdist(u,t)),k=Math.min(.18,d-.3);u.lunge=[(t.fx-u.fx)/d*k,(t.fy-u.fy)/d*k];u.fx+=u.lunge[0];u.fy+=u.lunge[1];}}
+  else if(u.act==='strike'&&u.pt<=0){u.act='rec';u.pt=.3+Math.random()*.25;if(u.lunge){u.fx-=u.lunge[0];u.fy-=u.lunge[1];u.lunge=null;}}
+  else if(u.act==='rec'&&u.pt<=0){u.act='idle';u.pt=.15+Math.random()*.5;}}
+function swingStart(u,wind){u.act='wind';u.pt=wind;}
+function walk(u,tx,ty,v,dt){const d=Math.hypot(tx-u.fx,ty-u.fy);if(d<.01)return;const k=Math.min(d,v*dt);u.fx+=(tx-u.fx)/d*k;u.fy+=(ty-u.fy)/d*k;u.dir=(tx-ty)-(u.fx-u.fy)>0?1:-1;u.moving=.1;
+  if(Math.random()<dt*3)raid.fx.push({ty:'dust',fx:u.fx,fy:u.fy,t:0,m:.4});}
+function duel(a,b,dt,v){a.foe=b;const d=rdist(a,b);a.dir=(b.fx-b.fy)-(a.fx-a.fy)>0?1:-1;
+  if(a.act==='idle'){if(d>.68)walk(a,b.fx,b.fy,v,dt);else if(d<.48){const k=dt*.5/Math.max(d,.01);a.fx-=(b.fx-a.fx)*k;a.fy-=(b.fy-a.fy)*k;}   // keep a sword's length apart
+    else if(a.pt<=0)swingStart(a,.3+Math.random()*.2);}
+  if(a.act==='strike'&&!a.done1){a.done1=1;if(d>.95)return;
+    if(b.act==='idle'&&Math.random()<.28){   // parried
+      raid.fx.push({ty:'clang',fx:(a.fx+b.fx)/2,fy:(a.fy+b.fy)/2,t:0,m:.35});knock(a,b,-.08);knock(b,a,-.06);b.act='rec';b.pt=.25;sfx('click');return;}
+    raidHit(b,1,true,a);}}
+function knock(u,from,k){const d=Math.max(.01,rdist(u,from));u.kb=[(u.fx-from.fx)/d*-k,(u.fy-from.fy)/d*-k];}
+function raidHit(u,dmg,melee,by){if(by)knock(u,by,-.2);if(u.act==='wind'){u.act='rec';u.pt=.35;}   // a blow knocks the target back and breaks its swing
+const r=raid;if(!r||u.hp<=0)return;u.hp-=dmg;u.hit=.15;
+  r.fx.push({ty:'num',fx:u.fx,fy:u.fy,t:0,m:.7,v:'-'+dmg,dx:(Math.random()-.5)*6});if(melee)r.fx.push({ty:'spark',fx:u.fx,fy:u.fy,t:0,m:.3});
   if(u.hp>0)return;
   if(u.path){u.done=true;u.crew=0;u.sunk=1;for(let k=0;k<14;k++)r.fx.push({ty:'splash',fx:u.fx+(Math.random()-.5)*.8,fy:u.fy+(Math.random()-.5)*.8,t:0,m:.9});r.fx.push({ty:'sink',fx:u.fx,fy:u.fy,t:0,m:2.4,hd:u.hd||0});
     sfx('boom');toast('해적선을 침몰시켰어요!','good');return;}
-  let n=r.foes.indexOf(u);if(n>=0){r.foes.splice(n,1);r.killed++;r.fx.push({ty:'down',fx:u.fx,fy:u.fy,t:0,m:1.4,s:u.cap?RSP.cap:RSP.crew[u.v],dir:u.dir||1});sfx('click');return;}
-  n=r.guards.indexOf(u);if(n>=0){r.guards.splice(n,1);r.fx.push({ty:'down',fx:u.fx,fy:u.fy,t:0,m:1.4,s:RSP.guard[W.era>=3?1:0],dir:u.dir||1});}}
+  let n=r.foes.indexOf(u);if(n>=0){r.foes.splice(n,1);r.killed++;r.fx.push({ty:'down',fx:u.fx,fy:u.fy,t:0,m:1.4,s:u.cap?RSP.cap:RSP.crew[u.v],dir:u.dir||1},{ty:'blade',fx:u.fx,fy:u.fy,t:0,m:.9,dir:-(u.dir||1)});sfx('click');return;}
+  n=r.guards.indexOf(u);if(n>=0){r.guards.splice(n,1);r.fx.push({ty:'down',fx:u.fx,fy:u.fy,t:0,m:1.4,s:RSP.guard[W.era>=3?1:0],dir:u.dir||1},{ty:'blade',fx:u.fx,fy:u.fy,t:0,m:.9,dir:-(u.dir||1),spear:1});}}
 function raidEnd(won){const r=raid,w=W;
   if(won){const g=Math.round(adAmount()*.08)+10;w.funds+=g;w.ev=w.ev||evState();w.ev.raidWon=(w.ev.raidWon||0)+1;fireworks();sfx('win');
     toast(`해적을 모두 물리쳤어요! 전리품 +${money(g)}`+(r.dmg.length?` · 부서진 건물 ${r.dmg.length}채는 복구를 시작해요.`:''),'good');}
@@ -3227,8 +3249,10 @@ function drawRaid(c){const r=raid;if(!r)return;const nf=nightF,S=(fx,fy)=>[Math.
   // the people, back to front
   const ppl=[];for(const f of r.foes)if(f.wait<=0)ppl.push([f,f.cap?RSP.cap:RSP.crew[f.v]]);for(const g of r.guards)if(g.wait<=0)ppl.push([g,RSP.guard[W.era>=3?1:0]]);
   ppl.sort((a,b)=>(a[0].fx+a[0].fy)-(b[0].fx+b[0].fy));
-  for(const[u,set]of ppl){const[x,y]=S(u.fx,u.fy),moving=!(u.at>.6)||u.fight,fr=u.sw>0?2:moving?((now/150+u.ph)|0)%2:0,sp=(u.dir||1)>0?set.r[fr]:set.l[fr];
-    c.globalAlpha=.3;c.fillStyle='#000';c.fillRect(x-3,y,7,1);c.globalAlpha=1;drawSpr(c,sp,x+(u.hit>0?(((now/40)|0)%2?1:-1):0),y);
+  for(const[u,set]of ppl){const[x,y]=S(u.fx,u.fy),fr=u.act==='wind'?2:u.act==='strike'?3:u.moving>0?((now/140+(u.seed||(u.seed=Math.random()*9)))|0)%2:0,sp=(u.dir||1)>0?set.r[fr]:set.l[fr];u.moving=(u.moving||0)-frameDt;
+    c.globalAlpha=.3;c.fillStyle='#000';c.fillRect(x-3,y,7,1);c.fillRect(x-2,y+1,5,1);c.globalAlpha=1;drawSpr(c,sp,x+(u.hit>0?(((now/40)|0)%2?1:-1):0),y);
+    if(u.act==='strike'){const d=u.dir||1,q=1-Math.max(0,u.pt)/.16,sp2=set===RSP.guard[0];   // the swing's trail: an arc for a cutlass, a streak for a spear thrust
+      if(sp2)for(let k=0;k<6;k++)px(x+d*(4+k),y-6,'#ffffff',1,1,(1-k/6)*.8);else for(let k=0;k<7;k++){const a=-1.2+k*.32*Math.min(1,q+.3);px(Math.round(x+d*(2+Math.cos(a)*7)),Math.round(y-8+Math.sin(a)*7),'#ffffff',1,1,.85-k*.08);}}
     if(u.hp<u.max){px(x-4,y-19,'#1a1414',9,2);px(x-4,y-19,set===RSP.guard[0]||set===RSP.guard[1]?'#4ac06a':'#e04a3a',Math.round(9*u.hp/u.max),1);}}
   for(const e of r.fx)if(e.ty==='down'){const[x,y]=S(e.fx,e.fy),q=e.t/e.m,sp=e.dir>0?e.s.r[0]:e.s.l[0];c.save();c.globalAlpha=1-q;c.translate(x,y);c.rotate(e.dir*Math.min(1.5,q*6));drawSpr(c,sp,0,0);c.restore();
     for(let k=0;k<3;k++){const a=now/150+k*2.1;px(Math.round(x+Math.cos(a)*4),Math.round(y-16+Math.sin(a)*1.5),'#ffe27a',1,1,1-q);}c.globalAlpha=1;}
@@ -3238,9 +3262,15 @@ function drawRaid(c){const r=raid;if(!r)return;const nf=nightF,S=(fx,fy)=>[Math.
     for(let k=0;k<5;k++)px(Math.round(x-Math.cos(ang)*k),Math.round(y-Math.sin(ang)*k),nightCss(k===0?'#d8d4cc':k>=4?'#f2ede0':'#8a6238',nf*.4));}
   for(const e of r.fx){const q=e.t/e.m;
     if(e.ty==='splash'){const[x,y]=S(e.fx,e.fy);px(x,y-Math.round(Math.sin(q*Math.PI)*7),nightCss('#e2f3fb',nf*.5),1,2,1-q);}
+    else if(e.ty==='clang'){const[x,y]=S(e.fx,e.fy);for(let k=0;k<8;k++){const a=k/8*6.283;px(Math.round(x+Math.cos(a)*(1+q*7)),Math.round(y-9+Math.sin(a)*(1+q*5)),k%2?'#ffffff':'#ffe27a',1,1,1-q);}
+      c.globalAlpha=1-q;c.font='bold 7px sans-serif';c.fillStyle='#1a1414';c.fillText(LANG==='ko'?'쨍!':'Clang!',x-6,y-16-q*6);c.fillStyle='#bfe8ff';c.fillText(LANG==='ko'?'쨍!':'Clang!',x-7,y-17-q*6);c.globalAlpha=1;}
+    else if(e.ty==='dust'){const[x,y]=S(e.fx,e.fy);px(x-1-Math.round(q*2),y-Math.round(q*2),'#c9b896',2,1,.6*(1-q));px(x+1+Math.round(q*2),y-Math.round(q*2),'#c9b896',1,1,.5*(1-q));}
+    else if(e.ty==='chip'){const[x,y]=S(e.fx,e.fy);for(let k=0;k<4;k++)px(x-3+k*2,Math.round(y-8+q*(4+k)-Math.sin(q*3)*4),k%2?'#8a6238':'#c9a060',1,1,1-q);}
+    else if(e.ty==='blade'){const[x,y]=S(e.fx,e.fy),bx=Math.round(x+e.dir*q*10),by=Math.round(y-10-Math.sin(q*Math.PI)*10+q*10),a=q*12;for(let k=-2;k<=2;k++)px(Math.round(bx+Math.cos(a)*k),Math.round(by+Math.sin(a)*k),k>1?'#d9a03a':e.spear?'#8a6238':'#e8eaee',1,1,1-q*.5);}
     else if(e.ty==='muzzle'){const[x,y]=S(e.fx,e.fy);px(x-3,y-12,'#ffe27a',6,4,1-q);px(x-1,y-11,'#ffffff',2,2,1-q);}
     else if(e.ty==='boom'){const[x,y]=S(e.fx,e.fy),rr=2+q*9;c.globalAlpha=1-q;c.fillStyle='#ff9a3a';c.beginPath();c.arc(x,y-4,rr,0,6.283);c.fill();c.fillStyle='#ffe27a';c.beginPath();c.arc(x,y-4,rr*.5,0,6.283);c.fill();c.globalAlpha=1;}
-    else if(e.ty==='spark'){const[x,y]=S(e.fx,e.fy);for(let k=0;k<6;k++){const a=k/6*6.283+e.t*20;px(Math.round(x+Math.cos(a)*(2+q*4)),Math.round(y-8+Math.sin(a)*(2+q*3)),'#ffe27a',1,1,1-q);}px(x,y-8,'#ffffff',1,1,1-q);}
+    else if(e.ty==='spark'){const[x,y]=S(e.fx,e.fy);for(let k=0;k<6;k++){const a=k/6*6.283+e.t*20;px(Math.round(x+Math.cos(a)*(2+q*4)),Math.round(y-8+Math.sin(a)*(2+q*3)),'#ffe27a',1,1,1-q);}px(x-1,y-9,'#ffffff',3,3,1-q*2);
+      c.globalAlpha=Math.max(0,1-q*1.5);c.font='bold 7px sans-serif';c.fillStyle='#1a1414';c.fillText(LANG==='ko'?'퍽!':'Pow!',x+3,y-12);c.fillStyle='#ffffff';c.fillText(LANG==='ko'?'퍽!':'Pow!',x+2,y-13);c.globalAlpha=1;}
     else if(e.ty==='num'){const[x,y]=S(e.fx,e.fy);c.globalAlpha=1-q;c.font='bold 7px sans-serif';c.fillStyle='#1a1414';c.fillText(e.v,x+e.dx+1,y-22-q*10+1);c.fillStyle='#ffd84a';c.fillText(e.v,x+e.dx,y-22-q*10);c.globalAlpha=1;}
     else if(e.ty==='slash'){const x=Math.round(e.x-X0),y=Math.round(e.y-Y0);for(let k=-4;k<=4;k++){px(x+k,y-k,'#ffffff',1,1,1-q);px(x+k+1,y-k,'#ffe27a',1,1,(1-q)*.6);}}}
   c.globalAlpha=1;}
