@@ -2047,14 +2047,14 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         P(2,7,pa);P(3,7,pa);P(4,7,paD);
         if(step){P(2,8,pa);P(4,8,paD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,pa);P(2,8,paD);P(3,9,shoe);P(2,9,shoe);}
         const sp=mk(pb,-3,-10);sp.g=0;return sp;};
-      return[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});};
+      const out=[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);a.ped=a.alt.ped=1;return a;});out.ped=1;return out;};
     ;yield;
     SP.walker=walker;
     SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
       [...['#e8e0c8','#c9b896'].map(b=>walker(b)),handCart(),handCart('#c9b896')],
       [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),oxCart(),oxCart('#7a5030','#e8d6a8'),palanquin()],
       [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(b=>walker(b))],
-      SP.car];
+      [...SP.car,walker('#2a2e3a','#2a2e3a'),walker('#d9463b'),walker('#f2ede0','#3a5a8a'),walker('#f2c140','#3a3a42'),walker('#5a8a6a','#e8e4dc')]];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
     SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
 
@@ -3266,7 +3266,8 @@ function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kin
   const opts=[0,1,2,3].filter(d=>isRoad(x+DIRS[d][0],y+DIRS[d][1]));if(!opts.length)continue;
   const e=W.era,set=SP.veh[e],S=W.st,r=Math.random();let em=-1;
   if(e>=3){const pol=S.police?.05:0,amb=S.hosp?.04:0,fir=S.fires?.03:0;if(r<pol)em=0;else if(r<pol+amb)em=1;else if(r<pol+amb+fir)em=2;}
-  cars.push({x,y,e,d:opts[(Math.random()*opts.length)|0],t:Math.random(),c:(Math.random()*set.length)|0,em,sp:(e<3?.45:em>=0?1.4:.9)+Math.random()*.6});return;}}
+  const ci=(Math.random()*set.length)|0,ped=e>=3&&em<0&&!!(set[ci]&&set[ci].ped);
+  cars.push({x,y,e,d:opts[(Math.random()*opts.length)|0],t:Math.random(),c:ci,em,ped,side:Math.random()<.5?1:-1,sp:ped?.18+Math.random()*.1:(e<3?.45:em>=0?1.4:.9)+Math.random()*.6});return;}}
 // fire engines: each burning building gets one, sent from the nearest fire station along the roads (shortest path)
 const fightSet=new Set(),fireTry=new Map();let dispAcc=0,dispMsg=0;
 // shortest road route from any road next to a station of kind `src` to a road within 2 tiles of tile `ti` (BFS), or null
@@ -3316,7 +3317,7 @@ function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+
   if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target)for(let n=cars.length-1;n>=0;n--)if(!cars[n].path){cars.splice(n,1);break;}
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}
     if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
-    c.t+=dt*c.sp*wxCar()/(1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
+    c.t+=dt*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
@@ -3736,8 +3737,8 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
   const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.te[j]!==4||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
-  const lx=gx+pd[0]*.16,ly=gy+pd[1]*.16,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
-  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/190+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);
+  const lo=car.ped?.36*car.side:.16,lx=gx+pd[0]*lo,ly=gy+pd[1]*lo,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
