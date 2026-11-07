@@ -3080,7 +3080,7 @@ function raidSprites(){if(RSP)return RSP;
     // body (leans forward on the strike)
     for(let y=6;y<=10;y++)for(let x=4;x<=7;x++)P(x,y,sh(x,y));if(o.belt)for(let x=4;x<=7;x++)P(x,10,col(o.belt));
     if(o.coat){P(3,8,col(o.coat,-.2));P(3,9,col(o.coat,-.2));Q(3,10,col(o.coat,-.25));Q(3,11,col(o.coat,-.3));P(8,9,col(o.coat,-.1));Q(8,10,col(o.coat,-.15));}
-    for(let y=2;y<=5;y++)for(let x=4;x<=7;x++)P(x,y,x===4?skD:sk);P(7,3,col('#1a1a20'));if(pose>=2)P(6,3,col('#1a1a20'));   // a frown when fighting
+    for(let y=2;y<=5;y++)for(let x=4;x<=7;x++)P(x,y,x===4?col('#2a1d14'):x===5&&y<4?col('#2a1d14',.1):sk);P(8,4,sk);P(7,3,col('#1a1a20'));P(6,5,skD);if(pose>=2)P(6,2,col('#1a1a20'));   // a frown when fighting
     if(o.beard){P(5,5,col(o.beard));P(6,5,col(o.beard));P(7,5,col(o.beard,-.1));P(7,4,col(o.beard,-.1));}if(o.patch){P(6,3,col('#1a1a20'));P(5,2,col('#1a1a20'));}
     o.hat(P);
     const W2=col('#c9ccd2'),W3=col('#e8eaee'),W4=col('#ffffff'),HD=col('#d9a03a'),SH=col('#8a6238');
@@ -3175,8 +3175,8 @@ function raidTick(dt){const r=raid;if(!r)return;r.t+=dt;if(r.flash>0)r.flash-=dt
       if(f.at>4){f.at=0;raidWreck(f.tgt);f.tgt=-1;sfx('err');}}}
   // guards: march out after a moment, take on the nearest pirate, go home when it is over
   for(let n=r.guards.length-1;n>=0;n--){const g=r.guards[n];fighterTick(g,dt);if(g.wait>0){g.wait-=dt;continue;}
-    let foe=null,bd=1e9;for(const f of live){const d=rdist(f,g);if(d<bd){bd=d;foe=f;}}
-    if(foe&&bd<1.4){duel(g,foe,dt,.95);continue;}
+    let foe=null,bd=1e9;for(const f of live){const d=rdist(f,g)+.9*r.guards.filter(o=>o!==g&&o.foe===f).length;if(d<bd){bd=d;foe=f;}}   // spread out over the pirates
+    if(foe)bd=rdist(foe,g);if(foe&&bd<1.4){duel(g,foe,dt,.95);continue;}
     const tgt=foe||{fx:g.home[0],fy:g.home[1]};if(g.act==='idle'&&rdist(g,tgt)>.15)walk(g,tgt.fx,tgt.fy,foe?1:.6,dt);}
   for(const t of r.towers){if((t[3]-=dt)>0)continue;let tg=null,bd=t[2];
     for(const f of live){const d=Math.hypot(f.fx-t[0],f.fy-t[1]);if(d<bd){bd=d;tg=f;}}
@@ -3196,9 +3196,13 @@ function fighterTick(u,dt){if(u.hit>0)u.hit-=dt;if(u.kb){const k=Math.min(1,dt*1
 function swingStart(u,wind){u.act='wind';u.pt=wind;}
 function walk(u,tx,ty,v,dt){const d=Math.hypot(tx-u.fx,ty-u.fy);if(d<.01)return;const k=Math.min(d,v*dt);u.fx+=(tx-u.fx)/d*k;u.fy+=(ty-u.fy)/d*k;u.dir=(tx-ty)-(u.fx-u.fy)>0?1:-1;u.moving=.1;
   if(Math.random()<dt*3)raid.fx.push({ty:'dust',fx:u.fx,fy:u.fy,t:0,m:.4});}
-function duel(a,b,dt,v){a.foe=b;const d=rdist(a,b);a.dir=(b.fx-b.fy)-(a.fx-a.fy)>0?1:-1;
-  if(a.act==='idle'){if(d>.68)walk(a,b.fx,b.fy,v,dt);else if(d<.48){const k=dt*.5/Math.max(d,.01);a.fx-=(b.fx-a.fx)*k;a.fy-=(b.fy-a.fy)*k;}   // keep a sword's length apart
-    else if(a.pt<=0)swingStart(a,.3+Math.random()*.2);}
+// a duel is fought side by side on screen (the sprites only face left or right): each fighter takes the spot a sword's length to the
+// left or right of the other, on its own side, and faces it
+function duel(a,b,dt,v){a.foe=b;const d=rdist(a,b);let side=(a.fx-a.fy)-(b.fx-b.fy)>=0?1:-1;
+  if(raid.guards.concat(raid.foes).some(o=>o!==a&&o.foe===b&&o.side===side&&rdist(o,b)<.6))side=-side;   // that side is taken: go round to the other
+  a.side=side;const px2=b.fx+side*.3,py2=b.fy-side*.3,dp=Math.hypot(px2-a.fx,py2-a.fy);
+  if(a.act==='idle'){if(dp>.08){walk(a,px2,py2,dp>.6?v:v*.6,dt);}else if(a.pt<=0)swingStart(a,.3+Math.random()*.2);}
+  a.dir=-side;
   if(a.act==='strike'&&!a.done1){a.done1=1;if(d>.95)return;
     if(b.act==='idle'&&Math.random()<.28){   // parried
       raid.fx.push({ty:'clang',fx:(a.fx+b.fx)/2,fy:(a.fy+b.fy)/2,t:0,m:.35});knock(a,b,-.08);knock(b,a,-.06);b.act='rec';b.pt=.25;sfx('click');return;}
