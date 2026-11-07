@@ -2073,6 +2073,21 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     const ring=(pb,cx,cy,r,hex=NEON)=>pb.ell(cx,cy,r,(dx,dy)=>dx*dx+dy*dy>.72?neon(hex):null);
     const tipBlink=(cx,y)=>({blink:[[cx,y,'#ff4a6a']]});
     const TINT=['#e9eef4','#e3f2ee','#ece8f6','#f4ece4'];
+    // cyberpunk kit for the future civic buildings: gunmetal walls with thin neon strips and lit windows, holo signs with glyphs,
+    // pipes and ducts, rooftop clutter (vents, dishes, aerials)
+    const CPK='#2c3044',CPK2='#22253a',PURP='#a05aff',YEL='#ffd25f',HRED='#ff4a5a';
+    const cpW=(t,seed,step=6,hex=NEON,hex2=PINK)=>(a,b,hw,h)=>{if(b>=h-1)return col('#4a5068',t);const k=b%step;
+      if(k<.9)return band(t,(Math.floor(b/step)&1)?hex2:hex);if(a<.9||a>hw-.9)return col('#3a3f56',t);
+      if((a|0)%3===0)return col(CPK2,t-.02);const r=hash(Math.floor(a/3)+(t?40:0),Math.floor(b/step)*2+(k>step/2?1:0),seed);
+      return r<.45?[col('#33406a',t+(k>step-1.5?.1:0)),col(r<.15?'#ff9ad8':r<.3?'#9ff4ff':'#ffd88a')]:[col('#2a3354',t),col('#2a3354',t)];};
+    const cpRoof=(u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.07)return neon(NEON,-.1);return col('#3a3f56',(((x>>1)+(y>>1))%2?-.05:.02)+(hash(x,y,8)<.08?-.1:0));};
+    const glyph=(pb,x,y,w,h,hex,seed)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++){const edge=i===0||j===0||i===w-1||j===h-1;
+        pb.put(x+i,y+j,edge?neon(hex):(i%3!==0&&hash(i>>0,(j/2|0),seed)<.55&&j%2===0)||(i===Math.floor(w/2)&&hash(j,i,seed+1)<.6)?neon('#ffffff',-.05):[col('#151826'),col('#1e2236')]);}};
+    const pipe=(pb,x,y0,y1,hex='#5a6078')=>{for(let y=y1;y<=y0;y++){pb.put(x,y,col(hex,.12));pb.put(x+1,y,col(hex,-.2));if((y-y1)%7===0){pb.put(x-1,y,col(hex,-.1));pb.put(x+2,y,col(hex,-.3));}}};
+    const vent=(pb,x,y)=>{pb.box({cx:x,cy:y,hw:2.5,h:3,L:(a,b)=>col('#5a6078',(b|0)%2?-.1:.04),R:()=>col('#4a5068',-.2),T:(u,v)=>col('#6a7088',Math.hypot(u-.5,v-.5)<.3?-.3:0)});};
+    const dish=(pb,x,y,r=3)=>{for(let i=0;i<5;i++)pb.put(x,y-i,col('#6a7088'));pb.ell(x-1,y-6,r,(dx,dy)=>col('#c9ced8',dx>.3?-.25:dy>0?-.1:.05));pb.put(x-1,y-6,neon(PINK));};
+    const aerial=(pb,x,y,n)=>{for(let i=0;i<n;i++)pb.put(x,y-i,col('#6a7088'));for(let i=2;i<n;i+=3){pb.put(x-1,y-i,col('#6a7088'));pb.put(x+1,y-i,col('#6a7088'));}};
+    const cpBase=(pb,cx,cy,hw)=>pb.box({cx,cy:cy+1,hw,h:2,L:()=>col('#3a3f56'),R:()=>col('#3a3f56',-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.05?neon(NEON,-.1):col('#2c3044',((x+y)&7)===0?.1:((Math.floor(u*8)+Math.floor(v*8))&1)?.04:-.02)});
     // neon cyberpunk: dark glass towers trimmed in pink/cyan/gold neon, holo billboards, capsule pods, antennas with warning lights
     const DK='#252c42',DK2='#323a54',GL2='#3a5a82',YL='#ffd25f',VI='#9a7bff',GR='#5fff9a',ACC=[NEON,PINK,YL,VI,GR];
     const mkN=(H,fn)=>{const m={lights:[],blink:[]};return mk1(H,(pb,cx,cy)=>fn(pb,cx,cy,m),()=>m);};
@@ -2187,12 +2202,17 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     ;yield;
     SP.veh[5]=[carHover('#f4f7fa',NEON),carHover('#f4f7fa',PINK),carHover('#ff6a8a',NEON),carHover('#5f8fe0',NEON),carHover('#2f3448',PINK),walker('#e9eef4'),walker('#5fe6f2')];
     // fusion plant (2x2): a white torus around a glowing core
-    SP.fusion=mk2(88,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:28,h:3,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:fRoof});
-      pb.box({cx:cx+15,cy:cy-1,hw:7,h:9,L:ftw(0,950),R:ftw(-.24,950),T:fRoof});pb.cyl(cx-17,cy-3,3,8,side('#e6ecf2'),()=>neon(NEON));
-      for(let b=0;b<12;b++)pb.ell(cx-2,cy-3-b,17,(dx,dy)=>{const r=dx*dx+dy*dy;if(r<.42&&dy<.35)return null;if(b===11)return r>.42&&r<.56?neon(NEON):col('#f6f9fc');
-        const t=dx<-.3?.1:dx<.3?-.04:-.28;return b%4===2?band(t):col(SH,t);});
-      for(let b=0;b<20;b++)pb.ell(cx-2,cy-8-b,3.2-b*.06,()=>[col('#bff6ff'),col('#e8ffff')]);dome(pb,cx-2,cy-8,6,4,'#9ff4ff',true);
-      ring(pb,cx-2,cy-22,5.5,PINK);ring(pb,cx-2,cy-27,4.5,NEON);},(cx,cy)=>({lights:[[cx-2,cy-14],[cx-2,cy-24]],blink:[[cx-2,cy-29,'#ffffff']]}));
+    SP.fusion=mk2(92,(pb,cx,cy)=>{cpBase(pb,cx,cy,28);
+      pb.box({cx:cx+15,cy:cy-1,hw:7,h:10,L:cpW(0,950,4,YEL,YEL),R:cpW(-.24,951,4,YEL,YEL),T:cpRoof});vent(pb,cx+13,cy-12);vent(pb,cx+18,cy-10);
+      pb.cyl(cx-17,cy-3,3,10,(dx,b)=>b%3<1?band(dx>.2?-.2:0,YEL):col(CPK,dx<-.4?.1:dx<.2?0:-.26),()=>neon(YEL));
+      for(let b=0;b<12;b++)pb.ell(cx-2,cy-3-b,17,(dx,dy)=>{const r=dx*dx+dy*dy;if(r<.42&&dy<.35)return null;if(b===11)return r>.42&&r<.56?neon(PINK):col('#3a3f56');
+        const t=dx<-.3?.08:dx<.3?-.04:-.28,an=Math.atan2(dy,dx);if(b%4===2)return band(t,(Math.floor(an*3+3)&1)?NEON:PINK);if(Math.abs(Math.sin(an*6))<.12)return col('#6a7088',t);return col(CPK,t+(b%4===0?-.06:0));});   // the torus, ribbed, with neon bands
+      for(let b=0;b<22;b++)pb.ell(cx-2,cy-8-b,3.2-b*.05,(dx)=>[col(Math.abs(dx)<.4?'#ffe0ff':'#ff6ad5'),col(Math.abs(dx)<.4?'#ffffff':'#ff9ae8')]);   // plasma column
+      ring(pb,cx-2,cy-22,5.5,NEON);ring(pb,cx-2,cy-27,4.5,PINK);ring(pb,cx-2,cy-31,3.5,NEON);
+      for(let k=0;k<12;k++){pb.put(cx+6+k,cy-6+(k>>1),col('#6a7088',.1));pb.put(cx+6+k,cy-5+(k>>1),col('#4a5068',-.1));if(k%4===0)pb.put(cx+6+k,cy-7+(k>>1),neon(YEL));}   // coolant line
+      for(let k=0;k<24;k++){const x=cx-28+k,y=cy+1+Math.round(k/2);if(((k>>1)&1))pb.put(x,y,col(YEL));}   // hazard stripe along the front edge
+      glyph(pb,cx-24,cy-22,4,12,YEL,952);for(let i=0;i<14;i++)pb.put(cx-22,cy-8-i+12,col('#6a7088'));},
+      (cx,cy)=>({lights:[[cx-2,cy-14],[cx-2,cy-26]],blink:[[cx-2,cy-32,'#ffffff']]}));
     // space elevator (2x2 wonder): a ribbon climbing out of sight
     const elevSp=H=>mk2(H,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:28,h:4,L:(a,b)=>b>=2&&b<3?band(0):col(SH),R:(a,b)=>b>=2&&b<3?band(-.24):col(SH,-.25),T:fRoof});
       pb.box({cx,cy:cy-3,hw:16,h:10,L:ftw(0,960,'#3a6aa8',5),R:ftw(-.24,960,'#3a6aa8',5),T:fGarden});
@@ -2205,24 +2225,64 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     SP.elev=elevSp(230);SP.elevIco=elevSp(84);
     // civic buildings, future style
     const BLUE='#4a8cff',RED='#ff4a3a';
-    SP.policeF=mk1(56,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f6f9fc',t);if(b>=8&&b<9)return band(t,BLUE);if(b<6&&a>1&&a<hw-1)return(a|0)%3===0?col(SH,t-.05):winC(a|0,0,5101,.9,'#4a6fbf');return col(SH,t);};
-      pb.box({cx,cy:cy-1,hw:12,h:12,L:f(0),R:f(-.24),T:(u,w,x,y)=>{const d=Math.hypot(u-.5,w-.5);if(d<.26&&d>.19)return neon(BLUE);if(d<.12&&(Math.abs(u-w)<.05||Math.abs(u+w-1)<.05))return neon('#ffffff');return Math.min(u,w,1-u,1-w)<.08?col('#f6f9fc'):col('#b9c4d2');}});
-      pb.box({cx:cx-6,cy:cy-13,hw:3,h:5,L:ftw(0,5102,'#4a6fbf',3,BLUE),R:ftw(-.24,5102,'#4a6fbf',3,BLUE),T:()=>col('#e6ecf2')});
-      for(const[x,y]of[[cx+3,cy-21],[cx+7,cy-19]]){pb.put(x,y,col('#2b3348'));pb.put(x-1,y,col('#9aa6b8'));pb.put(x+1,y,col('#9aa6b8'));pb.put(x,y+1,neon(BLUE));}},
-      (cx,cy)=>({siren:[cx-7,cy-19]}));
-    SP.fireF=mk1(62,(pb,cx,cy)=>{const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f6f9fc',t);if(b>=9&&b<10)return band(t,RED);return col(SH,t);};
-      pb.cyl(cx+6,cy-6,3,26,(dx,b)=>b%5<1?band(dx>.2?-.25:0,RED):col(SH,dx<-.4?.1:dx<.2?0:-.26),()=>neon(RED));
-      pb.box({cx:cx-1,cy:cy-1,hw:12,h:12,L:(a,b,hw,h)=>{if(b<7&&a>2&&a<hw-2)return(a|0)%3===0?col(SH,-.05):winC(a|0,0,5201,.8,'#4a6fbf');return f(0)(a,b,hw,h);},
-        R:(a,b,hw,h)=>{if(((a>=1.5&&a<5.5)||(a>=6.5&&a<10.5))&&b<7.5)return[col('#ff6a4a',(b|0)%2?-.1:-.2),col('#ffb070')];return f(-.24)(a,b,hw,h);},T:fRoof});
-      pb.box({cx:cx-5,cy:cy-14,hw:2,h:1,L:()=>neon(RED),R:()=>neon(RED,-.2),T:()=>neon('#ffd25f')});},
-      (cx,cy)=>({siren:[cx-7,cy-16]}));
+    SP.policeF=mk1(60,(pb,cx,cy)=>{const PB2='#4a8cff';cpBase(pb,cx,cy,14);
+      pb.box({cx,cy:cy-1,hw:12,h:14,L:(a,b,hw,h)=>b>=h-2?band(0,(a|0)%4<2?PB2:HRED):cpW(0,5101,5,PB2,PB2)(a,b,hw,h),
+        R:(a,b,hw,h)=>b>=h-2?band(-.2,(a|0)%4<2?HRED:PB2):a>4&&a<8&&b<6?(a<5||a>=7||b>=5?neon(PB2):[col('#1e2236'),col('#9ff4ff',-.2)]):cpW(-.24,5102,5,PB2,PB2)(a,b,hw,h),T:cpRoof});
+      for(let j=0;j<7;j++)for(let i=0;i<5;i++){const w=j<4?2:2-(j-4);if(Math.abs(i-2)>w)continue;
+        pb.put(cx-9+i,cy-10+j+Math.round(i/2),(Math.abs(i-2)===w||j===0||j===6)?neon(PB2):i===2&&j>1&&j<5?neon('#ffffff'):[col('#1e2a50'),col('#3a5aa0')]);}   // holo badge
+      pb.ell(cx+3,cy-15,4,(dx,dy)=>dx*dx+dy*dy>.6?neon(YEL):col('#3a3f56'));                                                           // drone pad
+      for(const dx of[-1,0,1])pb.put(cx+3+dx,cy-17,col('#c9ced8'));pb.put(cx+1,cy-18,col('#6a7088'));pb.put(cx+5,cy-18,col('#6a7088'));pb.put(cx+3,cy-16,neon(PB2));   // parked drone
+      aerial(pb,cx-6,cy-14,9);vent(pb,cx-2,cy-14);pipe(pb,cx+11,cy-2,cy-13);},
+      (cx,cy)=>({siren:[cx-6,cy-23],lights:[[cx-7,cy-7],[cx+3,cy-16]]}));
+    SP.fireF=mk1(66,(pb,cx,cy)=>{cpBase(pb,cx,cy,14);
+      pb.cyl(cx+7,cy-6,3,30,(dx,b)=>b%6<1?band(dx>.2?-.25:0,HRED):col(CPK,dx<-.4?.12:dx<.2?0:-.26),()=>neon(HRED));for(let k=0;k<5;k++)pb.put(cx+4,cy-30+k*5,neon(YEL));   // hose tower
+      pb.box({cx:cx-1,cy:cy-1,hw:12,h:13,L:(a,b,hw,h)=>b>=h-2?band(0,HRED):cpW(0,5201,6,HRED,YEL)(a,b,hw,h),
+        R:(a,b,hw,h)=>{if(((a>=1.5&&a<5.5)||(a>=6.5&&a<10.5))&&b<8){const edge=a<2.5||(a>=4.5&&a<5.5)||(a>=6.5&&a<7.5)||a>=9.5||b>=7;return edge?neon(HRED):[col('#1e2236',(b|0)%2?-.05:0),col('#ff8a5a',-.3)];}
+          return b>=h-2?band(-.2,HRED):cpW(-.24,5202,6,HRED,YEL)(a,b,hw,h);},T:cpRoof});
+      for(const[i,j]of[[2,0],[1,1],[2,1],[3,1],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]])pb.put(cx-10+i,cy-10+j+Math.round(i/2),neon(j<2?YEL:j<3?'#ff9a3a':HRED));   // holo flame
+      vent(pb,cx-6,cy-14);pipe(pb,cx-13,cy-1,cy-12);},
+      (cx,cy)=>({siren:[cx-4,cy-17],lights:[[cx+7,cy-36],[cx-8,cy-8]]}));
     ;yield;
-    SP.schoolF=mk2(84,(pb,cx,cy)=>{pb.box({cx:cx+7,cy:cy-9,hw:21,h:12,L:ftw(0,5301,'#3f6a96',6,'#ffd25f'),R:ftw(-.24,5301,'#3f6a96',6,'#ffd25f'),T:fGarden});
-      for(let k=0;k<4;k++)treeInto(pb,cx-2+k*6,cy-22+k*3,0,2,5310+k);
-      pb.box({cx:cx+7,cy:cy-22,hw:4,h:1,L:()=>col('#2b3b66'),R:()=>col('#2b3b66',-.2),T:(u)=>col('#3b5aa0',Math.floor(u*4)%2?.25:0)});
-      dome(pb,cx-8,cy-4,8,9,'#9fe0e8',true);ring(pb,cx-8,cy-5,8.5,'#ffd25f');
-      for(let i=0;i<14;i++)pb.put(cx-22,cy+4-i,col('#d6dde3'));for(let i=0;i<3;i++)for(let j=0;j<5;j++)pb.put(cx-21+j,cy-9+i+(j>>1),neon(i===1?'#ffd25f':NEON));},
-      (cx,cy)=>({lights:[[cx-8,cy-6]]}));
+    SP.schoolF=mk2(88,(pb,cx,cy)=>{cpBase(pb,cx,cy,30);
+      pb.box({cx:cx+7,cy:cy-9,hw:21,h:13,L:(a,b,hw,h)=>a>3&&a<14&&b>2&&b<10?(a<4.5||a>=13||b<3.5||b>=9?neon(NEON):[col('#1e2a40'),col(hash(a|0,b|0,5303)<.5?'#ffd25f':'#9ff4ff',-.15)]):cpW(0,5301,5,YEL,NEON)(a,b,hw,h),
+        R:cpW(-.24,5302,5,YEL,NEON),T:fGarden});                                                                                           // with a lesson on a big screen
+      for(let k=0;k<4;k++)treeInto(pb,cx-2+k*6,cy-23+k*3,0,2,5310+k);
+      dome(pb,cx-8,cy-4,8,9,'#2a3a5a',true);ring(pb,cx-8,cy-5,8.5,YEL);ring(pb,cx-8,cy-9,7.2,NEON);ring(pb,cx-8,cy-12,4.6,PINK);   // planetarium
+      for(let i=0;i<18;i++)pb.put(cx-23,cy+4-i,col('#6a7088'));glyph(pb,cx-27,cy-16,4,10,YEL,5304);
+      vent(pb,cx+22,cy-20);aerial(pb,cx+26,cy-20,8);},
+      (cx,cy)=>({lights:[[cx-8,cy-6],[cx-25,cy-11],[cx-4,cy-16]],blink:[[cx+26,cy-28,'#ff4a6a']]}));
+    ;yield;
+    // future landmarks: a dark stepped city hall under a wireframe holo dome, a neon spire, and a stadium with a holo bowl
+    SP.hallF=mk2(100,(pb,cx,cy)=>{cpBase(pb,cx,cy,30);
+      pb.box({cx,cy:cy-1,hw:22,h:8,L:cpW(0,7101,4,NEON,NEON),R:cpW(-.24,7102,4,NEON,NEON),T:cpRoof});
+      pb.box({cx,cy:cy-9,hw:16,h:10,L:cpW(0,7103,5,YEL,NEON),R:cpW(-.24,7104,5,YEL,NEON),T:cpRoof});
+      for(let a=4;a<14;a+=3)for(let b=0;b<6;b++)pb.put(cx-16+a,cy-10+Math.round(a/2)-b-2,b===5?neon('#ffffff'):col('#c9ced8',-.05));   // colonnade
+      dome(pb,cx,cy-19,10,10,'#2a3a5a',true);
+      for(let b=0;b<=10;b+=2){const r=10.5*Math.sqrt(Math.max(0,1-(b/10.8)**2));ring(pb,cx,cy-19-b,Math.max(1,r),b%4?NEON:YEL);}
+      for(let b=0;b<10;b++){const r=10.5*Math.sqrt(Math.max(0,1-(b/10.8)**2));for(const f of[-.7,0,.7])pb.put(Math.round(cx+f*r),cy-19-b+Math.round(Math.sqrt(Math.max(0,1-f*f))*r/2),neon(NEON));}   // meridians
+      for(let i=0;i<10;i++)pb.put(cx,cy-30-i,col('#6a7088'));pb.put(cx,cy-40,neon(YEL));
+      for(const s of[-1,1]){for(let i=0;i<20;i++)pb.put(cx+s*24,cy+2-i,col('#6a7088'));glyph(pb,cx+s*24-(s<0?3:0),cy-22,3,12,s<0?YEL:NEON,7105+s);}   // banner masts
+      vent(pb,cx+10,cy-20);dish(pb,cx-11,cy-20);},
+      (cx,cy)=>({lights:[[cx,cy-14],[cx-24,cy-16],[cx+24,cy-16]],blink:[[cx,cy-41,'#ffd25f']]}));
+    SP.towerF=mk1(116,(pb,cx,cy)=>{cpBase(pb,cx,cy,8);
+      for(const s of[-1,1])for(let k=0;k<26;k++)pb.put(cx+s*Math.round(6-k*.17),cy-1-k,col('#4a5068',s<0?0:-.2));                      // flared legs
+      pb.cyl(cx,cy-4,2.4,64,(dx,b)=>b%10<1?band(dx>.2?-.2:0,b%20<1?PINK:NEON):Math.abs(dx)<.25&&b%10>3?[col('#3a4a6a'),col('#9ff4ff')]:col(CPK,dx<-.3?.12:dx<.3?0:-.26),()=>col('#3a3f56'));
+      for(let b=0;b<10;b++){const r=b<3?3+b*1.7:b<7?8:8-(b-6)*2;pb.ell(cx,cy-66-b,r,(dx,dy,x)=>b>=3&&b<6?(x%2?[col('#33406a'),col('#ffd88a')]:col(CPK2)):b===6?neon(PINK):col(CPK,dx<-.3?.12:dx<.3?0:-.26));}
+      ring(pb,cx,cy-71,10,NEON);                                                                                                         // holo halo round the deck
+      for(let i=0;i<24;i++)pb.put(cx,cy-76-i,col(i%6<1?PINK:'#6a7088'));},
+      (cx,cy)=>({blink:[[cx,cy-100,'#ff4a4a']],lights:[[cx,cy-70],[cx,cy-40]]}));
+    {const H=96,pb=new PB(96,H),cx=48,cy=H-24,R0=40,lights=[];
+      for(let b=0;b<14;b++)pb.ell(cx,cy-b,R0,(dx,dy,x,y)=>{const arch=b>1&&b<10&&((x>>2)%2===0);if(b%5===4)return band(dx>.3?-.25:0,(x>>3)%2?NEON:PINK);
+        return arch?[col('#1e2236'),col(hash(x>>2,b,7)<.5?'#ffd88a':'#9ff4ff',-.2)]:col(CPK,dx<-.5?.1:dx<.2?0:dx<.6?-.18:-.3);});
+      pb.ell(cx,cy-14,R0,(dx,dy,x,y)=>{const r=Math.hypot(dx,dy);if(r>.94)return neon(NEON,-.05);
+        if(r>.62){const row=Math.floor(r*16)%2;return hash(x,y,9)<.12?neon(['#ff6ad5','#5fe6f2','#ffd25f'][(x+y)%3]):col('#2a2e44',row?-.1:.04);}
+        if(r>.58)return col('#151826');const px=dx/.58,py=dy/.58;
+        if(Math.abs(px)<.03||Math.abs(Math.hypot(px,py)-.28)<.035||(Math.abs(Math.abs(px)-.8)<.03&&Math.abs(py)<.55))return neon(NEON);return col('#2a6a5a',(Math.floor((px+1)*6))%2?0:.08);});   // dark turf with glowing lines
+      [[-1,0],[0,-1],[1,0],[0,1]].forEach(([ux,uy])=>{const x=cx+ux*(R0+3),y=cy+uy*(R0/2+2)+(uy?0:-2);for(let i=0;i<30;i++)pb.put(x,y-i,col(i%6<1?PINK:'#4a5068'));
+        for(let k=-2;k<=2;k++){pb.put(x+k,y-30,[col('#e8eef4'),col('#fffbe0')]);pb.put(x+k,y-31,col('#3a3f56'));}lights.push([x,y-30]);});
+      for(let j=0;j<8;j++)for(let i=0;i<18;i++)pb.put(cx-9+i,cy-46+j,j===0||j===7||i===0||i===17?neon(PINK):[col('#1e2236'),col(hash(i>>1,j,11)<.5?'#5fe6f2':'#ff6ad5',-.1)]);   // holo scoreboard
+      for(let i=0;i<6;i++)pb.put(cx,cy-38+i,col('#6a7088'));
+      SP.stadiumF=mk(pb,-48,48-H,true,{lights:[...lights,[cx,cy-42]]});}
 
     // hospitals, one look per era
     const plaque=(pb,x,y,red=[col('#e0302a'),col('#ff5a4a')],bg=col('#ffffff'))=>{for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const edge=Math.abs(dx)===3||Math.abs(dy)===3;pb.put(x+dx,y+dy,edge?col('#c9d2dc'):(Math.abs(dx)<=0||Math.abs(dy)<=0)&&Math.abs(dx)<=2&&Math.abs(dy)<=2?red:bg);}};
@@ -2244,12 +2304,15 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         const f=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#f2f5f8',t);if((b%4)>=1&&(a|0)%3!==0&&a>.8&&a<hw-.8)return winC(Math.floor(a/3)+(t?40:0),Math.floor(b/4),5502,.5,'#5a9ab8');return col('#e8eef2',t);};
         pb.box({cx:cx-1,cy:cy-4,hw:10,h:30,L:f(0),R:f(-.24),T:(u,w)=>{const d=Math.hypot(u-.5,w-.5);if(d<.3&&d>.23)return col('#ffd25f');if(d<.16&&(Math.abs(u-.5)<.04||Math.abs(w-.5)<.04))return col('#ffffff');return Math.min(u,w,1-u,1-w)<.07?col('#f2f5f8'):col('#7a8088');}});plaque(pb,cx-6,cy-25);},
         (cx,cy)=>({blink:[[cx-1,cy-40,'#ff4a4a']],lights:[[cx,cy+2]]})),
-      mk1(100,(pb,cx,cy)=>{const MINT='#5ff2b0';pb.box({cx,cy:cy+1,hw:12,h:1,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:fGarden});
-        const f=t=>ftw(t,5601,'#3f8a96',6,MINT);
-        pb.box({cx,cy:cy-1,hw:9,h:46,L:f(0),R:f(-.24),T:fGarden});plaque(pb,cx-5,cy-36,neon('#ff4a6a'),col('#f6f9fc'));dome(pb,cx,cy-47,5,5,'#bff6e8',true);ring(pb,cx,cy-48,5.5,MINT);
-        pb.box({cx:cx+9,cy:cy+1,hw:4,h:9,L:ftw(0,5602,'#3f8a96',3,MINT),R:ftw(-.24,5602,'#3f8a96',3,MINT),T:fRoof});
-        for(const[x,y]of[[cx-8,cy-40],[cx+11,cy-28]]){pb.put(x,y,col('#f6f9fc'));pb.put(x-1,y,col('#9aa6b8'));pb.put(x+1,y,col('#9aa6b8'));pb.put(x,y+1,neon('#ff4a6a'));}},
-        (cx,cy)=>({blink:[[cx,cy-54,'#ff4a6a']],lights:[[cx,cy-30]]}))];
+      mk1(106,(pb,cx,cy)=>{const MINT='#5ff2b0';cpBase(pb,cx,cy,13);
+        pb.box({cx:cx+9,cy:cy+1,hw:4,h:10,L:cpW(0,5602,4,MINT,MINT),R:cpW(-.24,5602,4,MINT,MINT),T:cpRoof});
+        pb.box({cx,cy:cy-1,hw:9,h:48,L:cpW(0,5601,6,MINT,NEON),R:cpW(-.24,5603,6,MINT,NEON),T:cpRoof});pipe(pb,cx+12,cy-1,cy-9);
+        for(let j=-5;j<=5;j++)for(let i=-5;i<=5;i++){if(!(Math.abs(i)<=1||Math.abs(j)<=1))continue;const edge=(Math.abs(i)===1&&Math.abs(j)>1)||(Math.abs(j)===1&&Math.abs(i)>1)||Math.abs(i)===5||Math.abs(j)===5;
+          pb.put(cx-6+i,cy-34+j+Math.round(i/2),edge?neon('#ff4a6a'):[col('#ff4a6a',-.35),col('#ff9ab0')]);}                            // giant holo cross
+        glyph(pb,cx+4,cy-30,3,14,MINT,5604);
+        pb.ell(cx,cy-49,6,(dx,dy)=>{const r=dx*dx+dy*dy;return r>.75?neon(YEL):(Math.abs(dx)<.12&&Math.abs(dy)<.5)||(Math.abs(dy)<.18&&Math.abs(dx)<.45)?col('#ffffff'):col('#3a3f56');});   // helipad
+        aerial(pb,cx-7,cy-50,8);},
+        (cx,cy)=>({blink:[[cx-7,cy-58,'#ff4a6a']],lights:[[cx-6,cy-34],[cx,cy-49]]}))];
 
     // ports (나루터 -> 수상 정거장): built on the shore, boats come and go from them
     const deck=(pb,cx,cy,hw,h,hex,plank=7)=>pb.box({cx,cy,hw,h,L:()=>col(hex,-.12),R:()=>col(hex,-.32),T:(u,v,x,y)=>col(hex,(Math.floor(u*plank)%2?-.08:.05)+(hash(x,y,61)<.1?-.08:0))});
@@ -2489,14 +2552,16 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         canopy(pb,cx+17,cy+3,11,10,'#e6ecf2','#9aa6b8',true);pb.box({cx:cx+18,cy:cy-1,hw:4,h:7,L:()=>[col('#9fd6ea'),col('#dff6ff')],R:()=>[col('#7fb6ca'),col('#bfe6f2')],T:()=>col('#c8ccd2')});
         for(let i=0;i<14;i++)pb.put(cx-25,cy+2-i,col('#9aa6b8'));pb.ell(cx-25,cy-13,2.4,(dx,dy)=>dx*dx+dy*dy>.6?col('#3a3f4a'):[col('#ffffff'),col('#ffffff')]);
         bench(pb,cx+10,cy+8);bench(pb,cx-14,cy+9);return 0;},(cx,cy)=>({lights:[[cx-4,cy-5],[cx+17,cy-6],[cx-25,cy-13]]})),
-      // 자기부상역 → a white terminal pod under a glass dome, neon rings, a tube canopy and a floating holo sign
-      mk2(104,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:30,h:2,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:(u,v)=>Math.min(u,v,1-u,1-v)<.06?neon(NEON):col('#e6ecf2',((Math.floor(u*8)+Math.floor(v*8))&1)?.05:0)});
-        pb.box({cx:cx-4,cy:cy-1,hw:17,h:10,L:ftw(0,5901,'#3f6a96',5,PINK),R:ftw(-.24,5901,'#3f6a96',5,PINK),T:()=>col('#f6f9fc')});
-        dome(pb,cx-4,cy-11,14,14,'#bff6ff',true);ring(pb,cx-4,cy-12,15,NEON);ring(pb,cx-4,cy-19,11,PINK);
-        for(let i=0;i<12;i++)pb.put(cx-4,cy-26-i,col('#f6f9fc'));pb.put(cx-4,cy-38,neon(PINK));
-        for(let k=0;k<20;k++){const x=cx+6+k,y=cy-4+k/2|0;for(let d=0;d<4;d++)pb.put(x,y-9-d,d===0||d===3?neon(NEON):[col('#9fdce4',0,200),col('#cff8ff',0,220)]);}
-        for(let j=0;j<5;j++)for(let i=0;i<10;i++)pb.put(cx+12+i,cy-34+j,j===0||j===4||i===0||i===9?neon(PINK):hash(i,j,9)<.5?neon(NEON,-.2):[col('#2a3148'),col('#5a6a8a')]);
-        return 0;},(cx,cy)=>({lights:[[cx-4,cy-6],[cx+16,cy-8]],blink:[[cx-4,cy-39,'#ff6ad5'],[cx+17,cy-36,'#5fe6f2']]}))];
+      // 자기부상역 → a dark terminal under neon arches and a glass dome, a glowing maglev tube and a holo billboard on a mast
+      mk2(108,(pb,cx,cy)=>{cpBase(pb,cx,cy,30);
+        pb.box({cx:cx-4,cy:cy-1,hw:17,h:11,L:cpW(0,5901,4,NEON,PINK),R:cpW(-.24,5902,4,NEON,PINK),T:cpRoof});
+        dome(pb,cx-4,cy-12,10,10,'#2a3a5a',true);ring(pb,cx-4,cy-13,10.5,NEON);
+        for(let k=0;k<4;k++){const r=15-k*2.5;pb.ell(cx-4,cy-12-k*3,r,(dx,dy)=>dx*dx+dy*dy>.8&&dy>-.1?neon(k%2?PINK:NEON):null);}
+        for(let i=0;i<14;i++)pb.put(cx-4,cy-23-i,col('#6a7088'));pb.put(cx-4,cy-37,neon(PINK));
+        for(let k=0;k<20;k++){const x=cx+6+k,y=cy-4+k/2|0;for(let d=0;d<4;d++)pb.put(x,y-9-d,d===0||d===3?neon(PINK):[col('#3a4a6a'),col('#9ff4ff')]);}
+        for(let i=0;i<16;i++)pb.put(cx+20,cy-20-i,col('#6a7088'));glyph(pb,cx+12,cy-44,14,8,PINK,5903);
+        vent(pb,cx-16,cy-12);dish(pb,cx+6,cy-12);
+        return 0;},(cx,cy)=>({lights:[[cx-4,cy-6],[cx+16,cy-8],[cx+19,cy-40]],blink:[[cx-4,cy-38,'#ff6ad5'],[cx+20,cy-37,'#5fe6f2']]}))];
     SP.port2=[
       // 나루터 (stone age): a wide log pier with canoes and a lean-to
       mk2(64,(pb,cx,cy)=>{deck(pb,cx+2,cy-1,24,1,'#9a7448',9);posts(pb,[[cx-20,cy],[cx+22,cy],[cx+2,cy+11],[cx+2,cy-12],[cx-8,cy+5],[cx+12,cy+5]],5,WOOD);
@@ -2532,13 +2597,16 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         for(let k=0;k<14;k++){const x=cx+12+k,y=cy+4+(k>>1);for(let d=0;d<4;d++)pb.put(x,y-5-d,d===0?col('#9aa6b8'):d===3?col('#e8ecf0'):[col('#4f8fc0'),col('#ffe6a0')]);pb.put(x,y-1,col('#8a8f98'));}
         for(let j=0;j<3;j++)flagPole(pb,cx-26+j*6,cy+5+j*3,12,[['#c0392b','#ffffff','#2f6fc0'],['#2f9a4a','#ffffff','#e0a020'],['#2f6fc0','#ffffff','#c0392b']][j]);
         for(let k=0;k<10;k++)pb.put(cx-14+k,cy-15+(k>>2),[col('#2f6fc0'),col('#7fd0ff')]);return 0;},(cx,cy)=>({lights:[[cx-6,cy-8],[cx+14,cy-28],[cx+18,cy-2]],blink:[[cx+14,cy-36,'#ff4a6a']]})),
-      // 수상 정거장 (future): a glass dome terminal ringed in neon, a landing pad and a boarding tube
-      mk2(100,(pb,cx,cy)=>{pb.box({cx:cx+1,cy:cy-1,hw:27,h:2,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:(u,v)=>Math.min(u,v,1-u,1-v)<.06?neon(NEON):col('#e6ecf2')});
-        pb.box({cx:cx-7,cy:cy-3,hw:13,h:6,L:ftw(0,6001,'#3f6a96',4,PINK),R:ftw(-.24,6001,'#3f6a96',4,PINK),T:()=>col('#f6f9fc')});
-        dome(pb,cx-7,cy-9,13,15,'#bff6e8',true);ring(pb,cx-7,cy-10,14,NEON);ring(pb,cx-7,cy-17,10,PINK);for(let i=0;i<10;i++)pb.put(cx-7,cy-25-i,col('#f6f9fc'));pb.put(cx-7,cy-35,neon('#ff6ad5'));
-        pb.box({cx:cx+14,cy:cy-4,hw:7,h:1,L:()=>col('#c9d2dc'),R:()=>col('#c9d2dc',-.25),T:(u,v)=>{const d=Math.hypot(u-.5,v-.5);return d<.32&&d>.24?neon('#ffd25f'):col('#3a425a');}});
-        for(let k=0;k<12;k++){const x=cx+2+k,y=cy+6+(k>>1);for(let d=0;d<4;d++)pb.put(x,y-3-d,d===0||d===3?neon(NEON):[col('#9fdce4',0,200),col('#cff8ff',0,220)]);}
-        return 0;},(cx,cy)=>({lights:[[cx-7,cy-6]],blink:[[cx-7,cy-36,'#5fe6f2'],[cx+14,cy-6,'#ffd25f']]}))];
+      // 수상 정거장 (future): a dark terminal under a neon-ringed glass dome, a landing pad, a boarding tube and a vertical sign
+      mk2(104,(pb,cx,cy)=>{pb.box({cx:cx+1,cy:cy-1,hw:27,h:2,L:()=>col('#3a3f56'),R:()=>col('#3a3f56',-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.05?neon(NEON,-.1):col('#2c3044',((x+y)&7)===0?.1:0)});
+        pb.box({cx:cx-7,cy:cy-3,hw:13,h:7,L:cpW(0,6001,4,PINK,NEON),R:cpW(-.24,6002,4,PINK,NEON),T:cpRoof});
+        dome(pb,cx-7,cy-10,12,13,'#2a3a5a',true);ring(pb,cx-7,cy-10,12.5,NEON);ring(pb,cx-7,cy-15,11,PINK);ring(pb,cx-7,cy-19,8,NEON);
+        for(let i=0;i<10;i++)pb.put(cx-7,cy-23-i,col('#6a7088'));pb.put(cx-7,cy-33,neon(PINK));
+        for(let i=0;i<22;i++)pb.put(cx-22,cy+2-i,col('#6a7088'));glyph(pb,cx-26,cy-26,4,16,NEON,6003);
+        pb.box({cx:cx+14,cy:cy-4,hw:7,h:1,L:()=>col('#3a3f56'),R:()=>col('#3a3f56',-.25),T:(u,v)=>{const d=Math.hypot(u-.5,v-.5);return d<.32&&d>.24?neon(YEL):col('#22253a');}});
+        for(let k=0;k<12;k++){const x=cx+2+k,y=cy+6+(k>>1);for(let d=0;d<4;d++)pb.put(x,y-3-d,d===0||d===3?neon(PINK):[col('#3a4a6a'),col('#9ff4ff')]);}
+        vent(pb,cx+3,cy-8);
+        return 0;},(cx,cy)=>({lights:[[cx-7,cy-6],[cx-24,cy-18]],blink:[[cx-7,cy-34,'#5fe6f2'],[cx+14,cy-6,'#ffd25f']]}))];
   }
   ;yield;
   SP.icoPow=mk(bitmapPB(["..##",".##.","####",".##.","##..","#..."],{'#':'#ffd23f'},'#2a1d05'),-3,0,false);
@@ -3599,7 +3667,7 @@ function render(){
     else if((k===K.DEPOT||k===K.PORT)&&w.anchor[i]<0){const e=Math.min(5,w.te[i]),sp=FL(k===K.DEPOT?SP.depot[Math.max(3,e)]:SP.port[e],i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
-    else if(k===K.TOWER){const sp=FL(SP.tower,i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
+    else if(k===K.TOWER){const sp=FL(civSprite(K.TOWER,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a],w.level[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);if(cs2.crane)craneAnim(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8,a+dy*N+dx,blinkOn);}}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);if(k===K.THEME)themeAnim(c,a,asx,asy+24);if(k===K.AD)adAnim(c,sp,asx,asy);}fronts(a,sz);}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
@@ -3646,7 +3714,7 @@ const anc=i=>W.anchor[i]>=0?W.anchor[i]:i,FL=(sp,i)=>sp&&W.flip[anc(i)]?flipped(
 let buildFlip=0;const canTurn=t=>t&&!t.items&&t.kind>=K.POLICE&&t.kind!==K.WIND&&t.kind!==K.DECO&&t.kind!==K.AD;
 function decoView(L,r){if(L===4)return SP.benchD[r&3];if(L===6)return SP.lampD[r&3];if(L===1)return SP.fence[r&1?10:5];const b=SP.deco[L]||SP.deco[0];return DECO_ROT[L]===2&&(r&1)?flipped(b):b;}
 function decoSprite(i){const L=W.level[i];if(L!==1)return decoView(L,W.vari[i]);if(L===1){const x=i%N,y=i/N|0;let m=0;DIRS.forEach(([dx,dy],b)=>{if(isFence(x+dx,y+dy))m|=1<<b;});return SP.fence[m||(W.vari[i]&1?10:5)];}return SP.deco[L]||SP.deco[0];}
-function civSprite(k,e,lv){e=Math.min(5,e);if(k===K.AD)return SP.adtw[e>=5?1:0];if(k===K.THEME)return SP.theme[lv??subSel.theme]||SP.theme[0];if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port2[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot2[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
+function civSprite(k,e,lv){e=Math.min(5,e);if(e>=5){if(k===K.HALL&&SP.hallF)return SP.hallF;if(k===K.TOWER&&SP.towerF)return SP.towerF;if(k===K.STADIUM&&SP.stadiumF)return SP.stadiumF;}if(k===K.AD)return SP.adtw[e>=5?1:0];if(k===K.THEME)return SP.theme[lv??subSel.theme]||SP.theme[0];if(k===K.HOSP)return SP.hosp[e];if(k===K.PORT)return SP.port2[e];if(k===K.AIRPORT)return SP.airport[e>=5?1:0];if(k===K.DEPOT)return SP.depot2[Math.max(3,e)];if(k===K.ELEV)return SP.elev;if(k===K.COAL&&e>=5)return SP.fusion;
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
@@ -3812,7 +3880,7 @@ function buildTools(){
   const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon((E>=5?SP.aveF:SP.ave)[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
-    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),port:()=>spriteIcon(civSprite(K.PORT,E)),depot:()=>spriteIcon(civSprite(K.DEPOT,E)),airport:()=>spriteIcon(SP.airport[E>=5?1:0],40),rail:()=>spriteIcon(SP.rail[Math.max(3,E)][5],30),hall:()=>spriteIcon(SP.hall,38),theme:()=>spriteIcon(SP.theme[0].icon,30),adtw:()=>spriteIcon(SP.adtw[E>=5?1:0],40),stadium:()=>spriteIcon(SP.stadium,40),tower:()=>spriteIcon(SP.tower,38),
+    wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),port:()=>spriteIcon(civSprite(K.PORT,E)),depot:()=>spriteIcon(civSprite(K.DEPOT,E)),airport:()=>spriteIcon(SP.airport[E>=5?1:0],40),rail:()=>spriteIcon(SP.rail[Math.max(3,E)][5],30),hall:()=>spriteIcon(E>=5?SP.hallF:SP.hall,38),theme:()=>spriteIcon(SP.theme[0].icon,30),adtw:()=>spriteIcon(SP.adtw[E>=5?1:0],40),stadium:()=>spriteIcon(E>=5?SP.stadiumF:SP.stadium,40),tower:()=>spriteIcon(E>=5?SP.towerF:SP.tower,38),
     deco:()=>spriteIcon(SP.deco[0]),land:()=>spriteIcon(SP.water[0][0],30),
     w0:()=>spriteIcon(SP.dolmen,40),w1:()=>spriteIcon(SP.mound,40),w2:()=>spriteIcon(SP.palace,40),w3:()=>spriteIcon(SP.station,40),w4:()=>spriteIcon(SP.elevIco,40)};
   const tg=document.createElement('div'),og=document.createElement('div');tg.className='tgrid';og.className='ogrid';
