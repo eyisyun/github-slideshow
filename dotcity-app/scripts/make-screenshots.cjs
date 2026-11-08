@@ -5,6 +5,8 @@ const out = path.join(__dirname, '..', 'store', 'screenshots');
 const scenes = [
   ['1-stone', 0, false], ['2-dynasty', 2, false], ['3-modern-night', 4, true], ['4-future', 5, false], ['5-shop', 1, false, true], ['6-airport', 4, false, false, true],
   ['7-themeparks', 4, false, false, 'parks'], ['8-themeparks-night', 4, true, false, 'parks'],
+  ['9-lantern-festival', 2, true, false, 'fest:lantern'], ['10-fireworks', 4, true, false, 'fest:firework'], ['11-cranes', 4, false, false, 'build'], ['12-decor', 4, false, false, 'decor'],
+  ['13-postcard', 4, true, false, 'postcard'],   // 13 is the postcard image itself (1080x1350), not a screen
 ];
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -52,6 +54,20 @@ const scenes = [
           trains = []; for (let k = 0; k < 400; k++) stepTrains(.1); boats = []; for (let k = 0; k < 300; k++) stepBoats(.3);
           planes.clear(); planes.set(idx(42, 18), { ph: 'land', u: -1.5, alt: 0, dir: 1, e: 4, t: 0 }); stepPlanes(.01);
         }
+        if (typeof feat === 'string' && feat.startsWith('fest:')) { W.ev = { c: 0, nf: 1e9, nd: 1e9, fest: { k: feat.slice(5), end: 60 }, dis: null }; festSrc = null; festFxs = []; }
+        if (feat === 'build') { // a town rebuilding after an earthquake: cranes swinging over a dozen sites, the recovery card showing progress
+          const ts = []; for (let i = 0; i < N * N; i++) if (isBld(i) && hash(i % N, i / N | 0, 5) < .16) { W.build[i] = 99999; W.te[i] = era; ts.push(i); }
+          const t12 = ts.slice(0, 12); for (const i of t12.slice(0, 3)) W.build[i] = 0; W.ev = { c: 0, nf: 1e9, nd: 1e9, fest: null, dis: { k: 'quake', ph: 'fix', tiles: t12, n: t12.length } };
+        }
+        if (feat === 'decor') { // three blocks turned into a plaza: fountain and flower beds, a statue, a clock tower with a pavilion and a playground
+          const deco = (L, x, y, r) => { clearTile(x, y); placeRaw(K.DECO, x, y); W.level[idx(x, y)] = L; W.vari[idx(x, y)] = r || 0; };
+          for (const [x, y, L, r] of [[33,33,0],[34,33,7],[35,33,0],[33,34,7],[34,34,8],[35,34,7],[33,35,0],[34,35,4,1],[35,35,0],
+            [30,34,9],[29,33,6,2],[31,33,0],[29,35,0],[31,35,6],[30,33,4],[30,35,4,2],[29,34,7],[31,34,7],
+            [34,30,10],[33,29,11],[35,31,12],[33,31,7],[35,29,7],[34,29,0],[34,31,0],[33,30,0],[35,30,0]]) deco(L, x, y, r);
+          for (let i = 0; i < N * N; i++) if (W.kind[i] >= K.RES && W.kind[i] <= K.IND && Math.hypot(i % N - 32, (i / N | 0) - 32) < 8) W.level[i] = Math.min(W.level[i], 2);   // low-rise round the plaza so it shows
+          W.labels[idx(34, 34)] = LANG === 'en' ? 'Town fountain' : '우리 동네 분수'; recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1);
+        }
+        if (feat === 'decor' || (typeof feat === 'string' && feat.startsWith('fest:'))) cam.s = 4; else if (typeof feat === 'string' && feat !== 'parks') cam.s = 3;
         cam.x = feat === true ? 330 : feat ? 0 : 0; cam.y = feat === true ? 500 : feat ? 31 * 16 + 30 : 32 * 16 + 20; if (feat === true) cam.s = 3; if (feat === 'parks') cam.s = 3.3; if (innerWidth > 700) cam.s = Math.round(cam.s * 1.8 * 10) / 10; // tablets show far more map: zoom in so the city fills the shot
         if (night) { dayMode = 'night'; W.tod = 22; paintDayBtn(); } setSpeed(0); document.querySelectorAll('.toast').forEach(t => t.remove());
         if (shop) { // the top-up screen with store-style prices (the real app shows the App Store's own prices)
@@ -60,8 +76,15 @@ const scenes = [
           window.DotAds = { show: () => new Promise(() => {}) }; openShop();
         }
       }, [era, night, shop, feat]);
-      await p.waitForTimeout(1500);
-      await p.screenshot({ path: path.join(out, `${dev}${lang === 'en' ? '-en' : ''}-${name}.png`) }); await p.context().close();
+      await p.waitForTimeout(feat && typeof feat === 'string' && feat.startsWith('fest:') ? 9000 : 1500);   // let lanterns rise and rockets burst
+      if (feat === 'fest:firework') { await p.evaluate(() => { const cols = ['#ff5f7a', '#ffd84a', '#5fe0ff', '#9aff6a', '#ffffff', '#c28bff'], lw = view.width / cam.s, lh = view.height / cam.s;   // a sky full of bursts over what is on screen
+          for (let b = 0; b < 9; b++) { const x = X0 + lw * (.12 + .76 * ((b * .37) % 1)), y = Y0 + lh * (.28 + .3 * ((b * .61) % 1)), c = cols[b % cols.length], d = (b % 3) * .12;
+            for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2, sp = 20 + (k % 4) * 4; parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .8, life: -d, max: 1.8, sz: 1, kind: 'fw', c, g: 14 }); } } });
+        await p.waitForTimeout(650); }
+      const file = path.join(out, `${dev}${lang === 'en' ? '-en' : ''}-${name}.png`);
+      if (feat === 'postcard') { const url = await p.evaluate(async () => { const bl = await makePostcard(); return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(bl); }); });
+        fs.writeFileSync(file, Buffer.from(url.split(',')[1], 'base64')); }
+      else await p.screenshot({ path: file }); await p.context().close();
       await p.close();
     }
   }
