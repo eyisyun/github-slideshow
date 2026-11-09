@@ -3225,35 +3225,70 @@ function xmasLights(c,lh){if(!xmasOn()||(W.ev&&W.ev.fest&&!W.ev.fest.done&&W.ev.
       if(nt>.15){c.globalCompositeOperation='lighter';c.globalAlpha=.25*nt;c.fillRect(px-1,py-1,3,3);c.globalCompositeOperation='source-over';}}
     if(i%9===0){c.globalAlpha=1;c.fillStyle='#2f6a3a';c.fillRect(x0-1,y0-4,3,3);c.fillStyle='#c0302a';c.fillRect(x0,y0-2,1,1);}}   // a wreath now and then
   c.globalAlpha=1;}
-// Santa's sleigh, facing right, two gallop frames: four reindeer in harness with bells (the leader's nose glowing red), a red sleigh with a
-// curled gold front and runners, Santa waving from his seat, and a sack with toys peeking out
+// Santa's sleigh, facing right, two gallop frames, drawn like a game character sheet: shaded volumes, rim light, fur trim, a face
+// with rosy cheeks and a curled moustache; four reindeer with white chests, many-tined antlers, harness and bells (the leader's
+// nose glows red); a lacquered sleigh with gold filigree and curled runners; a sack of toys.
 let sleighSp=null;
 function sleighSprites(){if(sleighSp)return sleighSp;
-  const one=fr=>{const pb=new PB(86,32),P=(x,y,c2)=>pb.put(x,y,c2),BR='#8a5a3a';
-    const deer=(x,y,lead,ph)=>{   // body, belly, neck, head, antlers, legs (galloping), tail, harness and bell
-      for(let k=0;k<9;k++)for(let j=0;j<4;j++){const e=((k-4)/4.6)**2+((j-1.5)/2.2)**2;if(e>1)continue;P(x+k,y+j,col(j>2?'#c9a070':BR,(j===0?.12:0)+(k>6?-.06:0)));}
-      for(let k=0;k<4;k++){P(x+8+(k>>1),y-1-k,col(BR,.05));P(x+9+(k>>1),y-1-k,col(BR,-.1));}                          // neck
-      for(let k=0;k<4;k++)for(let j=0;j<3;j++)P(x+10+k,y-6+j,col(BR,(j===0?.12:0)+(k===3?-.1:0)));P(x+12,y-6,col('#1a1210'));       // head, eye
-      P(x+14,y-5,lead?[col('#e02020'),col('#ff5a4a')]:col('#3a2418'));                                                    // nose
-      for(const[ax,ay]of[[10,-7],[10,-8],[9,-9],[11,-9],[9,-10],[12,-8],[12,-9],[13,-10],[11,-10]])P(x+ax,y+ay,col('#d8c09a',ay<-9?.1:0));   // antlers
-      const legs=ph?[[1,2],[2,3],[6,0],[7,1]]:[[0,0],[2,1],[6,2],[8,3]];for(const[lx,sw]of legs)for(let h=0;h<4;h++)P(x+lx+(ph?Math.round(h*(sw-1.5)*.25):0),y+4+h,col('#5a3a22',h===3?-.2:0));
-      P(x-1,y,col('#f2ede0'));P(x-1,y+1,col('#f2ede0'));                                                                  // tail
-      for(let j=0;j<4;j++)P(x+6,y+j,col('#c0302a',j===3?-.2:0));P(x+6,y+4,[col('#e0b030'),col('#ffe27a')]);};          // strap and bell
-    deer(52,14,false,fr);deer(66,10,true,1-fr);deer(48,18,false,1-fr);deer(62,14,false,fr);
-    for(let k=0;k<22;k++){P(30+k,11+Math.round(k*.05),col('#d8b070'));}for(let k=0;k<26;k++)P(30+k,13+Math.round(k*.12),col('#c9a060',-.1));   // reins
-    // the sleigh: body with a curled front, gold trim and runners
-    for(let y=0;y<9;y++)for(let x=0;x<20;x++){if(x>15&&y<x-15)continue;P(10+x,16+y,col('#c0302a',(y===0?.15:y>6?-.2:0)+(x<2?.1:0)+((x+y)%5===0?-.04:0)));}
-    for(let x=0;x<20;x++)P(10+x,16,col('#f2c040',.1));for(let x=2;x<18;x++)P(10+x,21,col('#f2c040',-.05));for(const[x,y]of[[30,15],[31,14],[32,14],[33,15],[32,16]])P(x,y,col('#f2c040'));   // trim and the front scroll
-    for(let x=0;x<26;x++)P(8+x,26+(x>22?-(x-22):0),col('#d0a030',x%4===0?-.15:0));for(const x of[12,20,28])P(x,25,col('#a07820'));P(34,22,col('#d0a030'));P(35,21,col('#d0a030'));   // runners
-    // Santa: hat with pompom, face, big beard, red suit with white trim, belt, waving arm
-    for(let y=0;y<7;y++)for(let x=0;x<6;x++)P(17+x,9+y,col('#d0302a',(x===0?.1:x===5?-.2:0)));for(let x=0;x<6;x++)P(17+x,13,col('#2a2a2a'));P(19,13,col('#f2c040'));   // body, belt
-    for(let y=0;y<3;y++)for(let x=0;x<4;x++)P(18+x,5+y,col('#f2c8a0',x===3?-.1:0));P(21,6,col('#1a1210'));                             // face
-    for(const[x,y]of[[17,7],[18,8],[19,8],[20,8],[21,8],[22,7],[18,9],[19,9],[20,9],[21,9],[19,10],[20,10]])P(x,y,col('#f6f6f2',y>8?-.08:0));   // beard
-    for(let x=0;x<6;x++)P(17+x,4,col('#f6f6f2'));for(let y=0;y<3;y++)for(let x=0;x<5-y;x++)P(17+x-y,1+y,col('#d0302a',-.05*y));P(13,2,col('#f6f6f2'));P(14,2,col('#f6f6f2'));   // hat, pompom
-    const arm=fr?[[23,9],[24,7],[25,5]]:[[23,9],[25,8],[26,7]];for(const[x,y]of arm){P(x,y,col('#d0302a'));P(x,y+1,col('#a02020'));}P(arm[2][0]+(fr?0:1),arm[2][1]-1,col('#f6f6f2'));   // waving
-    for(let y=0;y<7;y++)for(let x=0;x<7;x++){const e=((x-3)/3.6)**2+((y-3.5)/3.6)**2;if(e<=1)P(9+x,8+y,col('#8a6a44',(x>4?-.15:0)+(y<2?.1:0)));}   // the sack
-    P(10,7,col('#3a8a4a'));P(11,7,col('#3a8a4a'));P(11,6,col('#e0302a'));P(13,6,col('#a07040'));P(13,5,col('#a07040'));P(14,6,col('#a07040'));   // toys peeking out
-    return mk(pb,-30,-20,true,{lights:[[80,5]]});};
+  const one=fr=>{const W2=136,H2=56,pb=new PB(W2,H2),P=(x,y,c2)=>pb.put(Math.round(x),Math.round(y),c2);
+    const ell=(cx,cy,rx,ry,fn)=>{for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry;if(dx*dx+dy*dy<=1)P(x,y,fn(dx,dy,x,y));}};
+    const inPoly=(x,y,pts)=>{let ins=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)ins=!ins;}return ins;};
+    const poly=(pts,fn)=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const[x,y]of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+      for(let y=Math.floor(y0);y<=y1;y++)for(let x=Math.floor(x0);x<=x1;x++)if(inPoly(x+.5,y+.5,pts))P(x,y,fn(x,y,(x-x0)/(x1-x0+1),(y-y0)/(y1-y0+1)));};
+    const line=(x0,y0,x1,y1,w,fn)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let i=0;i<=n;i++){const u=i/n,x=x0+(x1-x0)*u,y=y0+(y1-y0)*u;for(let k=0;k<w;k++)P(x,y+k,fn(u,k));}};
+    // ---- reindeer ----
+    const deer=(x,y,lead,ph,far)=>{const s=far?-.22:0,BR='#8a5634',DK='#5a3420',LT='#c08a5a',CR='#f2e6d0';
+      const leg=(lx,ly,a1,a2)=>{const kx=lx+Math.sin(a1)*4,ky=ly+Math.cos(a1)*4,fx2=kx+Math.sin(a2)*4,fy=ky+Math.cos(a2)*4;
+        line(lx,ly,kx,ky,2,(u,k)=>col(k?DK:BR,s+(k?0:.05)));line(kx,ky,fx2,fy,1,()=>col(DK,s));P(fx2,fy+1,col('#2a1a10',s));P(fx2+1,fy+1,col('#2a1a10',s));};
+      const g=ph?[[.9,-.4],[.5,.2],[-.6,.5],[-1,.2]]:[[.3,.6],[-.1,.9],[-.2,-.6],[.4,-.9]];
+      leg(x+17,y+10,g[0][0],g[0][1]);leg(x+6,y+10,g[2][0],g[2][1]);                                                 // far legs
+      ell(x+12,y+7,10,5.2,(dx,dy)=>col(dy>.45&&dx>-.4?CR:BR,s+(dy<-.55?.18:dy<-.2?.07:dy>.3?-.12:0)+(dx<-.75?-.08:0)));   // body with a pale belly
+      ell(x+19.5,y+8,3,3.4,(dx,dy)=>col(CR,s+(dy<-.3?.08:-.04)));                                                     // white chest
+      P(x+1,y+4,col('#f6f6f2',s));P(x+1,y+5,col('#f6f6f2',s));P(x,y+5,col('#e8e8e2',s));                           // tail
+      leg(x+18,y+11,g[1][0],g[1][1]);leg(x+7,y+11,g[3][0],g[3][1]);                                                 // near legs
+      for(let k=0;k<7;k++){const u=k/6,cx=x+19+u*4,cy=y+4-u*6;ell(cx,cy,2.4,2.2,(dx,dy)=>col(dx>.3?CR:BR,s+(dx<-.3?.1:0)));}   // neck
+      ell(x+25,y-4,3.6,2.8,(dx,dy)=>col(BR,s+(dy<-.3?.15:dy>.4?-.1:0)));ell(x+28.5,y-3,2.2,1.8,(dx,dy)=>col(LT,s+(dy<0?.08:-.06)));   // head, muzzle
+      P(x+30.5,y-3.5,lead?[col('#e01818'),col('#ff4a3a')]:col('#2a1810',s));if(lead)P(x+30.5,y-4.5,[col('#ff8a7a'),col('#ffd0c0')]);   // nose
+      P(x+25,y-5,col('#1a1010'));P(x+25.5,y-5.5,col('#ffffff'));P(x+22.5,y-6.5,col(BR,s+.1));P(x+21.5,y-7,col(DK,s));                  // eye with a glint, ear
+      for(const[ox2,sp]of[[0,1],[2.5,.7]]){const bx=x+23+ox2,by=y-7;   // antlers: a main beam with tines
+        line(bx,by,bx-2*sp,by-5,1,()=>col('#d8c09a',s+.05));line(bx-2*sp,by-5,bx-4*sp,by-9,1,()=>col('#e8d4b0',s+.1));
+        line(bx-1*sp,by-3,bx+1.5*sp,by-6,1,()=>col('#d8c09a',s));line(bx-3*sp,by-7,bx-1*sp,by-10,1,()=>col('#e8d4b0',s+.1));line(bx-3.5*sp,by-8,bx-6*sp,by-10,1,()=>col('#d8c09a',s));}
+      for(let k=-2;k<=2;k++)P(x+20+k*.4,y+1+k,col('#c0262a',s+(k<0?.1:-.1)));for(let k=0;k<9;k++)P(x+11+k*.1,y+2+k*.9,col('#a02024',s));   // collar, belly strap
+      for(const[bx,by]of[[x+21,y+2],[x+20,y+4]]){P(bx,by,[col('#e8b830'),col('#ffe27a')]);P(bx+1,by,col('#b08020'));P(bx,by+1,col('#a07018'));}};   // bells
+    deer(70,22,false,1-fr,true);deer(102,19,true,fr,true);deer(66,26,false,fr,false);deer(98,23,true,1-fr,false);
+    // ---- reins ----
+    for(const[tx,ty]of[[84,25],[116,22]]){line(42,26,tx,ty,1,()=>col('#e0c080'));}
+    // ---- the sack (behind Santa) ----
+    ell(14,26,9,9,(dx,dy,x,y)=>col('#9a7448',(dx<-.4?.12:dx>.45?-.22:0)+(dy<-.5?.1:0)+((x*3+y*2)%7===0?-.08:0)));
+    pb.box({cx:12,cy:18,hw:3.4,h:4,L:()=>col('#3a8a4a'),R:()=>col('#2a6a3a'),T:(u,v)=>Math.abs(u-.5)<.15||Math.abs(v-.5)<.15?col('#e03030'):col('#4aa05a')});   // a present peeking out
+    ell(19,16,2.6,2.6,(dx,dy)=>col('#b07840',dy<0?.1:-.05));P(17,14,col('#8a5a30'));P(21,14,col('#8a5a30'));P(19,16,col('#1a1010'));P(18,15,col('#1a1010'));P(20,15,col('#1a1010'));   // a teddy
+    for(let k=0;k<6;k++){P(8,14+k,col(k%2?'#ffffff':'#e02020'));}P(9,13,col('#e02020'));P(10,13,col('#ffffff'));P(10,14,col('#e02020'));   // a candy cane
+    for(let x=8;x<=20;x++)P(x,19+Math.round(Math.abs(x-14)*.15),col('#6a4a28'));                                   // the rope tie
+    // ---- Santa ----
+    const RED='#d42a2a',RD='#9a1a1a',FUR='#f6f4ee',FS='#d8d4cc',SKIN='#f4c8a0';
+    poly([[24,22],[38,22],[40,36],[22,36]],(x,y,u,v)=>col(RED,(u<.18?.1:u>.82?-.22:0)+(v<.15?.08:0)));               // coat
+    for(let y=22;y<36;y++){P(31,y,col(FUR));P(32,y,col(FS));}                                                         // fur placket
+    for(let x=24;x<=39;x++){P(x,30,col('#1e1e22'));P(x,31,col('#2e2e34'));}for(const[x,y]of[[30,29],[31,29],[32,29],[33,29],[30,32],[33,32],[30,30],[33,30],[30,31],[33,31]])P(x,y,col('#f2c040',y===29?.15:0));   // belt and buckle
+    const arm=fr?[[37,25],[40,21],[42,17]]:[[37,25],[41,23],[44,21]];line(37,24,arm[1][0],arm[1][1],3,(u,k)=>col(RED,k===0?.08:k===2?-.2:0));line(arm[1][0],arm[1][1],arm[2][0],arm[2][1],3,(u,k)=>col(RED,k===0?.08:-.1));   // waving arm
+    ell(arm[2][0]+.5,arm[2][1]-1,2,2,(dx,dy)=>col('#1e1e22',dy<0?.15:0));for(let k=0;k<3;k++)P(arm[2][0]-1+k,arm[2][1]+1,col(FUR));   // glove, cuff
+    line(25,25,40,27,2,(u,k)=>col(RED,k?-.2:.02));ell(41,27,1.6,1.6,()=>col('#1e1e22'));                               // the other arm on the reins
+    ell(31,15,6,6,(dx,dy)=>col(SKIN,(dx>.5?-.12:0)+(dy<-.4?.06:0)));                                                // face
+    ell(28,16.5,1.4,1,()=>col('#f08a8a'));ell(34,16.5,1.4,1,()=>col('#f08a8a'));                                     // rosy cheeks
+    P(29,13,col('#2a1a14'));P(33,13,col('#2a1a14'));P(29,12.6,col('#ffffff'));P(33,12.6,col('#ffffff'));               // eyes
+    for(const[x,y]of[[28,11],[29,11],[33,11],[34,11]])P(x,y,col(FUR));                                               // eyebrows
+    ell(31,23,6.4,6,(dx,dy)=>col(FUR,(dx>.4?-.12:0)+(dy>.5?-.08:0)+(((dx*5|0)+(dy*7|0))%2?-.04:0)));                // the big beard
+    for(const[x,y]of[[27,18],[28,17],[29,17],[30,18],[32,18],[33,17],[34,17],[35,18],[26,17],[36,17]])P(x,y,col(FUR,.02));P(31,17,col('#e8a080'));P(31,16,col('#e8a080'));   // moustache, nose
+    poly([[24,9],[38,9],[34,4],[28,1],[21,4]],(x,y,u)=>col(RED,(u<.3?.08:u>.75?-.2:0)));                            // hat flopping back
+    for(let x=23;x<=39;x++){P(x,9,col(FUR,.03));P(x,10,col(FS));}ell(20,5,2.4,2.4,(dx,dy)=>col(FUR,dy<0?.05:-.1));    // fur band, pompom
+    // ---- the sleigh ----
+    const body=[[4,28],[8,24],[12,30],[46,30],[52,24],[56,20],[59,22],[57,27],[52,36],[48,42],[8,42],[4,36]];
+    poly(body,(x,y,u,v)=>col('#c41e24',(v<.12?.14:v<.3?.04:v>.8?-.24:v>.6?-.1:0)+(u<.06?.08:0)+(Math.abs(y-35)<.6?.12:0)));   // red lacquer with a highlight band
+    for(let x=10;x<=46;x++)P(x,30,col('#f2c040',.1));for(let x=8;x<=48;x++)P(x,41,col('#c89a20'));                 // gold rim
+    for(let k=0;k<5;k++){const cx=16+k*7;for(let a=0;a<12;a++){const r2=a/12*6.283;P(cx+Math.cos(r2)*2.2,36+Math.sin(r2)*1.6,col('#f2c040',Math.sin(r2)<0?.12:-.1));}P(cx,36,col('#ffe27a'));}   // filigree rosettes
+    for(const[x,y]of[[53,22],[55,20],[57,20],[58,22],[57,24],[55,24]])P(x,y,col('#f2c040'));P(56,22,col('#ffe27a'));                  // the scroll at the front
+    for(const x of[12,24,36,46])line(x,42,x-1,46,2,()=>col('#b08818'));                                              // struts
+    for(let x=2;x<=58;x++){P(x,47,col('#e0b030',x%5===0?.15:0));P(x,48,col('#a07818'));}for(const[x,y]of[[59,46],[61,44],[62,42],[61,40],[59,40],[58,41]])P(x,y,col('#e0b030'));   // runners curling up
+    return mk(pb,-32,-30,true,{lights:[[129,20]]});};
   const r=[one(0),one(1)];sleighSp={r,l:r.map(flipped)};return sleighSp;}
 // Santa's sleigh: crosses the night sky now and then; tap it and a present floats down on a little parachute
 let santa=null,santaNext=0,santaGifts=[];
@@ -3263,13 +3298,13 @@ function santaFx(c){const dt=Math.min(.1,frameDt);
   if(xmasOn()&&!santa&&nightF>.3&&now>santaNext&&SPEEDS[speed]&&!document.body.classList.contains('photo')){if(santaNext)santaSpawn();santaNext=now+70000+Math.random()*60000;}
   if(santa){const s=santa;s.x+=s.vx*dt;s.y+=Math.sin((now-s.t0)/400)*.15;if((s.d>0&&s.x>s.end)||(s.d<0&&s.x<s.end))santa=null;else{
       const x=Math.round(s.x-X0),y=Math.round(s.y-Y0),d=s.d,bob=Math.round(Math.sin(now/180)*1);
-      if(Math.random()<dt*25)parts.push({x:s.x-d*24,y:s.y+2,vx:-d*6+(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:0,max:1.2,sz:1,kind:'fw',c:Math.random()<.5?'#ffe27a':'#ffffff',g:4});   // a trail of sparkles
+      if(Math.random()<dt*25)parts.push({x:s.x-d*34,y:s.y+6,vx:-d*6+(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:0,max:1.2,sz:1,kind:'fw',c:Math.random()<.5?'#ffe27a':'#ffffff',g:4});   // a trail of sparkles
       const ssp=sleighSprites()[d>0?'r':'l'][((now/140)|0)%2];c.drawImage(ssp.c,x+ssp.ox,y+bob+ssp.oy);   // lit by its own glow: never dimmed by the night
-      if(nightF>.3){c.globalCompositeOperation='lighter';c.globalAlpha=.45;c.fillStyle='#ff4a4a';c.fillRect(x+d*50-1,y-16+bob,4,3);c.globalAlpha=1;c.globalCompositeOperation='source-over';}}}
+      if(nightF>.3){c.globalCompositeOperation='lighter';c.globalAlpha=.45;c.fillStyle='#ff4a4a';c.fillRect(x+d*97-1,y-11+bob,4,3);c.globalAlpha=1;c.globalCompositeOperation='source-over';}}}
   for(let n=santaGifts.length-1;n>=0;n--){const g=santaGifts[n];g.t+=dt;g.y+=dt*16;g.x+=Math.sin(g.t*2)*.3;if(g.t>g.m){santaGifts.splice(n,1);continue;}
     const x=Math.round(g.x-X0),y=Math.round(g.y-Y0);c.fillStyle='#f2ede0';c.beginPath();c.ellipse(x+.5,y-6,5,3,0,Math.PI,0);c.fill();c.strokeStyle='#c9c3b5';c.beginPath();c.moveTo(x-4,y-6);c.lineTo(x,y);c.lineTo(x+5,y-6);c.stroke();   // parachute
     c.fillStyle='#c0302a';c.fillRect(x-1,y,4,3);c.fillStyle='#ffd84a';c.fillRect(x,y,1,3);c.fillRect(x-1,y+1,4,1);}}
-function santaTap(e){const s=santa;if(!s||s.hit)return false;const[wx,wy]=toWorld(e.clientX,e.clientY);if(Math.abs(wx-(s.x+s.d*12))>40||Math.abs(wy-(s.y-6))>16)return false;
+function santaTap(e){const s=santa;if(!s||s.hit)return false;const[wx,wy]=toWorld(e.clientX,e.clientY);if(Math.abs(wx-(s.x+s.d*36))>70||Math.abs(wy-(s.y-4))>26)return false;
   s.hit=true;santaGifts.push({x:s.x,y:s.y+6,t:0,m:3});const f=funState();f.santa=(f.santa|0)+1;
   if(f.santa%2){funBoost();toast(L2('🎅 산타가 선물을 떨어뜨렸어요! 2분 동안 마을이 50% 더 빨리 자라요.','🎅 Santa dropped a present! The town grows 50% faster for 2 minutes.'),'good');}
   else{const g=funGift();W.funds+=g;toast(L2(`🎅 산타가 선물을 떨어뜨렸어요! +${money(g)}`,`🎅 Santa dropped a present! +${money(g)}`),'good');}
