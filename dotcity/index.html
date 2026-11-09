@@ -400,7 +400,7 @@ body.photo>*:not(#view):not(#vig):not(#photobar):not(#shotView){display:none!imp
     <h3 class="msub">시대 골라 시작 <small>그 시대 마을이 지어진 채로 시작해요</small></h3>
     <div class="eras" id="mEras"><button class="btn" data-era="0" data-warn="한 번 더">석기</button><button class="btn" data-era="1" data-warn="한 번 더">청동기</button><button class="btn" data-era="2" data-warn="한 번 더">왕조</button><button class="btn" data-era="3" data-warn="한 번 더">근대</button><button class="btn" data-era="4" data-warn="한 번 더">현대</button><button class="btn" data-era="5" data-warn="한 번 더">미래</button><button class="btn devonly" data-test="police" data-warn="한 번 더">🚓 경찰 출동 테스트</button><button class="btn devonly" data-test="med" data-warn="한 번 더">🚑 구급차 출동 테스트</button><button class="btn devonly" data-test="fire" data-warn="한 번 더">🔥 화재 출동 테스트</button><button class="btn devonly" data-test="4" data-warn="한 번 더">✈ 공항 테스트</button><button class="btn devonly" data-test="5" data-warn="한 번 더">✈ 우주공항 테스트</button><button class="btn devonly" data-test="ad4" data-warn="한 번 더">📺 광고판 빌딩 테스트</button><button class="btn devonly" data-test="ad5" data-warn="한 번 더">📺 홀로그램 광고 타워 테스트</button></div>
     <h3 class="msub devonly">재미 요소 미리보기 <small>테스트 페이지에만 보여요</small></h3>
-    <div class="eras devonly" id="mFun"><button class="btn" data-fun="disc">다음 발견</button><button class="btn" data-fun="quest">부탁 완료</button><button class="btn" data-fun="rare">희귀 건물</button><button class="btn" data-fun="visit">손님 오기</button><button class="btn" data-fun="whale">고래</button><button class="btn" data-fun="squid">대왕오징어</button><button class="btn" data-fun="shadow">바다 괴물 그림자</button><button class="btn" data-fun="scout">외계 비행선</button><button class="btn" data-fun="xmas">크리스마스 켜기/끄기</button><button class="btn" data-fun="santa">산타 썰매</button></div>
+    <div class="eras devonly" id="mFun"><button class="btn" data-fun="disc">다음 발견</button><button class="btn" data-fun="quest">부탁 완료</button><button class="btn" data-fun="rare">희귀 건물</button><button class="btn" data-fun="visit">손님 오기</button><button class="btn" data-fun="whale">고래</button><button class="btn" data-fun="squid">대왕오징어</button><button class="btn" data-fun="shadow">바다 괴물 그림자</button><button class="btn" data-fun="scout">외계 비행선</button><button class="btn" data-fun="xmas">크리스마스 켜기/끄기</button></div>
     <h3 class="msub devonly">축제·재난 미리보기 <small>바로 열어 볼 수 있어요 · 보상 없음</small></h3>
     <div class="eras devonly" id="mFest"><button class="btn" data-fest="lantern">연등회</button><button class="btn" data-fest="expo">풍선 축제</button><button class="btn" data-fest="firework">불꽃 축제</button><button class="btn" data-fest="kite">설날 연날리기</button><button class="btn" data-fest="xmas">크리스마스</button><button class="btn" data-dis="quake">지진</button><button class="btn" data-dis="typhoon">태풍</button></div>
     <h3 class="msub">언어 · Language</h3>
@@ -3151,7 +3151,7 @@ function makeRare(i,quiet){const w=W,k=w.kind[i];if(k<K.RES||k>K.IND||!w.level[i
 function rareRoll(i){if(W.level[i]>=2&&Math.random()<.01)makeRare(i);}
 // the leader's request: a small goal of a few minutes, then the next one
 function qValue(q){const S=W.st;if(q.t==='R')return lvAtLeast(S,K.RES,1);if(q.t==='C')return lvAtLeast(S,K.COM,1);if(q.t==='I')return lvAtLeast(S,K.IND,1);
-  if(q.t==='pop')return S.pop;if(q.t==='santa')return funState().santa|0;if(q.t==='fac')return cntOf(S,T(q.tool).kind);if(q.t==='tap')return funState().taps|0;
+  if(q.t==='pop')return S.pop;if(q.t==='fac')return cntOf(S,T(q.tool).kind);if(q.t==='tap')return funState().taps|0;
   if(q.t==='disc'){let n=0;for(let i=0;i<N*N;i++)if(W.kind[i]===K.DECO&&W.level[i]===q.L)n++;return n;}return 0;}
 function qMake(){const f=funState(),S=W.st,e=W.era,opts=[],r=n=>n+((Math.random()*3)|0);
   const zone=(t,id)=>({t,tool:id,n:r(3+e*2),txt:`${tn(T(id))} ${'{n}'}곳 더 늘리기`,en:`Grow {n} more ${tr(tn(T(id)))}`});
@@ -3162,7 +3162,7 @@ function qMake(){const f=funState(),S=W.st,e=W.era,opts=[],r=n=>n+((Math.random(
   const dl=DISC.filter(d=>discHas(d.k)&&d.e<=e);if(dl.length){const d=dl[(Math.random()*dl.length)|0];opts.push({t:'disc',tool:'disc',L:d.L,sel:DISC.indexOf(d),n:1,txt:`${d.n} 하나 짓기`,en:`Build a ${tr(d.n)}`});}
   if(f.qn>=2)opts.push({t:'tap',n:1,txt:'마을에 온 손님 맞이하기 (말풍선 누르기)',en:'Greet a visitor (tap their bubble)'});
   if(xmasOn()&&Math.random()<.6){opts.length=0;for(const[L,n]of[[25,'크리스마스트리'],[26,'눈사람'],[27,'선물 더미']])opts.push({t:'disc',tool:'deco',L,n:1,txt:`🎄 ${n} 하나 놓기`,en:`🎄 Put up a ${tr(n)}`});
-    opts.push({t:'santa',n:1,txt:'🎅 밤하늘의 산타 썰매 누르기',en:'🎅 Tap Santa\u2019s sleigh in the night sky'});}
+}
   const pick=opts.filter(o=>o.t!==(f.q&&f.q.t)||o.t==='disc');const q=pick[(Math.random()*pick.length)|0];q.base=qValue(q);q.rw=(f.qn|0)%2?'gift':'boost';f.q=q;}
 function qDone(){const f=funState(),q=f.q;f.qn=(f.qn|0)+1;f.q=null;f.qWait=evState().c+4;
   if(q.rw==='gift'){const g=funGift();W.funds+=g;toast(L2(`📜 ${GIVER[W.era]}의 부탁을 들어줬어요! 답례 +${money(g)}`,`📜 Request done for the ${tr(GIVER[W.era])}! A thank-you gift +${money(g)}`),'good');}
@@ -3180,7 +3180,7 @@ function visitTap(){const f=funState(),v=f.vis;if(!v)return;const V=VISIT.find(o
     if(i<0||!makeRare(i,true)){const g=funGift();W.funds+=g;toast(`${V.ic} ${L2(V.msg,V.en)} +${money(g)}`,'good');}
     else{const r=f.rare[i];toast(`${V.ic} `+L2(`${V.msg} 그 집이 희귀 건물 ${RARE[r.e][r.z]}(으)로 바뀌었어요! (도감 ${bookN()}/${BOOK_ALL})`,`${V.en} A house became the rare ${tr(RARE[r.e][r.z])}! (book ${bookN()}/${BOOK_ALL})`),'good');}}
   sfx('win');save();updateHud(true);}
-function funTap(e){if(santaTap(e))return true;const v=W.fun&&W.fun.vis;if(!v)return false;const[wx,wy]=toWorld(e.clientX,e.clientY),x=v.i%N,y=v.i/N|0,bx=(x-y)*16,by=(x+y)*8+objTop(v.i)-14;
+function funTap(e){const v=W.fun&&W.fun.vis;if(!v)return false;const[wx,wy]=toWorld(e.clientX,e.clientY),x=v.i%N,y=v.i/N|0,bx=(x-y)*16,by=(x+y)*8+objTop(v.i)-14;
   if(Math.hypot(wx-bx,wy-by)>13)return false;visitTap();return true;}
 let funAcc=0;
 function funTick(live){if(!live)return;const ev=evState(),f=funState();if((funAcc+=1)<20)return;funAcc=0;   // about three times a second
@@ -3214,7 +3214,7 @@ function openBook(){const f=funState();
   $('#book').hidden=false;}
 /* ---------------- Christmas: all of December by the phone's date ----------------
    Snow comes often, every house gets a string of lights (glowing at night, in every age), four limited decorations appear in
-   the decorate tool, Santa's sleigh crosses the night sky (tap it for a present), and the leader asks for Christmas things. */
+   the decorate tool, and the leader asks for Christmas things. */
 let xmasTest=false;
 const xmasOn=()=>xmasTest||new Date().getMonth()===11;
 for(const[L,n,c,extra]of[[25,'크리스마스트리',3000,{prem:1,lv:[7,.16]}],[26,'눈사람',120,{lv:[3,.05]}],[27,'선물 더미',200,{lv:[3,.05]}],[28,'루돌프 썰매',600,{lv:[5,.1]}]])DECO[L]={n,c,xmas:1,...extra};
@@ -3225,94 +3225,10 @@ function xmasLights(c,lh){if(!xmasOn()||(W.ev&&W.ev.fest&&!W.ev.fest.done&&W.ev.
       if(nt>.15){c.globalCompositeOperation='lighter';c.globalAlpha=.25*nt;c.fillRect(px-1,py-1,3,3);c.globalCompositeOperation='source-over';}}
     if(i%9===0){c.globalAlpha=1;c.fillStyle='#2f6a3a';c.fillRect(x0-1,y0-4,3,3);c.fillStyle='#c0302a';c.fillRect(x0,y0-2,1,1);}}   // a wreath now and then
   c.globalAlpha=1;}
-// Santa's sleigh, facing right, two gallop frames, drawn like a game character sheet: shaded volumes, rim light, fur trim, a face
-// with rosy cheeks and a curled moustache; four reindeer with white chests, many-tined antlers, harness and bells (the leader's
-// nose glows red); a lacquered sleigh with gold filigree and curled runners; a sack of toys.
-let sleighSp=null;
-function sleighSprites(){if(sleighSp)return sleighSp;
-  const one=fr=>{const W2=136,H2=56,pb=new PB(W2,H2),P=(x,y,c2)=>pb.put(Math.round(x),Math.round(y),c2);
-    const ell=(cx,cy,rx,ry,fn)=>{for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry;if(dx*dx+dy*dy<=1)P(x,y,fn(dx,dy,x,y));}};
-    const inPoly=(x,y,pts)=>{let ins=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)ins=!ins;}return ins;};
-    const poly=(pts,fn)=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const[x,y]of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
-      for(let y=Math.floor(y0);y<=y1;y++)for(let x=Math.floor(x0);x<=x1;x++)if(inPoly(x+.5,y+.5,pts))P(x,y,fn(x,y,(x-x0)/(x1-x0+1),(y-y0)/(y1-y0+1)));};
-    const line=(x0,y0,x1,y1,w,fn)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let i=0;i<=n;i++){const u=i/n,x=x0+(x1-x0)*u,y=y0+(y1-y0)*u;for(let k=0;k<w;k++)P(x,y+k,fn(u,k));}};
-    // ---- reindeer ----
-    const deer=(x,y,lead,ph,far)=>{const s=far?-.22:0,BR='#8a5634',DK='#5a3420',LT='#c08a5a',CR='#f2e6d0';
-      const leg=(lx,ly,a1,a2)=>{const kx=lx+Math.sin(a1)*4,ky=ly+Math.cos(a1)*4,fx2=kx+Math.sin(a2)*4,fy=ky+Math.cos(a2)*4;
-        line(lx,ly,kx,ky,2,(u,k)=>col(k?DK:BR,s+(k?0:.05)));line(kx,ky,fx2,fy,1,()=>col(DK,s));P(fx2,fy+1,col('#2a1a10',s));P(fx2+1,fy+1,col('#2a1a10',s));};
-      const g=ph?[[.9,-.4],[.5,.2],[-.6,.5],[-1,.2]]:[[.3,.6],[-.1,.9],[-.2,-.6],[.4,-.9]];
-      leg(x+17,y+10,g[0][0],g[0][1]);leg(x+6,y+10,g[2][0],g[2][1]);                                                 // far legs
-      ell(x+12,y+7,10,5.2,(dx,dy)=>col(dy>.45&&dx>-.4?CR:BR,s+(dy<-.55?.18:dy<-.2?.07:dy>.3?-.12:0)+(dx<-.75?-.08:0)));   // body with a pale belly
-      ell(x+19.5,y+8,3,3.4,(dx,dy)=>col(CR,s+(dy<-.3?.08:-.04)));                                                     // white chest
-      P(x+1,y+4,col('#f6f6f2',s));P(x+1,y+5,col('#f6f6f2',s));P(x,y+5,col('#e8e8e2',s));                           // tail
-      leg(x+18,y+11,g[1][0],g[1][1]);leg(x+7,y+11,g[3][0],g[3][1]);                                                 // near legs
-      for(let k=0;k<7;k++){const u=k/6,cx=x+19+u*4,cy=y+4-u*6;ell(cx,cy,2.4,2.2,(dx,dy)=>col(dx>.3?CR:BR,s+(dx<-.3?.1:0)));}   // neck
-      ell(x+25,y-4,3.6,2.8,(dx,dy)=>col(BR,s+(dy<-.3?.15:dy>.4?-.1:0)));ell(x+28.5,y-3,2.2,1.8,(dx,dy)=>col(LT,s+(dy<0?.08:-.06)));   // head, muzzle
-      P(x+30.5,y-3.5,lead?[col('#e01818'),col('#ff4a3a')]:col('#2a1810',s));if(lead)P(x+30.5,y-4.5,[col('#ff8a7a'),col('#ffd0c0')]);   // nose
-      P(x+25,y-5,col('#1a1010'));P(x+25.5,y-5.5,col('#ffffff'));P(x+22.5,y-6.5,col(BR,s+.1));P(x+21.5,y-7,col(DK,s));                  // eye with a glint, ear
-      for(const[ox2,sp]of[[0,1],[2.5,.7]]){const bx=x+23+ox2,by=y-7;   // antlers: a main beam with tines
-        line(bx,by,bx-2*sp,by-5,1,()=>col('#d8c09a',s+.05));line(bx-2*sp,by-5,bx-4*sp,by-9,1,()=>col('#e8d4b0',s+.1));
-        line(bx-1*sp,by-3,bx+1.5*sp,by-6,1,()=>col('#d8c09a',s));line(bx-3*sp,by-7,bx-1*sp,by-10,1,()=>col('#e8d4b0',s+.1));line(bx-3.5*sp,by-8,bx-6*sp,by-10,1,()=>col('#d8c09a',s));}
-      for(let k=-2;k<=2;k++)P(x+20+k*.4,y+1+k,col('#c0262a',s+(k<0?.1:-.1)));for(let k=0;k<9;k++)P(x+11+k*.1,y+2+k*.9,col('#a02024',s));   // collar, belly strap
-      for(const[bx,by]of[[x+21,y+2],[x+20,y+4]]){P(bx,by,[col('#e8b830'),col('#ffe27a')]);P(bx+1,by,col('#b08020'));P(bx,by+1,col('#a07018'));}};   // bells
-    deer(70,22,false,1-fr,true);deer(102,19,true,fr,true);deer(66,26,false,fr,false);deer(98,23,true,1-fr,false);
-    // ---- reins ----
-    for(const[tx,ty]of[[84,25],[116,22]]){line(42,26,tx,ty,1,()=>col('#e0c080'));}
-    // ---- the sack (behind Santa) ----
-    ell(14,26,9,9,(dx,dy,x,y)=>col('#9a7448',(dx<-.4?.12:dx>.45?-.22:0)+(dy<-.5?.1:0)+((x*3+y*2)%7===0?-.08:0)));
-    pb.box({cx:12,cy:18,hw:3.4,h:4,L:()=>col('#3a8a4a'),R:()=>col('#2a6a3a'),T:(u,v)=>Math.abs(u-.5)<.15||Math.abs(v-.5)<.15?col('#e03030'):col('#4aa05a')});   // a present peeking out
-    ell(19,16,2.6,2.6,(dx,dy)=>col('#b07840',dy<0?.1:-.05));P(17,14,col('#8a5a30'));P(21,14,col('#8a5a30'));P(19,16,col('#1a1010'));P(18,15,col('#1a1010'));P(20,15,col('#1a1010'));   // a teddy
-    for(let k=0;k<6;k++){P(8,14+k,col(k%2?'#ffffff':'#e02020'));}P(9,13,col('#e02020'));P(10,13,col('#ffffff'));P(10,14,col('#e02020'));   // a candy cane
-    for(let x=8;x<=20;x++)P(x,19+Math.round(Math.abs(x-14)*.15),col('#6a4a28'));                                   // the rope tie
-    // ---- Santa ----
-    const RED='#d42a2a',RD='#9a1a1a',FUR='#f6f4ee',FS='#d8d4cc',SKIN='#f4c8a0';
-    poly([[24,22],[38,22],[40,36],[22,36]],(x,y,u,v)=>col(RED,(u<.18?.1:u>.82?-.22:0)+(v<.15?.08:0)));               // coat
-    for(let y=22;y<36;y++){P(31,y,col(FUR));P(32,y,col(FS));}                                                         // fur placket
-    for(let x=24;x<=39;x++){P(x,30,col('#1e1e22'));P(x,31,col('#2e2e34'));}for(const[x,y]of[[30,29],[31,29],[32,29],[33,29],[30,32],[33,32],[30,30],[33,30],[30,31],[33,31]])P(x,y,col('#f2c040',y===29?.15:0));   // belt and buckle
-    const arm=fr?[[37,25],[40,21],[42,17]]:[[37,25],[41,23],[44,21]];line(37,24,arm[1][0],arm[1][1],3,(u,k)=>col(RED,k===0?.08:k===2?-.2:0));line(arm[1][0],arm[1][1],arm[2][0],arm[2][1],3,(u,k)=>col(RED,k===0?.08:-.1));   // waving arm
-    ell(arm[2][0]+.5,arm[2][1]-1,2,2,(dx,dy)=>col('#1e1e22',dy<0?.15:0));for(let k=0;k<3;k++)P(arm[2][0]-1+k,arm[2][1]+1,col(FUR));   // glove, cuff
-    line(25,25,40,27,2,(u,k)=>col(RED,k?-.2:.02));ell(41,27,1.6,1.6,()=>col('#1e1e22'));                               // the other arm on the reins
-    ell(31,15,6,6,(dx,dy)=>col(SKIN,(dx>.5?-.12:0)+(dy<-.4?.06:0)));                                                // face
-    ell(28,16.5,1.4,1,()=>col('#f08a8a'));ell(34,16.5,1.4,1,()=>col('#f08a8a'));                                     // rosy cheeks
-    P(29,13,col('#2a1a14'));P(33,13,col('#2a1a14'));P(29,12.6,col('#ffffff'));P(33,12.6,col('#ffffff'));               // eyes
-    for(const[x,y]of[[28,11],[29,11],[33,11],[34,11]])P(x,y,col(FUR));                                               // eyebrows
-    ell(31,23,6.4,6,(dx,dy)=>col(FUR,(dx>.4?-.12:0)+(dy>.5?-.08:0)+(((dx*5|0)+(dy*7|0))%2?-.04:0)));                // the big beard
-    for(const[x,y]of[[27,18],[28,17],[29,17],[30,18],[32,18],[33,17],[34,17],[35,18],[26,17],[36,17]])P(x,y,col(FUR,.02));P(31,17,col('#e8a080'));P(31,16,col('#e8a080'));   // moustache, nose
-    poly([[24,9],[38,9],[34,4],[28,1],[21,4]],(x,y,u)=>col(RED,(u<.3?.08:u>.75?-.2:0)));                            // hat flopping back
-    for(let x=23;x<=39;x++){P(x,9,col(FUR,.03));P(x,10,col(FS));}ell(20,5,2.4,2.4,(dx,dy)=>col(FUR,dy<0?.05:-.1));    // fur band, pompom
-    // ---- the sleigh ----
-    const body=[[4,28],[8,24],[12,30],[46,30],[52,24],[56,20],[59,22],[57,27],[52,36],[48,42],[8,42],[4,36]];
-    poly(body,(x,y,u,v)=>col('#c41e24',(v<.12?.14:v<.3?.04:v>.8?-.24:v>.6?-.1:0)+(u<.06?.08:0)+(Math.abs(y-35)<.6?.12:0)));   // red lacquer with a highlight band
-    for(let x=10;x<=46;x++)P(x,30,col('#f2c040',.1));for(let x=8;x<=48;x++)P(x,41,col('#c89a20'));                 // gold rim
-    for(let k=0;k<5;k++){const cx=16+k*7;for(let a=0;a<12;a++){const r2=a/12*6.283;P(cx+Math.cos(r2)*2.2,36+Math.sin(r2)*1.6,col('#f2c040',Math.sin(r2)<0?.12:-.1));}P(cx,36,col('#ffe27a'));}   // filigree rosettes
-    for(const[x,y]of[[53,22],[55,20],[57,20],[58,22],[57,24],[55,24]])P(x,y,col('#f2c040'));P(56,22,col('#ffe27a'));                  // the scroll at the front
-    for(const x of[12,24,36,46])line(x,42,x-1,46,2,()=>col('#b08818'));                                              // struts
-    for(let x=2;x<=58;x++){P(x,47,col('#e0b030',x%5===0?.15:0));P(x,48,col('#a07818'));}for(const[x,y]of[[59,46],[61,44],[62,42],[61,40],[59,40],[58,41]])P(x,y,col('#e0b030'));   // runners curling up
-    return mk(pb,-32,-30,true,{lights:[[129,20]]});};
-  const r=[one(0),one(1)];sleighSp={r,l:r.map(flipped)};return sleighSp;}
-// Santa's sleigh: crosses the night sky now and then; tap it and a present floats down on a little parachute
-let santa=null,santaNext=0,santaGifts=[];
-function santaSpawn(){const lw=view.width/cam.s,lh=view.height/cam.s,d=Math.random()<.5?1:-1;
-  santa={x:cam.x-d*(lw/2+40),y:cam.y-lh*(.02+Math.random()*.1),vx:d*42,d,t0:now,last:now,end:cam.x+d*(lw/2+60),hit:false};}
-function santaFx(c){const dt=Math.min(.1,frameDt);
-  if(xmasOn()&&!santa&&nightF>.3&&now>santaNext&&SPEEDS[speed]&&!document.body.classList.contains('photo')){if(santaNext)santaSpawn();santaNext=now+70000+Math.random()*60000;}
-  if(santa){const s=santa;s.x+=s.vx*dt;s.y+=Math.sin((now-s.t0)/400)*.15;if((s.d>0&&s.x>s.end)||(s.d<0&&s.x<s.end))santa=null;else{
-      const x=Math.round(s.x-X0),y=Math.round(s.y-Y0),d=s.d,bob=Math.round(Math.sin(now/180)*1);
-      if(Math.random()<dt*25)parts.push({x:s.x-d*34,y:s.y+6,vx:-d*6+(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:0,max:1.2,sz:1,kind:'fw',c:Math.random()<.5?'#ffe27a':'#ffffff',g:4});   // a trail of sparkles
-      const ssp=sleighSprites()[d>0?'r':'l'][((now/140)|0)%2];c.drawImage(ssp.c,x+ssp.ox,y+bob+ssp.oy);   // lit by its own glow: never dimmed by the night
-      if(nightF>.3){c.globalCompositeOperation='lighter';c.globalAlpha=.45;c.fillStyle='#ff4a4a';c.fillRect(x+d*97-1,y-11+bob,4,3);c.globalAlpha=1;c.globalCompositeOperation='source-over';}}}
-  for(let n=santaGifts.length-1;n>=0;n--){const g=santaGifts[n];g.t+=dt;g.y+=dt*16;g.x+=Math.sin(g.t*2)*.3;if(g.t>g.m){santaGifts.splice(n,1);continue;}
-    const x=Math.round(g.x-X0),y=Math.round(g.y-Y0);c.fillStyle='#f2ede0';c.beginPath();c.ellipse(x+.5,y-6,5,3,0,Math.PI,0);c.fill();c.strokeStyle='#c9c3b5';c.beginPath();c.moveTo(x-4,y-6);c.lineTo(x,y);c.lineTo(x+5,y-6);c.stroke();   // parachute
-    c.fillStyle='#c0302a';c.fillRect(x-1,y,4,3);c.fillStyle='#ffd84a';c.fillRect(x,y,1,3);c.fillRect(x-1,y+1,4,1);}}
-function santaTap(e){const s=santa;if(!s||s.hit)return false;const[wx,wy]=toWorld(e.clientX,e.clientY);if(Math.abs(wx-(s.x+s.d*36))>70||Math.abs(wy-(s.y-4))>26)return false;
-  s.hit=true;santaGifts.push({x:s.x,y:s.y+6,t:0,m:3});const f=funState();f.santa=(f.santa|0)+1;
-  if(f.santa%2){funBoost();toast(L2('🎅 산타가 선물을 떨어뜨렸어요! 2분 동안 마을이 50% 더 빨리 자라요.','🎅 Santa dropped a present! The town grows 50% faster for 2 minutes.'),'good');}
-  else{const g=funGift();W.funds+=g;toast(L2(`🎅 산타가 선물을 떨어뜨렸어요! +${money(g)}`,`🎅 Santa dropped a present! +${money(g)}`),'good');}
-  sfx('win');save();updateHud(true);return true;}
 // the first time the game is opened in December
 function xmasHello(){const f=funState(),y=new Date().getFullYear();if(!xmasOn()||f.xmasY===y)return;f.xmasY=y;
-  toast(L2('🎄 크리스마스 이벤트가 시작됐어요! 12월 한 달 동안 눈이 자주 오고 집마다 전구가 켜져요. 꾸미기에 한정 소품이 생겼고, 밤하늘의 산타 썰매를 누르면 선물을 받아요.',
-    '🎄 The Christmas event has begun! All December it snows often and every house is lit up. Limited decorations are in Decorate, and tapping Santa’s sleigh in the night sky brings a present.'),'good');sfx('win');save();}
+  toast(L2('🎄 크리스마스 이벤트가 시작됐어요! 12월 한 달 동안 눈이 자주 오고 집마다 전구가 켜져요. 꾸미기에 한정 소품도 생겼어요.',
+    '🎄 The Christmas event has begun! All December it snows often and every house is lit up. Limited decorations are in Decorate.'),'good');sfx('win');save();}
 const themeBuilt=n=>{for(let i=0;i<N*N;i++)if(W.kind[i]===K.THEME&&W.anchor[i]===i&&W.level[i]===n)return true;return false;};
 const curItem=t=>t.items?ITEMS[t.items][subSel[t.items]]:null;
 const premNow=t=>!!(t.prem&&t.prem[W.era])||!!(t.items&&curItem(t).prem);
@@ -4184,7 +4100,7 @@ function render(){
     c.fillStyle='#1a1404';c.fillRect(bx-3,by-9,7,11);
     if(o.type==='med'){c.fillStyle=on?'#ffffff':'#ffd8d8';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#e0302a';c.fillRect(bx,by-7,1,7);c.fillRect(bx-2,by-4,5,1);}
     else{c.fillStyle=on?'#ff3a3a':'#3a7dff';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#ffffff';c.fillRect(bx,by-7,1,4);c.fillRect(bx,by-2,1,1);}}
-  funFx(c);xmasLights(c,lh);scoutFx(c);santaFx(c);festFx(c,lw,lh);drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
+  funFx(c);xmasLights(c,lh);scoutFx(c);festFx(c,lw,lh);drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
   // the picked tile's edge and pin go on top of trees and buildings
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
     for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++)if(inb(x+dx,y+dy))tileSp(SP.tgt.edge,x+dx,y+dy);
@@ -4630,7 +4546,6 @@ document.querySelectorAll('#mFun [data-fun]').forEach(b=>b.addEventListener('cli
   else if(a==='quest'){if(!f.q)qMake();qDone();}
   else if(a==='rare'){const bl=[];for(let i=0;i<N*N;i++)if(isBld(i)&&!f.rare[i])bl.push(i);if(bl.length){const i=bl[(Math.random()*bl.length)|0];makeRare(i);const x=i%N,y=i/N|0;cam.x=(x-y)*16;cam.y=(x+y)*8;}}
   else if(a==='xmas'){xmasTest=!xmasTest;if(xmasTest){W.wx=2;W.wxEnd=Date.now()+180000;funState().xmasY=0;xmasHello();}else toast('크리스마스 미리보기를 껐어요.','info');buildTools();}
-  else if(a==='santa'){if(!xmasOn()){xmasTest=true;buildTools();}dayMode='night';santa=null;santaSpawn();santaNext=now+90000;}
   else if(a==='scout'){scoutEv=null;scoutSpawn(true);scoutNext=now+240000;}
   else if(a==='whale'||a==='squid'||a==='shadow'){seaEv=null;const g=toGrid(innerWidth/2,innerHeight/2);if(!seaSpawn(a,g))toast('화면 가까이에 깊은 바다가 없어요. 바다 쪽으로 옮겨 보세요.','info');else{const e=seaEv;cam.x=(e.x-e.y)*16;cam.y=(e.x+e.y)*8;seaNext=now+60000;}}
   else{f.vis=null;visitSpawn();const v=f.vis;if(v){const x=v.i%N,y=v.i/N|0;cam.x=(x-y)*16;cam.y=(x+y)*8;}}}));
