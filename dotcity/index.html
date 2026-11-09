@@ -4053,7 +4053,7 @@ function render(){
   groundWeather(c,lh);
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
-    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(SP.glow.c,visBuf[n+1]-15,visBuf[n+2]+1);}
+    for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.kind[i]!==K.ROAD||w.te[i]<3)continue;const x=i%N,y=i/N|0;const m=roadDrawMask(x,y);if(!((x*3+y*5)%4===0||(m&5)&&(m&10)))continue;c.drawImage(glowTexOf('warm',1),visBuf[n+1]-20,visBuf[n+2]+1);}
     c.globalAlpha=1;c.globalCompositeOperation='source-over';}
   if(overlay)for(let n=0;n<visN;n+=3){const i=visBuf[n];const sp=heatSpr(i);if(sp)c.drawImage(sp.c,visBuf[n+1]-16,visBuf[n+2]);}
   // cursor & previews
@@ -4097,7 +4097,7 @@ function render(){
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
-      else if(L>0){sp=FL(bldSprite(i),i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      else if(L>0){sp=FL(bldSprite(i),i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(nightF>.05)winGlow(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK)drawSpr(c,FL(parkSprite(i),i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
@@ -4249,8 +4249,44 @@ function craneAnim(c,sp,x0,y0,i,blinkOn){const k=sp.crane,bx=x0+sp.ox+k.x+(k.dir
   for(let j=-8;j<=-5;j++){const[x,y]=at(j);px(x,y+2,gr);px(x,y+3,gd);}                                                             // ballast
   px(tx,ty+2,ln);if(!back)load();
   if(blinkOn){const[ex,ey]=at(24);px(ex,ey-1,'#ff4a4a');}}
+// night glows: each light gets a halo in its own colour (sampled from the sprite's lit pixel: warm lamp, cool white, neon cyan, pink,
+// red, green, gold), banded into six steps with a Bayer dither so it stays pixel-art yet soft, a whiter core, and - for lights low
+// on a building such as lamps and lanterns - a pool of light on the ground below. Warm lights breathe a little.
+const GLOW_COL={warm:[255,176,92],white:[214,236,255],cyan:[95,230,242],pink:[255,106,213],red:[255,74,74],green:[122,255,154],gold:[255,226,122]},glowTex={};
+function glowTexOf(k,pool){const key=k+(pool?'p':'');if(glowTex[key])return glowTex[key];const W2=pool?40:48,H2=pool?14:24,cv=document.createElement('canvas');cv.width=W2;cv.height=H2;
+  const g=cv.getContext('2d'),im=g.createImageData(W2,H2),[r,gg,b]=GLOW_COL[k];
+  for(let y=0;y<H2;y++)for(let x=0;x<W2;x++){const d=Math.hypot((x+.5-W2/2)/(W2/2),(y+.5-H2/2)/(H2/2));if(d>=1)continue;
+    const lv=Math.pow(1-d,pool?1.4:1.9)*6,lo=Math.floor(lv),q=lo+((lv-lo)*16>BAYER[(x&3)+(y&3)*4]?1:0),a=q/6;if(!q)continue;
+    const wm=pool?0:Math.max(0,(a-.62)/.38)*.65,o=(y*W2+x)*4;im.data[o]=r+(255-r)*wm;im.data[o+1]=gg+(255-gg)*wm;im.data[o+2]=b+(255-b)*wm;im.data[o+3]=Math.round(a*(pool?120:165));}
+  g.putImageData(im,0,0);return glowTex[key]=cv;}
+function lightKinds(sp){if(sp._lk&&sp._lk.length===sp.lights.length)return sp._lk;let d=null;try{const cv=sp.n||sp.c;d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;}catch(e){}
+  const out=sp.lights.map(([lx,ly])=>{if(!d)return'warm';let best=null,bs=-1;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=lx+dx,Y=ly+dy;if(X<0||Y<0||X>=sp.w||Y>=sp.h)continue;
+      const o=(Y*sp.w+X)*4;if(d[o+3]<100)continue;const sm=d[o]+d[o+1]+d[o+2];if(sm>bs){bs=sm;best=[d[o],d[o+1],d[o+2]];}}
+    if(!best||bs<330)return'warm';const[r,g,b]=best,mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;if(sat<.22)return mx>215&&b>=r?'white':'warm';
+    let h=0;if(mx===r)h=((g-b)/(mx-mn)+6)%6;else if(mx===g)h=(b-r)/(mx-mn)+2;else h=(r-g)/(mx-mn)+4;h*=60;
+    return h<18||h>=345?'red':h<42?'warm':h<70?'gold':h<165?'green':h<205?'cyan':h<275?'white':'pink';});
+  return sp._lk=out;}
+// lit windows: on ordinary houses, shops and workshops the brightest clusters of lit pixels in the night sprite each get a small
+// soft halo in their own colour, so windows bleed light into the street (found once per sprite, at most three per building)
+function winLights(sp){if(sp._wl)return sp._wl;let d=null;try{const cv=sp.n;if(cv)d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;}catch(e){}
+  if(!d)return sp._wl=[];const B=new Map();
+  for(let y=0;y<sp.h;y++)for(let x=0;x<sp.w;x++){const o=(y*sp.w+x)*4;if(d[o+3]<200)continue;const r=d[o],g=d[o+1],b=d[o+2];if(r+g+b<470||Math.max(r,g,b)<200)continue;
+    const k=((y/7)|0)*64+((x/7)|0),e=B.get(k)||[0,0,0,0,0,0];e[0]++;e[1]+=x;e[2]+=y;e[3]+=r;e[4]+=g;e[5]+=b;B.set(k,e);}
+  const out=[...B.values()].filter(e=>e[0]>=2).sort((a,b)=>b[0]-a[0]).slice(0,3).map(e=>{const n=e[0],r=e[3]/n,g=e[4]/n,b=e[5]/n,mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+    let k='warm';if((mx-mn)/mx>.22){let h=mx===r?((g-b)/(mx-mn)+6)%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;h*=60;k=h<18||h>=345?'red':h<42?'warm':h<70?'gold':h<165?'green':h<205?'cyan':h<275?'white':'pink';}
+    else if(b>=r)k='white';return[e[1]/n,e[2]/n,k,Math.min(1,n/8)];});
+  return sp._wl=out;}
+function winGlow(c,sp,x,y){const L=winLights(sp);if(!L.length)return;const ga=c.globalAlpha;c.globalCompositeOperation='lighter';
+  for(const[lx,ly,k,str]of L){c.globalAlpha=ga*nightF*(.26+.32*str);c.drawImage(glowTexOf(k),Math.round(x+sp.ox+lx)-12,Math.round(y+sp.oy+ly)-6,24,12);}
+  c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
+function drawGlows(c,sp,x,y){const ga=c.globalAlpha,ks=lightKinds(sp),base=y+8;c.globalCompositeOperation='lighter';
+  sp.lights.forEach(([lx,ly],n)=>{const k=ks[n],X=x+sp.ox+lx,Y=y+sp.oy+ly,fl=k==='warm'?.9+.1*Math.sin(now/170+lx*1.3+ly*.7):1;
+    c.globalAlpha=ga*nightF*.95*fl;c.drawImage(glowTexOf(k),X-24,Y-12);
+    if(base-Y>2&&base-Y<30){c.globalAlpha=ga*nightF*.7*fl*(1-(base-Y)/34);c.drawImage(glowTexOf(k,1),X-20,base-7);}   // the pool of light on the ground
+    c.globalAlpha=ga*nightF*.85;c.fillStyle='#fffaf0';c.fillRect(X,Y,1,1);});   // the hot core
+  c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
 function extras(c,sp,x,y,blinkOn){if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(x+sp.ox+bx,y+sp.oy+by,1,1);}
-  if(sp.lights&&nightF>.05){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.9;for(const[lx,ly]of sp.lights)c.drawImage(SP.glow.c,x+sp.ox+lx-15,y+sp.oy+ly-4);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}
+  if(sp.lights&&nightF>.05)drawGlows(c,sp,x,y);}
 function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?bldSprite(i):null,top=sp?sy+sp.top+4:sy-6,span=Math.max(6,sy+10-top),f=now/90|0;
   const ga=c.globalAlpha;c.globalAlpha=1;c.globalCompositeOperation='lighter';c.globalAlpha=.55+nightF*.4;c.drawImage(SP.glow.c,sx-15,sy-4);c.globalCompositeOperation='source-over';c.globalAlpha=1;
   for(let k2=0;k2<26;k2++){const fx=sx-9+((hash(i,k2,f)*18)|0),fy=top-3+((hash(k2,i,f+3)*span)|0);c.fillStyle=k2%3===0?'#fff1a0':k2%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,2,3+(k2%3===2?1:0));}
