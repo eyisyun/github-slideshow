@@ -54,7 +54,9 @@ const head = `<!doctype html>
 // AdMob rewarded unit. Store builds use the real ids; DOT_TEST builds keep Google's public test units
 // (tapping your own live ads during development can get the AdMob account suspended).
 const AD_IOS = process.env.DOT_TEST ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-2841633824543051/3219774790';
-const AD_AND = 'ca-app-pub-3940256099942544/5224354917'; // TODO: Android unit once the Android app exists in AdMob
+const AD_AND_REAL = 'ca-app-pub-2841633824543051/6512727908'; // AdMob > Apps > 도트시티 Android > Ad units > 게임머니 충전 (ca-app-pub-.../...)
+const AD_AND = process.env.DOT_TEST || !AD_AND_REAL ? 'ca-app-pub-3940256099942544/5224354917' : AD_AND_REAL;
+if (!AD_AND_REAL && !process.env.DOT_TEST) console.warn('\n!! Android: AD_AND_REAL is empty, the Android build shows TEST ads. Do not upload it to Google Play.\n');
 
 const native = `
 <script>
@@ -164,7 +166,7 @@ const native = `
     };
     window.DotAds = {
       ready: loadAd,
-      test: ${process.env.DOT_TEST ? 'true' : 'false'},
+      test: ${process.env.DOT_TEST ? 'true' : AD_AND_REAL ? 'false' : '!IOS'},
       lastError: function () { return adErr; },
       // resolves true only when the viewer watched long enough to earn the reward
       show: function () {
