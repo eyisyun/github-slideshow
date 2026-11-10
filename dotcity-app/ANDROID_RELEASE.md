@@ -8,6 +8,8 @@
 
 - ☐ [Android Studio](https://developer.android.com/studio) 최신판 (Mac에 같이 설치하면 됩니다)
 - ☐ Node.js 22 이상 (iOS 때 설치한 것 그대로)
+- ☐ Java 21 (`/usr/libexec/java_home -V`로 확인, 없으면 `brew install openjdk@21`)
+- 이 Mac의 SDK 위치: `/opt/homebrew/share/android-commandlinetools` (`android/local.properties`에 `sdk.dir=`로 적혀 있어야 함)
 - ☐ [Google Play Console](https://play.google.com/console) 개발자 계정 (1회 $25, 신분 확인에 며칠 걸릴 수 있음)
 - ☐ 안드로이드 폰 1대 (USB 디버깅 켜기: 설정 → 휴대전화 정보 → 빌드번호 7번 탭 → 개발자 옵션 → USB 디버깅)
 
@@ -32,7 +34,7 @@ Google Play는 앱에 **업로드 키**로 서명된 파일만 받습니다. 실
 
 1. ☐ 터미널에서 (비밀번호는 직접 정해서 두 번 입력):
    ```bash
-   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # Mac: Android Studio에 들어 있는 Java 사용
+   export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # Java 21 (Android Studio 최신판의 Java 25는 Gradle 8.14가 못 씀)
    export PATH="$JAVA_HOME/bin:$PATH"
    cd dotcity-app/android/app
    keytool -genkeypair -v -keystore dotcity-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
@@ -66,7 +68,8 @@ grep -c "3940256099942544" android/app/src/main/assets/public/index.html        
 
 ☐ 앱 번들(.aab) 만들기:
 ```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # 새 터미널 창이면 다시
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # 새 터미널 창이면 다시. Java 25면 "Unsupported class file major version 69" 에러
+cd android && ./gradlew --stop && cd ..   # 다른 Java로 떠 있던 빌드 프로그램 끄기
 cd android
 ./gradlew bundleRelease
 ```
