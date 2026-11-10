@@ -32,6 +32,8 @@ Google Play는 앱에 **업로드 키**로 서명된 파일만 받습니다. 실
 
 1. ☐ 터미널에서 (비밀번호는 직접 정해서 두 번 입력):
    ```bash
+   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # Mac: Android Studio에 들어 있는 Java 사용
+   export PATH="$JAVA_HOME/bin:$PATH"
    cd dotcity-app/android/app
    keytool -genkeypair -v -keystore dotcity-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
    ```
@@ -64,6 +66,7 @@ grep -c "3940256099942544" android/app/src/main/assets/public/index.html        
 
 ☐ 앱 번들(.aab) 만들기:
 ```bash
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # 새 터미널 창이면 다시
 cd android
 ./gradlew bundleRelease
 ```
