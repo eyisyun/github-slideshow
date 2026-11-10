@@ -3463,7 +3463,7 @@ async function makePostcard(){const Wd=1080,Hd=1350,cv=document.createElement('c
   g.textAlign='left';g.fillStyle='#1a2030';g.font=`92px ${UI}`;g.fillText(W.name,px,py+ph+112);
   g.fillStyle='#5a5040';g.font=`38px ${UI}`;g.fillText(`${tr(ERAS[W.era].name)} · ${$('#date').textContent.replace(/ · .*/,'')} · ${tr('인구')} ${fmt(W.st.pop)}`,px,py+ph+170);
   g.fillStyle='#d8443a';g.font=`30px ${PX}`;g.textAlign='right';g.fillText(LANG==='en'?'DOT CITY':'DOT CITY · 도트시티',Wd-px,py+ph+236);
-  g.fillStyle='#8a7a60';g.font=`26px ${UI}`;g.textAlign='left';g.fillText(LANG==='en'?'Build yours: search "Dot City" on the App Store':'App Store에서 「도트시티」를 검색해 보세요',px,py+ph+236);
+  g.fillStyle='#8a7a60';g.font=`26px ${UI}`;g.textAlign='left';{const st=/Android/i.test(navigator.userAgent)?'Google Play':'App Store';g.fillText(LANG==='en'?`Build yours: search "Dot City" on ${st}`:`${st}에서 「도트시티」를 검색해 보세요`,px,py+ph+236);}
   return new Promise(r=>cv.toBlob(r,'image/png'));}
 
 /* ---------------- audio ---------------- */

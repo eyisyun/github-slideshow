@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+// Upload key for Play: put keystore.properties next to this file (never commit it, see ANDROID_RELEASE.md):
+//   storeFile=/full/path/dotcity-upload.jks
+//   storePassword=...
+//   keyAlias=upload
+//   keyPassword=...
+def keystorePropsFile = file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+
+// AdMob Android app id (AdMob > Apps > 도트시티 Android > App settings). Google's test id until the real one is filled in.
+def admobAppId = 'ca-app-pub-3940256099942544~3347511713'
+
 android {
     namespace = "com.eyisyun.dotcity"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +19,9 @@ android {
         applicationId "com.eyisyun.dotcity"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 10
+        versionName "1.0.8"
+        manifestPlaceholders = [admobAppId: admobAppId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +29,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystoreProps['storeFile']) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystoreProps['storeFile']) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

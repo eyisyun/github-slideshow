@@ -1,5 +1,5 @@
 // Store screenshots with a caption on top: takes the plain shots from store/screenshots (run make-screenshots.cjs first)
-// and writes store/screenshots/marketing/{ios,ipad}[-en]-NN.png in App Store order.
+// and writes store/screenshots/marketing/{ios,ipad,android}[-en]-NN.png in App Store order.
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path');
 const dir = path.join(__dirname, '..', 'store', 'screenshots'), out = path.join(dir, 'marketing');
@@ -17,11 +17,12 @@ const SHOTS = [
   ['1-stone', '석기시대 움집에서 시작', '모닥불 곁 작은 마을이 대도시가 되기까지', 'Start in the Stone Age', 'Grow a campfire village into a big city'],
   ['13-postcard', '내 도시를 엽서로', '사진 모드에서 친구에게 보내 보세요', 'Send Your City as a Postcard', 'Make one in photo mode and share it'],
 ];
-const DEV = { ios: { w: 402, h: 874, dpr: 3, t: 33, s: 17, top: 21, iw: 84, r: 26 }, ipad: { w: 1032, h: 1376, dpr: 2, t: 62, s: 30, top: 19, iw: 80, r: 34 } };
+const DEV = { ios: { w: 402, h: 874, dpr: 3, t: 33, s: 17, top: 21, iw: 84, r: 26 }, ipad: { w: 1032, h: 1376, dpr: 2, t: 62, s: 30, top: 19, iw: 80, r: 34 },
+  android: { w: 360, h: 640, dpr: 3, t: 29, s: 15, top: 20, iw: 76, r: 20 } };
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  for (const [dev, d] of Object.entries(DEV)) {
+  for (const [dev, d] of Object.entries(DEV).filter(([k]) => !process.env.DEV || k === process.env.DEV)) {
     const p = await b.newPage({ viewport: { width: d.w, height: d.h }, deviceScaleFactor: d.dpr });
     for (const lang of ['ko', 'en']) for (let n = 0; n < SHOTS.length; n++) {
       const [name, kt, ks, et, es] = SHOTS[n], src = path.join(dir, `${dev}${lang === 'en' ? '-en' : ''}-${name}.png`);

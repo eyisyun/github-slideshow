@@ -13,7 +13,7 @@ const scenes = [
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   for (const lang of ['ko', 'en']) for (const [dev, vp, dpr] of [['ios', { width: 402, height: 874 }, 3], ['ipad', { width: 1032, height: 1376 }, 2], ['android', { width: 360, height: 640 }, 3]].filter(d => !process.env.DEV || d[0] === process.env.DEV)) {
     for (const [name, era, night, shop, feat] of scenes.filter(s => !process.env.ONLY || s[0].includes(process.env.ONLY))) {
-      const p = await (await b.newContext({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true, locale: lang === 'ko' ? 'ko-KR' : 'en-US' })).newPage();
+      const p = await (await b.newContext({ viewport: vp, deviceScaleFactor: dpr, isMobile: true, hasTouch: true, ...(dev === 'android' ? { userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36' } : {}), locale: lang === 'ko' ? 'ko-KR' : 'en-US' })).newPage();
       await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForFunction(() => { const b = document.getElementById('boot'); return !b || b.hidden; }, null, { timeout: 30000 });
       await p.evaluate(([era, night, shop, feat]) => {
         closeEra(); try { localStorage.clear(); } catch (e) {}
