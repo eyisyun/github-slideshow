@@ -9,8 +9,8 @@ def keystorePropsFile = file('keystore.properties')
 def keystoreProps = new Properties()
 if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
 
-// AdMob Android app id (AdMob > Apps > 도트시티 Android > App settings). Google's test id until the real one is filled in.
-def admobAppId = 'ca-app-pub-3940256099942544~3347511713'
+// AdMob Android app id (AdMob > Apps > 도트시티 Android > App settings)
+def admobAppId = 'ca-app-pub-2841633824543051~9609664533'
 
 android {
     namespace = "com.eyisyun.dotcity"

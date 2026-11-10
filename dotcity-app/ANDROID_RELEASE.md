@@ -18,9 +18,9 @@
 
 ## 1. AdMob에 Android 앱 만들기
 
-1. ☐ [AdMob](https://admob.google.com) → **앱 → 앱 추가 → Android** → "앱이 지원되는 스토어에 등록되어 있나요?" **아니요** → 이름 `도트시티`
-2. ☐ 만든 앱 → **광고 단위 → 보상형** → 이름 `게임머니 충전` (보상 설정은 기본값 그대로, 게임이 직접 계산함)
-3. ☐ 두 ID를 코드에 넣습니다 (Claude에게 ID 두 개를 알려주면 넣어 드립니다).
+1. ✅ [AdMob](https://admob.google.com) → **앱 → 앱 추가 → Android** → "앱이 지원되는 스토어에 등록되어 있나요?" **아니요** → 이름 `도트시티`
+2. ✅ 만든 앱 → **광고 단위 → 보상형** → 이름 `게임머니 충전` (보상 설정은 기본값 그대로, 게임이 직접 계산함)
+3. ✅ 두 ID를 코드에 넣었습니다 (앱 ID `ca-app-pub-2841633824543051~9609664533`, 광고 단위 `ca-app-pub-2841633824543051/6512727908`).
    - **앱 ID** `ca-app-pub-...~...` → `android/app/build.gradle`의 `def admobAppId = '...'`
    - **광고 단위 ID** `ca-app-pub-.../...` → `scripts/build-web.mjs`의 `const AD_AND_REAL = '...'`
    - 비어 있으면 빌드할 때 `!! Android: AD_AND_REAL is empty` 경고가 나오고 테스트 광고가 뜹니다. **그 빌드는 올리면 안 됩니다.**
