@@ -234,3 +234,44 @@ Post the era timelapse video with a plain, non-salesy title, and put the link in
 Title: I've been drawing a pixel city builder on my own — here's one town from the Stone Age to a neon future
 Comment: It's called Dot City (free on iOS). Every era redraws the homes, roads and vehicles; the next update adds festivals, earthquakes you rebuild from, and postcards. Happy to answer questions about the pixel art!
 ```
+
+---
+
+# 새 영상: 누군가 지켜보고 있다 (`dotcity-watch-ko.mp4` / `-en.mp4`, 1080×1920, 약 22초, 무음)
+
+외계 정찰선이 도시를 레이저로 훑는 장면 → 석기 움집 마을 → 네온 사이버펑크 도시 → 대왕오징어 → 고래 → 끝 화면.
+첫 2초 장면이 궁금증을 만드는 미끼예요. 긴장감 있는 신스·칩튠 음악이 잘 어울려요.
+
+## 인스타그램 릴스
+```
+누군가 당신의 도시를 지켜보고 있다… 🛸
+
+움집 몇 채로 시작한 마을이 네온 사이버펑크 도시가 되기까지.
+깊은 바다엔 대왕오징어와 고래가 살고, 가끔 하늘엔 정체불명의 비행체가 나타나 도시를 훑어보고 사라져요.
+
+📱 도트시티 | App Store에서 무료 (프로필 링크)
+
+#도트시티 #픽셀아트 #도시건설 #인디게임 #모바일게임 #힐링게임 #도트그래픽 #사이버펑크 #pixelart #indiegame #citybuilder
+```
+
+## 틱톡
+```
+내 도시를 누가 보고 있어… 🛸🦑 #도트시티 #픽셀아트 #게임추천 #인디게임 #모바일게임추천 #사이버펑크 #fyp
+```
+
+## Instagram Reels (English)
+```
+Something is watching your city… 🛸
+
+From a few Stone Age huts to a neon cyberpunk city.
+Giant squid and whales live in the deep, and now and then an unknown craft shows up to scan your town before it vanishes.
+
+📱 Dot City | Free on the App Store (link in bio)
+
+#dotcity #pixelart #citybuilder #indiegame #mobilegame #cozygame #cyberpunk #gamedev
+```
+
+## TikTok (English)
+```
+Something's watching my pixel city 🛸🦑 #dotcity #pixelart #indiegame #citybuilder #cozygames #cyberpunk #fyp
+```

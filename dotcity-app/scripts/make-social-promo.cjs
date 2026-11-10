@@ -1,6 +1,6 @@
 // Short 9:16 promo videos for TikTok / Instagram Reels / YouTube Shorts, rendered from the built app (www/) with a manual clock and
 // encoded with ffmpeg (silent: pick a trending track in the app when posting).
-//   node scripts/make-social-promo.cjs <eras|festivals|life> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
+//   node scripts/make-social-promo.cjs <eras|festivals|life|watch> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const VID = process.argv[2] || 'eras', LANG = process.argv[3] || 'ko', FPS = 24;
@@ -31,6 +31,13 @@ const VIDEOS = {
     [4, 0, 'decor', ko ? '분수와 시계탑으로 꾸미고' : 'Decorate with fountains and clock towers', 3.4, 5.2, 4.6, [24, -10], [8, -20]],
     [4, 1, 'postcard', ko ? '엽서로 만들어 친구에게!' : 'and send it as a postcard!', 3, 1, 1, [0, 0], [0, 0]]],
     end: ko ? ['살아 움직이는 나만의 픽셀 도시', 'App Store에서 무료'] : ['A pixel city that comes alive', 'Free on the App Store'] },
+  watch: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', scenes: [
+    [4, 0, 'scout', ko ? '누군가 당신의 도시를<br>지켜보고 있다…' : 'Something is watching<br>your city…', 5.8, 4.8, 4.4, [0, -66], [0, -60], 1.2],
+    [0, 0, '', ko ? '석기시대 움집 마을이' : 'From a Stone Age village', 2.2, 5, 4.4, [0, 10], [0, 0]],
+    [5, 1, '', ko ? '네온 사이버펑크 도시로!' : 'to a neon cyberpunk city!', 2.8, 3.2, 2.7, [0, 0], [0, -16]],
+    [3, 0, 'squid', ko ? '깊은 바다에선…' : 'And deep in the sea…', 4.6, 7, 6.4, [0, -2], [0, -6], 2.3],
+    [3, 0, 'whale', ko ? '고래가 숨을 쉬어요 🐋' : 'a whale comes up for air 🐋', 4.8, 6.4, 6, [0, 0], [-6, -4], 2.4]],
+    end: ko ? ['바다 괴물부터 외계 손님까지\n살아 있는 나만의 픽셀 도시', 'App Store에서 무료'] : ['Sea monsters, alien visitors\nand a pixel city that lives', 'Free on the App Store'] },
 }[VID];
 (async () => {
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -53,7 +60,7 @@ const VIDEOS = {
   const icon = 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '..', 'ios', 'App', 'App', 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png')).toString('base64');
   let n = 0, t = 1000; const shot = async () => { await p.screenshot({ path: `${OUT}/${String(n++).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92 }); };
   for (let k = 0; k < VIDEOS.scenes.length; k++) {
-    const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1]] = VIDEOS.scenes[k];
+    const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1], evOff = 0] = VIDEOS.scenes[k];
     await p.evaluate(([era, night, setup]) => {   // the same town builder as the store screenshots, plus the scene's setup
       closeEra(); try { localStorage.clear(); } catch (e) {}
       W = blankWorld(77); genTerrain(W); W.era = era;
@@ -86,7 +93,13 @@ const VIDEOS = {
         return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(bl); }); });
       await p.evaluate(url => { const d = document.createElement('div'); d.id = 'pcard'; d.innerHTML = `<img src="${url}">`; document.body.append(d); }, url);
     }
-    const F = Math.round(sec * FPS), cx0 = 0, cy0 = 32 * 16 + 20;
+    let F = Math.round(sec * FPS), cx0 = 0, cy0 = 32 * 16 + 20;
+    if (setup === 'scout' || setup === 'squid' || setup === 'whale') {   // start the sky / sea visitor part-way through, and centre the camera on it
+      const at = await p.evaluate(([setup, t, off, cx, cy]) => { seaNext = scoutNext = 1e15; seaEv = null; scoutEv = null; cam.s = 3; cam.x = cx; cam.y = cy; frame(t);
+        if (setup === 'scout') { scoutSpawn(true); scoutEv.t0 = t - off * 1000; scoutEv.last = t; return [(scoutEv.x - scoutEv.y) * 16, (scoutEv.x + scoutEv.y) * 8]; }
+        let best = null, bd = 1e9; for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { if (seaDeep(x, y) < 6) continue; const d = Math.hypot(x - 32, y - 32); if (d < bd) { bd = d; best = [x, y]; } }
+        if (!best || !seaSpawn(setup, best)) return null; seaEv.t0 = t - off * 1000; seaEv.last = t; return [(seaEv.x - seaEv.y) * 16, (seaEv.x + seaEv.y) * 8 - 4]; }, [setup, t, evOff, cx0, cy0]);
+      if (!at) throw new Error('no deep water for ' + setup); [cx0, cy0] = at; }
     if (setup.startsWith('fest:') || setup === 'build' || setup === 'decor') {   // run the scene for a few seconds first so lanterns, balloons and cranes are already up
       await p.evaluate(([cx, cy, s, t]) => { cam.s = s; cam.x = cx; cam.y = cy; for (let i = 0; i < 160; i++) frame(t + i * 50); }, [cx0 + x0, cy0 + y0, z0, t]); t += 160 * 50; }
     for (let f = 0; f < F; f++) { const u = f / (F - 1), e = u * u * (3 - 2 * u); t += 1000 / FPS;
