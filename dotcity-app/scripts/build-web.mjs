@@ -31,6 +31,13 @@ if (!existsSync(join(root, 'assets', 'fonts', 'fonts.css'))) {
   throw new Error('assets/fonts is missing. Run `npm run fonts` once with network access.');
 }
 
+// Preload the font files the loading screen needs (both languages) so its title never waits on them.
+const bootText = '도트시티도시를 불러오는 중Dot CityLoading your city…';
+const bootPreload = [...(await readFile(join(root, 'assets', 'fonts', 'fonts.css'), 'utf8')).matchAll(/@font-face\s*{([^}]*)}/g)]
+  .map(m => m[1]).filter(b => /Do Hyeon/.test(b)).filter(b => {
+    const ranges = (b.match(/unicode-range:([^;]*)/) || [, ''])[1].split(',').map(r => r.trim().replace('U+', '').split('-').map(h => parseInt(h, 16)));
+    return [...bootText].some(ch => { const c = ch.codePointAt(0); return ranges.some(([a, z]) => c >= a && c <= (z ?? a)); });
+  }).map(b => b.match(/url\(([^)]+)\)/)[1]).map(u => `<link rel="preload" href="${u}" as="font" type="font/woff2" crossorigin>\n`).join('');
 const head = `<!doctype html>
 <html lang="ko">
 <head>
@@ -40,7 +47,7 @@ const head = `<!doctype html>
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
 <title>${title}</title>
-<link rel="stylesheet" href="fonts.css">
+${bootPreload}<link rel="stylesheet" href="fonts.css">
 <style>
   html, body { margin: 0; height: 100%; background: #141a30; overscroll-behavior: none; }
   body { -webkit-touch-callout: none; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
