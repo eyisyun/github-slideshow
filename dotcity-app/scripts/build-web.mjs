@@ -198,6 +198,8 @@ const native = `
 await rm(www, { recursive: true, force: true });
 await mkdir(www, { recursive: true });
 await cp(join(root, 'assets', 'fonts'), join(www, 'fonts'), { recursive: true });
-await cp(join(root, 'assets', 'fonts', 'fonts.css'), join(www, 'fonts.css'));
+// The fonts ship inside the app, so they load in a moment: 'block' keeps text invisible for that moment instead of drawing it
+// in a fallback face and swapping (the loading-screen title used to flick between thin and bold as each Hangul subset arrived).
+await writeFile(join(www, 'fonts.css'), (await readFile(join(root, 'assets', 'fonts', 'fonts.css'), 'utf8')).replace(/font-display:\s*swap/g, 'font-display: block'));
 await writeFile(join(www, 'index.html'), head + game + native + '</body>\n</html>\n');
 console.log('Built www/index.html from dotcity/index.html' + (process.env.DOT_TEST ? ' (test build: era picker and test ads kept)' : ''));
