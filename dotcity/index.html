@@ -3597,6 +3597,11 @@ function paintSndMenu(){$('#mMusic').innerHTML=`배경 음악 <small>${SND.music
 /* ---------------- cars ---------------- */
 const DIRS=[[1,0],[0,1],[-1,0],[0,-1]];
 function isRoad(x,y){return inb(x,y)&&W.kind[idx(x,y)]===K.ROAD;}
+// traffic lights at the four-way crossings of present-day and future streets: a 14 s cycle, one axis green 6 s then amber 1 s,
+// each crossing on its own offset. sigState: 0 x-axis green, 1 x amber, 2 y-axis green, 3 y amber
+function hasSignal(x,y){if(!isRoad(x,y))return false;const i=idx(x,y);return W.te[i]>=4&&W.terrain[i]!==1&&roadMask(x,y)===15&&!roadArea(x,y);}
+function sigState(x,y){const t=(now/1000+hash(x,y,123)*14)%14;return t<6?0:t<7?1:t<13?2:3;}
+const sigGo=(x,y,d)=>{const s2=sigState(x,y);return DIRS[d][0]?s2===0:s2===2;};
 // Mask used for drawing: two roads laid side by side are parallel lanes, not a row of junctions,
 // so a link to a neighbour that runs the same way is dropped (keeps the centre line and kerbs).
 // A tile inside a solid patch of road (part of any 3x3 block that is all road) is a paved square,
@@ -3682,6 +3687,7 @@ function stepCars(dt){const S=W.st,target=Math.round(Math.min(240,Math.floor(S.r
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}
     if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
     c.t+=dt*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
+    if(!c.ped&&c.e>=4&&c.t>.28){const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(hasSignal(nx,ny)&&!hasSignal(c.x,c.y)&&!sigGo(nx,ny,c.d)&&c.t<.5)c.t=.28;}   // wait at the stop line
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
@@ -4140,7 +4146,7 @@ function render(){seasonGrass();
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
     if(k===K.RAIL)continue;
     if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
-      const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);continue;}
+      const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);continue;}
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const ph=now/(stormy?420:1700)+x*.9+y*.45;for(let j=0;j<pts.length;j++){const[u,v,s]=pts[j];bendDX=Math.round(Math.sin(ph+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(s,x,y,j),sx+(u-v)*16,sy+(u+v)*8);}bendDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
@@ -4346,12 +4352,24 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
   const lo=car.ped?.36*car.side:.16,lx=gx+pd[0]*lo,ly=gy+pd[1]*lo,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
-  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);if(nightF>.15&&car.e>=3&&!car.ped)carLights(c,car,sx,sy);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);if(nightF>.15&&car.e>=3&&!car.ped)carLights(c,car,sx,sy);if(sp.ped&&car.e>=2&&(photoWx??W.wx)===1)umbrella(c,car,sp,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
   if(sp.siren&&!car.quiet){const ph=(now/160+car.x+car.y|0)%2,[px,py]=sp.siren;c.fillStyle=ph?'#ff3a3a':'#3a7dff';c.fillRect(sx+sp.ox+px-1,sy+sp.oy+py,1,1);c.fillStyle=ph?'#3a7dff':'#ff3a3a';c.fillRect(sx+sp.ox+px+1,sy+sp.oy+py,1,1);
     if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.5;c.drawImage(ph?SP.sirR.c:SP.sirB.c,sx+sp.ox+px-6,sy+sp.oy+py-3);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
+// two signal poles on the corners of a crossing, one for each axis: dark head with red / amber / green lamps, glowing after dusk
+function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),pole=nightCss('#6a7078',nightF),head=nightCss('#24272e',nightF*.5);
+  for(const[px,py,ax]of[[sx-11,sy+9,1],[sx+11,sy+9,0]]){const s2=ax?(st>=2?st-2:2):(st<2?st:2),lit=s2===0?'#4cff7a':s2===1?'#ffc23a':'#ff4a3a',ly=s2===0?py-8:s2===1?py-9:py-10;
+    c.fillStyle=pole;c.fillRect(px,py-8,1,8);c.fillStyle=head;c.fillRect(px-1,py-11,3,4);c.fillStyle=lit;c.fillRect(px,ly,1,1);
+    if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.7;c.drawImage(glowTexOf(s2===0?'green':s2===1?'gold':'red'),px-6,ly-3,13,7);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
+// umbrellas: people out walking in the rain carry one, each in its own colour
+function umbrella(c,car,sp,sx,sy){const X=sx+sp.ox+4,Y=sy+sp.oy,h=hash(car.x*13+car.c,car.y*7+(car.side>0?1:0),55),cl=['#e04a3a','#3a7ad8','#f2c140','#2a2d36','#5ab45a','#e070b0','#f4f2ec'][(h*7)|0];
+  c.fillStyle=nightCss('#3a3030',nightF*.5);c.fillRect(X+1,Y-2,1,7);                                   // shaft down to the hand
+  c.fillStyle=nightCss(cl,nightF);c.fillRect(X-1,Y-5,3,1);c.fillRect(X-2,Y-4,5,1);c.fillRect(X-3,Y-3,7,1);   // dome
+  c.fillStyle=nightCss(cl,Math.min(1,nightF+.35),.9);c.fillRect(X-3,Y-3,1,1);c.fillRect(X,Y-3,1,1);c.fillRect(X+3,Y-3,1,1);   // ribs at the scalloped rim
+  c.fillStyle=nightCss('#ffffff',nightF,.35);c.fillRect(X-1,Y-5,1,1);c.fillRect(X-2,Y-4,1,1);              // sheen
+  c.fillStyle=nightCss('#3a3030',nightF*.5);c.fillRect(X,Y-6,1,1);}
 // after dark motor vehicles drive with headlights (two bright points and a soft pool of light on the road ahead) and red tail lights
 function carLights(c,car,sx,sy){const[dx,dy]=DIRS[car.d],vx=(dx-dy)*16,vy=(dx+dy)*8,L=Math.hypot(vx,vy),ux=vx/L,uy=vy/L,cx=sx,cy=sy-3,ga=c.globalAlpha,f=Math.min(1,(nightF-.15)/.4);
   c.globalCompositeOperation='lighter';c.globalAlpha=ga*f*.6;c.drawImage(glowTexOf('white',1),Math.round(cx+ux*13-11),Math.round(cy+uy*13+2-4),22,8);
