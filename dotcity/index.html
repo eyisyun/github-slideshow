@@ -3053,7 +3053,7 @@ let brush='one'; // every tool places exactly one tile per tap
 let target=null; // touch: the tile picked by the first tap, built on confirm
 let tool='inspect',overlay=null,speed=1,dayMode='auto',muted=false;
 const SPEEDS=[0,1,2.5,6],DAY=0.16;
-let hover=null,drag=null,selected=null,now=0,frameDt=0,nightF=0,duskF=0,simAcc=0;
+let hover=null,drag=null,selected=null,now=0,frameDt=0,nightF=0,duskF=0,simAcc=0,clockT=12;   // clockT: the hour that lights, traffic and shadows follow (fixed in the day / night / dusk views)
 let cars=[],parts=[],boats=[],trains=[];
 const keys=new Set();
 
@@ -3653,10 +3653,12 @@ function stepTruck(c,dt){
   if(c.st==='work'){c.t=0;c.wt+=dt;
     if(c.inc&&c.wt>4&&!c.inc.done){c.inc.done=true;if(now>polMsg-4000){polMsg=now+4000;toast(INC[c.inc.type||'theft'].done,'good');}}
     if(!live||c.wt>45)goHome(c);}}
-function stepCars(dt){const S=W.st,target=Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24));
+// how busy the streets are by the hour: rush hours in the morning and evening, quiet small hours
+function rush(t){const g=(c,w)=>Math.exp(-(((t-c)/w)**2));return .28+.72*(t>=6&&t<23?1:0)*(1-g(23,2.5)*.5)+.5*g(8,1.1)+.55*g(18.2,1.3)-.25*g(3,2.2);}
+function stepCars(dt){const S=W.st,target=Math.round(Math.min(240,Math.floor(S.roads*.5),4+Math.floor(S.pop/24))*Math.min(1.25,rush(clockT)));
   dispAcc+=dt;if(dispAcc>.5){dispAcc=0;dispatchFire();}
   dispatchPolice(dt);fightSet.clear();for(const c of cars)if(c.st==='work'&&c.fire!=null)fightSet.add(c.fire);
-  if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target)for(let n=cars.length-1;n>=0;n--)if(!cars[n].path){cars.splice(n,1);break;}
+  if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target&&Math.random()<.08)for(let n=cars.length-1;n>=0;n--)if(!cars[n].path){cars.splice(n,1);break;}   // thin out gently
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}
     if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
     c.t+=dt*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
@@ -3827,22 +3829,35 @@ let X0=0,Y0=0;const visBuf=new Int32Array(N*N*3);let visN=0;
 // cast shadows: each object sprite gets a ground shadow, its silhouette sheared away from a sun at the upper left.
 // sp.g is where the sprite meets the ground relative to its anchor (8 = tile centre for buildings, 0 for things placed at a point)
 let castSh=false,shA=0;
-function shadowOf(sp){if(sp.sh!==undefined)return sp.sh;const w=sp.w,h=sp.h,src=sp.c.getContext('2d').getImageData(0,0,w,h).data;
+// The sun moves through the day: long shadows to the left in the morning, short ones at noon, long to the right towards evening.
+// Five sun positions, each sprite's shadow built once per position the first time it's needed.
+const SUN=[[-1.45,.5],[-.7,.38],[.2,.28],[.9,.45],[1.55,.55]];let sunB=3;
+const sunOf=t=>t<8.5?0:t<11?1:t<13.5?2:t<16?3:4;
+function shadowOf(sp){const key='sh'+sunB;if(sp[key]!==undefined)return sp[key];const w=sp.w,h=sp.h,src=sp.c.getContext('2d').getImageData(0,0,w,h).data;
   let bot=0;for(let i=3;i<src.length;i+=4)if(src[i]>60)bot=Math.max(bot,(i>>2)/w|0);
-  const base=sp.g!=null?sp.g-sp.oy:bot-Math.round(w/4),   // buildings: footprint centre sits a quarter of the sprite width above its lowest pixel
-    ext=Math.max(0,base),cw=w+Math.ceil(ext*.9)+2,ch=Math.max(h,base+Math.ceil(ext*.45)+2);
+  const [ax,ay]=SUN[sunB],base=sp.g!=null?sp.g-sp.oy:bot-Math.round(w/4),   // buildings: footprint centre sits a quarter of the sprite width above its lowest pixel
+    ext=Math.max(0,base),padL=ax<0?Math.ceil(ext*-ax)+2:0,cw=w+Math.ceil(ext*Math.abs(ax))+4,ch=Math.max(h,base+Math.ceil(ext*ay)+2);
   const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;const g=cv.getContext('2d'),img=g.createImageData(cw,ch),d=img.data;let any=false;
-  for(let py=0;py<h;py++)for(let px=0;px<w;px++){if(src[(py*w+px)*4+3]<60)continue;const hh=base-py;let X=px,Y=py;if(hh>0){X=Math.round(px+hh*.9);Y=Math.round(base+hh*.45);}
+  for(let py=0;py<h;py++)for(let px=0;px<w;px++){if(src[(py*w+px)*4+3]<60)continue;const hh=base-py;let X=px+padL,Y=py;if(hh>0){X=Math.round(px+hh*ax)+padL;Y=Math.round(base+hh*ay);}
     if(X<0||Y<0||X>=cw||Y>=ch)continue;const o=(Y*cw+X)*4;d[o]=18;d[o+1]=22;d[o+2]=48;d[o+3]=255;any=true;}
-  g.putImageData(img,0,0);return sp.sh=any?{c:cv}:null;}
+  g.putImageData(img,0,0);return sp[key]=any?{c:cv,dx:-padL}:null;}
 // Shadows of things that stand still are gathered while the objects are drawn and painted next frame as one layer
 // (opaque into an offscreen canvas, then composited once), which is only redrawn when that set or the camera changes.
 let shRec=[],shHash=0,spIds=0,swayDX=0;const shCv=document.createElement('canvas'),shCx=shCv.getContext('2d');let shKey='';
 function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp);if(sh){
-      if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
-      else{const wx=x-swayDX+sp.ox+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13)|0;}}}
-  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(sp.n,x+sp.ox,y+sp.oy);c.globalAlpha=a;}
+      if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox+sh.dx,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
+      else{const wx=x-swayDX+sp.ox+sh.dx+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13+sunB*131)|0;}}}
+  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(litNow?sp.n:nightDark(sp),x+sp.ox,y+sp.oy);c.globalAlpha=a;}
   if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;c.drawImage(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+// Homes, shops and workshops switch their lights on one by one between 17:30 and 19:30 and off again through the night; some
+// stay up all night (offices, night shifts), some homes light up again before dawn. A dark building uses its night colours
+// without the lit windows (the day sprite tinted the way nightOf tints it).
+let litNow=1;const ndCache=new WeakMap();
+function nightDark(sp){let d=ndCache.get(sp);if(d)return d;d=document.createElement('canvas');d.width=sp.w;d.height=sp.h;const g=d.getContext('2d');
+  g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA})`;g.fillRect(0,0,sp.w,sp.h);ndCache.set(sp,d);return d;}
+function litOf(i){const k=W.kind[i],t=clockT,a=hash(i,7,3),b=hash(i,11,5),c2=hash(i,13,9),T=t<12?t+24:t,on=17.4+a*2.2;
+  const off=k===K.RES?(b<.2?99:21.6+c2*5):k===K.COM?(b<.35?99:20.6+c2*4):(b<.45?99:22+c2*5);
+  return(T>=on&&T<off)||(k===K.RES&&b>.5&&t>=5+c2*1.7&&t<7.6)?1:0;}
 // snow caps: the top few opaque pixels of every column of a standing sprite (roofs, treetops), built once per sprite
 let capA=0;const capCache=new WeakMap();
 function capOf(sp){let cp=capCache.get(sp);if(cp!==undefined)return cp;cp=null;
@@ -4055,8 +4070,8 @@ function render(){
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){if(b.fx==null)continue;const k=idx(Math.floor(b.fx),Math.floor(b.fy));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
-  const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);
-  if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh;
+  const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);sunB=sunOf(clockT);
+  if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh+'|'+sunB;
     if(key!==shKey){shKey=key;if(shCv.width!==lw||shCv.height!==lh){shCv.width=lw;shCv.height=lh;}else shCx.clearRect(0,0,lw,lh);
       for(let n=0;n<shRec.length;n+=3)shCx.drawImage(shRec[n],shRec[n+1]-X0,shRec[n+2]-Y0);}
     c.globalAlpha=shA;c.drawImage(shCv,0,0);c.globalAlpha=oa;}
@@ -4074,9 +4089,9 @@ function render(){
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const sw=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45)*(stormy?2.4:.75));for(const[u,v,s]of pts){swayDX=s&1?sw:0;drawSpr(c,SP.tree[s],sx+(u-v)*16+swayDX,sy+(u+v)*8);}swayDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
-      if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);drawSpr(c,spb,asx,asy);emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
+      if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);litNow=nightF>.01?litOf(ba):1;drawSpr(c,spb,asx,asy);litNow=1;emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
-      else if(L>0){sp=FL(bldSprite(i),i);drawSpr(c,sp,sx,sy);emit(sp,sx,sy);if(nightF>.05)winGlow(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK)drawSpr(c,FL(parkSprite(i),i),sx,sy);
     else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
@@ -4276,12 +4291,18 @@ function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
   const lo=car.ped?.36*car.side:.16,lx=gx+pd[0]*lo,ly=gy+pd[1]*lo,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
-  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);
+  const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>>2;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),bk&1,bk>>1&1,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);if(nightF>.15&&car.e>=3&&!car.ped)carLights(c,car,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
   if(sp.siren&&!car.quiet){const ph=(now/160+car.x+car.y|0)%2,[px,py]=sp.siren;c.fillStyle=ph?'#ff3a3a':'#3a7dff';c.fillRect(sx+sp.ox+px-1,sy+sp.oy+py,1,1);c.fillStyle=ph?'#3a7dff':'#ff3a3a';c.fillRect(sx+sp.ox+px+1,sy+sp.oy+py,1,1);
     if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.5;c.drawImage(ph?SP.sirR.c:SP.sirB.c,sx+sp.ox+px-6,sy+sp.oy+py-3);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
+// after dark motor vehicles drive with headlights (two bright points and a soft pool of light on the road ahead) and red tail lights
+function carLights(c,car,sx,sy){const[dx,dy]=DIRS[car.d],vx=(dx-dy)*16,vy=(dx+dy)*8,L=Math.hypot(vx,vy),ux=vx/L,uy=vy/L,cx=sx,cy=sy-3,ga=c.globalAlpha,f=Math.min(1,(nightF-.15)/.4);
+  c.globalCompositeOperation='lighter';c.globalAlpha=ga*f*.6;c.drawImage(glowTexOf('white',1),Math.round(cx+ux*13-11),Math.round(cy+uy*13+2-4),22,8);
+  c.globalAlpha=ga*f*.45;c.drawImage(glowTexOf('red',1),Math.round(cx-ux*6-5),Math.round(cy-uy*6+1-2),10,4);c.globalCompositeOperation='source-over';c.globalAlpha=ga*Math.min(1,f*1.4);
+  c.fillStyle='#fff6d6';c.fillRect(Math.round(cx+ux*5-uy*1.5),Math.round(cy+uy*5+ux*.8),1,1);c.fillRect(Math.round(cx+ux*5+uy*1.5),Math.round(cy+uy*5-ux*.8),1,1);
+  c.fillStyle='#ff3a2a';c.fillRect(Math.round(cx-ux*5),Math.round(cy-uy*5),1,1);c.globalAlpha=ga;}
 function emit(sp,sx,sy){if(!sp.em||!SPEEDS[speed])return;const r=frameDt*Math.min(2.2,SPEEDS[speed]);
   for(const[ex,ey,kind]of sp.em)if(Math.random()<r*(kind==='steam'?5:3.2)&&parts.length<700)
     parts.push({x:sx+sp.ox+ex+X0+(Math.random()-.5)*2,y:sy+sp.oy+ey+Y0,vx:3+Math.random()*4,vy:-7-Math.random()*5,life:0,max:2.2+Math.random()*1.6,sz:kind==='steam'?2:1,kind,g:0});}
@@ -4617,6 +4638,7 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
   if(mul){simAcc+=dt*mul;let steps=0;while(simAcc>=DAY&&steps<8){simAcc-=DAY;simDay(false);steps++;}if(steps>=8)simAcc=0;
     if(dayMode==='auto')W.tod=(W.tod+dt*mul*24/150)%24;}
   const td=dayMode==='dusk'?18.3:W.tod;nightF=dayMode==='day'?0:dayMode==='night'?1:(td>=7&&td<17.5?0:td<20&&td>=17.5?(td-17.5)/2.5:td>=20||td<5?1:1-(td-5)/2);
+  clockT=dayMode==='day'?14.5:dayMode==='night'?21.5:td;
   duskF=dayMode!=='auto'&&dayMode!=='dusk'?0:Math.max(0,1-Math.abs(td-18.4)/1.5)+Math.max(0,1-Math.abs(td-6.2)/1.2);
   const pan=600*dt*DPR/cam.s*2;if(keys.has('w')||keys.has('arrowup'))cam.y-=pan;if(keys.has('s')||keys.has('arrowdown'))cam.y+=pan;if(keys.has('a')||keys.has('arrowleft'))cam.x-=pan;if(keys.has('d')||keys.has('arrowright'))cam.x+=pan;if(keys.size)clampCam();
   stepCars(dt*mul*1.1);stepBoats(dt*mul*1.1);stepTrains(dt*mul*1.1);stepPlanes(dt*Math.min(mul,2));stepParts(dt);render();placeTarget();updateHud(false);evTick(dt);
