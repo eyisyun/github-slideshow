@@ -4358,18 +4358,39 @@ function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[
     if(SPEEDS[speed]&&Math.random()<.25&&parts.length<700)parts.push({x:tx+X0+(Math.random()-.5)*10,y:ty+Y0,vx:(Math.random()-.5)*6,vy:-6-Math.random()*4,life:0,max:1.6,sz:2,kind:'steam',g:0});}
   if(sp.siren&&!car.quiet){const ph=(now/160+car.x+car.y|0)%2,[px,py]=sp.siren;c.fillStyle=ph?'#ff3a3a':'#3a7dff';c.fillRect(sx+sp.ox+px-1,sy+sp.oy+py,1,1);c.fillStyle=ph?'#3a7dff':'#ff3a3a';c.fillRect(sx+sp.ox+px+1,sy+sp.oy+py,1,1);
     if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.5;c.drawImage(ph?SP.sirR.c:SP.sirB.c,sx+sp.ox+px-6,sy+sp.oy+py-3);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
-// two signal poles on the corners of a crossing, one for each axis: dark head with red / amber / green lamps, glowing after dusk
-function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),pole=nightCss('#6a7078',nightF),head=nightCss('#24272e',nightF*.5);
-  for(const[px,py,ax]of[[sx-11,sy+9,1],[sx+11,sy+9,0]]){const s2=ax?(st>=2?st-2:2):(st<2?st:2),lit=s2===0?'#4cff7a':s2===1?'#ffc23a':'#ff4a3a',ly=s2===0?py-8:s2===1?py-9:py-10;
-    c.fillStyle=pole;c.fillRect(px,py-8,1,8);c.fillStyle=head;c.fillRect(px-1,py-11,3,4);c.fillStyle=lit;c.fillRect(px,ly,1,1);
-    if(nightF>.2){const ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*.7;c.drawImage(glowTexOf(s2===0?'green':s2===1?'gold':'red'),px-6,ly-3,13,7);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
-// umbrellas: people out walking in the rain carry one, each in its own colour
-function umbrella(c,car,sp,sx,sy){const X=sx+sp.ox+4,Y=sy+sp.oy,h=hash(car.x*13+car.c,car.y*7+(car.side>0?1:0),55),cl=['#e04a3a','#3a7ad8','#f2c140','#2a2d36','#5ab45a','#e070b0','#f4f2ec'][(h*7)|0];
-  c.fillStyle=nightCss('#3a3030',nightF*.5);c.fillRect(X+1,Y-2,1,7);                                   // shaft down to the hand
-  c.fillStyle=nightCss(cl,nightF);c.fillRect(X-1,Y-5,3,1);c.fillRect(X-2,Y-4,5,1);c.fillRect(X-3,Y-3,7,1);   // dome
-  c.fillStyle=nightCss(cl,Math.min(1,nightF+.35),.9);c.fillRect(X-3,Y-3,1,1);c.fillRect(X,Y-3,1,1);c.fillRect(X+3,Y-3,1,1);   // ribs at the scalloped rim
-  c.fillStyle=nightCss('#ffffff',nightF,.35);c.fillRect(X-1,Y-5,1,1);c.fillRect(X-2,Y-4,1,1);              // sheen
-  c.fillStyle=nightCss('#3a3030',nightF*.5);c.fillRect(X,Y-6,1,1);}
+// two mast-arm traffic lights on the corners of a crossing (one per axis), Korean style: a shaded steel pole on a base plate, an arm
+// reaching out over the road with a horizontal three-lamp head (red / amber / green under hoods) hanging from it, and a pedestrian
+// signal box on the pole showing a red or green figure. The lit lamp glows after dusk.
+function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),nf=nightF,P=(px,py,w,h,cl,a)=>{c.fillStyle=nightCss(cl,nf*.85,a==null?1:a);c.fillRect(px,py,w,h);};
+  for(const[px,py,ax,dir,tl]of[[sx-12,sy+9,1,1,-1],[sx+11,sy+9,0,-1,1]]){const s2=ax?(st>=2?st-2:2):(st<2?st:2),walk=s2===2,top=py-14,end=px+dir*8,ey=top+tl*4;   // arms run along the iso grid, one up-right, one down-left
+    P(px-1,py,4,1,'#3a3e46');P(px,py-1,2,1,'#4a4f58');                                                    // base plate
+    P(px,top,1,py-top-1,'#9aa2ac');P(px+1,top,1,py-top-1,'#5c636e');                                   // pole, lit side and shadow side
+    for(let k=0;k<=8;k++){const ax2=px+dir*k,ay2=top+Math.round(tl*k/2);P(ax2,ay2,1,1,'#8a929c');P(ax2,ay2+1,1,1,'#4c525c',.8);}   // mast arm
+    P(px+dir,top+1+(tl>0?1:0),1,1,'#6a717c');                                                          // bracket
+    const hx=end-dir*1-3,hy=ey+2;P(hx-1,hy,7,4,'#1c1f25');P(hx-1,hy,7,1,'#30343c');P(end-dir,ey+1,1,1,'#30343c');   // head with backplate, hanger
+    const lamp=[['#ff3a2a','#5a1c18'],['#ffc23a','#5a4416'],['#3cf07a','#14502c']];
+    for(let k=0;k<3;k++){const on=(k===0&&s2===2)||(k===1&&s2===1)||(k===2&&s2===0),lx=hx+k*2,col2=lamp[k][on?0:1];
+      c.fillStyle=on?col2:nightCss(col2,nf*.5);c.fillRect(lx,hy+1,1,2);if(on){c.fillStyle='rgba(255,255,255,.55)';c.fillRect(lx,hy+1,1,1);}
+      P(lx,hy+1-1,1,1,'#3a3f48');}                                                                         // hoods
+    const pyb=top+6,pxb=px+(dir>0?2:-2);P(pxb,pyb,2,4,'#1c1f25');c.fillStyle=walk?'#5cff9a':'#ff5040';c.fillRect(pxb+(dir>0?0:1),pyb+1+(walk?0:0),1,walk?2:2);   // pedestrian box
+    if(nf>.2){const ga=c.globalAlpha,k=s2===2?0:s2===1?1:2,lx=hx+k*2;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nf*.8;
+      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red'),lx-8,hy-3,17,9);c.globalAlpha=ga*nf*.4;c.drawImage(glowTexOf(walk?'green':'red'),pxb-4,pyb-1,10,6);
+      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red',1),end-10,py-3+tl*4,20,7);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
+// umbrellas: people out walking in the rain carry one: a domed canopy of eight panels (solid, two-tone, polka-dot or clear plastic),
+// lit from the upper left, scalloped rim with rib tips, a finial on top, the shaft and a crook handle held at the side,
+// and now and then a drop bursting off the top
+function umbrella(c,car,sp,sx,sy){const X=sx+sp.ox+4,Y=sy+sp.oy,h=hash(car.x*13+car.c,car.y*7+(car.side>0?1:0),55),h2=hash(car.c,car.x+car.y,56),nf=nightF;
+  const pal=['#e04a3a','#3a6ad0','#f2c140','#2a2d36','#4aa45a','#e070b0','#7a4ab8','#1e6a7a'][(h*8)|0],style=h2<.3?'solid':h2<.55?'two':h2<.72?'dots':'clear';
+  const row=[[-1,1],[-3,3],[-4,4]],px=(xx,yy,cl,a)=>{c.fillStyle=nightCss(cl,nf,a==null?1:a);c.fillRect(xx,yy,1,1);};
+  const shade=(cl,dx,r)=>{const [R0,G0,B0]=rgbOf(cl),k=dx<-1?.22:dx>1?-.22:0,t=r===0?.12:0,m=v=>Math.max(0,Math.min(255,Math.round(v+(255*(k+t)))));return`#${[m(R0),m(G0),m(B0)].map(v=>v.toString(16).padStart(2,'0')).join('')}`;};
+  c.fillStyle=nightCss('#2e2626',nf*.5);c.fillRect(X+1,Y-4,1,10);c.fillRect(X+2,Y+5,1,1);c.fillRect(X+3,Y+4,1,1);   // shaft and crook
+  for(let r=0;r<3;r++){const [a,b]=row[r];for(let dx=a;dx<=b;dx++){const seg=Math.floor((dx+4.5)/2.25)%2;let cl=pal,al=1;
+    if(style==='two'&&seg)cl='#f4f2ec';if(style==='dots'&&((dx+r*3)%3===0))cl='#f4f2ec';if(style==='clear'){cl='#e8f0f6';al=dx===a||dx===b||r===0?.75:.45;}
+    px(X+dx,Y-7+r,style==='clear'?cl:shade(cl,dx,r),al);}}
+  for(const dx of[-4,-2,0,2,4])px(X+dx,Y-4,style==='clear'?'#b8c4cc':shade(pal,dx,2),style==='clear'?.8:1);   // rib tips under the rim
+  if(style==='clear')for(const dx of[-2,0,2])px(X+dx,Y-6,'#9aa6b0',.7);
+  px(X,Y-8,'#3a3434');                                                                                   // finial
+  if(((now/140+h*37)|0)%9===0){const d=h2<.5?-1:1;px(X+d*3,Y-8,'#e6f2ff',.85);px(X+d*5,Y-7,'#e6f2ff',.6);}}   // a drop splashing off
 // after dark motor vehicles drive with headlights (two bright points and a soft pool of light on the road ahead) and red tail lights
 function carLights(c,car,sx,sy){const[dx,dy]=DIRS[car.d],vx=(dx-dy)*16,vy=(dx+dy)*8,L=Math.hypot(vx,vy),ux=vx/L,uy=vy/L,cx=sx,cy=sy-3,ga=c.globalAlpha,f=Math.min(1,(nightF-.15)/.4);
   c.globalCompositeOperation='lighter';c.globalAlpha=ga*f*.6;c.drawImage(glowTexOf('white',1),Math.round(cx+ux*13-11),Math.round(cy+uy*13+2-4),22,8);
