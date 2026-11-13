@@ -646,11 +646,22 @@ function treeInto(pb,x,y,type,s,seed,lv){   // lv: seasonal leaves [dark, mid, l
       for(let dx=-hw;dx<=hw;dx++){let c=dx<0?PAL.pine1:PAL.pine0;if(dx<0&&dx>=-1&&k%3===0)c=PAL.pine2;if(hash(x+dx,yy,seed)<.1)c=PAL.pine2;pb.put(x+dx,yy,col(c));}}
   }else{
     pb.put(x,y,col(PAL.trunk));pb.put(x,y-1,col(PAL.trunk));pb.put(x,y-2,col(PAL.trunk,-.2));
-    if(lv==='bare'){ // winter: the trunk carries on up, thin branches angle out left and right and end in fine twigs
-      const top=y-3-s-1,TR='#6e5040',TW='#93785f';for(let yy=y-3;yy>=top;yy--)pb.put(x,yy,col(TR,yy<top+2?.1:0));
-      for(let k=0,yy=y-4;yy>top;yy-=2,k++){const d=(k+seed)%2?1:-1,L=2+Math.round(hash(k,seed,4)*(s-1));let bx=x,by=yy;
-        for(let q=0;q<L;q++){bx+=d;if(q%2===0)by--;pb.put(bx,by,col(q<L-1?TR:TW,q>1?.08:0));}pb.put(bx+d,by-1,col(TW));pb.put(bx,by-1,col(TW,.1));}
-      pb.put(x-1,top,col(TW));pb.put(x+1,top,col(TW));
+    if(lv==='bare'){ // winter: a tapering trunk that forks into limbs, branches and fine twigs, filling the same crown as in summer,
+      // lit from the upper left, with a faint haze of twigs inside the crown and a few dry leaves still hanging on
+      const cy=y-2-s,R=s+1.2,empty=(px,py)=>{const i=(py|0)*pb.w+(px|0);return px>=0&&py>=0&&px<pb.w&&py<pb.h&&!pb.d[i];};
+      for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const e=(dx*dx)/(R*R)+(dy*dy)/(R*R*.8);if(e>1)continue;const j=hash(x+dx,cy+dy,seed+20);
+        if(j<.07+(1-e)*.08)pb.put(x+dx,cy+dy,col(dx+dy<0?'#97806b':'#7a6454',0,j<.03?120:70));}                       // twig haze
+      const C=['#43301f','#563d2c','#6c523f','#86705c'],plot=(px,py,d)=>{const X=Math.round(px),Y=Math.round(py);if(X<0||Y<0||X>=pb.w||Y>=pb.h)return;
+        const lit=X<x||Y<cy-1;pb.put(X,Y,col(C[Math.min(3,d+(lit&&d>0?1:0))]));};
+      const limb=(px,py,ang,len,depth,k)=>{const dx=Math.cos(ang),dy=Math.sin(ang);let q=0;for(;q<len;q+=.5){const nx=px+dx*q,ny=py+dy*q;
+          if(((nx-x)**2)/(R*R)+((ny-cy)**2)/(R*R*.9)>1.15)break;plot(nx,ny,3-depth);}
+        const ex=px+dx*q,ey=py+dy*q;if(depth<=0||q<1.2)return;
+        const sp=.42+hash(k,seed,depth)*.32,tw=(hash(k,seed,depth+5)-.5)*.3;
+        limb(ex,ey,ang-sp+tw,len*.7,depth-1,k*2+1);limb(ex,ey,ang+sp+tw,len*.66,depth-1,k*2+2);
+        if(depth===3&&hash(k,seed,8)<.6)limb(px+dx*q*.55,py+dy*q*.55,ang+(hash(k,seed,9)<.5?-1:1)*.9,len*.5,1,k*3+7);};
+      for(let k=0;k<3;k++){pb.put(x,y-k,col(C[0]));pb.put(x+1,y-k,col(C[0],-.15));}pb.put(x-1,y,col(C[0],-.1));pb.put(x+2,y,col(C[0],-.2));   // trunk and root flare
+      pb.put(x,y-3,col(C[1]));limb(x+.4,y-3,-Math.PI/2-.12,s*.9,3,1);limb(x+.6,y-3.5,-Math.PI/2+.55,s*.75,2,2);limb(x,y-4.5,-Math.PI/2-.75,s*.7,2,3);
+      for(let k=0;k<2;k++){const lx=x+Math.round((hash(k,seed,12)-.5)*R*1.6),ly=cy+Math.round((hash(k,seed,13)-.5)*R*1.2);if(hash(k,seed,14)<.55&&!empty(lx,ly))pb.put(lx,ly+1,col(hash(k,seed,15)<.5?'#8a5428':'#7a4c2a'));}   // dry leaves
       return;}
     const cy=y-2-s,base=lv?null:type===2?'#4f8f3a':null;
     for(let dy=-s-1;dy<=s+1;dy++)for(let dx=-s-1;dx<=s+1;dx++){const d=dx*dx+dy*dy*1.12,j=hash(x+dx,cy+dy,seed);
