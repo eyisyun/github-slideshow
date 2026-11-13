@@ -7,6 +7,9 @@ const scenes = [
   ['7-themeparks', 4, false, false, 'parks'], ['8-themeparks-night', 4, true, false, 'parks'],
   ['9-lantern-festival', 2, true, false, 'fest:lantern'], ['10-fireworks', 4, true, false, 'fest:firework'], ['11-cranes', 4, false, false, 'build'], ['12-decor', 4, false, false, 'decor'],
   ['13-postcard', 4, true, false, 'postcard'],   // 13 is the postcard image itself (1080x1350), not a screen
+  // 1.0.8: the living day, the seasons and the new buildings
+  ['14-dusk-lights', 4, false, false, 'dusk'], ['15-autumn', 4, false, false, 'season:9.6'], ['16-xmas-night', 4, true, false, 'xmas'],
+  ['17-spring', 2, false, false, 'season:3.5'], ['18-future-night', 5, true, false, 'adtw'],
 ];
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -17,7 +20,8 @@ const scenes = [
       await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html')); await p.waitForFunction(() => { const b = document.getElementById('boot'); return !b || b.hidden; }, null, { timeout: 30000 });
       await p.evaluate(([era, night, shop, feat]) => {
         closeEra(); try { localStorage.clear(); } catch (e) {}
-        W = blankWorld(77); genTerrain(W); W.era = era;
+        document.querySelectorAll('.devonly').forEach(e => e.remove());   // test-page tools (fast-forward etc.) are not in the app
+        W = blankWorld(77); genTerrain(W); W.era = era; W.cm = 5; W.ct = 10;   // early summer unless a scene says otherwise
         for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < (feat === true ? 20 : 13)) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
         const road = (x, y) => { if (inb(x, y) && W.terrain[idx(x, y)] !== 1 && W.kind[idx(x, y)] !== K.ROAD) placeRaw(K.ROAD, x, y); };
         const R = era === 0 ? 5 : 9;
@@ -67,6 +71,14 @@ const scenes = [
           for (let i = 0; i < N * N; i++) if (W.kind[i] >= K.RES && W.kind[i] <= K.IND && Math.hypot(i % N - 32, (i / N | 0) - 32) < 8) W.level[i] = Math.min(W.level[i], 2);   // low-rise round the plaza so it shows
           W.labels[idx(34, 34)] = LANG === 'en' ? 'Town fountain' : '우리 동네 분수'; recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1);
         }
+        const woods = () => { for (let i = 0; i < N * N; i++) { const d = Math.hypot(i % N - 32, (i / N | 0) - 32); if (d >= 10.5 && d < 18 && !W.kind[i] && W.terrain[i] === 0) W.trees[i] = 1 + (i * 7) % 3; } };
+        if (typeof feat === 'string' && feat.startsWith('season:')) { const m = +feat.slice(7); W.cm = Math.floor(m); W.ct = Math.round((m % 1) * CAL_T); W.wx = 0; W.wxEnd = Date.now() + 1e9; W.snow = 0; woods(); }
+        if (feat === 'dusk') { W.tod = 19.1; dayMode = 'auto'; paintDayBtn(); W.wx = 0; W.wxEnd = Date.now() + 1e9; cars = []; for (let k = 0; k < 200; k++) spawnCar(); }
+        if (feat === 'xmas') { // a snowy Christmas night: lights on every house, a tree and snowmen in the middle of town
+          xmasTest = true; W.cm = 11; W.ct = 10; W.snow = .8; W.wx = 2; W.wxEnd = Date.now() + 1e9; woods();
+          const deco = (L, x, y) => { clearTile(x, y); placeRaw(K.DECO, x, y); W.level[idx(x, y)] = L; W.vari[idx(x, y)] = 0; };
+          deco(25, 33, 33); deco(26, 34, 34); deco(26, 31, 33); recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1); }
+        if (feat === 'adtw') { for (const [x, y] of [[33, 33], [34, 33], [33, 34], [34, 34]]) clearTile(x, y); placeRaw(K.AD, 33, 33); recompute(); W.powered.fill(1); W.grid.fill(1); W.road.fill(1); }
         if (feat === 'decor' || (typeof feat === 'string' && feat.startsWith('fest:'))) cam.s = 4; else if (typeof feat === 'string' && feat !== 'parks') cam.s = 3;
         cam.x = feat === true ? 330 : feat ? 0 : 0; cam.y = feat === true ? 500 : feat ? 31 * 16 + 30 : 32 * 16 + 20; if (feat === true) cam.s = 3; if (feat === 'parks') cam.s = 3.3; if (innerWidth > 700) cam.s = Math.round(cam.s * 1.8 * 10) / 10; // tablets show far more map: zoom in so the city fills the shot
         if (night) { dayMode = 'night'; W.tod = 22; paintDayBtn(); } setSpeed(0); document.querySelectorAll('.toast').forEach(t => t.remove());
