@@ -6,7 +6,7 @@ const dir = path.join(__dirname, '..', 'store', 'screenshots'), out = path.join(
 const fonts = 'file://' + path.join(__dirname, '..', 'www', 'fonts.css');
 // [plain shot, ko title, ko line, en title, en line]
 const SHOTS = [
-  ['14-dusk-lights', '해 질 녘, 하나둘 켜지는 불빛', '창문마다 불이 켜지고 차들이 전조등을 켜요', 'City Lights at Dusk', 'Windows light up one by one as cars head home'],
+  ['14-dusk-lights', '해 질 녘 켜지는 불빛', '창문마다 불이 켜지고 차들이 전조등을 켜요', 'City Lights at Dusk', 'Windows light up one by one as cars head home'],
   ['15-autumn', '단풍이 물드는 가을', '벚꽃부터 단풍, 눈 덮인 겨울까지 계절이 흘러요', 'Autumn Colours', 'Cherry blossom, autumn leaves and snowy winters'],
   ['16-xmas-night', '눈 내리는 크리스마스', '12월이면 집집마다 전구가 반짝여요', 'A Snowy Christmas', 'Every house lights up all December'],
   ['18-future-night', '네온이 빛나는 미래 도시', '홀로그램 광고 타워와 사이버펑크 거리', 'A Neon Future City', 'Hologram ad towers and cyberpunk streets'],
