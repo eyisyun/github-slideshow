@@ -3973,7 +3973,7 @@ function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]
   if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
-  if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:e<=2||e>=5?SP.parkG:SP.parkGV[w.vari[i]%3][W.flip[anc(i)]?1:0];if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
+  if(k===K.PARK)return e<=1?SP.grass[w.gv[i]]:e<=2||e>=5?SP.parkG:SP.parkGV[0][W.flip[anc(i)]?1:0];if(k===K.POLICE)return e<3?SP.lotOld[K.COM][0]:SP.plaza;
   if(k===K.FIREPIT||k===K.WELL)return SP.lotOld.dirt[v];if(k===K.HOSP)return e<3?SP.lotOld[K.COM][0]:SP.plaza;if(k===K.PORT)return e<3?SP.lotOld.dirt[v]:SP.plaza;if(k===K.DEPOT)return SP.plaza;if(k===K.AIRPORT){const a=w.anchor[i],dx=i%N-a%N,dy=(i/N|0)-(a/N|0),f=w.flip[a],g=SP.tarmac[Math.min(5,Math.max(4,w.te[a]))-4][f?dx*5+dy:dy*5+dx]||SP.plaza;return f?flipped(g):g;}if(k===K.DECO){if(w.level[i]===12)return SP.sand[(x*7+y)&1];if(w.level[i]===3||w.level[i]===11||w.level[i]===8||w.level[i]===9||w.level[i]===10)return e<3?SP.lotOld.dirt[v]:SP.plaza;return w.terrain[i]===2?SP.sand[(x*7+y)&1]:SP.grass[w.gv[i]];}if(k===K.DOLMEN||k===K.MOUND)return SP.grass[w.gv[i]];if(k===K.PALACE||k===K.STATION||k===K.ELEV)return SP.plaza;
   if(k===K.SCHOOL&&w.te[w.anchor[i]]<3)return SP.lotOld[K.COM][0];if(k===K.WIND)return SP.grass[w.gv[i]];if(k===K.COAL)return SP.lot[K.IND][0];
   if(k===K.SCHOOL){const a=w.anchor[i],dx=i%N-a%N,dy=(i/N|0)-(a/N|0),f=w.flip[a];const g=SP.field[f?dx*2+dy:dy*2+dx]||SP.plaza;return f?flipped(g):g;}if(k===K.STADIUM)return SP.lot[K.COM][1];if(k>=K.FIRE)return SP.plaza;
@@ -4194,7 +4194,7 @@ function render(){seasonGrass();
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
       else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
-    else if(k===K.PARK){const sp=FL(parkSprite(i),i),e=Math.min(5,w.te[i]),pt=e>=3&&e<=4?SP.parkTrees[w.vari[i]%3]:null,fl=W.flip[anc(i)];
+    else if(k===K.PARK){const sp=FL(parkSprite(i),i),e=Math.min(5,w.te[i]),pt=e>=3&&e<=4?SP.parkTrees[0]:null,fl=W.flip[anc(i)];
       const tree=(j,back)=>{const[u0,v0,ts]=pt[j],u=fl?v0:u0,v=fl?u0:v0;if((u+v<.9)!==back)return;bendDX=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(ts,x,y,j+7),sx+(u-v)*16,sy+(u+v)*8);bendDX=0;};
       if(pt)for(let j=0;j<pt.length;j++)tree(j,true);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(pt)for(let j=0;j<pt.length;j++)tree(j,false);}
     else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
@@ -4255,7 +4255,12 @@ function civSprite(k,e,lv){e=Math.min(5,e);if(e>=5){if(k===K.HALL&&SP.hallF)retu
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
 function bldSprite(i){const e=Math.min(5,W.te[i]),k=W.kind[i],set=SP.E[e][k];const arr=set[Math.min(W.level[i],set.length-1)];return arr[W.vari[i]%arr.length];}
-function parkSprite(i){const e=Math.min(5,W.te[i]),arr=e<3?SP.parkE[e]:e>=5?SP.parkF:SP.park;return arr[W.vari[i]%arr.length];}
+// the present-day park for the toolbar: its ground, trees and sprite put together on one canvas
+function parkIcon(){if(SP.parkIco)return SP.parkIco;const sp=SP.park[0],H=sp.h,c=document.createElement('canvas');c.width=32;c.height=H;const g=c.getContext('2d');
+  g.drawImage(SP.parkGV[0][0].c,0,H-16);const tr=(u,v,s2)=>{const t=SP.tree[s2];g.drawImage(t.c,16+(u-v)*16+t.ox,H-16+(u+v)*8+t.oy);};
+  for(const[u,v,s2]of SP.parkTrees[0])if(u+v<.9)tr(u,v,s2);g.drawImage(sp.c,0,0);for(const[u,v,s2]of SP.parkTrees[0])if(u+v>=.9)tr(u,v,s2);return SP.parkIco={c,w:32,h:H};}
+// one look per age, so a row of parks matches: menhirs, the village tree (당산나무), a pavilion (정자), the strolling park, the sky garden
+function parkSprite(i){const e=Math.min(5,W.te[i]);return(e<3?SP.parkE[e]:e>=5?SP.parkF:SP.park)[0];}
 function campfire(c,sx,sy){const f=now/110|0,ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.3+nightF*.6;c.drawImage(SP.glow.c,sx-15,sy+2);c.globalCompositeOperation='source-over';c.globalAlpha=ga;
   for(let k=0;k<9;k++){const fx=sx-2+((hash(k,1,f)*5)|0),fy=sy+7-((hash(k,2,f)*6)|0);c.fillStyle=k%3===0?'#fff1a0':k%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,1,2);}}
 // theme park motion (bx,by = footprint centre on screen, f = -1 when mirrored): windmill sails, the cable car, drifting balloons, a sparkling iron tower at night
@@ -4505,7 +4510,7 @@ function spriteIcon(sp,maxPx=36){const c=sp.c,g=c.getContext('2d'),d=g.getImageD
 function buildTools(){
   const tools=$('#tools');tools.innerHTML='';const E=W.era;
   OVERLAYS[0].name=['불씨','우물','우물','전력망','전력망','전력망'][E];T('coal').desc=E>=5?'전력 8,000을 오염 없이 만듭니다. 옛 화력 발전소는 저절로 바뀌지 않으니 새로 지어야 해요. 2×2.':'전력 1,600을 만들지만 오염이 심합니다. 2×2.';OVERLAYS[0].desc=E<3?'불씨와 우물이 닿는 곳(노란색)과 닿지 않는 곳(빨간색).':'노란색은 전기가 들어오는 곳, 빨간색은 끊긴 곳.';
-  const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon((E>=5?SP.aveF:SP.ave)[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:SP.park[1]),
+  const iconFor={road:()=>spriteIcon((E>=5?SP.roadF:E>=4?SP.road:SP.roadE[E])[5],30),avenue:()=>spriteIcon((E>=5?SP.aveF:SP.ave)[5],30),park:()=>spriteIcon(E<3?SP.parkE[E][0]:E>=5?SP.parkF[0]:parkIcon()),
     res:()=>spriteIcon(SP.E[E][K.RES][1][0]),com:()=>spriteIcon(SP.E[E][K.COM][1][0]),ind:()=>spriteIcon(SP.E[E][K.IND][E>=3?2:1][0]),
     police:()=>spriteIcon(civSprite(K.POLICE,E)),school:()=>spriteIcon(civSprite(K.SCHOOL,E),40),firepit:()=>spriteIcon(SP.firepit),well:()=>spriteIcon(SP.well),
     wind:()=>spriteIcon(SP.wind),coal:()=>spriteIcon(E>=5?SP.fusion:SP.coal,38),fire:()=>spriteIcon(civSprite(K.FIRE,E)),hosp:()=>spriteIcon(civSprite(K.HOSP,E)),port:()=>spriteIcon(civSprite(K.PORT,E)),depot:()=>spriteIcon(civSprite(K.DEPOT,E)),airport:()=>spriteIcon(SP.airport[E>=5?1:0],40),rail:()=>spriteIcon(SP.rail[Math.max(3,E)][5],30),hall:()=>spriteIcon(E>=5?SP.hallF:SP.hall,38),theme:()=>spriteIcon(SP.theme[0].icon,30),adtw:()=>spriteIcon(SP.adtw[E>=5?1:0],40),stadium:()=>spriteIcon(E>=5?SP.stadiumF:SP.stadium,40),tower:()=>spriteIcon(E>=5?SP.towerF:SP.tower,38),
