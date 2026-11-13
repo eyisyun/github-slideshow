@@ -4381,7 +4381,8 @@ function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),nf=nightF,P=(px,py,w,h,
 // umbrellas: people out walking in the rain carry one: a domed canopy of eight panels (solid, two-tone, polka-dot or clear plastic),
 // lit from the upper left, scalloped rim with rib tips, a finial on top, the shaft and a crook handle held at the side,
 // and now and then a drop bursting off the top
-function umbrella(c,car,sp,sx,sy){const X=sx+sp.ox+4,Y=sy+sp.oy,h=hash(car.x*13+car.c,car.y*7+(car.side>0?1:0),55),h2=hash(car.c,car.x+car.y,56),nf=nightF;
+function umbrella(c,car,sp,sx,sy){if(car.um==null){car.um=Math.random();car.um2=Math.random();}   // picked once per walker, kept while they walk
+  const X=sx+sp.ox+4,Y=sy+sp.oy,h=car.um,h2=car.um2,nf=nightF;
   const pal=['#e04a3a','#3a6ad0','#f2c140','#2a2d36','#4aa45a','#e070b0','#7a4ab8','#1e6a7a'][(h*8)|0],style=h2<.3?'solid':h2<.55?'two':h2<.72?'dots':'clear';
   const row=[[-1,1],[-3,3],[-4,4]],px=(xx,yy,cl,a)=>{c.fillStyle=nightCss(cl,nf,a==null?1:a);c.fillRect(xx,yy,1,1);};
   const shade=(cl,dx,r)=>{const [R0,G0,B0]=rgbOf(cl),k=dx<-1?.22:dx>1?-.22:0,t=r===0?.12:0,m=v=>Math.max(0,Math.min(255,Math.round(v+(255*(k+t)))));return`#${[m(R0),m(G0),m(B0)].map(v=>v.toString(16).padStart(2,'0')).join('')}`;};
