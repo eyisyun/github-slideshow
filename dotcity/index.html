@@ -3893,12 +3893,17 @@ function shadowOf(sp){const key='sh'+sunB;if(sp[key]!==undefined)return sp[key];
   g.putImageData(img,0,0);return sp[key]=any?{c:cv,dx:-padL}:null;}
 // Shadows of things that stand still are gathered while the objects are drawn and painted next frame as one layer
 // (opaque into an offscreen canvas, then composited once), which is only redrawn when that set or the camera changes.
-let shRec=[],shHash=0,spIds=0,swayDX=0;const shCv=document.createElement('canvas'),shCx=shCv.getContext('2d');let shKey='';
+let shRec=[],shHash=0,spIds=0,swayDX=0,bendDX=0;const shCv=document.createElement('canvas'),shCx=shCv.getContext('2d');let shKey='';
 function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp);if(sh){
       if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox+sh.dx,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
       else{const wx=x-swayDX+sp.ox+sh.dx+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13+sunB*131)|0;}}}
-  c.drawImage(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;c.drawImage(litNow?sp.n:nightDark(sp),x+sp.ox,y+sp.oy);c.globalAlpha=a;}
-  if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;c.drawImage(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+  const blit=bendDX?bent:(img,X,Y)=>c.drawImage(img,X,Y);if(bendDX)bentC=c,bentH=sp.h;
+  blit(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;blit(litNow?sp.n:nightDark(sp),x+sp.ox,y+sp.oy);c.globalAlpha=a;}
+  if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;blit(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+// trees bend in the wind instead of sliding: the whole crown leans by bendDX pixels, the top of the trunk by half of it, the base and roots stay put
+let bentC=null,bentH=0;
+function bent(img,X,Y){const h=bentH,w=img.width,a=Math.round(h*.72),b=Math.round(h*.82),half=Math.trunc(bendDX/2);   // crown | upper trunk | base
+  bentC.drawImage(img,0,0,w,a,X+bendDX,Y,w,a);bentC.drawImage(img,0,a,w,b-a,X+half,Y+a,w,b-a);bentC.drawImage(img,0,b,w,h-b,X,Y+b,w,h-b);}
 // Homes, shops and workshops switch their lights on one by one between 17:30 and 19:30 and off again through the night; some
 // stay up all night (offices, night shifts), some homes light up again before dawn. A dark building uses its night colours
 // without the lit windows (the day sprite tinted the way nightOf tints it).
@@ -4137,7 +4142,7 @@ function render(){seasonGrass();
     if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
       const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);continue;}
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
-        pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const sw=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45)*(stormy?2.4:.75));for(let j=0;j<pts.length;j++){const[u,v,s]=pts[j];swayDX=s&1?sw:0;drawSpr(c,treeLook(s,x,y,j),sx+(u-v)*16+swayDX,sy+(u+v)*8);}swayDX=0;}}
+        pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const ph=now/(stormy?420:1700)+x*.9+y*.45;for(let j=0;j<pts.length;j++){const[u,v,s]=pts[j];bendDX=Math.round(Math.sin(ph+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(s,x,y,j),sx+(u-v)*16,sy+(u+v)*8);}bendDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);litNow=nightF>.01?litOf(ba):1;drawSpr(c,spb,asx,asy);litNow=1;emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
