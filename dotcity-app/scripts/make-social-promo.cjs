@@ -1,6 +1,6 @@
 // Short 9:16 promo videos for TikTok / Instagram Reels / YouTube Shorts, rendered from the built app (www/) with a manual clock and
 // encoded with ffmpeg (silent: pick a trending track in the app when posting).
-//   node scripts/make-social-promo.cjs <eras|festivals|life|watch> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
+//   node scripts/make-social-promo.cjs <eras|festivals|life|watch|seasons> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const VID = process.argv[2] || 'eras', LANG = process.argv[3] || 'ko', FPS = 24;
@@ -38,6 +38,14 @@ const VIDEOS = {
     [3, 0, 'squid', ko ? '깊은 바다에선…' : 'And deep in the sea…', 4.6, 7, 6.4, [0, -2], [0, -6], 2.3],
     [3, 0, 'whale', ko ? '고래가 숨을 쉬어요 🐋' : 'a whale comes up for air 🐋', 4.8, 6.4, 6, [0, 0], [-6, -4], 2.4]],
     end: ko ? ['바다 괴물부터 외계 손님까지\n살아 있는 나만의 픽셀 도시', 'App Store에서 무료'] : ['Sea monsters, alien visitors\nand a pixel city that lives', 'Free on the App Store'] },
+  seasons: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', scenes: [
+    [4, 0, 'dusk', ko ? '해가 지면<br>불이 하나씩 켜지고' : 'As the sun goes down<br>the lights come on one by one', 5.2, 3.6, 3.1, [0, -6], [0, -18]],
+    [4, 0, 'rush', ko ? '퇴근길 차들은<br>전조등을 켜요' : 'Cars head home<br>with their headlights on', 3.6, 6.2, 5.6, [0, 0], [0, -6]],
+    [2, 0, 'spring', ko ? '봄이면 벚꽃이 피고 🌸' : 'Cherry blossom in spring 🌸', 3.6, 3.8, 3.4, [10, 0], [-10, -10]],
+    [4, 0, 'rain', ko ? '비 오는 날엔<br>우산을 쓰고 ☂' : 'Umbrellas out<br>on rainy days ☂', 3.4, 7.4, 6.8, [0, -4], [0, -8]],
+    [4, 0, 'autumn', ko ? '가을엔 단풍이<br>하나둘 물들어요 🍁' : 'Autumn colours<br>creep across town 🍁', 5, 3.4, 3, [0, 0], [0, -14]],
+    [4, 1, 'winter', ko ? '겨울밤엔 눈이 내려요 ❄' : 'Snow falls on winter nights ❄', 3.8, 3.8, 3.4, [0, -4], [0, -16]]],
+    end: ko ? ['하루가 흐르고 계절이 바뀌는\n살아 있는 픽셀 도시', 'App Store에서 무료'] : ['Days pass and seasons turn\nin a pixel city that lives', 'Free on the App Store'] },
 }[VID];
 (async () => {
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -63,7 +71,7 @@ const VIDEOS = {
     const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1], evOff = 0] = VIDEOS.scenes[k];
     await p.evaluate(([era, night, setup]) => {   // the same town builder as the store screenshots, plus the scene's setup
       closeEra(); try { localStorage.clear(); } catch (e) {}
-      W = blankWorld(77); genTerrain(W); W.era = era;
+      W = blankWorld(77); genTerrain(W); W.era = era; W.cm = 5; W.ct = 10;   // early summer unless the scene sets a season
       for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < 14) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
       const road = (x, y) => { if (inb(x, y) && W.terrain[idx(x, y)] !== 1 && W.kind[idx(x, y)] !== K.ROAD) placeRaw(K.ROAD, x, y); };
       const R = era === 0 ? 5 : 9;
@@ -84,8 +92,14 @@ const VIDEOS = {
       W.ev = { c: 0, nf: 1e9, nd: 1e9, fest: null, dis: null }; W.wx = 0; W.wxEnd = Date.now() + 1e9; W.snow = 0; W.month = 5; incidents.length = 0;
       if (setup.startsWith('fest:')) { W.ev.fest = { k: setup.slice(5), end: 1e9 }; festSrc = null; festFxs = []; if (setup === 'fest:xmas') { W.wx = 2; W.snow = 1; } }
       if (setup === 'build' || setup === 'rebuild') for (let i = 0; i < N * N; i++) if (isBld(i) && hash(i % N, i / N | 0, 5) < (setup === 'build' ? .14 : .1)) { W.build[i] = 99999; W.te[i] = era; }
-      cars = []; for (let k = 0; k < 140; k++) spawnCar(); buildTools(); setTool('inspect'); setSpeed(1);
+      if (['spring', 'autumn', 'winter'].includes(setup)) for (let i = 0; i < N * N; i++) { const d = Math.hypot(i % N - 32, (i / N | 0) - 32); if (d >= 10.5 && d < 18 && !W.kind[i] && W.terrain[i] === 0) W.trees[i] = 1 + (i * 7) % 3; }   // woods round the town
+      if (setup === 'spring') { W.cm = 3; W.ct = 10; }
+      if (setup === 'winter') { xmasTest = true; W.cm = 11; W.ct = 10; W.snow = .8; W.wx = 2; }
+      if (setup === 'rain') { W.cm = 6; W.wx = 1; }
+      cars = []; for (let k = 0; k < (setup === 'rush' || setup === 'rain' ? 240 : 140); k++) spawnCar(); buildTools(); setTool('inspect'); setSpeed(1);
       dayMode = night ? 'night' : 'day'; W.tod = night ? 22 : 11; document.querySelectorAll('.toast').forEach(t => t.remove());
+      if (setup === 'dusk' || setup === 'rush') { dayMode = 'auto'; W.tod = setup === 'dusk' ? 17.2 : 19.6; }
+      if (setup === 'autumn') { W.cm = 9; W.ct = 0; }
       for (let i = 0; i < 30; i++) frame(performance.now() + i * 40);
     }, [era, night, setup]);
     if (setup === 'postcard') {   // the postcard itself, made from a night view of the town, slides in over it
@@ -100,11 +114,18 @@ const VIDEOS = {
         let best = null, bd = 1e9; for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { if (seaDeep(x, y) < 6) continue; const d = Math.hypot(x - 32, y - 32); if (d < bd) { bd = d; best = [x, y]; } }
         if (!best || !seaSpawn(setup, best)) return null; seaEv.t0 = t - off * 1000; seaEv.last = t; return [(seaEv.x - seaEv.y) * 16, (seaEv.x + seaEv.y) * 8 - 4]; }, [setup, t, evOff, cx0, cy0]);
       if (!at) throw new Error('no deep water for ' + setup); [cx0, cy0] = at; }
+    if (setup === 'rush' || setup === 'rain') {   // centre on a traffic-light crossing, or on someone walking in the rain
+      const at = await p.evaluate(setup => { if (setup === 'rush') { for (let d = 0; d < 12; d++) for (let y = 32 - d; y <= 32 + d; y++) for (let x = 32 - d; x <= 32 + d; x++) if (hasSignal(x, y)) return [(x - y) * 16, (x + y) * 8 + 8]; return null; }
+        const w = cars.filter(c => c.ped).sort((a, b) => Math.hypot(a.x - 32, a.y - 32) - Math.hypot(b.x - 32, b.y - 32))[0]; if (!w) return null; w.sp *= .5; return [(w.x - w.y) * 16, (w.x + w.y) * 8 + 4]; }, setup);
+      if (at) [cx0, cy0] = at; }
     if (setup.startsWith('fest:') || setup === 'build' || setup === 'decor') {   // run the scene for a few seconds first so lanterns, balloons and cranes are already up
       await p.evaluate(([cx, cy, s, t]) => { cam.s = s; cam.x = cx; cam.y = cy; for (let i = 0; i < 160; i++) frame(t + i * 50); }, [cx0 + x0, cy0 + y0, z0, t]); t += 160 * 50; }
     for (let f = 0; f < F; f++) { const u = f / (F - 1), e = u * u * (3 - 2 * u); t += 1000 / FPS;
       if (setup === 'fest:firework' && f % 5 === 0) await p.evaluate(() => { const cols = ['#ff5f7a', '#ffd84a', '#5fe0ff', '#9aff6a', '#ffffff', '#c28bff'], lw = view.width / cam.s, lh = view.height / cam.s, c = cols[(Math.random() * 6) | 0];
         const x = X0 + lw * (.15 + .7 * Math.random()), y = Y0 + lh * (.3 + .3 * Math.random()); for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2, sp = 20 + (k % 4) * 4; parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * .8, life: 0, max: 1.6, sz: 1, kind: 'fw', c, g: 14 }); } });
+      if (setup === 'dusk') await p.evaluate(u => { W.tod = 17.2 + 5.4 * u; }, u);   // time-lapse from late afternoon to night
+      if (setup === 'rush') await p.evaluate(() => { W.tod = 19.6; });
+      if (setup === 'autumn') await p.evaluate(u => { const m = 9 + 1.5 * u; W.cm = Math.floor(m); W.ct = Math.round((m % 1) * CAL_T); }, u);   // September into October: the trees turn one by one
       if (setup === 'quake' && f === Math.round(F * .3)) await p.evaluate(() => { const ev = W.ev; ev.dis = { k: 'quake', ph: 'hit', t: 0, tiles: [], n: 0 }; disTick(ev.dis, ev); shakeT = 2.2; W.powered.fill(1); W.road.fill(1); });
       if (setup === 'rebuild' && f > F * .35 && f % 6 === 0) await p.evaluate(() => { const l = []; for (let i = 0; i < N * N; i++) if (W.build[i] > 9000) l.push(i); const i = l[(Math.random() * l.length) | 0];
         if (i != null) { W.build[i] = 0; dust(i % N + .5, (i / N | 0) + .5, '#d8cfc0'); } });
