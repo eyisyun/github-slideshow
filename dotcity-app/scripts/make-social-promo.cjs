@@ -40,9 +40,9 @@ const VIDEOS = {
     end: ko ? ['바다 괴물부터 외계 손님까지\n살아 있는 나만의 픽셀 도시', 'App Store에서 무료'] : ['Sea monsters, alien visitors\nand a pixel city that lives', 'Free on the App Store'] },
   seasons: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', scenes: [
     [4, 0, 'dusk', ko ? '해가 지면<br>불이 하나씩 켜지고' : 'As the sun goes down<br>the lights come on one by one', 5.2, 3.6, 3.1, [0, -6], [0, -18]],
-    [4, 0, 'rush', ko ? '퇴근길 차들은<br>전조등을 켜요' : 'Cars head home<br>with their headlights on', 3.6, 6.2, 5.6, [0, 0], [0, -6]],
+    [4, 0, 'rush', ko ? '퇴근길 차들은<br>전조등을 켜요' : 'Cars head home<br>with their headlights on', 3.6, 5, 4.4, [0, 0], [0, -6]],
     [2, 0, 'spring', ko ? '봄이면 벚꽃이 피고 🌸' : 'Cherry blossom in spring 🌸', 3.6, 3.8, 3.4, [10, 0], [-10, -10]],
-    [4, 0, 'rain', ko ? '비 오는 날엔<br>우산을 쓰고 ☂' : 'Umbrellas out<br>on rainy days ☂', 3.4, 7.4, 6.8, [0, -4], [0, -8]],
+    [4, 0, 'rain', ko ? '비 오는 날엔<br>우산을 쓰고 ☔' : 'Umbrellas out<br>on rainy days ☔', 3.4, 5.4, 5, [0, -4], [0, -8]],
     [4, 0, 'autumn', ko ? '가을엔 단풍이<br>하나둘 물들어요 🍁' : 'Autumn colours<br>creep across town 🍁', 5, 3.4, 3, [0, 0], [0, -14]],
     [4, 1, 'winter', ko ? '겨울밤엔 눈이 내려요 ❄' : 'Snow falls on winter nights ❄', 3.8, 3.8, 3.4, [0, -4], [0, -16]]],
     end: ko ? ['하루가 흐르고 계절이 바뀌는\n살아 있는 픽셀 도시', 'App Store에서 무료'] : ['Days pass and seasons turn\nin a pixel city that lives', 'Free on the App Store'] },
@@ -67,7 +67,7 @@ const VIDEOS = {
     document.head.append(st); const c = document.createElement('div'); c.id = 'cap'; document.body.append(c); });
   const icon = 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '..', 'ios', 'App', 'App', 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png')).toString('base64');
   let n = 0, t = 1000; const shot = async () => { await p.screenshot({ path: `${OUT}/${String(n++).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92 }); };
-  for (let k = 0; k < VIDEOS.scenes.length; k++) {
+  for (let k = 0; k < VIDEOS.scenes.length; k++) { if (process.env.ONLY && !process.env.ONLY.split(',').includes(String(k))) continue;   // ONLY=1,3 renders just those scenes (for checking)
     const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1], evOff = 0] = VIDEOS.scenes[k];
     await p.evaluate(([era, night, setup]) => {   // the same town builder as the store screenshots, plus the scene's setup
       closeEra(); try { localStorage.clear(); } catch (e) {}
@@ -94,6 +94,7 @@ const VIDEOS = {
       if (setup === 'build' || setup === 'rebuild') for (let i = 0; i < N * N; i++) if (isBld(i) && hash(i % N, i / N | 0, 5) < (setup === 'build' ? .14 : .1)) { W.build[i] = 99999; W.te[i] = era; }
       if (['spring', 'autumn', 'winter'].includes(setup)) for (let i = 0; i < N * N; i++) { const d = Math.hypot(i % N - 32, (i / N | 0) - 32); if (d >= 10.5 && d < 18 && !W.kind[i] && W.terrain[i] === 0) W.trees[i] = 1 + (i * 7) % 3; }   // woods round the town
       if (setup === 'spring') { W.cm = 3; W.ct = 10; }
+      if (setup === 'rush' || setup === 'rain') for (let i = 0; i < N * N; i++) if (W.kind[i] >= K.RES && W.kind[i] <= K.IND && Math.hypot(i % N - 32, (i / N | 0) - 32) < 9) W.level[i] = Math.min(W.level[i], 2);   // low-rise so the street shows
       if (setup === 'winter') { xmasTest = true; W.cm = 11; W.ct = 10; W.snow = .8; W.wx = 2; }
       if (setup === 'rain') { W.cm = 6; W.wx = 1; }
       cars = []; for (let k = 0; k < (setup === 'rush' || setup === 'rain' ? 240 : 140); k++) spawnCar(); buildTools(); setTool('inspect'); setSpeed(1);
