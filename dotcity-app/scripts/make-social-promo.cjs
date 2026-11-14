@@ -3,7 +3,10 @@
 //   node scripts/make-social-promo.cjs <eras|festivals|life|watch|seasons> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
-const VID = process.argv[2] || 'eras', LANG = process.argv[3] || 'ko', FPS = 24;
+// PREVIEW=iphone|ipad renders an App Store app preview instead: 886x1920 / 1200x1600 portrait, 30 fps, with a silent stereo track
+// (App Store Connect wants one), into store/preview/.
+const VID = process.argv[2] || 'eras', LANG = process.argv[3] || 'ko', PV = process.env.PREVIEW || '', FPS = PV ? 30 : 24;
+const VIEW = PV === 'ipad' ? { w: 600, h: 800, dpr: 2, W: 1200, H: 1600 } : PV ? { w: 360, h: 780, dpr: 886 / 360, W: 886, H: 1920 } : { w: 360, h: 640, dpr: 3, W: 1080, H: 1920 };
 const OUT = path.join(require('os').tmpdir(), `sframes_${VID}_${LANG}`);
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT);
 const ko = LANG === 'ko';
@@ -46,10 +49,20 @@ const VIDEOS = {
     [4, 0, 'autumn', ko ? '가을엔 단풍이<br>하나둘 물들어요 🍁' : 'Autumn colours<br>creep across town 🍁', 5, 3.4, 3, [0, 0], [0, -14]],
     [4, 1, 'winter', ko ? '겨울밤엔 눈이 내려요 ❄' : 'Snow falls on winter nights ❄', 3.8, 3.8, 3.4, [0, -4], [0, -16]]],
     end: ko ? ['하루가 흐르고 계절이 바뀌는\n살아 있는 픽셀 도시', 'App Store에서 무료'] : ['Days pass and seasons turn\nin a pixel city that lives', 'Free on the App Store'] },
+  preview: { badge: '', scenes: [   // App Store app preview: the most striking things first, quick cuts, no prices or store names
+    [4, 0, 'dusk', ko ? '해가 지면<br>불이 하나씩 켜지는 도시' : 'A city where the lights<br>come on one by one', 3.4, 3.4, 3, [0, -6], [0, -18]],
+    [0, 0, '', ko ? '움집 몇 채에서 시작해' : 'Start with a few huts', 1.7, 5, 4.6, [0, 10], [0, 2]],
+    [2, 0, '', ko ? '한옥 마을을 지나' : 'grow a hanok town', 1.7, 4, 3.7, [10, 0], [-6, -8]],
+    [5, 1, '', ko ? '네온 미래 도시까지!' : 'all the way to a neon future!', 2.4, 3.2, 2.8, [0, 0], [0, -16]],
+    [4, 0, 'autumn', ko ? '계절이 흐르고 🍁' : 'Seasons turn 🍁', 3.2, 3.4, 3, [0, 0], [0, -14]],
+    [2, 0, 'spring', ko ? '봄이면 벚꽃이 피고 🌸' : 'Cherry blossom in spring 🌸', 2.2, 3.8, 3.5, [10, 0], [-8, -8]],
+    [4, 1, 'fest:firework', ko ? '축제의 밤 🎆' : 'Festival nights 🎆', 2.8, 4, 3.5, [0, -10], [0, -22]],
+    [4, 1, 'winter', ko ? '눈 내리는 겨울밤 ❄' : 'Snowy winter nights ❄', 2.4, 3.8, 3.4, [0, -4], [0, -14]]],
+    end: ko ? ['석기시대부터 미래까지\n나만의 픽셀 도시', '지금 시작해 보세요'] : ['From the Stone Age to the future\nyour own pixel city', 'Start building today'] },
 }[VID];
 (async () => {
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  const ctx = await b.newContext({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: ko ? 'ko-KR' : 'en-US' });
+  const ctx = await b.newContext({ viewport: { width: VIEW.w, height: VIEW.h }, deviceScaleFactor: VIEW.dpr, isMobile: true, hasTouch: true, locale: ko ? 'ko-KR' : 'en-US' });
   const p = await ctx.newPage(); p.on('pageerror', e => console.log('ERR', e.message));
   await p.goto('file://' + path.join(__dirname, '..', 'www', 'index.html'));
   await p.waitForFunction(() => { const b = document.getElementById('boot'); return b && b.hidden; }, null, { timeout: 60000 });
@@ -132,7 +145,7 @@ const VIDEOS = {
         if (i != null) { W.build[i] = 0; dust(i % N + .5, (i / N | 0) + .5, '#d8cfc0'); } });
       await p.evaluate(([cx, cy, s, t, txt, a, pc]) => { cam.s = s; cam.x = cx; cam.y = cy; frame(t); const c = document.getElementById('cap'); c.innerHTML = txt; c.style.opacity = a; c.style.transform = `translateY(${(1 - a) * 10}px)`;
         const d = document.getElementById('pcard'); if (d) { d.style.opacity = pc; d.style.transform = `translateY(${(1 - pc) * 60}px) rotate(${-3 + pc * 1.5}deg)`; } },
-        [cx0 + x0 + (x1 - x0) * e, cy0 + y0 + (y1 - y0) * e, setup === 'postcard' ? 3 : z0 + (z1 - z0) * e, t, (k === 0 ? `<b>${VIDEOS.badge}</b><br>` : '') + cap, Math.min(1, f / 6, (F - f) / 5), Math.min(1, f / 10)]);
+        [cx0 + x0 + (x1 - x0) * e, cy0 + y0 + (y1 - y0) * e, setup === 'postcard' ? 3 : z0 + (z1 - z0) * e, t, (k === 0 && VIDEOS.badge ? `<b>${VIDEOS.badge}</b><br>` : '') + cap, Math.min(1, f / 6, (F - f) / 5), Math.min(1, f / 10)]);
       await shot(); }
     await p.evaluate(() => { const d = document.getElementById('pcard'); if (d) d.remove(); });
   }
@@ -140,7 +153,10 @@ const VIDEOS = {
     d.innerHTML = `<img src="${icon}"><div class="t">${t}</div><div class="s">${s}</div><div class="c">${c}</div>`; document.body.append(d); }, [icon, ko ? '도트시티' : 'Dot City', VIDEOS.end[0], VIDEOS.end[1]]);
   for (let f = 0; f < Math.round(2.6 * FPS); f++) { await p.evaluate(a => { const d = document.getElementById('endc'); d.style.opacity = a; d.querySelector('img').style.transform = `scale(${.85 + .15 * a})`; }, Math.min(1, f / 8)); await shot(); }
   await b.close();
-  const dst = path.join(__dirname, '..', 'store', 'promo', `dotcity-${VID}-${LANG}.mp4`);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', `${OUT}/%05d.jpg`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-preset', 'slow', '-movflags', '+faststart', dst]);
+  const dst = PV ? path.join(__dirname, '..', 'store', 'preview', `dotcity-preview-${PV}-${LANG}.mp4`) : path.join(__dirname, '..', 'store', 'promo', `dotcity-${VID}-${LANG}.mp4`);
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', `${OUT}/%05d.jpg`,
+    ...(PV ? ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100', '-shortest', '-c:a', 'aac', '-b:a', '128k', '-vf', `scale=${VIEW.W}:${VIEW.H},setsar=1`, '-r', String(FPS)] : []),
+    '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'slow', '-movflags', '+faststart', dst]);
   fs.rmSync(OUT, { recursive: true, force: true }); console.log('saved', dst, n, 'frames');
 })();
