@@ -1560,15 +1560,23 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       for(let a=0;a<hw;a++){pb.put(cx-hw+a,b0+Math.round(a/2)-74,[col(TR),col(TR,.25)]);pb.put(cx+a,b0+hw/2-Math.round(a/2)-74,[col(TR,-.15),col(TR,.15)]);}   // trim under the ticker
       const sp=mk(pb,-32,32-H,true,meta);sp.ad={hw,b0,cx};return sp;});
   ;yield;
-  { // stadium: oval bowl with coloured stands, pitch and 4 floodlight towers
-    const H=90,pb=new PB(96,H),cx=48,cy=H-24,R0=40,lights=[];
-    for(let b=0;b<14;b++)pb.ell(cx,cy-b,R0,(dx,dy,x,y)=>{const arch=b>1&&b<9&&((x>>2)%2===0);return arch?col('#5f6672',dx>.3?-.25:0):col('#d9dde2',dx<-.5?.1:dx<.2?0:dx<.6?-.18:-.3);});
-    pb.ell(cx,cy-14,R0,(dx,dy)=>{const r=Math.hypot(dx,dy);if(r>.94)return col('#eef0f3');
-      if(r>.62){const sec=Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI*2)*18),row=Math.floor(r*16)%2;return col(['#d9463b','#2f6fc0','#f2c140'][sec%3],row?-.12:.04);}
-      if(r>.58)return col('#3a3f48');const px=dx/.58,py=dy/.58;
-      if(Math.abs(px)<.03||Math.abs(Math.hypot(px,py)-.28)<.035||(Math.abs(Math.abs(px)-.8)<.03&&Math.abs(py)<.55))return col('#ffffff');return col('#4fae45',(Math.floor((px+1)*6))%2?0:.08);});
-    [[-1,0],[0,-1],[1,0],[0,1]].forEach(([ux,uy])=>{const x=cx+ux*(R0+3),y=cy+uy*(R0/2+2)+(uy?0:-2);for(let i=0;i<28;i++)pb.put(x,y-i,col('#9aa3ad',i%4?0:-.2));
-      for(let k=-2;k<=2;k++){pb.put(x+k,y-28,[col('#e8eef4'),col('#fffbe0')]);pb.put(x+k,y-29,col('#6d747e'));}lights.push([x,y-28]);});
+  { // stadium: a rounded concrete bowl with entrance arches and a red band, red-and-white seating tiers, a roof canopy over the back
+    // stands, a striped pitch with markings, and four lattice floodlight towers with lamp banks at the corners
+    const H=96,pb=new PB(96,H),cx=48,cy=H-24,R0=41,lights=[];
+    const se=(yc,r,fn)=>{const ry=r/2;for(let y=Math.floor(yc-ry-1);y<=Math.ceil(yc+ry);y++)for(let x=Math.floor(cx-r-1);x<=Math.ceil(cx+r);x++){const dx=(x+.5-cx)/r,dy=(y+.5-yc)/ry,U=(dx+dy)/.96,V=(dy-dx)/.84,q=Math.abs(U)**3.6+Math.abs(V)**3.6;if(q<=1)pb.put(x,y,fn(dx,dy,q,x,y,U,V));}};
+    const towers=[[-.9,0],[.9,0],[0,-.82]].map(([ux,uy])=>[Math.round(cx+ux*R0),Math.round(cy+uy*R0/2)]);
+    const tower=([x,y])=>{for(let i=0;i<34;i++){pb.put(x-1,y-i,col('#8a929c',i%4===0?.12:-.05));pb.put(x+1,y-i,col('#6a727c'));if(i%4===2)pb.put(x,y-i,col('#9aa3ad'));}
+      for(let r=0;r<4;r++)for(let k=-3;k<=3;k++)pb.put(x+k,y-38+r,r===0||r===3?col('#4a525c'):[col('#e8eef4',(k+r)%2?-.08:0),col('#fffbe0')]);lights.push([x,y-36]);};
+    towers.filter(t=>t[1]<cy).forEach(tower);
+    for(let b=0;b<15;b++)se(cy-b,R0,(dx,dy,q,x,y)=>{const ang=Math.atan2(dy,dx),sh=dx<-.5?.1:dx<.2?0:dx<.6?-.16:-.28;
+      if(b>=1&&b<6&&(x%6)<2)return col('#4a505a',sh*.5);if(b>=7&&b<9)return[col('#c8302a',sh),col('#e05a4a',sh)];if(b>=10&&b<12&&(x%4)===1)return winC(x,b,3101,.6,'#5a7ab8');return col('#d4d8dd',sh+(b===14?.08:0));});
+    se(cy-15,R0,(dx,dy,q,x,y,U,V)=>{if(q>.86)return col('#eef0f3',q>.95?-.06:.04);if(q>.27){const tier=Math.floor(q*14),aisle=Math.floor((Math.atan2(V,U)+Math.PI)/(Math.PI*2)*24)%4===0;
+        if(aisle)return col('#e8e4dc',-.06);return col(tier%3===2?'#f2eee8':'#d43a30',(tier%2?-.1:.04)+(dy<0?-.04:0));}
+      if(q>.24)return col('#3a3f48');const px=U/.66,py=V/.54;
+      if(Math.abs(px)<.02||Math.abs(Math.hypot(px,py)-.2)<.025||Math.abs(Math.abs(px)-.84)<.02&&Math.abs(py)<.66||Math.abs(Math.abs(py)-.66)<.025&&Math.abs(px)<.84)return col('#ffffff');
+      return col('#4fae45',(Math.floor((px+1)*6))%2?0:.08);});
+    for(let b=0;b<3;b++)se(cy-17-b,R0+1,(dx,dy,q)=>q>.8&&dy<-.15?col(b<2?'#9aa0a8':'#f4f6f8',b<2?-.1:dx<0?.04:-.12):null);
+    towers.filter(t=>t[1]>=cy).forEach(tower);
     SP.stadium=mk(pb,-48,48-H,true,{lights}); }
   ;yield;
   { // world theme parks (★ 3×3): a landscaped plaza with one large, detailed landmark per country
@@ -1787,6 +1795,21 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       return col(f?'#d8dee6':'#b8bcc2',((Math.floor(U*4)+Math.floor(V*4))&1)?.03:-.02);}));return out;});
     SP.airport=[0,1].map(f=>{const H=150,pb=new PB(160,H),cx=80,cy=H-40,at=(U,V)=>[cx+(U-V)*16,cy+(U+V-5)*8];
       const glass=t=>(a,b,hw,h)=>b>=h-1.2?col(f?'#f6f9fc':'#e8eef2',t):(a|0)%3===0?col(f?'#f6f9fc':'#9aa6b8',t):winC((a|0)+(t?40:0),b|0,6101+f,.7,f?'#5fa8c8':'#4f8fc0');
+      if(!f){ // 공항: two glass terminal wings with dark roof slabs either side of a stone tower block that carries the control cab
+        const wing=t=>(a,b,hw,h)=>{const ai=a|0;if(b>=h-1)return col('#4a4e5a',t+.1);if(b<1)return col('#6a6e78',t);if(ai%3===0)return col('#c8ccd4',t);return winC(ai+(t?40:0),b>5?1:0,6101,.7,'#4f9ad0');};
+        for(const U of[.95,2.45]){const[x,y]=at(U,1.0);pb.box({cx:x,cy:y,hw:18,h:11,L:wing(0),R:wing(-.22),T:(u,v)=>Math.min(u,v,1-u,1-v)<.05?col('#6a6e78'):col('#3e424c',((u*8|0)+(v*8|0))%2?.03:0)});
+          for(const[dx,dy]of[[-4,-14],[5,-12]]){pb.put(x+dx,y+dy,col('#c8ccd2'));pb.put(x+dx+1,y+dy,col('#a8acb4'));}}
+        const[tx,ty]=at(1.7,1.15),blk=t=>(a,b,hw,h)=>{if(b>=h-1)return col('#e8e4dc',t);if((a|0)%4>=1&&(a|0)%4<3&&b>2&&b<h-2&&(b|0)%4<3)return winC((a|0)+(t?30:0),b|0,6105,.6,'#4f9ad0');return col('#7a6e86',t);};
+        pb.box({cx:tx,cy:ty,hw:9,h:24,L:blk(0),R:blk(-.22),T:()=>col('#5a5466')});
+        pb.box({cx:tx,cy:ty-24,hw:5,h:6,L:(a,b)=>col('#9a92a6',(a|0)%2?0:-.06),R:(a,b)=>col('#9a92a6',-.25),T:()=>col('#5a5466')});
+        pb.box({cx:tx,cy:ty-30,hw:8,h:5,L:(a,b)=>b>=4?col('#e8ecf0'):b<1?col('#4a4e5a'):(a|0)%3===0?col('#3a3f48'):[col('#5ac0d0',b>2.5?.12:0),col('#cff6ff')],R:(a,b)=>b>=4?col('#e8ecf0',-.25):b<1?col('#4a4e5a',-.2):(a|0)%3===0?col('#3a3f48',-.2):[col('#5ac0d0',-.2),col('#b0e8f8')],T:()=>col('#e8ecf0')});
+        for(let i=0;i<8;i++)pb.put(tx+2,ty-36-i,col('#9aa6b8'));for(let i=0;i<3;i++)for(let j=0;j<4;j++)pb.put(tx+3+j,ty-43+i+(j>>1),col(i===1?'#ffffff':'#2f6fc0'));
+        for(let i=0;i<5;i++)pb.put(tx-3,ty-36-i,col('#5a5f68'));pb.put(tx-4,ty-40,col('#e8ecf0'));pb.put(tx-2,ty-40,col('#e8ecf0'));
+        for(const U of[1.2,2.5]){const[x,y]=at(U,2.15);for(let k=0;k<9;k++){pb.put(x-1+k,y-4-(k>>1),col('#e8ecf0'));pb.put(x-1+k,y-3-(k>>1),[col('#4f8fc0'),col('#ffe6a0')]);pb.put(x-1+k,y-2-(k>>1),col('#9aa6b8'));}pb.put(x+7,y-1,col('#5a5f68'));pb.put(x+7,y,col('#5a5f68'));}
+        let[x,y]=at(4.2,2.6);pb.box({cx:x,cy:y,hw:9,h:6,L:()=>col('#a9a49a'),R:()=>col('#a9a49a',-.25),T:()=>col('#8f897d')});for(let k=-6;k<=6;k++)pb.put(x+k,y-7-Math.round(Math.sqrt(Math.max(0,36-k*k))/3),col('#c9c3b5'));
+        [x,y]=at(4.3,.9);for(let k=0;k<3;k++){const[vx,vy]=at(3.6+k*.25,1.9);ibox(pb,vx,vy,4,2,2,col(['#f2c140','#e8ecf0','#3fb07a'][k],-.1),col(['#f2c140','#e8ecf0','#3fb07a'][k],-.3),col(['#f2c140','#e8ecf0','#3fb07a'][k]));}
+        const tw=[tx+2,ty-44];
+        return mk(pb,-80,80-H,true,{lights:[[at(.95,1)[0],at(.95,1)[1]-4],[at(2.45,1)[0],at(2.45,1)[1]-4],[tx,ty-32]],blink:[[tw[0],tw[1]+1,'#ff4a4a']]});}
       for(const U of[1.0,2.3]){const[x,y]=at(U,1.0);pb.box({cx:x,cy:y,hw:18,h:10,L:glass(0),R:glass(-.22),T:()=>col(f?'#f6f9fc':'#d0d4d8')});
         if(f){for(let b=0;b<=8;b++){const r=11*Math.sqrt(Math.max(0,1-(b/8.5)**2));pb.ell(x,y-10-b,Math.max(.8,r),dx=>col('#bff6e8',dx<-.4?.2:dx<.2?.05:-.15,215));}pb.ell(x,y-10,11.5,(dx,dy)=>dx*dx+dy*dy>.8?ng('#5fe6f2'):null);}
         else pb.roof(x,y-10,19,4,'#2f6fc0');}
@@ -1844,13 +1867,23 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       for(const k of out)pb.put(k%W0,k/W0|0,col('#3c4352',0,170));
       const nx=CX+(.5*L*sg)*16,ny=CY+(.5*L*sg)*8-zcAt(.5);return mk(pb,-CX,-CY,true,{nose:[Math.round(nx),Math.round(ny)]});}));}
   ;yield;
-  { // broadcast tower
-    const H=104,pb=new PB(32,H),cx=16,cy=H-8;
-    pb.box({cx,cy:cy-1,hw:6,h:3,L:()=>col('#c9ccd2'),R:()=>col('#c9ccd2',-.25),T:()=>col('#dfe2e6')});
-    pb.cyl(cx,cy-4,2.2,60,(dx,b)=>col(b%12<1.5?'#e04a3a':'#eceff2',dx<-.3?.1:dx<.3?0:-.25),()=>col('#ffffff'));
-    for(let b=0;b<9;b++){const r=b<3?3+b*1.6:b<6?7.6:7.6-(b-5)*1.8;pb.ell(cx,cy-60-b,r,(dx,dy,x)=>b>=3&&b<5?winC(x,0,2901,.85,'#3e6a8f'):col('#dfe3e8',dx<-.3?.12:dx<.3?0:-.25));}
-    for(let i=0;i<18;i++)pb.put(cx,cy-69-i,col('#d8dde3'));
-    SP.tower=mk(pb,-16,16-H,true,{blink:[[cx,cy-87,'#ff4a4a']],lights:[[cx,cy-64]]}); }
+  { // broadcast tower: a red-and-white tapering lattice mast with cross bracing, two platforms with dishes and panel antennas,
+    // a whip antenna with an aviation light, a fenced gravel pad and a small equipment hut
+    const H=108,pb=new PB(32,H),cx=16,cy=H-8,TOP=78,band=y=>(Math.floor((cy-y)/10)%2)?'#f2f2ee':'#d8392a';
+    pb.box({cx,cy,hw:14,h:1,L:()=>col('#8a8478'),R:()=>col('#8a8478',-.3),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.05?col('#9aa0a8',.1):col('#b8ae98',hash(x,y,5)<.25?-.12:hash(x,y,6)<.1?.1:0)});
+    const legs=[[[cx-10,cy-1],[cx-2,cy-TOP]],[[cx,cy+4],[cx,cy-TOP+1]],[[cx+10,cy-1],[cx+2,cy-TOP]]],at=(L,t)=>[L[0][0]+(L[1][0]-L[0][0])*t,L[0][1]+(L[1][1]-L[0][1])*t];
+    const seg=(x0,y0,x1,y1,sh)=>{const n=Math.ceil(Math.max(Math.abs(x1-x0),Math.abs(y1-y0)));for(let i=0;i<=n;i++){const x=Math.round(x0+(x1-x0)*i/n),y=Math.round(y0+(y1-y0)*i/n);pb.put(x,y,col(band(y),sh));}};
+    const N=8,ts=Array.from({length:N+1},(_,k)=>1-Math.pow(1-k/N,1.25));
+    for(let k=0;k<N;k++)for(const[A,B,sh]of[[legs[0],legs[1],0],[legs[1],legs[2],-.25]]){const[a0x,a0y]=at(A,ts[k]),[a1x,a1y]=at(A,ts[k+1]),[b0x,b0y]=at(B,ts[k]),[b1x,b1y]=at(B,ts[k+1]);
+      if(k%2)seg(a0x,a0y,b1x,b1y,sh-.1);else seg(b0x,b0y,a1x,a1y,sh-.1);seg(a1x,a1y,b1x,b1y,sh-.05);}
+    for(const[L,sh]of[[legs[0],.06],[legs[1],0],[legs[2],-.28]])seg(L[0][0],L[0][1],L[1][0],L[1][1],sh);
+    for(const t of[.55,.85]){const[lx,ly]=at(legs[0],t),[fx,fy]=at(legs[1],t),[rx,ry]=at(legs[2],t),w=Math.round(rx-lx)/2+2;
+      for(let k=-w;k<=w;k++){pb.put(Math.round(cx+k),Math.round(ly+Math.abs(k)/2),col('#5a616c'));pb.put(Math.round(cx+k),Math.round(ly-Math.abs(k)/2+1),col('#7a818c'));}
+      pb.ell(Math.round(lx-2),Math.round(ly-2),1.8,(dx)=>col('#ffffff',dx>.2?-.2:0));pb.ell(Math.round(rx+2),Math.round(ry-3),1.6,(dx)=>col('#e8ecf0',dx>.2?-.25:-.05));
+      for(let i=0;i<3;i++){pb.put(Math.round(fx),Math.round(fy-2-i),col('#c8ccd2'));pb.put(Math.round(fx+3),Math.round(fy-3-i),col('#a8acb4'));}}
+    for(let i=0;i<16;i++)pb.put(cx,cy-TOP-i,col(i%6<3?'#d8392a':'#f2f2ee',-.05));pb.put(cx,cy-TOP-16,[col('#e04a3a'),col('#ff6a5a')]);
+    pb.box({cx:cx+8,cy:cy+2,hw:4,h:4,L:(a,b)=>a>1.2&&a<2.6&&b<3?col('#5a5f68'):col('#c8ccd2'),R:()=>col('#c8ccd2',-.25),T:()=>col('#9aa0a8')});pb.put(cx+9,cy-3,col('#e8ecf0'));pb.put(cx+10,cy-3,col('#c8ccd2'));
+    SP.tower=mk(pb,-16,16-H,true,{blink:[[cx,cy-TOP-16,'#ff4a4a']],lights:[[cx+5,cy+1]]}); }
   ;yield;
   { const H=58,pb=new PB(32,H),cx=16,cy=H-8,o=col('#e8912d'),od=col('#b86a1e'),yl=col('#f2c230'),yd=col('#c8961a');
     pb.box({cx,cy:cy-1,hw:10,h:4,L:()=>col('#b8b2a8'),R:()=>col('#b8b2a8',-.25),T:()=>col('#cfc9bf')});
@@ -2385,13 +2418,22 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       glyph(pb,cx-24,cy-22,4,12,YEL,952);for(let i=0;i<14;i++)pb.put(cx-22,cy-8-i+12,col('#6a7088'));},
       (cx,cy)=>({lights:[[cx-2,cy-14],[cx-2,cy-26]],blink:[[cx-2,cy-32,'#ffffff']]}));
     // space elevator (2x2 wonder): a ribbon climbing out of sight
-    const elevSp=H=>mk2(H,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:28,h:4,L:(a,b)=>b>=2&&b<3?band(0):col(SH),R:(a,b)=>b>=2&&b<3?band(-.24):col(SH,-.25),T:fRoof});
-      pb.box({cx,cy:cy-3,hw:16,h:10,L:ftw(0,960,'#3a6aa8',5),R:ftw(-.24,960,'#3a6aa8',5),T:fGarden});
-      for(const[dx,dy]of[[-12,0],[12,0],[0,-6],[0,6]])pb.cyl(cx+dx,cy-13+dy*.5,2,4,side('#c9d2dc'),()=>neon(NEON));
-      pb.box({cx,cy:cy-13,hw:6,h:30,L:ftw(0,961,'#3a6aa8',6,PINK),R:ftw(-.24,961,'#3a6aa8',6,PINK),T:fRoof});
-      for(let y=cy-43;y>=0;y--){pb.put(cx-1,y,col('#e6ecf2'));pb.put(cx,y,col('#aab4c2'));if((y&7)===0)pb.put(cx+1,y,neon(NEON));}
-      for(const yy of[cy-110,cy-170])pb.box({cx,cy:yy,hw:3,h:4,L:()=>col(SH),R:()=>col(SH,-.25),T:()=>neon(PINK)});},
-      (cx,cy)=>({lights:[[cx,cy-6],[cx,cy-40],[cx,cy-112]],blink:[[cx,2,'#ff4a6a'],[cx,cy-172,'#ffffff']]}));
+    // space elevator: a railed launch platform with steps, a round white base station with a teal band and lit windows, an upper ring,
+    // a thick teal tether shaft with collars that thins into a cable, a climber pod on the way up, anchor pods and twin lamps
+    const elevSp=H=>mk2(H,(pb,cx,cy)=>{const TE='#4fc8d0';
+      pb.box({cx,cy:cy+1,hw:28,h:4,L:(a,b)=>b>=2&&b<3?band(0):col(SH),R:(a,b)=>b>=2&&b<3?band(-.24):col(SH,-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.04?neon(NEON):col('#4a5064',((x+y)&7)===0?.08:0)});
+      for(let k=-27;k<=27;k+=3){pb.put(cx+k,cy-3-(Math.abs(k)-27)/2*-1+0,col('#9aa6b8'));}
+      for(let k=0;k<4;k++)pb.box({cx:cx-10+k,cy:cy+8-k*.5,hw:4,h:1,L:()=>col('#c8d0dc'),R:()=>col('#c8d0dc',-.25),T:()=>col('#e0e6ee')});
+      for(const[dx,dy]of[[-20,0],[20,0],[0,-9]])pb.cyl(cx+dx,cy-3+dy,2.4,4,side('#c9d2dc'),()=>neon(NEON));
+      pb.cyl(cx,cy-3,14,10,(dx,b,x)=>b>=6&&b<7.5?[col(TE,dx>.3?-.2:.05),col('#9ff8ff')]:b>=2&&b<5&&x%3!==0&&Math.abs(dx)<.92?[col('#2a3a5a',dx>.3?-.15:0),col(hash(x,b|0,971)<.7?'#ffe6a0':'#9ff4ff')]:col('#eef2f6',dx<-.45?.06:dx<.15?0:dx<.6?-.16:-.28),(dx,dy)=>dx*dx+dy*dy>.8?neon(NEON):col('#d8dee6',dx*dx+dy*dy<.3?-.1:0));
+      pb.cyl(cx,cy-13,8,6,(dx,b,x)=>b>=2&&b<4&&x%2===0&&Math.abs(dx)<.9?[col('#2a3a5a'),col('#ff9af0')]:col('#e6ecf2',dx<-.45?.06:dx<.15?0:dx<.6?-.16:-.28),(dx,dy)=>dx*dx+dy*dy>.75?neon(PINK):col('#c8d0dc'));
+      for(let b=0;b<70;b++){const r=b<54?3.6:3.6-(b-54)/16*2.4;pb.ell(cx,cy-19-b,r,(dx)=>(b%12)<1?col('#2a6a78'):Math.abs(dx+.45)<.2?col('#bff8ff'):col(TE,dx<-.3?.1:dx<.3?0:-.25));}
+      for(let y=cy-89;y>=0;y--){pb.put(cx-1,y,col('#bfeaf0'));pb.put(cx,y,col('#5aa8b8'));if((y&7)===0)pb.put(cx+1,y,neon(NEON));}
+      for(const yy of[cy-36,cy-60])pb.cyl(cx,yy,5,2,side('#e6ecf2'),()=>neon(NEON));
+      pb.box({cx,cy:cy-120,hw:5,h:7,L:(a,b)=>b>=2&&b<4&&(a|0)%2?[col('#2a3a5a'),col('#ffe6a0')]:col('#eef2f6'),R:(a,b)=>b>=2&&b<4&&(a|0)%2?[col('#2a3a5a',-.15),col('#ffd88a')]:col('#eef2f6',-.25),T:()=>neon(PINK)});
+      pb.box({cx,cy:cy-175,hw:3,h:4,L:()=>col(SH),R:()=>col(SH,-.25),T:()=>neon(NEON)});
+      for(let i=0;i<14;i++)pb.put(cx-22,cy+4-i,col('#8a94a8'));for(const k of[-2,2]){pb.put(cx-22+k,cy-10,[col('#e8ecf0'),col('#fff6c0')]);pb.put(cx-22+k,cy-11,col('#5a6070'));}pb.put(cx-23,cy-10,col('#8a94a8'));pb.put(cx-21,cy-10,col('#8a94a8'));},
+      (cx,cy)=>({lights:[[cx,cy-6],[cx,cy-14],[cx,cy-122],[cx-24,cy-10],[cx-20,cy-10]],blink:[[cx,2,'#ff4a6a'],[cx,cy-177,'#ffffff']]}));
     ;yield;
     SP.elev=elevSp(230);SP.elevIco=elevSp(84);
     // civic buildings, future style
@@ -4520,28 +4562,27 @@ function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[
 // reaching out over the road with a horizontal three-lamp head (red / amber / green under hoods) hanging from it, and a pedestrian
 // signal box on the pole showing a red or green figure. The lit lamp glows after dusk.
 function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),nf=nightF,P=(px,py,w,h,cl,a)=>{c.fillStyle=nightCss(cl,nf*.85,a==null?1:a);c.fillRect(px,py,w,h);};
-  // taller Korean-style mast-arm signals: a tapered two-tone steel pole on a concrete footing, a long arm along the iso grid with a
-  // support strut, a horizontal head of three big round lamps (2x2) under hoods on a backplate with a pale border, a blue street-name
-  // sign on the arm, and a pedestrian signal box with a standing (red) or walking (green) figure. The lit lamp glows after dusk.
-  for(const[px,py,ax,dir,tl]of[[sx-12,sy+9,1,1,-1],[sx+11,sy+9,0,-1,1]]){const s2=ax?(st>=2?st-2:2):(st<2?st:2),walk=s2===2,top=py-20,L=11,end=px+dir*L,ey=top+Math.round(tl*L/2);
-    P(px-2,py,6,1,'#8a8478');P(px-1,py+1,4,1,'#6a6458');P(px-1,py-1,4,1,'#a8a294');                           // concrete footing
-    P(px,top,1,py-top-1,'#b4bcc6');P(px+1,top,1,py-top-1,'#5c636e');P(px,py-4,2,1,'#3a3f48');                 // pole: lit side, shadow side, collar
-    P(px,top-1,2,1,'#3a3f48');                                                                                // cap
-    for(let k=0;k<=L;k++){const ax2=px+dir*k,ay2=top+Math.round(tl*k/2);P(ax2,ay2,1,1,'#a2aab4');P(ax2,ay2+1,1,1,'#555c66',.9);}   // mast arm
-    if(!ax){ const sx0=px-6,sy0=top-3;P(sx0,sy0,5,3,'#2a5ab0');P(sx0,sy0,5,1,'#4a7ad0');P(sx0+1,sy0+1,3,1,'#e8eef8',.85);}   // street-name sign
-    const hx=end-dir*2-4,hy=ey+2;P(hx-2,hy-1,11,6,'#d8dce2',.55);P(hx-1,hy,9,4,'#1a1d22');P(hx-1,hy,9,1,'#30343c');P(end-dir,ey+1,1,1,'#30343c');   // backplate border, head, hanger
+  // post-mounted signals on each corner: a square concrete base, a thick grey pole with a rounded cap, a tall black head of three
+  // round lamps stacked under visors on the pole's road side, a pedestrian signal box (standing red / walking green figure) and a
+  // push-button box lower down. The lit lamp glows after dusk.
+  for(const[px,py,ax,dir]of[[sx-12,sy+9,1,1],[sx+11,sy+9,0,-1]]){const s2=ax?(st>=2?st-2:2):(st<2?st:2),walk=s2===2,top=py-19;
+    P(px-3,py,7,1,'#8a8478');P(px-2,py+1,5,1,'#6a6458');P(px-2,py-1,5,1,'#b4ae9e');                                // concrete base
+    P(px-1,top,1,py-top-1,'#c4ccd6');P(px,top,1,py-top-1,'#8a929c');P(px+1,top,1,py-top-1,'#555c66');           // pole: highlight, mid, shadow
+    P(px-1,top-1,3,1,'#6a727c');P(px,top-2,1,1,'#8a929c');P(px-1,py-3,3,1,'#3a3f48');                            // cap, collar
+    const hx=dir>0?px+2:px-6,hy=top-1;P(dir>0?px+1:px-2,hy+3,2,1,'#3a3f48');P(dir>0?px+1:px-2,hy+8,2,1,'#3a3f48');   // brackets
+    P(hx-1,hy-1,7,13,'#d8dce2',.4);P(hx,hy,5,11,'#16181c');P(hx,hy,5,1,'#2c3036');P(hx+4,hy,1,11,'#0c0e10');     // backplate halo, head, edge shade
     const lamp=[['#ff3a2a','#4a1814'],['#ffc23a','#4a3812'],['#3cf07a','#123c22']];
-    for(let k=0;k<3;k++){const on=(k===0&&s2===2)||(k===1&&s2===1)||(k===2&&s2===0),lx=hx+k*3,col2=lamp[k][on?0:1];
-      c.fillStyle=on?col2:nightCss(col2,nf*.5);c.fillRect(lx,hy+1,2,2);if(on){c.fillStyle='rgba(255,255,255,.6)';c.fillRect(lx,hy+1,1,1);}
-      P(lx-1,hy,4,1,'#3a3f48');}                                                                              // round lamps under hoods
-    const pyb=top+8,pxb=px+(dir>0?2:-4);P(pxb,pyb,3,6,'#1a1d22');P(pxb,pyb,3,1,'#30343c');                    // pedestrian signal box
+    for(let k=0;k<3;k++){const on=(k===0&&s2===2)||(k===1&&s2===1)||(k===2&&s2===0),ly=hy+1+k*3+(k?0:0),col2=lamp[k][on?0:1];
+      c.fillStyle=on?col2:nightCss(col2,nf*.5);c.fillRect(hx+1,ly+1,3,2);if(on){c.fillStyle='rgba(255,255,255,.65)';c.fillRect(hx+1,ly+1,1,1);}
+      P(hx,ly,5,1,'#30343c');P(dir>0?hx+5:hx-1,ly,1,2,'#30343c');}                                                 // lamps under visors
+    const pyb=top+9,pxb=dir>0?px+2:px-4;P(pxb,pyb,3,6,'#1a1d22');P(pxb,pyb,3,1,'#30343c');                       // pedestrian signal box
     c.fillStyle=walk?'#5cff9a':'#ff5040';const fx=pxb+1;c.fillRect(fx,pyb+1,1,1);c.fillRect(fx,pyb+2,1,2);
-    if(walk){const st2=(now/300|0)%2;c.fillRect(fx-1,pyb+4,1,1);c.fillRect(fx+1,pyb+4+st2-st2,1,1);if(st2)c.fillRect(fx-1,pyb+2,1,1);else c.fillRect(fx+1,pyb+2,1,1);}   // walking: legs apart, arms swinging
-    else{c.fillRect(fx,pyb+4,1,1);}                                                                        // standing: straight, legs together
-    P(px+(dir>0?-2:2),py-7,2,2,'#e0c040');                                                                    // push-button box
-    if(nf>.2){const ga=c.globalAlpha,k=s2===2?0:s2===1?1:2,lx=hx+k*3;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nf*.85;
-      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red'),lx-8,hy-3,18,10);c.globalAlpha=ga*nf*.45;c.drawImage(glowTexOf(walk?'green':'red'),pxb-4,pyb-1,11,8);
-      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red',1),end-12,py-3+tl*5,24,8);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
+    if(walk){const st2=(now/300|0)%2;c.fillRect(fx-1,pyb+4,1,1);c.fillRect(fx+1,pyb+4,1,1);if(st2)c.fillRect(fx-1,pyb+2,1,1);else c.fillRect(fx+1,pyb+2,1,1);}
+    else c.fillRect(fx,pyb+4,1,1);
+    const bx=dir>0?px-3:px+2;P(bx,py-8,2,3,'#2a2e36');P(bx,py-7,2,1,'#e0c040');                                   // push-button box
+    if(nf>.2){const ga=c.globalAlpha,k=s2===2?0:s2===1?1:2,ly=hy+2+k*3;c.globalCompositeOperation='lighter';c.globalAlpha=ga*nf*.85;
+      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red'),hx-5,ly-4,14,10);c.globalAlpha=ga*nf*.45;c.drawImage(glowTexOf(walk?'green':'red'),pxb-4,pyb-1,11,8);
+      c.drawImage(glowTexOf(k===2?'green':k===1?'gold':'red',1),px-10+dir*6,py-3,22,8);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}}}
 // umbrellas: people out walking in the rain carry one: a domed canopy of eight panels (solid, two-tone, polka-dot or clear plastic),
 // lit from the upper left, scalloped rim with rib tips, a finial on top, the shaft and a crook handle held at the side,
 // and now and then a drop bursting off the top
