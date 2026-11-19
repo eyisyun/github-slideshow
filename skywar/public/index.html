@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SKY WAR</title>
+<style>
+  @font-face { font-family: 'Galmuri'; src: url('/font.woff2') format('woff2'); font-display: swap; }
+  :root {
+    --bg: #14161f; --panel: #1f2332; --panel2: #2a3045; --line: #3b4360; --ink: #eef1f8; --dim: #8d95b0;
+    --gold: #ffcc4d; --accent: #4ab3ff; --red: #ff5a5a; --green: #5fe07a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: 'Galmuri', monospace; font-size: 13px; overflow: hidden; -webkit-user-select: none; user-select: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+  .hidden { display: none !important; }
+
+  #game { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #1b3a6b; touch-action: none; }
+
+  /* 격납고 */
+  #hangar { position: fixed; inset: 0; overflow-y: auto; background:
+      repeating-linear-gradient(0deg, transparent 0 31px, #ffffff08 31px 32px),
+      repeating-linear-gradient(90deg, transparent 0 31px, #ffffff08 31px 32px), var(--bg); }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .logo { font-size: 26px; letter-spacing: 2px; color: var(--accent); text-shadow: 3px 3px 0 #0b3a66; flex: 1; min-width: 180px; }
+  .logo small { display: block; font-size: 12px; color: var(--dim); letter-spacing: 0; text-shadow: none; }
+  .chip { background: var(--panel); border: 2px solid var(--line); padding: 6px 10px; display: flex; gap: 6px; align-items: center; }
+  .chip input { font: inherit; color: var(--ink); background: transparent; border: none; outline: none; width: 96px; }
+  .coins { color: var(--gold); }
+  .grid { display: grid; grid-template-columns: 340px 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 #0008; }
+  .panel h2 { margin: 0; padding: 8px 12px; font-size: 14px; font-weight: normal; background: var(--panel2); border-bottom: 2px solid var(--line); }
+  #preview { width: 100%; aspect-ratio: 1; display: block; background: #1a2a1f; }
+  .paints { display: flex; gap: 6px; padding: 10px 12px 0; flex-wrap: wrap; }
+  .paints button { width: 22px; height: 22px; border: 2px solid #0008; padding: 0; }
+  .paints button.on { outline: 2px solid #fff; outline-offset: 1px; }
+  .stats { padding: 10px 12px 12px; display: grid; gap: 6px; }
+  .stat { display: grid; grid-template-columns: 70px 1fr 44px; align-items: center; gap: 8px; color: var(--dim); }
+  .stat b { font-weight: normal; color: var(--ink); text-align: right; }
+  .bar { height: 10px; background: #111; border: 1px solid var(--line); position: relative; }
+  .bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+  .bar i.up { background: var(--green); }
+  .bar i.down { background: var(--red); }
+  .tabs { display: flex; flex-wrap: wrap; border-bottom: 2px solid var(--line); background: var(--panel2); }
+  .tabs button { background: none; border: none; padding: 9px 14px; color: var(--dim); border-bottom: 3px solid transparent; }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+  #parts { padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .card { background: var(--panel2); border: 2px solid var(--line); padding: 10px; display: grid; grid-template-columns: 52px 1fr; gap: 4px 10px; }
+  .card.eq { border-color: var(--accent); }
+  .card canvas { grid-row: span 3; width: 52px; height: 52px; background: #0003; }
+  .card .nm { font-size: 14px; }
+  .card .ds { color: var(--dim); font-size: 12px; }
+  .card .sp { grid-column: 1 / -1; color: var(--dim); font-size: 12px; }
+  .card button { grid-column: 1 / -1; padding: 7px; border: 2px solid var(--line); background: #0003; }
+  .card button.buy { background: #3a2f10; border-color: var(--gold); color: var(--gold); }
+  .card button.buy:disabled { opacity: .45; cursor: not-allowed; }
+  .card button.equip { background: #10304a; border-color: var(--accent); }
+  .card button.on { cursor: default; color: var(--dim); }
+  #fly { display: block; width: 100%; margin-top: 14px; padding: 16px; font-size: 22px; letter-spacing: 4px; background: #c0392b; border: 3px solid #ff8a7a; box-shadow: 4px 4px 0 #000a; }
+  #fly:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000a; }
+  .help { color: var(--dim); font-size: 12px; line-height: 1.8; padding: 10px 12px; }
+  .help kbd { background: #0005; border: 1px solid var(--line); padding: 0 5px; color: var(--ink); font-family: inherit; }
+  #toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: #000c; border: 2px solid var(--red); padding: 8px 16px; z-index: 10; }
+  #status { position: fixed; top: 8px; right: 8px; background: #000c; padding: 6px 10px; border: 2px solid var(--red); z-index: 10; }
+
+  /* 터치 조작 */
+  #touch { position: fixed; inset: 0; pointer-events: none; }
+  #touch .stick { position: absolute; left: 24px; bottom: 24px; width: 130px; height: 130px; border-radius: 50%; background: #ffffff14; border: 2px solid #ffffff40; pointer-events: auto; }
+  #touch .knob { position: absolute; left: 40px; top: 40px; width: 46px; height: 46px; border-radius: 50%; background: #ffffff50; }
+  #touch .btns { position: absolute; right: 20px; bottom: 24px; display: flex; gap: 14px; align-items: flex-end; pointer-events: auto; }
+  #touch .btns div { width: 78px; height: 78px; border-radius: 50%; background: #ff5a5a40; border: 2px solid #ff8a8a90; display: grid; place-items: center; font-size: 13px; }
+  #touch .btns div.sp { width: 62px; height: 62px; background: #4ab3ff40; border-color: #8ad0ff90; }
+  #touch .exit { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); pointer-events: auto; background: #0008; border: 2px solid #fff4; padding: 4px 10px; }
+</style>
+</head>
+<body>
+<canvas id="game" class="hidden"></canvas>
+
+<div id="touch" class="hidden">
+  <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+  <div class="btns"><div class="sp" id="tSp">보조</div><div id="tFire">발사</div></div>
+  <button class="exit" id="tExit">격납고</button>
+</div>
+
+<div id="hangar">
+  <div class="wrap">
+    <header>
+      <div class="logo">SKY WAR<small>픽셀 전투기 온라인 대전</small></div>
+      <label class="chip">조종사 <input id="name" maxlength="10" placeholder="이름"></label>
+      <div class="chip">전적 <span id="record">0 격추 / 0 피격</span></div>
+      <div class="chip coins">코인 <span id="coins">0</span></div>
+    </header>
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <h2>내 전투기</h2>
+          <canvas id="preview" width="260" height="260"></canvas>
+          <div class="paints" id="paints"></div>
+          <div class="stats" id="stats"></div>
+        </div>
+        <button id="fly">출격!</button>
+        <div class="panel" style="margin-top:14px">
+          <h2>조작법</h2>
+          <div class="help">
+            <kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> 선회 &nbsp; <kbd>W</kbd>/<kbd>↑</kbd> 가속 &nbsp; <kbd>S</kbd>/<kbd>↓</kbd> 감속<br>
+            <kbd>Space</kbd>/<kbd>J</kbd> 주무기 &nbsp; <kbd>Shift</kbd>/<kbd>K</kbd> 보조무기<br>
+            <kbd>Tab</kbd> 순위표 &nbsp; <kbd>Esc</kbd> 격납고로 귀환<br>
+            적에게 피해를 주면 코인, 격추하면 보너스 코인 80!
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>부품 상점 · 조립</h2>
+        <div class="tabs" id="tabs"></div>
+        <div id="parts"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="hidden"></div>
+<div id="status" class="hidden">서버에 연결 중…</div>
+
+<script src="/parts.js"></script>
+<script src="/game.js"></script>
+</body>
+</html>
