@@ -4513,14 +4513,16 @@ function parkIcon(){if(SP.parkIco)return SP.parkIco;const sp=SP.park[0],H=sp.h,c
   for(const[u,v,s2]of SP.parkTrees[0])if(u+v<.9)tr(u,v,s2);g.drawImage(sp.c,0,0);for(const[u,v,s2]of SP.parkTrees[0])if(u+v>=.9)tr(u,v,s2);return SP.parkIco={c,w:32,h:H};}
 // one look per age, so a row of parks matches: menhirs, the village tree (당산나무), a pavilion (정자), the strolling park, the sky garden
 function parkSprite(i){const e=Math.min(5,W.te[i]);return(e<3?SP.parkE[e]:e>=5?SP.parkF:SP.park)[0];}
+// one tongue of flame: rows from the base (X,Y) upward, narrowing toward the tip and swaying more the higher it goes; cols run base→tip
+const FLAME={RED:['#ff7a1a','#f05a18','#d83a14','#b8280e'],ORG:['#ffb02a','#ff8a1a','#ff6a14'],YEL:['#fff0a0','#ffd23a','#ffb02a'],WHT:['#ffffff','#fff6c8']};
+function flameTongue(c,X,Y,h,w,ph,cols,t){const n=Math.max(2,Math.round(h));for(let r=0;r<n;r++){const q=r/n,wd=Math.max(.5,w*Math.pow(1-q,.75)*(1+.15*Math.sin(t*13+ph+r))),
+    sway=Math.sin(t*6+ph+r*.45)*q*1.6,x0=Math.round(X+sway-wd),x1=Math.round(X+sway+wd);c.fillStyle=cols[Math.min(cols.length-1,Math.floor(q*cols.length))];c.fillRect(x0,Y-1-r,Math.max(1,x1-x0),1);}}
 // 모닥불 flame: layered tongues (red outside, orange, yellow, a white core) that lick upward and sway, an ember bed pulsing between the
 // logs, sparks rising and fading, and a ground glow that flickers with the flame (stronger after dusk)
 function campfire(c,sx,sy){const t=now/1000,X=sx,Y=sy+8,ga=c.globalAlpha,fl=.85+.15*Math.sin(t*9.1)*Math.sin(t*5.3+1);
   c.globalCompositeOperation='lighter';c.globalAlpha=ga*(.25+nightF*.65)*fl;c.drawImage(SP.glow.c,X-15,Y-6);if(nightF>.1){c.globalAlpha=ga*nightF*.8*fl;c.drawImage(glowTexOf('warm',1),X-26,Y-9,52,18);c.globalAlpha=ga*nightF*.5*fl;c.drawImage(glowTexOf('warm'),X-10,Y-22,20,22);}c.globalCompositeOperation='source-over';c.globalAlpha=ga;
   for(let k=0;k<7;k++){const a=k/7*6.283,b=.5+.5*Math.sin(t*4+k*1.7);c.fillStyle=b>.6?'#ffb03a':b>.3?'#ff6a1a':'#c83a14';c.fillRect(Math.round(X+Math.cos(a)*3),Math.round(Y+Math.sin(a)*1.5),1,1);}
-  const tongue=(ox,h,w,ph,cols)=>{const n=Math.max(2,Math.round(h));for(let r=0;r<n;r++){const q=r/n,wd=Math.max(.5,w*Math.pow(1-q,.75)*(1+.15*Math.sin(t*13+ph+r))),
-      sway=Math.sin(t*6+ph+r*.45)*q*1.6,x0=Math.round(X+ox+sway-wd),x1=Math.round(X+ox+sway+wd);c.fillStyle=cols[Math.min(cols.length-1,Math.floor(q*cols.length))];c.fillRect(x0,Y-1-r,Math.max(1,x1-x0),1);}};
-  const RED=['#ff7a1a','#f05a18','#d83a14','#b8280e'],ORG=['#ffb02a','#ff8a1a','#ff6a14'],YEL=['#fff0a0','#ffd23a','#ffb02a'],WHT=['#ffffff','#fff6c8'];
+  const tongue=(ox,h,w,ph,cols)=>flameTongue(c,X+ox,Y,h,w,ph,cols,t),{RED,ORG,YEL,WHT}=FLAME;
   for(const[ox,ph]of[[-3,0],[3,2.1],[0,4.2]]){const h=8+3*Math.sin(t*3.1+ph)+2*Math.sin(t*7.7+ph*2);tongue(ox,h,2.6,ph,RED);}
   for(const[ox,ph]of[[-1.5,1],[1.5,3]]){const h=10+3*Math.sin(t*3.7+ph)+2*Math.sin(t*8.3+ph);tongue(ox,h,2,ph,ORG);}
   {const h=8+2.5*Math.sin(t*4.3)+1.5*Math.sin(t*9.7);tongue(0,h,1.7,5,YEL);tongue(0,h*.45,.9,6,WHT);}
@@ -4652,10 +4654,32 @@ function drawGlows(c,sp,x,y){const ga=c.globalAlpha,ks=lightKinds(sp),base=y+8;c
   c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
 function extras(c,sp,x,y,blinkOn){if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(x+sp.ox+bx,y+sp.oy+by,1,1);}
   if(sp.lights&&nightF>.05)drawGlows(c,sp,x,y);}
-function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?bldSprite(i):null,top=sp?sy+sp.top+4:sy-6,span=Math.max(6,sy+10-top),f=now/90|0;
-  const ga=c.globalAlpha;c.globalAlpha=1;c.globalCompositeOperation='lighter';c.globalAlpha=.55+nightF*.4;c.drawImage(SP.glow.c,sx-15,sy-4);c.globalCompositeOperation='source-over';c.globalAlpha=1;
-  for(let k2=0;k2<26;k2++){const fx=sx-9+((hash(i,k2,f)*18)|0),fy=top-3+((hash(k2,i,f+3)*span)|0);c.fillStyle=k2%3===0?'#fff1a0':k2%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,2,3+(k2%3===2?1:0));}
-  c.globalAlpha=ga;if(SPEEDS[speed]&&Math.random()<frameDt*5&&parts.length<700)parts.push({x:sx+X0+(Math.random()-.5)*8,y:top+Y0,vx:3,vy:-12,life:0,max:2.4,sz:2,kind:'soot',g:0});}
+// where flames can burst out of a building: the lit-window spots of its night picture (4 px bins), spread over its height
+function fireWins(sp){if(sp._fw)return sp._fw;let d=null;try{const cv=sp.n;if(cv)d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;}catch(e){}
+  const B=new Map();if(d)for(let y=0;y<sp.h;y++)for(let x=0;x<sp.w;x++){const o=(y*sp.w+x)*4;if(d[o+3]<200)continue;const r=d[o],g=d[o+1],b=d[o+2];if(r+g+b<470||Math.max(r,g,b)<200)continue;
+    const k=((y/4)|0)*64+((x/4)|0),e=B.get(k)||[0,0,0];e[0]++;e[1]+=x;e[2]+=y;B.set(k,e);}
+  let pts=[...B.values()].map(e=>[Math.round(e[1]/e[0]),Math.round(e[2]/e[0])]).sort((a,b)=>a[1]-b[1]);
+  if(pts.length>8){const out=[];for(let k=0;k<8;k++)out.push(pts[Math.floor(k*pts.length/8)]);pts=out;}
+  if(pts.length<3){pts=[];const top=sp.top-sp.oy;for(let k=0;k<4;k++)pts.push([Math.round(sp.w/2+(k%2?5:-5)),Math.round(top+8+k*(sp.h-top-14)/4)]);}
+  return sp._fw=pts;}
+// a building on fire: an orange cast over the walls, flames bursting from its windows with scorch marks above, a fire raging on the roof,
+// a dark smoke plume drifting downwind, sparks, and the ground lit at night
+function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?FL(bldSprite(i),i):null,t=now/1000+i*.37,ga=c.globalAlpha,top=sp?sy+sp.top:sy-6;
+  const fl=.85+.15*Math.sin(t*9.1)*Math.sin(t*5.3+1),{RED,ORG,YEL,WHT}=FLAME;
+  c.globalCompositeOperation='lighter';c.globalAlpha=ga*(.45+nightF*.45)*fl;c.drawImage(SP.glow.c,sx-15,sy-4);
+  c.globalAlpha=ga*(.25+nightF*.35)*fl;c.drawImage(glowTexOf('warm'),sx-14,top-4,28,Math.max(16,sy+10-top));
+  if(nightF>.1){c.globalAlpha=ga*nightF*.7*fl;c.drawImage(glowTexOf('warm',1),sx-28,sy+2,56,18);}
+  c.globalCompositeOperation='source-over';c.globalAlpha=ga;
+  if(sp){const ox=sx+sp.ox,oy=sy+sp.oy,W2=fireWins(sp);W2.forEach(([wx,wy],n)=>{const on=Math.sin(t*1.3+n*2.1)>-.55;if(!on)return;const X=ox+wx,Y=oy+wy+2;
+      c.fillStyle='rgba(28,18,16,.75)';c.fillRect(X-1,Y-6,3,2);c.fillRect(X,Y-8,1,2);                                                     // scorch above the window
+      const h=4+2.2*Math.sin(t*4+n)+1.2*Math.sin(t*9+n*3);flameTongue(c,X,Y,h+1,1.8,n,ORG,t);flameTongue(c,X,Y,h*.6,1,n+1,YEL,t);});}
+  for(const[o,ph]of[[-5,0],[4,2.1],[0,4.2]]){const h=10+4*Math.sin(t*3.1+ph)+2*Math.sin(t*7.7+ph*2);flameTongue(c,sx+o,top+5,h,3,ph,RED,t);}
+  for(const[o,ph]of[[-2,1],[2.5,3]]){const h=11+3*Math.sin(t*3.7+ph)+2*Math.sin(t*8.3+ph);flameTongue(c,sx+o,top+5,h,2.2,ph,ORG,t);}
+  {const h=8+2.5*Math.sin(t*4.3)+1.5*Math.sin(t*9.7);flameTongue(c,sx,top+5,h,1.8,5,YEL,t);flameTongue(c,sx,top+5,h*.4,.9,6,WHT,t);}
+  const wind=(W.wx===2?1.6:.8);for(let k2=0;k2<10;k2++){const ph=(t*.32+k2/10)%1,r=Math.round(2.5+ph*8),x=Math.round(sx+ph*14*wind+Math.sin(t*1.7+k2)*2),y=Math.round(top-8-ph*44);
+    c.fillStyle=`rgba(${ph<.25?62:40},${ph<.25?46:38},${ph<.25?40:42},${.82*(1-ph*.9)})`;for(let dy=-r;dy<=r;dy++){const w=Math.round(Math.sqrt(r*r-dy*dy));c.fillRect(x-w,y+dy,w*2+1,1);}}
+  for(let k2=0;k2<5;k2++){const ph=(t*.7+hash(i,k2,7))%1;c.globalAlpha=ga*(1-ph);c.fillStyle=ph<.4?'#fff0a0':'#ff8a2a';c.fillRect(Math.round(sx+(hash(k2,i,8)-.5)*12+ph*6*wind),Math.round(top-2-ph*22),1,1);}
+  c.globalAlpha=ga;}
 // four same-zone tiles on an even 2x2 grid cell, all developed high enough, render as one big building
 function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)return-1;const a=ax+ay*N,k=W.kind[a];if(k<K.RES||k>K.IND)return-1;
   const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.te[j]!==4||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
