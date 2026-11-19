@@ -2256,11 +2256,73 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       const out=[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);a.ped=a.alt.ped=1;return a;});out.ped=1;return out;};
     ;yield;
     SP.walker=walker;
-    SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
-      [...['#e8e0c8','#c9b896'].map(b=>walker(b)),handCart(),handCart('#c9b896')],
-      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),oxCart(),oxCart('#7a5030','#e8d6a8'),palanquin()],
-      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(b=>walker(b))],
-      [...SP.car,walker('#2a2e3a','#2a2e3a'),walker('#d9463b'),walker('#f2ede0','#3a5a8a'),walker('#f2c140','#3a3a42'),walker('#5a8a6a','#e8e4dc')]];
+    // HD people (2x detail, drawn at 16x24 canvas px = 8x12 world px): a figure per age after the chosen reference drafts, with a face,
+    // hair, clothes of the period and a prop, facing front or back with a two-step walk. lo is a half-size copy for the shadow.
+    const walkerHD=(o)=>{const C=h=>col(h),D=(h,t)=>col(h,t);const SKN=o.skin||'#f0c49a',HR=o.hair||'#2a1d14';
+      const fig=(back,flip,step)=>{const pb=new PB(16,24),P=(x,y,c)=>{if(c!=null)pb.put(flip?15-x:x,y,c);},R=(x0,x1,y,c)=>{for(let x=x0;x<=x1;x++)P(x,y,c);};
+        const kid=o.kid?3:0,Y=y=>y+kid,sk=C(SKN),skD=D(SKN,-.16),hr=C(HR),hrL=D(HR,.18);
+        if(back&&o.prop==='pack')for(let y=11;y<=16;y++)R(5,10,Y(y),D(o.packC||'#d8463a',y===11?.1:y===16?-.2:0));
+        if(o.prop==='jige'&&back){for(let y=6;y<=18;y++){P(4,Y(y),C('#8a5a34'));P(11,Y(y),C('#6a4428'));}for(const y of[8,13,17])R(4,11,Y(y),C('#9a6a3a'));}
+        // legs and feet
+        const legC=o.legs==='skin'?sk:C(o.pants||'#34405e'),legD=o.legs==='skin'?skD:D(o.pants||'#34405e',-.22),shoe=o.legs==='skin'?skD:C(o.shoe||'#1e1a1a');
+        const L1=step?[4,6]:[5,7],L2=step?[9,11]:[8,10],y0=Y(17);
+        for(let y=y0;y<=21;y++){R(L1[0],L1[1],y,legC);P(L1[1],y,legD);if(!(step&&y===21))R(L2[0],L2[1],y,y===21&&step?shoe:legD);}
+        R(L1[0],L1[1]+(flip?0:1),22,shoe);R(L1[0],L1[1],23,shoe);R(L2[0],L2[1],step?21:22,shoe);if(!step)R(L2[0],L2[1]+1,23,shoe);
+        // torso, lower garment (skirt, tunic hem, wide trousers)
+        const top=C(o.top),topD=D(o.top,-.2),topL=D(o.top,.14);
+        for(let y=Y(11);y<=Y(16);y++){R(4,11,y,top);P(4,y,topL);P(11,y,topD);}R(5,10,Y(11),topL);
+        if(o.skirt){for(let y=Y(16);y<=21;y++){const w=Math.round((y-Y(16))*.5);R(4-w,11+w,y,C(o.skirt));P(11+w,y,D(o.skirt,-.2));P(4-w,y,D(o.skirt,.12));}}
+        if(o.hem)for(let x=4;x<=11;x++)P(x,Y(17)+(x%2),C(o.top));
+        if(o.wide)for(let y=y0;y<=20;y++){R(4,11,y,C(o.pants));P(11,y,D(o.pants,-.2));}
+        if(o.belt)R(4,11,Y(16),C(o.belt));
+        if(o.trim){P(back?7:6,Y(12),C(o.trim));P(back?8:9,Y(12),C(o.trim));for(let y=Y(13);y<=Y(15);y++)P(7,y,C(o.trim));}
+        if(o.tie&&!back){P(7,Y(11),C('#f2f2f2'));P(8,Y(11),C('#f2f2f2'));for(let y=Y(12);y<=Y(15);y++)P(7,y,C(o.tie));}
+        if(o.ribbon&&!back){P(8,Y(12),C(o.ribbon));P(8,Y(13),C(o.ribbon));P(9,Y(14),C(o.ribbon));}
+        if(o.patch)for(const[x,y]of[[5,13],[9,15],[7,12]])P(x,Y(y),C(o.patch));
+        // arms swing opposite to the legs
+        const aF=step?1:0,arm=o.bare?sk:top,armD=o.bare?skD:topD;for(let y=Y(12);y<=Y(15)+aF;y++)P(3,y,arm);P(3,Y(16)+aF,sk);for(let y=Y(12);y<=Y(15)+1-aF;y++)P(12,y,armD);P(12,Y(17)-aF,skD);
+        // neck and head
+        R(7,8,Y(10),skD);for(let y=Y(3);y<=Y(9);y++)R(5,10,y,back?hr:sk);R(6,9,Y(2),hr);
+        if(!back){R(5,10,Y(3),hr);R(5,10,Y(4),hr);P(5,Y(5),hr);P(10,Y(5),hr);P(10,Y(6),skD);P(10,Y(7),skD);P(6,Y(6),C('#2a1d14'));P(8,Y(6),C('#2a1d14'));P(7,Y(8),D(SKN,-.08));R(5,10,Y(9),skD);P(5,Y(9),null);P(10,Y(9),null);}
+        else{P(5,Y(9),null);P(10,Y(9),null);R(6,9,Y(9),hrL);}
+        P(5,Y(3),null);P(10,Y(3),null);
+        if(o.hairLong){for(let y=Y(5);y<=Y(12);y++){P(4,y,hr);P(11,y,hr);}if(back)for(let y=Y(9);y<=Y(12);y++)R(5,10,y,hr);}
+        if(o.bun&&back){R(6,9,Y(1),hr);R(7,8,Y(0),hrL);}
+        if(o.wild){R(4,11,Y(2),hr);P(3,Y(4),hr);P(12,Y(4),hr);P(3,Y(6),hr);P(12,Y(6),hr);R(5,10,Y(1),hrL);}
+        if(o.band)R(5,10,Y(4),C(o.band));
+        if(o.visor&&!back){R(5,10,Y(6),[col('#5fe6f2'),col('#bff8ff')]);P(10,Y(6),[col('#3ac0d0'),col('#9ff4ff')]);}
+        if(o.gat){R(2,13,Y(3),C('#1a1a1e'));R(6,9,Y(0),C('#2a2a30'));R(6,9,Y(1),C('#1a1a1e'));R(6,9,Y(2),C('#1a1a1e'));P(13,Y(3),C('#3a3a42'));}
+        if(o.straw){R(2,13,Y(3),C('#e8c870'));R(3,12,Y(4),D('#e8c870',-.2));R(6,9,Y(1),C('#e8c870'));R(5,10,Y(2),D('#e8c870',.1));}
+        if(o.cap){R(5,10,Y(2),C(o.cap));R(5,10,Y(3),C(o.cap));if(!back)R(9,12,Y(4),D(o.cap,-.15));}
+        // props held at the side
+        const side=12;if(o.prop==='spear'){for(let y=Y(0);y<=21;y++)P(side+1,y,C('#8a5a34'));P(side+1,Y(0)-1,C('#c8ccd2'));P(side+1,Y(0)-2,C('#9aa0a8'));}
+        if(o.prop==='basket')for(let y=Y(14);y<=Y(17);y++)R(side,side+2,y,C(y%2?'#c8a058':'#a8803a'));
+        if(o.prop==='pot'){for(let y=Y(14);y<=Y(17);y++)R(side,side+2,y,D('#a8683a',y===Y(14)?.12:0));P(side+1,Y(13),C('#6a3a22'));}
+        if(o.prop==='brief')for(let y=Y(16);y<=Y(18);y++)R(side,side+2,y,C(y===Y(16)?'#5a3a24':'#7a4a2a'));
+        if(o.prop==='bag'){for(let y=Y(14);y<=Y(16);y++)R(2,3,y,C(o.bagC||'#d8302a'));P(3,Y(13),C('#5a1a14'));}
+        if(o.prop==='cup'){P(side,Y(14),C('#f2f2ee'));P(side,Y(15),C('#8a5a34'));}
+        if(o.prop==='pack'&&!back){P(4,Y(11),C(o.packC||'#d8463a'));P(11,Y(11),C(o.packC||'#d8463a'));P(4,Y(12),D(o.packC||'#d8463a',-.2));}
+        if(o.prop==='neon'&&back)for(let y=11;y<=15;y++)R(5,10,Y(y),[col(o.packC),col(o.packC,.4)]);
+        if(o.prop==='jige'&&!back){P(3,Y(10),C('#8a5a34'));P(12,Y(10),C('#8a5a34'));}
+        const hi=mk(pb,-8,-23),lo=new PB(8,12);for(let y=0;y<12;y++)for(let x=0;x<8;x++){let v=0;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){const q=pb.d[(y*2+dy)*16+x*2+dx];if(q>>>24){v=q;break;}}if(v)lo.put(x,y,v);}
+        const loS=mk(lo,-4,-11,true,{raw:1}),sp=Object.assign({},loS,{c:hi.c,n:hi.n,hd:2,lo:loS,g:0});loS.g=0;return sp;};
+      const out=[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);a.ped=a.alt.ped=1;return a;});out.ped=1;return out;};
+    const PPL={
+      stone:[{top:'#8a5a34',patch:'#a8784a',hem:1,bare:1,legs:'skin',wild:1,hair:'#3a2416',prop:'spear'},{top:'#7a4a2a',patch:'#9a6a3a',hem:1,bare:1,legs:'skin',wild:1,hair:'#2a1a10',prop:'basket',skin:'#e0aa7e'},
+        {top:'#9a6a3a',patch:'#7a4a2a',hem:1,bare:1,legs:'skin',hairLong:1,hair:'#4a2e1a',band:'#c0392b',prop:'pot',skin:'#c98e62'},{top:'#6a4a2a',patch:'#8a6a44',hem:1,bare:1,legs:'skin',wild:1,hair:'#2a1d14',band:'#d8a040'}],
+      bronze:[{top:'#c8b48a',hem:1,legs:'skin',bare:1,hairLong:1,hair:'#2a1d14',band:'#3a6fd0',prop:'basket'},{top:'#a89070',belt:'#6a4428',pants:'#8a7a5a',hair:'#2a1a10',wild:1,prop:'spear',skin:'#e0aa7e'}],
+      dyn:[{top:'#f4f0e6',pants:'#f0ece0',wide:1,gat:1,hair:'#151318',shoe:'#3a3a42'},{top:'#f6eaa0',ribbon:'#d8302a',skirt:'#d8484a',hairLong:1,bun:1,hair:'#151318',shoe:'#e8e0d0'},
+        {top:'#ece4d0',pants:'#8a6a48',wide:1,straw:1,hair:'#2a1d14',prop:'jige',skin:'#c98e62'}],
+      early:[{top:'#5a4a3a',pants:'#3a3430',tie:'#8a2a2a',cap:'#4a4038',hair:'#2a1d14',prop:'brief'},{top:'#7a3a4a',skirt:'#5a2a3a',hairLong:1,hair:'#4a2e1a',cap:'#e8d8b0',shoe:'#3a2a22'}],
+      mod:[{top:'#f4f4f0',pants:'#3a5a9a',hairLong:1,hair:'#6a3a20',shoe:'#d8302a',prop:'bag',bagC:'#c8302a'},{top:'#2a2e3a',pants:'#2a2e3a',tie:'#c8302a',hair:'#151318',prop:'brief'},
+        {top:'#3a8ad0',pants:'#5a6a8a',hair:'#4a2e1a',prop:'pack',packC:'#e0443a',kid:1},{top:'#f2c140',pants:'#2a3a5a',hair:'#2a1d14',prop:'cup',shoe:'#f2a020'},{top:'#c8302a',pants:'#3a5a8a',hair:'#3a2416',prop:'pack',packC:'#2a2e3a',hairLong:1}],
+      fut:[{top:'#eef2f6',pants:'#e4eaf0',trim:'#5fe6f2',belt:'#5fe6f2',visor:1,hair:'#f0f0f0',shoe:'#c8d0dc'},{top:'#22262e',pants:'#1a1e26',hair:'#151318',prop:'neon',packC:'#ff4ac0',trim:'#ff4ac0',bun:1}]};
+    SP.pplHD=PPL;SP.walkerHD=walkerHD;
+    SP.veh=[PPL.stone.map(walkerHD),
+      [...PPL.bronze.map(walkerHD),handCart(),handCart('#c9b896')],
+      [...PPL.dyn.map(walkerHD),oxCart(),oxCart('#7a5030','#e8d6a8'),palanquin()],
+      [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...PPL.early.map(walkerHD)],
+      [...SP.car,...PPL.mod.map(walkerHD)]];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
     SP.icoWater=mk(bitmapPB([".#..","###.","###.",".#.."],{'#':'#5fb0ff'},'#0a1a2a'),-2,0,false);
 
@@ -2406,7 +2468,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         pb.put(x,y,k==='l'?col(c,.15):k==='d'?col(c,-.25):k==='w'?neon('#7fd7ff',-.1):k==='h'?[col('#ffffff'),col('#ffffff')]:[col(c,-.4),col('#ff4a6a')]);
         if(y===3)pb.put(x,4,neon(glow));}));return mk(pb,-3,-9);});
     ;yield;
-    SP.veh[5]=[carHover('#f4f7fa',NEON),carHover('#f4f7fa',PINK),carHover('#ff6a8a',NEON),carHover('#5f8fe0',NEON),carHover('#2f3448',PINK),walker('#e9eef4'),walker('#5fe6f2')];
+    SP.veh[5]=[carHover('#f4f7fa',NEON),carHover('#f4f7fa',PINK),carHover('#ff6a8a',NEON),carHover('#5f8fe0',NEON),carHover('#2f3448',PINK),...SP.pplHD.fut.map(SP.walkerHD)];
     // fusion plant (2x2): a white torus around a glowing core
     SP.fusion=mk2(92,(pb,cx,cy)=>{cpBase(pb,cx,cy,28);
       pb.box({cx:cx+15,cy:cy-1,hw:7,h:10,L:cpW(0,950,4,YEL,YEL),R:cpW(-.24,951,4,YEL,YEL),T:cpRoof});vent(pb,cx+13,cy-12);vent(pb,cx+18,cy-10);
@@ -3339,6 +3401,12 @@ function catchUp(since){if(!since)return;const days=Math.min(720,Math.floor((Dat
 const view=$('#view'),vctx=view.getContext('2d');
 const wc=document.createElement('canvas'),wctx=wc.getContext('2d');
 let DPR=1;const cam={x:0,y:N*8,s:4};
+// the world is drawn into wc at HD canvas pixels per world pixel (2 once zoomed in), so the 2x-detail sprites (sp.hd) keep their detail;
+// everything else is drawn in world units through the scale and looks exactly as before
+let HD=1,hdOff=false,hdEma=0,hdN=0;
+// a slow device (drawing a frame takes long) falls back to 1 px per world px for the rest of the session; the 2x sprites are then
+// drawn scaled down, so nothing breaks
+function hdCost(ms){if(hdOff||HD<2)return;hdEma=hdEma?hdEma*.95+ms*.05:ms;if(++hdN>90&&hdEma>13){hdOff=true;}}
 function resize(){DPR=Math.min(2,window.devicePixelRatio||1);view.width=Math.round(innerWidth*DPR);view.height=Math.round(innerHeight*DPR);}
 function toWorld(px,py){return[(px*DPR-view.width/2)/cam.s+cam.x,(py*DPR-view.height/2)/cam.s+cam.y];}
 function toGrid(px,py){const[wx,wy]=toWorld(px,py);return[Math.floor((wy/8+wx/16)/2),Math.floor((wy/8-wx/16)/2)];}
@@ -4192,12 +4260,12 @@ function shadowOf(sp){const key='sh'+sunB;if(sp[key]!==undefined)return sp[key];
 // Shadows of things that stand still are gathered while the objects are drawn and painted next frame as one layer
 // (opaque into an offscreen canvas, then composited once), which is only redrawn when that set or the camera changes.
 let shRec=[],shHash=0,spIds=0,swayDX=0,bendDX=0;const shCv=document.createElement('canvas'),shCx=shCv.getContext('2d');let shKey='';
-function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp);if(sh){
+function drawSpr(c,sp,x,y){if(castSh&&shA>.01&&!sp.noSh){const sh=shadowOf(sp.lo||sp);if(sh){
       if(sp.g===0&&!sp.still){const a=c.globalAlpha;c.globalAlpha=a*shA;c.drawImage(sh.c,x+sp.ox+sh.dx,y+sp.oy);c.globalAlpha=a;}   // moving things: inline
       else{const wx=x-swayDX+sp.ox+sh.dx+X0,wy=y+sp.oy+Y0;shRec.push(sh.c,wx,wy);shHash=(Math.imul(shHash,31)+(sp.id||(sp.id=++spIds))*977+wx*7+wy*13+sunB*131)|0;}}}
-  const blit=bendDX?bent:(img,X,Y)=>c.drawImage(img,X,Y);if(bendDX)bentC=c,bentH=sp.h;
+  const blit=bendDX?bent:sp.hd?(img,X,Y)=>c.drawImage(img,X,Y,sp.w,sp.h):(img,X,Y)=>c.drawImage(img,X,Y);if(bendDX)bentC=c,bentH=sp.h;
   blit(sp.c,x+sp.ox,y+sp.oy);if(nightF>.01&&sp.n){const a=c.globalAlpha;c.globalAlpha=a*nightF;blit(litNow?sp.n:nightDark(sp),x+sp.ox,y+sp.oy);c.globalAlpha=a;}
-  if(capA>.01&&(sp.g!==0||sp.still)){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;blit(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
+  if(capA>.01&&(sp.g!==0||sp.still)&&!sp.hd){const cp=capOf(sp);if(cp){const a=c.globalAlpha;c.globalAlpha=a*capA;blit(cp,x+sp.ox,y+sp.oy);c.globalAlpha=a;}}}
 // trees bend in the wind instead of sliding: the whole crown leans by bendDX pixels, the top of the trunk by half of it, the base and roots stay put
 let bentC=null,bentH=0;
 function bent(img,X,Y){const h=bentH,w=img.width,a=Math.round(h*.72),b=Math.round(h*.82),half=Math.trunc(bendDX/2);   // crown | upper trunk | base
@@ -4206,8 +4274,8 @@ function bent(img,X,Y){const h=bentH,w=img.width,a=Math.round(h*.72),b=Math.roun
 // stay up all night (offices, night shifts), some homes light up again before dawn. A dark building uses its night colours
 // without the lit windows (the day sprite tinted the way nightOf tints it).
 let litNow=1;const ndCache=new WeakMap();
-function nightDark(sp){let d=ndCache.get(sp);if(d)return d;d=document.createElement('canvas');d.width=sp.w;d.height=sp.h;const g=d.getContext('2d');
-  g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA})`;g.fillRect(0,0,sp.w,sp.h);ndCache.set(sp,d);return d;}
+function nightDark(sp){let d=ndCache.get(sp);if(d)return d;d=document.createElement('canvas');d.width=sp.c.width;d.height=sp.c.height;const g=d.getContext('2d');
+  g.drawImage(sp.c,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA})`;g.fillRect(0,0,d.width,d.height);ndCache.set(sp,d);return d;}
 function litOf(i){const k=W.kind[i],t=clockT,a=hash(i,7,3),b=hash(i,11,5),c2=hash(i,13,9),T=t<12?t+24:t,on=17.4+a*2.2;
   const off=k===K.RES?(b<.2?99:21.6+c2*5):k===K.COM?(b<.35?99:20.6+c2*4):(b<.45?99:22+c2*5);
   return(T>=on&&T<off)||(k===K.RES&&b>.5&&t>=5+c2*1.7&&t<7.6)?1:0;}
@@ -4247,7 +4315,7 @@ let seaEv=null,seaNext=0,seaMask=null;
 const seaDeep=(x,y)=>{const w=W,M=N+1;if(!inb(x,y)||w.terrain[idx(x,y)]!==1||!w.wcv)return 0;return(w.wcv[y*M+x]+w.wcv[y*M+x+1]+w.wcv[(y+1)*M+x]+w.wcv[(y+1)*M+x+1])/4;};
 function seaSpawn(force,near){const cand=[];
   if(near){const[cx,cy]=near;for(let y=Math.max(0,cy-14);y<Math.min(N,cy+14);y++)for(let x=Math.max(0,cx-14);x<Math.min(N,cx+14);x++)if(seaDeep(x,y)>=5)cand.push([x,y]);}
-  else for(let n=0;n<visN;n+=3){const i=visBuf[n],x=i%N,y=i/N|0,sy=visBuf[n+2],sx=visBuf[n+1];if(sx<50||sy<70||sx>wc.width-50||sy>wc.height-40)continue;if(seaDeep(x,y)>=6)cand.push([x,y]);}
+  else for(let n=0;n<visN;n+=3){const i=visBuf[n],x=i%N,y=i/N|0,sy=visBuf[n+2],sx=visBuf[n+1];if(sx<50||sy<70||sx>wc.width/HD-50||sy>wc.height/HD-40)continue;if(seaDeep(x,y)>=6)cand.push([x,y]);}
   if(!cand.length)return false;const[x,y]=cand[(Math.random()*cand.length)|0],r=Math.random(),k=force||(r<.42?'whale':r<.7?'squid':'shadow');
   if(k==='shadow'){const dirs=[[1,0],[0,1],[-1,0],[0,-1]].sort(()=>Math.random()-.5);
     for(const[dx,dy]of dirs){let ok=true;for(let s=-4;s<=4;s++)if(seaDeep(x+dx*s,y+dy*s)<4){ok=false;break;}if(ok){seaEv={k,x:x+.5,y:y+.5,dx,dy,t0:now,last:now,dur:15000,fx:[]};return true;}}return false;}
@@ -4258,7 +4326,7 @@ function seaFx(c){if(!W.wcv)return;
   const e=seaEv;if(!e)return;const t=(now-e.t0)/1000,T2=e.dur/1000,dt=Math.min(.1,(now-e.last)/1000);e.last=now;if(t>T2){seaEv=null;return;}
   const P=(x,y,col2,w2=1,h2=1)=>{c.fillStyle=col2;c.fillRect(Math.round(x),Math.round(y),w2,h2);};
   // stippled ellipse: pixels on a 4x4 Bayer grid, so a darker shape under the water shows as depth
-  if(!seaMask||seaMask.width!==wc.width||seaMask.height!==wc.height){seaMask=document.createElement('canvas');seaMask.width=wc.width;seaMask.height=wc.height;}
+  if(!seaMask||seaMask.width!==wc.width/HD||seaMask.height!==wc.height/HD){seaMask=document.createElement('canvas');seaMask.width=wc.width/HD;seaMask.height=wc.height/HD;}
   const mg=seaMask.getContext('2d');let blobs=[];
   const dith=(cx,cy,rx,ry,dens,col2)=>{if(dens>0)blobs.push([cx,cy,rx,ry,dens,col2]);};
   const flush=()=>{if(!blobs.length)return;for(const core of[0,1]){mg.clearRect(0,0,seaMask.width,seaMask.height);let a=0,col2='#000';
@@ -4381,9 +4449,9 @@ function scoutFx(c){
   c.globalAlpha=1;}
 function render(){seasonGrass();
   const c=wctx,s=cam.s,lw=Math.ceil(view.width/s)+2,lh=Math.ceil(view.height/s)+2;
-  if(wc.width!==lw||wc.height!==lh){wc.width=lw;wc.height=lh;}
+  HD=s>=2&&!hdOff?2:1;if(wc.width!==lw*HD||wc.height!==lh*HD){wc.width=lw*HD;wc.height=lh*HD;}
   const ox=cam.x-view.width/s/2,oy=cam.y-view.height/s/2;X0=Math.floor(ox);Y0=Math.floor(oy);const fx=ox-X0,fy=oy-Y0;
-  c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';c.globalAlpha=1;c.imageSmoothingEnabled=false;c.clearRect(0,0,lw,lh);
+  c.setTransform(HD,0,0,HD,0,0);c.globalCompositeOperation='source-over';c.globalAlpha=1;c.imageSmoothingEnabled=false;c.clearRect(0,0,lw,lh);
   const w=W,wf=Math.floor(now/450)%4,wf8=Math.floor(now/230)%8,M1=N+1;
   visN=0;for(let d=0;d<2*N-1;d++){const sy=d*8-Y0;if(sy>lh+110)break;if(sy<-16-SLAB)continue;const xa=Math.max(0,d-N+1),xb=Math.min(N-1,d);
     for(let x=xa;x<=xb;x++){const y=d-x,sx=(x-y)*16-X0;if(sx<-48||sx>lw+48)continue;visBuf[visN++]=y*N+x;visBuf[visN++]=sx;visBuf[visN++]=sy;}}
@@ -4493,7 +4561,7 @@ const SPK={[K.POLICE]:()=>SP.police,[K.WIND]:()=>SP.wind,[K.COAL]:()=>SP.coal,[K
 const isFence=(x,y)=>inb(x,y)&&W.kind[idx(x,y)]===K.DECO&&W.level[idx(x,y)]===1;
 // items that can face different ways: 4 directions for the bench and lamp models, mirrored left/right for the drawn ones
 const DECO_ROT={1:2,3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
-function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=sp.w;cv.height=sp.h;const g=cv.getContext('2d');g.translate(sp.w,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
+function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=src.width;cv.height=src.height;const g=cv.getContext('2d');g.translate(src.width,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
   const mx=v=>v&&v.map(a=>[sp.w-1-a[0],...a.slice(1)]);
   const m1=v=>v&&[sp.w-1-v[0],...v.slice(1)];
   return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,sil:null,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em),siren:m1(sp.siren),nose:m1(sp.nose),head:m1(sp.head),hub:m1(sp.hub)});}
@@ -5084,11 +5152,11 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
   clockT=dayMode==='day'?14.5:dayMode==='night'?21.5:td;
   duskF=dayMode!=='auto'&&dayMode!=='dusk'?0:Math.max(0,1-Math.abs(td-18.4)/1.5)+Math.max(0,1-Math.abs(td-6.2)/1.2);
   const pan=600*dt*DPR/cam.s*2;if(keys.has('w')||keys.has('arrowup'))cam.y-=pan;if(keys.has('s')||keys.has('arrowdown'))cam.y+=pan;if(keys.has('a')||keys.has('arrowleft'))cam.x-=pan;if(keys.has('d')||keys.has('arrowright'))cam.x+=pan;if(keys.size)clampCam();
-  stepCars(dt*mul*1.1);stepBoats(dt*mul*1.1);stepTrains(dt*mul*1.1);stepPlanes(dt*Math.min(mul,2));stepParts(dt);render();placeTarget();updateHud(false);evTick(dt);
+  stepCars(dt*mul*1.1);stepBoats(dt*mul*1.1);stepTrains(dt*mul*1.1);stepPlanes(dt*Math.min(mul,2));stepParts(dt);{const t0=performance.now();render();hdCost(performance.now()-t0);}placeTarget();updateHud(false);evTick(dt);
   if(t-miniT>300){miniT=t;drawMini();const a=mixHex('#2b3a66','#0d1226',nightF),b=mixHex('#141a30','#070a16',nightF);document.body.style.setProperty('--sky-a',a);document.body.style.setProperty('--sky-b',b);}
   requestAnimationFrame(frame);}
 
-function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(2*DPR));if(innerWidth>1500)cam.s=Math.round(2.5*DPR);zoomTo(cam.s);$('#miniZoom').textContent='x'+(cam.s/DPR).toFixed(cam.s%DPR?1:0);}
+function centerCam(){cam.x=0;cam.y=N*8;cam.s=Math.max(1,Math.round(3*DPR));if(innerWidth>1500)cam.s=Math.round(3.5*DPR);zoomTo(cam.s);$('#miniZoom').textContent='x'+(cam.s/DPR).toFixed(cam.s%DPR?1:0);}
 function starterEra(e){const w=W;starter();w.era=e;w.eraStart=0;w.cmEra=0;
   for(let i=0;i<N*N;i++){const k=w.kind[i];if(!k)continue;if(k===K.WIND&&e<4){w.kind[i]=0;w.level[i]=0;continue;}w.te[i]=e;
     if(k>=K.RES&&k<=K.IND)w.level[i]=Math.min(w.level[i],ERAS[e].maxL[k]);}
