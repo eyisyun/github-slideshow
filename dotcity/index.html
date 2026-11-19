@@ -3974,7 +3974,10 @@ function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i
       if(opts.length)trains.push({dep:p0,trail:[[x,y]],d:opts[(Math.random()*opts.length)|0],t:0,e:W.era,n:W.era>=4?4:3,sp:W.era>=5?1.5:W.era>=4?1.2:.8,wait:1.5,stop:true});}}
   if(trains.length>target)trains.shift();
   for(let n=trains.length-1;n>=0;n--){const tr=trains[n];if(!tr.trail.every(([x,y])=>isRail(x,y))){trains.splice(n,1);continue;}
-    if(tr.wait>0){tr.wait-=dt;continue;}tr.t+=dt*tr.sp;
+    if(tr.wait>0){tr.wait-=dt;tr.v=0;continue;}
+    { const[hx,hy]=tr.trail[0],nx=hx+DIRS[tr.d][0],ny=hy+DIRS[tr.d][1],near=!tr.stop&&DIRS.some(([dx,dy])=>inb(nx+dx,ny+dy)&&W.kind[idx(nx+dx,ny+dy)]===K.DEPOT),end=!isRail(nx,ny);
+      const want=tr.sp*(near||end?Math.max(.18,1-tr.t*.85):1);tr.v=(tr.v||0)+(want-(tr.v||0))*Math.min(1,dt*(want<(tr.v||0)?4:1.2)); }   // ease out of stops, brake into stations and dead ends
+    tr.t+=dt*Math.max(.05,tr.v);
     while(tr.t>=1){tr.t-=1;const[hx,hy]=tr.trail[0],nx=hx+DIRS[tr.d][0],ny=hy+DIRS[tr.d][1];
       if(!isRail(nx,ny)){if(tr.trail.length>1)tr.trail.reverse();const[ax,ay]=tr.trail[0],b=tr.trail[1];
         const opts=[0,1,2,3].filter(d=>isRail(ax+DIRS[d][0],ay+DIRS[d][1])&&!(b&&ax+DIRS[d][0]===b[0]&&ay+DIRS[d][1]===b[1]));
@@ -3982,9 +3985,18 @@ function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i
       tr.trail.unshift([nx,ny]);if(tr.trail.length>tr.n)tr.trail.pop();
       const opts=[0,1,2,3].filter(d=>d!==(tr.d+2)%4&&isRail(nx+DIRS[d][0],ny+DIRS[d][1]));if(opts.length)tr.d=opts.includes(tr.d)&&Math.random()<.7?tr.d:opts[(Math.random()*opts.length)|0];
       const atSt=DIRS.some(([dx,dy])=>inb(nx+dx,ny+dy)&&W.kind[idx(nx+dx,ny+dy)]===K.DEPOT);if(atSt&&!tr.stop){tr.stop=true;tr.wait=2.5;tr.t=0;break;}if(!atSt)tr.stop=false;}}}
-function trainCars(tr){const out=[];for(let k=0;k<tr.trail.length;k++){const[fx,fy]=tr.trail[k],to=k===0?[fx+DIRS[tr.d][0],fy+DIRS[tr.d][1]]:tr.trail[k-1];
-    const dx=to[0]-fx,dy=to[1]-fy,d=dx>0?0:dy>0?1:dx<0?2:3;out.push({gx:fx+.5+dx*tr.t,gy:fy+.5+dy*tr.t,d,type:k?1:0,e:tr.e,m:tr.dep!=null?fleetAt(tr.dep):null});}return out;}
-function drawTrainCar(c,tc){const sp=(tc.m!=null&&SP.fleetT[tc.m]?SP.fleetT[tc.m]:SP.train[Math.max(3,Math.min(5,tc.e))])[tc.type][tc.d],sx=Math.round((tc.gx-tc.gy)*16-X0),sy=Math.round((tc.gx+tc.gy)*8-Y0);
+// each car runs edge to edge through a tile: straight across, or round a quarter circle where the track turns, so trains take
+// corners in a curve instead of snapping at the tile centre. t runs centre to centre, so the first half is the end of tile A
+function trainCars(tr){const out=[],T=tr.trail,dirOf=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1];return dx>0?0:dy>0?1:dx<0?2:3;};
+  const place=(cx,cy,di,de,p)=>{const[ix,iy]=DIRS[di],[ex,ey]=DIRS[de];if(di===de)return[cx+.5-ix*.5+ix*p,cy+.5-iy*.5+iy*p,0];
+    const Cx=cx+.5-ix*.5+ex*.5,Cy=cy+.5-iy*.5+ey*.5,th=p*Math.PI/2;return[Cx+(-ex*Math.cos(th)+ix*Math.sin(th))*.5,Cy+(-ey*Math.cos(th)+iy*Math.sin(th))*.5,1];};
+  for(let k=0;k<T.length;k++){const A=T[k],B=k===0?[A[0]+DIRS[tr.d][0],A[1]+DIRS[tr.d][1]]:T[k-1],ab=dirOf(A,B);
+    const inA=T[k+1]?dirOf(T[k+1],A):ab,outB=k>=2?dirOf(B,T[k-2]):k===1?tr.d:ab;let gx,gy,d,arc;
+    if(tr.t<.5){const p=.5+tr.t;[gx,gy,arc]=place(A[0],A[1],inA,ab,p);d=p<.5?inA:ab;}else{const p=tr.t-.5;[gx,gy,arc]=place(B[0],B[1],ab,outB,p);d=p<.5?ab:outB;}
+    out.push({gx,gy,d,arc,type:k?1:0,e:tr.e,m:tr.dep!=null?fleetAt(tr.dep):null});}return out;}
+function drawTrainCar(c,tc){const sp=(tc.m!=null&&SP.fleetT[tc.m]?SP.fleetT[tc.m]:SP.train[Math.max(3,Math.min(5,tc.e))])[tc.type][tc.d],X=(tc.gx-tc.gy)*16-X0,Y=(tc.gx+tc.gy)*8-Y0;
+  // on a straight the car moves 2 px across for each 1 px down: round y and keep x on that same 2:1 line so it glides instead of stair-stepping
+  const sy=Math.round(Y),sx=tc.arc?Math.round(X):Math.round(X+(sy-Y)*2*(tc.d===0||tc.d===2?1:-1));
   drawSpr(c,sp,sx,sy);if(tc.type===0){emit(sp,sx,sy);if(sp.head&&nightF>.05){c.fillStyle=`rgba(255,240,190,${nightF})`;c.fillRect(sx+sp.ox+sp.head[0],sy+sp.oy+sp.head[1],2,1);}}}
 // planes: one per airport. Comes in from far away (FAR tiles out, fading in) heading +x along the runway, lands, waits, takes off back the other way,
 // climbs to cruise height and flies far off (fading out) before the next arrival
