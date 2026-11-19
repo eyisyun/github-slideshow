@@ -690,7 +690,7 @@ function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].ma
       for(let i=0;i<=ns;i++)for(let j=0;j<=nz;j++){const a=i/ns,b=j/nz,z=z0+(z1-z0)*b;plot(s0+(s1-s0)*a,t1,z,C('+t',a,b),[0,1,0]);plot(s0+(s1-s0)*a,t0,z,C('-t',a,b),[0,-1,0]);}
       for(let i=0;i<=nt;i++)for(let j=0;j<=nz;j++){const a=i/nt,b=j/nz,z=z0+(z1-z0)*b;plot(s1,t0+(t1-t0)*a,z,C('+s',a,b),[1,0,0]);plot(s0,t0+(t1-t0)*a,z,C('-s',a,b),[-1,0,0]);}}
     if(opt.shadowGlow){for(let i=0;i<=20;i++)for(let j=0;j<=6;j++)plot(-.45+.9*i/20,-.8+1.6*j/6,0,col('#0e1630',0,70),[0,0,1]);}
-    const meta={};if(opt.light){const[s0,z0]=opt.light,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.lights=[[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)+3]];}
+    const meta={};if(opt.light){meta.lights=(Array.isArray(opt.light[0])?opt.light:[opt.light]).map(([s0,z0])=>{const X=s0*L*hx*VSC,Y=s0*L*hy*VSC;return[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)+3];});}
     if(opt.siren){const[s0,z0]=opt.siren,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.siren=[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)];}   // light bar, blinked in drawCar
     return mk(pb,-CX,-CY,true,meta);});}
 const VSC=.78;   // overall vehicle size
@@ -1302,52 +1302,67 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     D.planter(pb,cx-12,cy+3);D.planter(pb,cx+10,cy+4);D.lamp(pb,cx-5,cy+7,11);D.lamp(pb,cx+5,cy+7,11);
     SP.bld[C][4].push(mk(pb,-16,16-H,true,meta));}
 
-  /* industrial L1: warehouses, silos, depots */
+  // a box on a 2:1 base: length A along the down-right axis, width B along the up-right axis, from its left corner (x,y).
+  // fL(s,z) the long front face, fR(s,z) the down-right end face, fT(a,b) the top
+  const ibox=(pb,x,y,A,B,h,fL,fR,fT)=>{const F=f=>typeof f==='function'?f:()=>f;fL=F(fL);fR=F(fR);fT=F(fT);
+    for(let a=0;a<=A;a+=.5)for(let z=0;z<h;z++)pb.put(Math.floor(x+a),Math.floor(y+a/2)-z,fL(a/A,z));
+    for(let b=0;b<=B;b+=.5)for(let z=0;z<h;z++)pb.put(Math.floor(x+A+b),Math.floor(y+A/2-b/2)-z,fR(b/B,z));
+    for(let a=0;a<=A;a+=.5)for(let b=0;b<=B;b+=.5)pb.put(Math.floor(x+a+b),Math.floor(y+a/2-b/2)-h,fT(a/A,b/B));};
+  // little parked vehicles nosing down-right: a car (body colour, optional light-bar colours) and a fire engine with a ladder
+  const miniCar=(pb,x,y,c,bar)=>{pb.put(x+1,y+1,col('#1a1a1e'));pb.put(x+4,y+2,col('#1a1a1e'));ibox(pb,x,y,5,2.5,2,col(c,-.12),col(c,-.3),col(c));
+    ibox(pb,x+1,y-1.5,2.5,2,1,(s)=>[col('#2a3a50'),col('#5a6a80')],col('#2a3a50',-.1),col(c,.1));if(bar){pb.put(x+3,y-3,[col(bar[0]),col(bar[0],.4)]);pb.put(x+4,y-3,[col(bar[1]),col(bar[1],.4)]);}};
+  const fireTruck=(pb,x,y)=>{for(const[dx,dy]of[[1,1],[4,3],[7,4]])pb.put(x+dx,y+dy,col('#1a1a1e'));
+    ibox(pb,x,y,9,3,3,(s,z)=>z===1?col('#f2efe8'):s>.75&&z===2?[col('#2a3a50'),col('#ffd88a')]:col('#d8392a',-.08),(s,z)=>z===2?[col('#2a3a50'),col('#ffd88a')]:col('#d8392a',-.3),(a,b)=>a>.75?col('#e04a3a',.1):col('#c8ccd2',(Math.floor(a*12)%2)?-.15:.05));
+    pb.put(x+7,y+1,[col('#4a7aff'),col('#9ac0ff')]);pb.put(x+8,y+1,[col('#ff3a3a'),col('#ff9a9a')]);};
+  /* industrial: corrugated-metal works with blue roller doors (after the chosen reference). L1 sheds, L2 factories, L3 silo plants */
+  // shared bits: a concrete apron with a yellow edge line, corrugated wall shaders, roller doors, crates, roof vents
+  const apron=(pb,cx,cy)=>pb.box({cx,cy,hw:15,h:1,L:()=>col('#8a8f98'),R:()=>col('#8a8f98',-.3),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.04?col('#e0b83a'):col('#a8acb2',hash(x,y,31)<.08?-.08:hash(x,y,32)<.05?.06:0)});
+  const corr=(m,t)=>(a,b)=>col(m,t+((a|0)%2?-.06:.03));
+  const roller=(m,t,door)=>(a,b,hw,h)=>{for(const[d0,d1]of door)if(a>=d0&&a<d1&&b<Math.min(7,h-2)){if(a<d0+.6||a>=d1-.6||b>=Math.min(7,h-2)-.6)return col('#3a3f48',t);return col('#2f62b8',t+((b|0)%2?-.1:.04));}return null;};
+  const crates=(pb,x,y,n)=>{for(let k=0;k<n;k++){const dx=k%2*4,dy=(k%2)*2,dz=k>1?3:0;pb.box({cx:x+dx,cy:y+dy-dz,hw:2.2,h:3,L:(a,b)=>col('#a0703f',(b|0)===1?-.15:0),R:(a,b)=>col('#a0703f',-.3+((b|0)===1?-.1:0)),T:(u,v)=>col('#c08a50',Math.abs(u-v)<.15?-.12:0)});}};
+  const vents=(pb,pts)=>{for(const[x,y]of pts){pb.cyl(x,y,1.6,2,side('#7a8088'),(dx,dy)=>col(dx*dx+dy*dy<.35?'#2a2e36':'#9aa0a8'));}};
   ;yield;
-  for(let v=0;v<8;v++){const r=mulberry(v*271+17),H=46,pb=new PB(32,H),cx=16,cy=H-8,s=v*17+1601;
-    const m=['#a7b0b5','#8fa6a0','#b58d6a','#9aa2c0','#c2a878','#7f9aa8','#a88a8a','#98a888'][v],hw=10+((r()*3)|0),h=7+((r()*4)|0);
-    if(v%3===1)pb.cyl(cx+8,cy-6,3.5,14,side('#cfc9bc'),()=>col('#e2ddd2'));
-    pb.box({cx:cx+1,cy:cy-1,hw,h,
-      L:(a,b)=>{if(b>=h-1.2)return col(m,-.2);if(a>=hw-4&&a<hw-1.5&&b>=3&&b<5.5)return winC(0,0,s,.4,'#667b8e');return col(m,(a|0)%2?0:-.08);},
-      R:(a,b)=>{if(a>=2&&a<hw-3&&b<Math.min(6.5,h-1.5))return col('#5e6468',(b|0)%2?.08:0);if(b>=h-1.2)return col(m,-.42);return col(m,(a|0)%2?-.24:-.3);},
-      T:(u)=>col(m,Math.floor(u*9)%2?.18:.06)});
-    if(r()<.7)pb.box({cx:cx-10,cy:cy+1,hw:2.5,h:3,L:()=>col('#b0844f'),R:()=>col('#b0844f',-.3),T:()=>col('#c99a5f')});
-    if(v%3===2){pb.box({cx:cx-6,cy:cy+4,hw:3,h:3,L:()=>col('#f0f0ee'),R:()=>col('#d0d0cc'),T:()=>col('#ffffff')});pb.box({cx:cx-2,cy:cy+6,hw:1.5,h:2,L:()=>col(PAL.zC),R:()=>col(PAL.zC,-.3),T:()=>col(PAL.zC,.2)});}
-    D.pallet(pb,cx-13,cy+3);D.barrel(pb,cx+5,cy+6,['#2f6fc0','#d9463b','#2f8f5b'][v%3]);D.barrel(pb,cx+7,cy+5,'#e0a830');if(v%2)D.forklift(pb,cx-5,cy+7);
-    SP.bld[I][1].push(mk(pb,-16,16-H));}
+  for(let v=0;v<8;v++){const r=mulberry(v*271+17),H=50,pb=new PB(32,H),cx=16,cy=H-8,s=v*17+1601;
+    const m=['#9aa2aa','#a8aeb4','#8a949e','#b0a898','#98a4ae','#a0a8a0','#8e98a8','#aab0b8'][v],hw=10+((r()*2)|0),h=8+((r()*3)|0),two=v%2===0;
+    apron(pb,cx,cy);
+    const L=(a,b,hw2,h2)=>{if(b>=h2-1)return col(m,-.25);if(a>=1.5&&a<3.2&&b<4.5)return col('#4a4f58');if(b>=h2-3.2&&b<h2-1.8&&(a|0)%3!==0&&a>4)return winC(a|0,0,s,.45,'#6a8aa8');return corr(m,0)(a,b);};
+    const R=(a,b,hw2,h2)=>{const d=roller(m,-.2,two?[[1.5,4.8],[5.8,9]]:[[2.5,7.5]])(a,b,hw2,h2);if(d)return d;if(b>=h2-1)return col(m,-.45);return corr(m,-.26)(a,b);};
+    pb.box({cx:cx+1,cy:cy-2,hw,h,L,R,T:(u,w)=>Math.min(u,w,1-u,1-w)<.06?col(m,-.12):col('#7a8088',Math.floor(u*8)%2?.04:-.02)});
+    const ty=cy-2-h;vents(pb,[[cx-2,ty-1],[cx+2,ty],[cx+1,ty-3],[cx+5,ty-1]].slice(0,2+(v%3)));
+    crates(pb,cx+8,cy+3,1+(v%3));D.pallet(pb,cx-13,cy+3);if(v%3===1)D.barrel(pb,cx-9,cy+5,['#2f6fc0','#d9463b','#2f8f5b'][v%3]);if(v%4===3)D.forklift(pb,cx-5,cy+7);
+    SP.bld[I][1].push(mk(pb,-16,16-H,true,{lights:[[cx-9,cy-1]]}));}
 
-  /* industrial L2: half the factories smoke, others have silos or roof vents */
   ;yield;
-  for(let v=0;v<8;v++){const r=mulberry(v*331+19),H=68,pb=new PB(32,H),cx=16,cy=H-8,s=v*23+1801,type=v%4;
-    const br=['#a4553d','#8c6a52','#6d7a86','#9a7a4a','#7a5a4a','#5f7a7a','#a46a4a','#7a7a8a'][v],meta={};
-    if(type===0){pb.cyl(cx+6,cy-6,2.5,28,(dx,b)=>b>22&&b<25?col('#f0ede6',dx>.2?-.25:0):side('#9b4a36')(dx),()=>col('#2a1f22'));meta.em=[[cx+6,cy-35,'smoke']];}
-    if(type===2){pb.cyl(cx+7,cy-7,3.5,20,side('#d8d2c4'),()=>col('#ece6d8'));pb.cyl(cx+1,cy-9,3.5,22,side('#cfc9bc'),()=>col('#e2ddd2'));}
-    if(type===3){pb.cyl(cx+4,cy-7,2,18,side('#8a8f96'),()=>col('#2a1f22'));pb.cyl(cx+9,cy-5,2,15,side('#8a8f96'),()=>col('#2a1f22'));meta.em=[[cx+4,cy-26,'smoke'],[cx+9,cy-21,'smoke']];}
-    pb.box({cx:cx-1,cy:cy-1,hw:12,h:10+(type===1?2:0),
-      L:facade({wall:col(br),px:4,ww:2,py:10,wh:5,mx:1.5,my:3,mt:1,rim:col(br,.2),p:.35,seed:s,glass:'#6f8fa8'}),
-      R:(a,b)=>{if(a>=4&&a<8&&b<6.5)return col('#4a4f55',(b|0)%2?.1:0);return col(br,b>=9?0:-.24);},
-      T:(u)=>{const f=(u*5)%1;return f<.38?col('#86a9c6',f<.15?.2:0):col('#6b6f75',f*.3);}});
-    if(type===1)for(const[x,y]of[[cx-5,cy-13],[cx+1,cy-15],[cx+5,cy-11]])pb.cyl(x,y,1.5,3,side('#a9b0b6'),()=>col('#3a3a3a'));
-    D.barrel(pb,cx-12,cy+3,'#d9463b');D.barrel(pb,cx-10,cy+4,'#2f6fc0');D.pallet(pb,cx+6,cy+5);if(v%2===0)D.forklift(pb,cx-4,cy+7);D.lamp(pb,cx+11,cy+4,8);
-    SP.bld[I][2].push(mk(pb,-16,16-H,true,meta));}
+  for(let v=0;v<8;v++){const r=mulberry(v*331+19),H=72,pb=new PB(32,H),cx=16,cy=H-8,s=v*23+1801,type=v%4,meta={};
+    const m=['#a8aeb4','#9aa4ae','#b4ac9c','#8e98a4','#a4aca4','#b0b4bc','#9a9488','#a0a8b4'][v],h=12+(type===1?2:0);
+    apron(pb,cx,cy);
+    if(type===0){pb.cyl(cx+7,cy-8,3.4,22,(dx,b)=>b%7<1?col('#9aa0a8'):side('#eceae4')(dx),()=>col('#5a5f66'));}
+    if(type===2){pb.cyl(cx+8,cy-7,3.4,24,(dx,b)=>b%8<1?col('#9aa0a8'):side('#f0eee8')(dx),()=>col('#5a5f66'));pb.cyl(cx+2,cy-10,3.4,26,(dx,b)=>b%8<1?col('#9aa0a8'):side('#e6e4dc')(dx),()=>col('#5a5f66'));}
+    if(type===3){pb.cyl(cx+6,cy-7,2.2,30,(dx,b)=>b>24&&b<27?col('#e04a3a',dx>.2?-.2:0):side('#b8bcc2')(dx),()=>col('#2a1f22'));meta.em=[[cx+6,cy-38,'smoke']];}
+    const L=(a,b,hw2,h2)=>{if(b>=h2-1)return col(m,-.22);if(b>=h2-2.4)return col('#2f62b8');if(b>=4&&b<7&&(a|0)%4>=1&&(a|0)%4<3&&a>1)return winC((a|0)>>2,1,s,.4,'#6a8aa8');if(a>=1.5&&a<3.5&&b<4)return col('#4a4f58');return corr(m,0)(a,b);};
+    const R=(a,b,hw2,h2)=>{const d=roller(m,-.2,[[1.5,5.2],[6.4,10.1]])(a,b,hw2,h2);if(d)return d;if(b>=h2-1)return col(m,-.44);if(b>=h2-2.4)return col('#2f62b8',-.25);return corr(m,-.26)(a,b);};
+    pb.box({cx:cx-1,cy:cy-2,hw:12,h,L,R,T:(u,w)=>Math.min(u,w,1-u,1-w)<.05?col(m,-.12):col('#7a8088',Math.floor(u*6)%2?.05:-.02)});
+    const ty=cy-2-h;if(type===1)vents(pb,[[cx-5,ty-1],[cx-1,ty-3],[cx+3,ty-1],[cx,ty+1]]);else vents(pb,[[cx-4,ty-1],[cx,ty-2]]);
+    for(let k=0;k<8;k++)pb.put(cx-8+k,ty-4+(k>>1),col('#6a7078'));                                     // a pipe run over the roof
+    crates(pb,cx+9,cy+4,2);D.barrel(pb,cx-12,cy+3,'#d9463b');D.barrel(pb,cx-10,cy+4,'#2f6fc0');if(v%2===0)D.forklift(pb,cx-4,cy+8);D.lamp(pb,cx+12,cy+3,8);
+    meta.lights=[[cx-9,cy-3]];SP.bld[I][2].push(mk(pb,-16,16-H,true,meta));}
 
-  /* industrial L3: chemical plant, refinery, silo cluster, steel mill */
   ;yield;
-  for(let v=0;v<4;v++){const H=84,pb=new PB(32,H),cx=16,cy=H-8,s=v*19+2001,meta={};
-    const m=['#5f8a8b','#7d8a6a','#6a7896','#8a6a5a'][v];
-    const hall=(hc,hw,h,c)=>pb.box({cx:hc[0],cy:hc[1],hw,h,
-      L:(a,b)=>{if(b>=6&&b<7)return col('#e8b53a');if(b>=h-1)return col(c,.2);if(a>=2&&a<hw-2&&b>=8&&b<10.5)return winC(a>>1,1,s,.5,'#89a9b8');return col(c,(a|0)%2?0:-.07);},
-      R:(a,b)=>{if(b>=6&&b<7)return col('#e8b53a',-.25);if(b>=h-1)return col(c,-.05);return col(c,(a|0)%2?-.22:-.28);},
-      T:(u,w)=>col(c,(Math.floor(u*6)+Math.floor(w*6))%2?.12:.04)});
-    if(v===0){pb.cyl(cx-6,cy-8,2.6,36,(dx,b)=>b>18&&Math.floor(b/4)%2?col('#f2efe8',dx>.2?-.25:0):side('#c0473a')(dx),()=>col('#2a1f22'));hall([cx+2,cy-2],11,13,m);
-      pb.cyl(cx-6,cy+3,4,7,side('#e3e1da'),(dx,dy)=>col('#f1efe9',dx*dx+dy*dy>.7?-.1:0));pb.cyl(cx+7,cy+4,3,5,side('#d8d2c4'),()=>col('#ece6d8'));meta.em=[[cx-6,cy-45,'smoke']];}
-    else if(v===1){pb.cyl(cx+5,cy-8,1.8,34,(dx,b)=>b%6<1?col('#e8b53a'):side('#b9bec4')(dx),()=>col('#5a5f66'));pb.cyl(cx-3,cy-7,2.4,26,(dx,b)=>b%5<1?col('#e8b53a'):side('#c9ced4')(dx),()=>col('#5a5f66'));
-      hall([cx-2,cy+1],10,8,m);pb.cyl(cx+8,cy+3,4.5,6,side('#e3e1da'),()=>col('#f1efe9'));meta.em=[[cx+5,cy-43,'smoke']];}
-    else if(v===2){for(const[x,y]of[[cx+6,cy-6],[cx-1,cy-8],[cx+3,cy-1],[cx-5,cy+1]])pb.cyl(x,y,4,24,(dx,b)=>b%8<1?col('#a9a49a'):side('#d9d3c4')(dx),(dx,dy)=>col('#e9e3d4',dx*dx+dy*dy>.6?-.12:0));
-      pb.box({cx:cx-9,cy:cy+2,hw:3,h:10,L:()=>col(m),R:()=>col(m,-.25),T:()=>col(m,.15)});}
-    else{hall([cx,cy-1],12,15,m);pb.cyl(cx+5,cy-14,3,12,side('#5a5f66'),()=>col('#2a1f22'));pb.cyl(cx-3,cy-16,3,10,side('#5a5f66'),()=>col('#2a1f22'));meta.em=[[cx+5,cy-27,'smoke'],[cx-3,cy-27,'smoke']];}
-    D.pallet(pb,cx-13,cy+3);D.pallet(pb,cx-9,cy+5);D.forklift(pb,cx+4,cy+7);D.barrel(pb,cx+9,cy+5,'#e0a830');
-    SP.bld[I][3].push(mk(pb,-16,16-H,true,meta));}
+  for(let v=0;v<4;v++){const H=90,pb=new PB(32,H),cx=16,cy=H-8,s=v*19+2001,meta={};
+    const acc=['#2f62b8','#3a8a5a','#c0392b','#d8902a'][v],cream='#ece2c8';
+    apron(pb,cx,cy);
+    // twin white silos with dark caps and a ladder, joined to the office by a pipe bridge
+    if(v%2)for(const[x,y]of[[cx+4,cy-8],[cx+9,cy-3]]){pb.cyl(x,y,4.6,9,(dx,b)=>b%3<.5?col('#b8bcc2'):side('#eef0f2')(dx),(dx,dy)=>col('#d8dce2',dx*dx+dy*dy<.3?-.1:0));for(let i=0;i<10;i++)pb.put(Math.round(x+4.6),y-i,col('#5a5f66'));}
+    else for(const[x,y,hh]of[[cx+3,cy-9,34],[cx+9,cy-6,30]]){pb.cyl(x,y,3.6,hh,(dx,b)=>b%9<1?col('#b8bcc2'):Math.abs(dx-.55)<.12?col('#5a5f66'):side('#f2f0ea')(dx),()=>col('#4a4f58'));
+      for(let k=-2;k<=2;k++)pb.put(x+k,y-hh-1,col('#9aa0a8',k>0?-.2:0));}
+    if(!(v%2))for(let k=0;k<10;k++){pb.put(cx-4+k,cy-26+(k>>2),col('#6a7078'));pb.put(cx-4+k,cy-25+(k>>2),col('#4a5058'));}
+    const fL=(a,b,hw,h)=>{if(b>=h-1)return col(cream,-.15);if(b<1)return col('#8a8478');if((b%4)>=1.4&&(b%4)<3.2&&(a|0)%3!==0&&a>.8&&a<hw-.8)return winC(Math.floor(a/3),Math.floor(b/4),s,.55,'#4f6f8f');return col(cream,(a|0)%5===0?-.06:0);};
+    pb.box({cx:cx-4,cy:cy-1,hw:8,h:17,L:fL,R:(a,b,hw,h)=>{const c=fL(a,b,hw,h);return Array.isArray(c)?[col('#4f6f8f',-.2),c[1]]:tone(c,-.22);},T:()=>col('#9aa0a8')});
+    vents(pb,[[cx-5,cy-19]]);for(let i=0;i<5;i++)pb.put(cx-1,cy-19-i,col('#9aa0a8'));
+    pb.box({cx:cx-11,cy:cy+4,hw:3.5,h:4,L:()=>col(acc),R:()=>col(acc,-.28),T:()=>col(acc,.15)});                                          // a small coloured pump house
+    ibox(pb,cx+3,cy+4,7,3,3,(q,z)=>col('#c0392b',(Math.floor(q*14)%2?-.08:0)),col('#c0392b',-.3),col('#d8584a'));                       // a shipping container
+    if(v===3){pb.cyl(cx-10,cy-6,2,22,(dx,b)=>b>16&&b<19?col('#f2efe8',dx>.2?-.25:0):side('#9b4a36')(dx),()=>col('#2a1f22'));meta.em=[[cx-10,cy-29,'smoke']];}
+    meta.lights=[[cx-6,cy-6],[cx-2,cy-10]];SP.bld[I][3].push(mk(pb,-16,16-H,true,meta));}
 
   /* 2x2 merged buildings: apartment complexes, malls, factory halls --------- */
   ;yield;
@@ -1386,18 +1401,6 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
   SP.big[I][1]=SP.big[I][0];
 
   /* civic ------------------------------------------------------ */
-  // a box on a 2:1 base: length A along the down-right axis, width B along the up-right axis, from its left corner (x,y).
-  // fL(s,z) the long front face, fR(s,z) the down-right end face, fT(a,b) the top
-  const ibox=(pb,x,y,A,B,h,fL,fR,fT)=>{const F=f=>typeof f==='function'?f:()=>f;fL=F(fL);fR=F(fR);fT=F(fT);
-    for(let a=0;a<=A;a+=.5)for(let z=0;z<h;z++)pb.put(Math.floor(x+a),Math.floor(y+a/2)-z,fL(a/A,z));
-    for(let b=0;b<=B;b+=.5)for(let z=0;z<h;z++)pb.put(Math.floor(x+A+b),Math.floor(y+A/2-b/2)-z,fR(b/B,z));
-    for(let a=0;a<=A;a+=.5)for(let b=0;b<=B;b+=.5)pb.put(Math.floor(x+a+b),Math.floor(y+a/2-b/2)-h,fT(a/A,b/B));};
-  // little parked vehicles nosing down-right: a car (body colour, optional light-bar colours) and a fire engine with a ladder
-  const miniCar=(pb,x,y,c,bar)=>{pb.put(x+1,y+1,col('#1a1a1e'));pb.put(x+4,y+2,col('#1a1a1e'));ibox(pb,x,y,5,2.5,2,col(c,-.12),col(c,-.3),col(c));
-    ibox(pb,x+1,y-1.5,2.5,2,1,(s)=>[col('#2a3a50'),col('#5a6a80')],col('#2a3a50',-.1),col(c,.1));if(bar){pb.put(x+3,y-3,[col(bar[0]),col(bar[0],.4)]);pb.put(x+4,y-3,[col(bar[1]),col(bar[1],.4)]);}};
-  const fireTruck=(pb,x,y)=>{for(const[dx,dy]of[[1,1],[4,3],[7,4]])pb.put(x+dx,y+dy,col('#1a1a1e'));
-    ibox(pb,x,y,9,3,3,(s,z)=>z===1?col('#f2efe8'):s>.75&&z===2?[col('#2a3a50'),col('#ffd88a')]:col('#d8392a',-.08),(s,z)=>z===2?[col('#2a3a50'),col('#ffd88a')]:col('#d8392a',-.3),(a,b)=>a>.75?col('#e04a3a',.1):col('#c8ccd2',(Math.floor(a*12)%2)?-.15:.05));
-    pb.put(x+7,y+1,[col('#4a7aff'),col('#9ac0ff')]);pb.put(x+8,y+1,[col('#ff3a3a'),col('#ff9a9a')]);};
   { // police station: navy upper floor over a white ground floor with a glass entrance, a blue light mast on the roof, patrol cars out front
     const H=58,pb=new PB(32,H),cx=16,cy=H-8,s=2201,wall='#eef1f5',nav='#24396e',blu='#3a6fd8';
     pb.box({cx,cy,hw:15,h:1,L:()=>col('#8a8f98'),R:()=>col('#8a8f98',-.3),T:(u,v,x,y)=>Math.abs(u-.62)<.02&&v>.45?col('#f2f2f2'):col('#6a6f78',hash(x,y,9)<.06?.08:0)});
@@ -2590,11 +2593,18 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         pb.ell(cx-3,cy-23,2.6,(dx,dy)=>dx*dx+dy*dy>.6?col('#2e2b33'):[col('#f6f2e4'),col('#fff2c0')]);pb.put(cx-3,cy-25,col('#2e2b33'));pb.put(cx-2,cy-23,col('#2e2b33'));
         pb.ell(cx+3,cy-23,2.6,(dx,dy)=>dx*dx+dy*dy>.6?col('#2e2b33'):[col('#e6e2d4'),col('#f2e4b0')]);},(cx,cy)=>({lights:[[cx,cy-22]]}))];
     // benches and street lamps can face any of the four ways (vari&3); small box models like the cars
-    SP.benchD=vehModel([{b:[-.46,-.34,-.6,.6,0,1.7],c:'#3a3f4a'},{b:[.34,.46,-.6,.6,0,1.7],c:'#3a3f4a'},
-      {b:[-.5,.5,-.75,.75,1.7,2.3],f:(f,a,b)=>f==='top'&&(b*4|0)%2?col('#a37b4c',-.08):'#a37b4c'},{b:[-.5,.5,-1,-.72,2.3,4.4],f:(f,a,b)=>(b*3|0)%2?col('#8a6238',-.1):'#8a6238'}],.34,.07);
+    // benches and street lamps can face any of the four ways (vari&3); small box models like the cars.
+    // bench: slatted wooden seat and back on iron legs, a little lamp post at one end and a flower pot at the other
+    SP.benchD=vehModel([{b:[-.46,-.34,-.6,.6,0,1.7],c:'#2e333c'},{b:[.34,.46,-.6,.6,0,1.7],c:'#2e333c'},
+      {b:[-.5,.5,-.75,.75,1.7,2.3],f:(f,a,b)=>f==='top'&&(b*4|0)%2?col('#b0804a',-.1):'#b0804a'},{b:[-.5,.5,-1,-.72,2.3,4.6],f:(f,a,b)=>(b*3|0)%2?col('#9a6a3a',-.12):'#9a6a3a'},
+      {b:[.74,.84,-.9,-.5,0,10],c:'#3a3f4a'},{b:[.68,.9,-1.05,-.35,10,11.8],f:(f)=>f==='top'?'#3a3f4a':[col('#f2e6c0'),col('#fff2b0')]},{b:[.7,.88,-1,-.4,11.8,12.4],c:'#2a2e36'},
+      {b:[-.9,-.68,-.45,.45,0,1.6],c:'#b0643a'},{b:[-.92,-.66,-.55,.55,1.6,2.8],f:(f,a,b)=>f==='top'?((a*5|0)%2?col('#e0443a'):col('#ffffff')):'#3f8a3e'}],.34,.07,{h:28,light:[.79,11]});
     ;yield;
-    SP.lampD=vehModel([{b:[-.45,.45,-.45,.45,0,1],c:'#4a4f5a'},{b:[-.14,.14,-.14,.14,1,19],c:'#3a3f4a'},{b:[0,.8,-.12,.12,18,19],c:'#3a3f4a'},{b:[.62,.72,-.12,.12,17,18],c:'#3a3f4a'},
-      {b:[.55,.95,-.6,.6,16,17.4],f:(f,a,b)=>f==='top'?'#3a3f4a':[col('#e8e4d4'),col('#fff2c0')]}],.32,.06,{h:28,light:[.75,15.5]});
+    // street lamp: a fluted dark pole on a base, a crossbar with two hanging lanterns and a finial
+    SP.lampD=vehModel([{b:[-.4,.4,-.4,.4,0,1.2],c:'#3a3f4a'},{b:[-.14,.14,-.14,.14,1.2,19],c:'#2e333c'},{b:[-.2,.2,-.2,.2,6,6.8],c:'#4a505a'},{b:[-.85,.85,-.1,.1,18.4,19.2],c:'#2e333c'},
+      {b:[-.1,.1,-.1,.1,19.2,21],c:'#2e333c'},
+      ...[-.7,.7].flatMap(s0=>[{b:[s0-.02,s0+.02,-.05,.05,17.4,18.4],c:'#2e333c'},{b:[s0-.16,s0+.16,-.35,.35,14.6,17.4],f:(f)=>f==='top'?'#2e333c':[col('#f2e6c0'),col('#fff2b0')]},{b:[s0-.2,s0+.2,-.42,.42,17.2,17.8],c:'#2e333c'}])],
+      .32,.06,{h:30,light:[[-.7,14],[.7,14]]});
     for(const sp of[...SP.benchD,...SP.lampD]){sp.g=0;sp.gp=1;}
     // 정자: stone plinth, red-lacquered posts, low rails and a tiled roof with upturned eaves
     SP.deco[11]=mk1(52,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:12,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:(u,v)=>col('#bdb6a6',((Math.floor(u*4)+Math.floor(v*4))&1)?.06:0)});
@@ -2726,6 +2736,77 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       pb.put(cx-3,cy+5,col(R));pb.put(cx-2,cy+5,col(R,-.2));pb.put(cx-3,cy+4,col(R,.15));pb.line(cx,cy+5,cx+1,cy+3,col(B));                                     // bucket, spade
       pb.put(cx+4,cy+6,col('#5a5f66'));pb.put(cx+4,cy+5,col('#5a5f66'));for(const[dx,dy,c]of[[3,4,G],[4,4,G],[5,4,G],[5,3,G],[3,3,'#2a2a30']])pb.put(cx+dx,cy+dy,col(c));   // spring rider
       });
+    // ---- decorations redrawn after the chosen reference set (B) ----
+    // 꽃밭: a round wooden planter of staves with a dark rim, red roses and white daisies with yellow hearts over green leaves
+    SP.deco[0]=mk1(36,(pb,cx,cy)=>{pb.cyl(cx,cy+1,10.5,4,(dx,b,x)=>col('#9a6a3a',(dx<-.4?.1:dx>.45?-.28:0)+((x%3)===0?-.12:0)+(b>=3?.12:b<1?-.1:0)),(dx,dy)=>dx*dx+dy*dy>.82?col('#6a4428',dy<0?.1:-.05):col('#4a3020'));
+      for(let k=0;k<26;k++){const a=hash(k,2,21)*6.28,q=Math.sqrt(hash(k,3,21))*.85,x=cx+Math.cos(a)*q*9,y=cy-3+Math.sin(a)*q*4.5;bloom(pb,x,y,1.6,2,'#3f8a3e',60+k);}
+      for(let k=0;k<12;k++){const a=hash(k,4,21)*6.28,q=Math.sqrt(hash(k,5,21))*.8,x=Math.round(cx+Math.cos(a)*q*8),y=Math.round(cy-5+Math.sin(a)*q*4);
+        if(k%2){pb.put(x,y,col('#d02a3a'));pb.put(x+1,y,col('#a01a2a'));pb.put(x,y-1,col('#ff4a5a'));pb.put(x+1,y-1,col('#e03040'));}
+        else{for(const[dx,dy]of[[-1,0],[1,0],[0,-1],[0,1]])pb.put(x+dx,y+dy,col('#ffffff',dx>0?-.12:0));pb.put(x,y,col('#f2c140'));}}});
+    // 돌탑: a three-storey stone pagoda on a stepped base, dark tiled eaves on each storey, a red panel on the first, a finial
+    SP.deco[2]=mk1(48,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:9,h:2,L:(a,b)=>col('#a9a49a',((a|0)>>1)%2?-.05:.04),R:()=>col('#a9a49a',-.3),T:()=>col('#bdb6a6')});
+      pb.box({cx,cy:cy-1,hw:7,h:2,L:()=>col('#b2ac9e'),R:()=>col('#b2ac9e',-.3),T:()=>col('#c4bdae')});let y=cy-3;
+      for(let k=0;k<3;k++){const hw=5.2-k*1.2,h=4-k*.5;pb.box({cx,cy:y,hw,h,L:(a,b)=>k===0&&a>hw*.3&&a<hw*.7&&b>1&&b<h-.8?col('#c0392b'):col('#a9a49a',((b|0)%2?-.04:.04)),R:(a,b)=>col('#a9a49a',-.28),T:()=>col('#8a857a')});
+        y-=h;pb.roof(cx,y,hw+2.2,2.4,'#4a4e58');for(const sg of[-1,1])pb.put(Math.round(cx+sg*(hw+2.6)),y-1,col('#4a4e58',.15));y-=2;}
+      for(let i=0;i<4;i++)pb.put(cx,y-i,col('#6a6e78',i%2?-.1:.1));pb.put(cx,y-4,col('#d8b040'));});
+    // 장독대: two big glazed jars with lids among flat stepping stones on the grass, a small jar beside them
+    SP.deco[3]=mk1(36,(pb,cx,cy)=>{for(const[x,y,r]of[[cx-8,cy+2,2.6],[cx+7,cy+3,2.4],[cx-2,cy+5,2.2],[cx+9,cy-2,2],[cx-10,cy-2,2.2],[cx+2,cy-4,2.4]])pb.ell(x,y,r,(dx,dy)=>col('#c9c3b6',dy<0?.12:-.15));
+      onggi(pb,cx-3,cy,1.35,1);onggi(pb,cx+4,cy-1,1.25,1);onggi(pb,cx+1,cy+4,.75,0);});
+    // 솟대: a carved wooden pole with rings and a painted band, topped by a wooden bird, on a little stone base
+    SP.deco[5]=mk1(46,(pb,cx,cy)=>{pb.ell(cx,cy+1,5,(dx,dy,x,y)=>col(hash(x,y,3)<.5?'#a9a49a':'#9a958a',dy<0?.08:-.12));
+      for(let i=0;i<26;i++){const ring=i%6===0;pb.put(cx-1,cy-i,col('#a07a52',ring?-.18:.06));pb.put(cx,cy-i,col('#8a6a48',ring?-.22:0));pb.put(cx+1,cy-i,col('#6a4e34',ring?-.2:0));}
+      ['#e04a3a','#f2c140','#3a6fd0'].forEach((c,k)=>{pb.put(cx-1,cy-15-k,col(c,.08));pb.put(cx,cy-15-k,col(c));pb.put(cx+1,cy-15-k,col(c,-.2));});
+      for(let k=-1;k<=1;k++)pb.put(cx+k,cy-26,col('#7a5a3a'));duck(pb,cx,cy-27,1);pb.put(cx+1,cy-30,col('#ffffff'));});
+    // 벚꽃나무 ★: a smaller cherry tree on a tidy grass patch with a stone lantern beside it and petals on the ground
+    SP.deco[7]=mk1(50,(pb,cx,cy)=>{for(let k=0;k<26;k++){const a=hash(k,3,19)*6.28,r=Math.sqrt(hash(k,4,19))*11;pb.put(Math.round(cx+Math.cos(a)*r),Math.round(cy+1+Math.sin(a)*r*.5),col(hash(k,5,19)<.5?'#f7a8c8':'#ffd6e6'));}
+      for(let i=0;i<11;i++){pb.put(cx-2,cy-i,col('#5a3a2a',i%4?.04:-.12));pb.put(cx-1,cy-i,col('#3a2418'));}for(const[x1,y1]of[[-8,-17],[5,-18],[-3,-22]])pb.line(cx-2,cy-9,cx+x1,cy+y1,col('#5a3a2a'));
+      for(const[x,y,r]of[[cx-2,cy-18,7.5],[cx-8,cy-15,5],[cx+4,cy-16,5],[cx-3,cy-23,4.5]])pb.ell(x,y,r,(dx,dy,xx,yy)=>{const h=hash(xx,yy,18);return col(h<.12?'#ffffff':dy<-.3?'#ffd6e6':dy>.4||dx>.6?'#e27aa8':h<.5?'#f7a8c8':'#f4b8d2');});
+      const lx=cx+8,ly=cy+3;pb.box({cx:lx,cy:ly,hw:2.5,h:2,L:()=>col('#a9a49a'),R:()=>col('#a9a49a',-.3),T:()=>col('#bdb6a6')});for(let i=0;i<3;i++){pb.put(lx-1,ly-2-i,col('#9a958a'));pb.put(lx,ly-2-i,col('#8a857a'));}
+      pb.box({cx:lx,cy:ly-5,hw:2.5,h:2,L:(a)=>a>1&&a<2?[col('#3a3020'),col('#ffd27a')]:col('#a9a49a'),R:()=>col('#a9a49a',-.3),T:()=>col('#8a857a')});pb.roof(lx,ly-7,3.2,2,'#7a766c');},
+      (cx,cy)=>({lights:[[cx+8,cy-3]]}));
+    // 분수 ★: a round red-brick basin with a stone coping, rippling water and a tall jet from a little nozzle (animated spray on top)
+    SP.deco[8]=mk1(54,(pb,cx,cy)=>{const water=(dx,dy,x,y)=>{const r=Math.sqrt(dx*dx+dy*dy),w=Math.sin(r*13)>.6;return[col('#3f86c8',w?.22:hash(x,y,3)<.1?.3:0),col('#2f7ad0',w?.5:.25)];};
+      pb.cyl(cx,cy+2,13,4,(dx,b,x)=>b>=3?col('#d8d0c0',dx<-.4?.08:dx>.45?-.25:0):col('#b0503a',(dx<-.4?.1:dx>.45?-.28:0)+(((x+(b|0)*2)%4)===0?-.15:0)),(dx,dy,x,y)=>dx*dx+dy*dy>.8?col('#e8e2d4',dy<0?.06:-.08):water(dx,dy,x,y));
+      pb.cyl(cx,cy-2,1.4,3,side('#bdb6a6'),()=>col('#d4cfc2'));
+      for(let y=cy-16;y<=cy-4;y++){pb.put(cx,y,[col('#e8f6ff',0,(y%3)?220:170),col('#bfe8ff',0,200)]);if(y>cy-13){pb.put(cx-1,y,col('#bfe4ff',0,120));pb.put(cx+1,y,col('#bfe4ff',0,120));}}
+      for(let k=1;k<6;k++){pb.put(cx-k,cy-16+k*k/3|0,col('#bfe4ff',0,170));pb.put(cx+k,cy-16+k*k/3|0,col('#bfe4ff',0,170));}
+      for(const[dx,dy]of[[-8,0],[7,1],[-3,2],[9,-1]])pb.put(cx+dx,cy+dy,col('#ffffff',0,200));},
+      (cx,cy)=>({fount:[cx,cy-2],lights:[[cx,cy-1]]}));
+    // 동상 ★: a white marble figure (draped robe, one arm raised) on a tall pale pedestal with a cornice, flower beds at its foot
+    SP.deco[9]=mk1(60,(pb,cx,cy)=>{pb.ell(cx,cy+1,12,(dx,dy,x,y)=>col('#5fa844',hash(x,y,7)<.1?.1:0));
+      for(let k=0;k<14;k++){const a=k/14*6.28,x=Math.round(cx+Math.cos(a)*9),y=Math.round(cy+1+Math.sin(a)*4.5);pb.put(x,y,col(['#ff6a8a','#ffd84a','#ffffff'][k%3]));pb.put(x,y+1,col('#3f8a3e'));}
+      const mb='#e8e2d8';pb.box({cx,cy,hw:6,h:2,L:()=>col(mb,-.04),R:()=>col(mb,-.3),T:()=>col(mb,.08)});pb.box({cx,cy:cy-2,hw:4.5,h:11,L:(a,b)=>col(mb,(b|0)===10?.1:(b|0)===1?-.06:0),R:()=>col(mb,-.26),T:()=>col(mb,.1)});
+      pb.box({cx,cy:cy-13,hw:5.2,h:1,L:()=>col(mb,.1),R:()=>col(mb,-.2),T:()=>col(mb,.14)});const y0=cy-15,W2=[2.6,2.6,2.3,2.1,1.9,1.7,1.6,1.5,1.6,1.9,2.1,2.2];
+      for(let r=0;r<W2.length;r++){const w=W2[r];for(let dx=-Math.ceil(w);dx<=Math.ceil(w);dx++){if(Math.abs(dx)>w+.2)continue;const t=dx/Math.max(1,w);pb.put(cx+dx,y0-r,col('#f4f0ea',(t<-.4?.04:t<.3?-.06:-.22)+((dx+r)%3===0&&r<8?-.06:0)));}}
+      pb.ell(cx,y0-13.5,1.8,(dx)=>col('#f4f0ea',dx<-.2?.04:dx<.3?-.06:-.2));for(let k=0;k<5;k++)pb.put(cx+3,y0-9-k,col('#e8e2d8',-.1));pb.put(cx+3,y0-14,col('#f4f0ea'));pb.put(cx-3,y0-9,col('#e0dad0',-.1));pb.put(cx-3,y0-8,col('#e0dad0',-.12));});
+    // 시계탑 ★: a slender white tower on a stepped base, clock faces near the top, a belfry with open arches and a tall pointed spire
+    SP.deco[10]=mk1(80,(pb,cx,cy)=>{const W='#f2efe8';pave(pb,cx,cy,10,'#c9c3b5');pb.box({cx,cy:cy-1,hw:7,h:3,L:()=>col(W,-.06),R:()=>col(W,-.3),T:()=>col(W,.06)});
+      pb.box({cx,cy:cy-4,hw:5,h:28,L:(a,b)=>a<.8||a>4.2?col(W,.06):a>1.8&&a<3.2&&(b>5&&b<8||b>13&&b<16)?[col('#3a4a6a'),col('#ffd27a')]:col(W,(b|0)%6===0?-.06:0),R:(a,b)=>a>1.8&&a<3.2&&b>9&&b<12?[col('#2a3a5a'),col('#ffcf7a')]:col(W,-.26),T:()=>col(W)});
+      const face=(x0,y0,sl)=>{for(let dy=-3;dy<=3;dy++)for(let dx=-2;dx<=2;dx++){const d=dx*dx*1.6+dy*dy;if(d>9.5)continue;pb.put(x0+dx,Math.round(y0+dy+dx*sl),d>7?col('#d8b860',dy<0?.12:0):[col('#fbf8f0'),col('#fff2c0')]);}
+        pb.put(x0,Math.round(y0-1),col('#6a5a4a'));pb.put(x0+1,Math.round(y0+sl),col('#6a5a4a'));};
+      {const[x,y]=dLF(cx,cy-4,5,2.5,23);face(x,y,.5);}{const[x,y]=dRF(cx,cy-4,5,2.5,23);face(x,y,-.5);}
+      pb.box({cx,cy:cy-32,hw:5.6,h:1,L:()=>col(W,.1),R:()=>col(W,-.2),T:()=>col(W,.12)});
+      pb.box({cx,cy:cy-33,hw:4.6,h:5,L:(a,b)=>(a|0)%2===1&&b>.6&&b<4.2?col('#3a3f48'):col(W,.04),R:(a,b)=>(a|0)%2===1&&b>.6&&b<4.2?col('#2a2e36'):col(W,-.24),T:()=>col(W)});
+      pb.roof(cx,cy-38,5.2,16,'#5a6676');for(let i=0;i<4;i++)pb.put(cx,cy-54-i,col('#d8b040',i%2?-.1:.1));},
+      (cx,cy)=>({lights:[[cx-3,cy-27],[cx+3,cy-27]]}));
+    // 정자: a hexagon-style garden pavilion with a red tiled pyramid roof, cream walls with round windows and an open door, on a grassy plinth
+    SP.deco[11]=mk1(56,(pb,cx,cy)=>{pb.box({cx,cy:cy+2,hw:13,h:2,L:()=>col('#7a5a3a'),R:()=>col('#7a5a3a',-.25),T:(u,v,x,y)=>col('#5fa844',hash(x,y,7)<.1?.1:0)});
+      pb.box({cx,cy:cy,hw:8,h:2,L:()=>col('#b8b2a6'),R:()=>col('#b8b2a6',-.3),T:()=>col('#c9c3b6')});
+      const wl=t=>(a,b,hw,h)=>{if(b<1)return col('#8a6a48',t);if(b>=h-1)return col('#8a5a34',t);if(Math.hypot(a-hw*.3,b-h*.55)<1.3)return[col('#3a4a6a',t),col('#ffd88a')];if(!t&&Math.abs(a-hw*.72)<1.2&&b<h-2)return col('#5a3a24');return col('#ecdcc0',t+((a|0)%3===0?-.06:0));};
+      pb.box({cx,cy:cy-2,hw:6.5,h:9,L:wl(0),R:wl(-.24),T:()=>col('#8a5a34')});pb.roof(cx,cy-11,9.5,10,'#c8463a');pb.put(cx,cy-22,col('#d8b040'));pb.put(cx,cy-23,col('#d8b040'));},
+      (cx,cy)=>({lights:[[cx-3,cy-5]]}));
+    // 놀이터: a wooden play tower with a red roof, a yellow slide, a ladder, a sandbox with toys and a bench, on a grass and rubber pad
+    SP.deco[12]=mk1(48,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:13,h:1,L:()=>col('#3f8a4a'),R:()=>col('#2f6a3a'),T:(u,v,x,y)=>u>.45&&v<.6?col('#d8584a',((u*8|0)+(v*8|0))%2?-.05:.04):col('#5fae6a',hash(x,y,3)<.1?.1:0)});
+      const Y='#f2c84a',WD='#a8703f';for(const[x,y]of[[cx-1,cy-2],[cx+7,cy-2],[cx+3,cy-4],[cx+3,cy]])for(let i=0;i<12;i++){pb.put(x,y-i,col(WD,i%4?0:-.1));}
+      pb.box({cx:cx+3,cy:cy-7,hw:4,h:1,L:()=>col(WD,-.05),R:()=>col(WD,-.3),T:(u)=>col('#c08a50',Math.floor(u*5)%2?-.06:.04)});
+      for(const[[x0,y0],[x1,y1]]of[[[cx-1,cy-2],[cx+3,cy]],[[cx+3,cy],[cx+7,cy-2]]])pb.line(x0,y0-10,x1,y1-10,col(WD,.08));
+      pb.roof(cx+3,cy-14,5.5,5,'#d8463a');
+      for(let k=0;k<10;k++){const x=cx+8+k,y=cy-8+Math.round(k*.9);pb.put(x,y,col(Y,.12));pb.put(x,y+1,col(Y,-.2));pb.put(x,y-1,col('#d8a020'));}pb.put(cx+18,cy+1,col(Y,-.1));
+      for(let k=0;k<7;k++){pb.put(cx-3-(k>>2),cy-1-k,col('#9aa3ad'));if(k%2===0)pb.put(cx-2-(k>>2),cy-1-k,col('#9aa3ad',.1));}
+      pb.box({cx:cx-6,cy:cy+5,hw:5,h:1,L:()=>col(WD),R:()=>col(WD,-.25),T:(u,v,x,y)=>Math.min(u,v,1-u,1-v)<.16?col(WD,.12):col('#ead6a0',hash(x,y,3)<.25?-.1:0)});
+      pb.put(cx-7,cy+4,col('#e0443a'));pb.put(cx-6,cy+4,col('#e0443a',-.2));pb.put(cx-7,cy+3,col('#e0443a',.15));pb.put(cx-4,cy+5,col('#3a7dd8'));pb.put(cx-3,cy+4,col('#3a7dd8'));
+      for(let k=0;k<4;k++){pb.put(cx-12+k,cy+1+(k>>1),col('#b0804a'));pb.put(cx-12+k,cy+(k>>1),col('#c8945a'));}});
+
     // discovery buildings (unlocked one by one in the stone, bronze and dynasty ages)
     const dirt=(pb,cx,cy,r,hex='#8a7a5a')=>pb.ell(cx,cy+1,r,(dx,dy,x,y)=>col(hex,(hash(x,y,3)<.3?-.08:0)+(dy<0?.04:-.05)));
     const glow=(x,y)=>[col('#ff8a3a'),col('#ffd27a')];
@@ -2839,9 +2920,12 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         xm.lamp.push([cx-8,cy+1]);xm.pts.push([cx-8,cy+1,1,'flame',0]);});
     }
     ;yield;
-    SP.fence=Array.from({length:16},(_,m)=>mk1(26,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
-      for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#a37b4c'));pb.put(x,y-4,col('#b8905e'));if(k%4===0){for(let h=0;h<6;h++)pb.put(x,y-h,col('#6e4e2c',h===5?.15:0));}}}
-      for(let h=0;h<6;h++)pb.put(cx,cy-h,col('#6e4e2c',h===5?.15:0));}));
+    // fence: square stone posts with lighter caps and two wooden rails between them
+    SP.fence=Array.from({length:16},(_,m)=>mk1(28,(pb,cx,cy)=>{const arms=m?[[1,[8,4]],[2,[-8,4]],[4,[-8,-4]],[8,[8,-4]]].filter(([b])=>m&b).map(a=>a[1]):[[8,4],[-8,-4]];
+      const post=(x,y)=>{for(let h=0;h<7;h++){pb.put(x,y-h,col('#a9a49a',h===6?.18:.04));pb.put(x+1,y-h,col('#8a857a',h===6?.05:-.12));}pb.put(x,y-7,col('#c2bcae'));pb.put(x+1,y-7,col('#a9a49a'));};
+      for(const[ex,ey]of arms){for(let k=0;k<=8;k++){const x=Math.round(cx+ex*k/8),y=Math.round(cy+ey*k/8);pb.put(x,y-2,col('#8a5a34'));pb.put(x,y-3,col('#a8703f',.06));pb.put(x,y-5,col('#8a5a34'));pb.put(x,y-6,col('#a8703f',.06));}
+        post(Math.round(cx+ex)-(ex>0?1:0),Math.round(cy+ey));}
+      post(cx,cy);}));
     // railway stations: 간이역 (era 3), 전철역 (4), 자기부상역 (5)
     SP.depot=[,,,
       mk1(48,(pb,cx,cy)=>{pb.box({cx,cy:cy+1,hw:12,h:2,L:()=>col('#a9a49a'),R:()=>col('#a9a49a',-.3),T:(u,v)=>col('#bdb6a6',((Math.floor(u*6)+Math.floor(v*6))&1)?.06:0)});
