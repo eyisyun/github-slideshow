@@ -4257,7 +4257,7 @@ function seaSpawn(force,near){const cand=[];
   if(!cand.length)return false;const[x,y]=cand[(Math.random()*cand.length)|0],r=Math.random(),k=force||(r<.42?'whale':r<.7?'squid':'shadow');
   if(k==='shadow'){const dirs=[[1,0],[0,1],[-1,0],[0,-1]].sort(()=>Math.random()-.5);
     for(const[dx,dy]of dirs){let ok=true;for(let s=-4;s<=4;s++)if(seaDeep(x+dx*s,y+dy*s)<4){ok=false;break;}if(ok){seaEv={k,x:x+.5,y:y+.5,dx,dy,t0:now,last:now,dur:15000,fx:[]};return true;}}return false;}
-  seaEv={k,x:x+.5,y:y+.5,t0:now,last:now,dur:k==='whale'?13500:11500,dir:Math.random()<.5?1:-1,ph:Math.random()*6,fx:[]};return true;}
+  seaEv={k,x:x+.5,y:y+.5,t0:now,last:now,dur:k==='whale'?12500:11500,dir:Math.random()<.5?1:-1,ph:Math.random()*6,fx:[]};return true;}
 const ease=q=>q<=0?0:q>=1?1:q*q*(3-2*q);
 function seaFx(c){if(!W.wcv)return;
   if(!seaEv&&now>seaNext&&SPEEDS[speed]&&!document.body.classList.contains('photo')){seaNext=now+(seaSpawn()?50000+Math.random()*40000:12000);}
@@ -4289,42 +4289,38 @@ function seaFx(c){if(!W.wcv)return;
     for(let n=e.fx.length-1;n>=0;n--){const p=e.fx[n];p.t+=dt;if(p.t>p.m){e.fx.splice(n,1);continue;}if(p.ring)ring(p.x-X0,p.y-Y0,2+p.t*6,.45*(1-p.t/p.m));}
     return;}
   const sx=(e.x-e.y)*16-X0,sy=(e.x+e.y)*8+8-Y0,d=e.dir;
-  if(e.k==='whale'){const BL=72,HX=36,drift=d*Math.max(0,t-2)*1.1,cx=sx+drift,head=cx+d*HX;
-    // the body under water: darker as it rises, lighter as it dives
-    const subD=t<2.6?ease(t/2.6)*.5:t<9.6?.42:.42*(1-ease((t-9.6)/2.4));
-    for(let k=0;k<8;k++){const u=k/7,x=cx+d*(HX-u*BL),r=k===0?8:k<4?11:k<6?8:5;dith(x,sy+2,r,r*.5,subD,'#0a2034');}
-    for(const sd of[-1,1])dith(cx+d*16,sy+3+sd*6,7,2.4,subD*.8,'#0a2034');flush();
-    if(t<2.8&&Math.random()<dt*14)spray(cx+d*(Math.random()*50-20),sy,1,0,-6,4,.6,['#dff4ff']);
-    // surfaced: the whole whale lies along the water, back and head above it, a pale belly line at the waterline, the pectoral
-    // fin and the lower body showing through the water, a dorsal fin, an eye; it bobs, sinks head-first when it dives
-    const up=t<2.6?0:t<3.4?ease((t-2.6)/.8):t<8.4?1:t<9.6?1-ease((t-8.4)/1.2):0,bob=Math.sin(t*1.6)*.6;
-    if(up>0){const top=u=>{const a2=u<.12?u/.12:1,h=Math.sin(Math.PI*Math.pow(u,.62))*11*a2+(u>.88?-(u-.88)*14:0);return Math.max(0,h);};   // u: 0 tail .. 1 snout
-      const sink=u=>Math.max(0,up*1.25-(t>8.4?(u)*.6*(1-up):0));
-      c.globalAlpha=.55*up;for(let x=0;x<=BL;x++){const u=1-x/BL,X=Math.round(head-d*x),h=Math.round(top(u)*.9);c.fillStyle='#24486e';c.fillRect(X,Math.round(sy+1),1,Math.max(1,h-2));}   // lower body seen through the water
-      for(let k=0;k<12;k++){const X=Math.round(cx+d*(14-k*.8)),Y=Math.round(sy+2+k*.7);c.fillStyle='#3a6a90';c.fillRect(X,Y,3-(k>>2),1);}c.globalAlpha=1;   // pectoral fin under the surface
-      for(let x=0;x<=BL;x++){const u=1-x/BL,X=Math.round(head-d*x),h=Math.round(top(u)*Math.min(1,sink(u))+bob*(u>.15?1:0));if(h<=0)continue;
-        for(let y=0;y<h;y++){const q=y/h;P(X,sy-y,y===h-1?'#1c2c3c':q>.8?'#9ab0c6':q>.55?'#6e86a0':q>.25?'#566e88':'#4a6078');}
-        P(X,sy,u>.25&&u<.96?'#e4eef6':'#6e86a0');if(x===0||x===BL)for(let y=0;y<h;y++)P(X,sy-y,'#1c2c3c');                                                                      // pale belly line at the waterline
-        if(u>.84&&u<.96&&h>3)P(X,sy-1,'#e6eef4');}
-      {const u=.36,X=Math.round(head-d*(1-u)*BL),h=Math.round(top(u)*Math.min(1,sink(u)));if(h>2)for(let y=0;y<5;y++)for(let k=0;k<=4-y;k++)P(X-d*(k+Math.round(y*.8)),sy-h-y,k===4-y||k===0?'#1c2c3c':'#566e88');}   // dorsal fin
-      {const u=.86,X=Math.round(head-d*(1-u)*BL),h=Math.round(top(u)*Math.min(1,sink(u)));if(h>3){P(X,sy-Math.round(h*.45),'#10202e');P(X+d,sy-Math.round(h*.45),'#10202e');}}   // eye
-      {const u=.95,X=Math.round(head-d*(1-u)*BL);for(let k=0;k<5;k++)P(X-d*k,sy-2,'#2a4058');}                                                    // mouth line
-      // foam: an oval of ripples round the whale and white water along its sides
-      if(up>.3){c.globalAlpha=.3*up;c.strokeStyle='#e8f6ff';c.lineWidth=1;c.beginPath();c.ellipse(Math.round(cx)+.5,sy+1.5,BL*.56+Math.sin(t*2)*1.5,6+Math.sin(t*2)*.5,0,0,6.283);c.stroke();c.globalAlpha=1;
-        for(let k=0;k<14;k++){const x=((k*5.3+t*9)%BL),X=Math.round(head-d*x);P(X,sy+1+((k+((now/140)|0))&1),'#ffffff');}
-        if(Math.random()<dt*14)e.fx.push({x:head-d*Math.random()*BL+X0,y:sy+1+Y0,vx:0,vy:0,t:0,m:2,c:'#ffffff',g:0,s:1});}
-      // the spout: a misty V from the blowhole, twice while surfaced
-      const bh=head-d*.18*BL;if(t>3.6&&t<4.2||t>6.2&&t<6.7)for(let k=0;k<4;k++)e.fx.push({x:bh+X0+(Math.random()-.5)*2,y:sy-9+Y0,vx:(Math.random()-.5)*16+d*-3,vy:-38-Math.random()*16,t:0,m:1.4+Math.random()*.6,c:Math.random()<.5?'#ffffff':'#e8f6ff',g:16,mist:1,s:Math.random()<.4?2:1});}
-    if(t>2.6&&t<3.3)ring(cx,sy,4+(t-2.6)*22,.6);
-    // the flukes lift as it dives, stream water and slide under
-    if(t>9.2&&t<12){const q=(t-9.2)/2.8,rise=Math.sin(ease(Math.min(1,q*1.15))*Math.PI),bx=cx-d*(BL-HX-2),hh=Math.round(24*rise),top=sy-hh-5;
-      if(hh>1){c.fillStyle='#34506e';c.fillRect(bx-1,top+7,4,sy-top-7);c.fillStyle='#4e6e92';c.fillRect(bx-1,top+7,1,sy-top-7);
-        for(const s2 of[-1,1]){c.fillStyle=s2===d?'#2e4a68':'#3e5c80';c.beginPath();c.moveTo(bx,top+8);c.quadraticCurveTo(bx+s2*9,top+8,bx+s2*18,top+1);c.quadraticCurveTo(bx+s2*15,top+5,bx+s2*14,top+6);c.quadraticCurveTo(bx+s2*6,top+11,bx,top+12);c.closePath();c.fill();}
-        c.fillStyle='#7a9ab8';c.fillRect(bx-16,top+1,6,1);c.fillRect(bx+11,top+1,5,1);
-        if(Math.random()<dt*40)for(const s2 of[-1,1])e.fx.push({x:bx+s2*(14+Math.random()*3)+X0,y:top+3+Y0,vx:s2*2,vy:2,t:0,m:.7,c:'#e8f6ff',g:60});
-        for(let x=-5;x<=5;x++)P(bx+x,sy+((x+((now/120)|0))&1),'#ffffff');}
-      if(q>.85&&!e.splashed){e.splashed=1;spray(bx,sy,22,0,-24,30,.8,['#ffffff','#dff4ff']);}}
-    if(t>11.6)ring(cx-d*(BL-HX),sy,5+(t-11.6)*10,.5*(1-(t-11.6)/1.4));
+  if(e.k==='whale'){const BL=46,head=sx+d*20,drift=d*Math.max(0,t-2)*1.2,cx=sx+drift;
+    // the whole body under water, darker as it rises, lighter as it dives
+    const subD=t<2.6?ease(t/2.6)*.5:t<9.5?.5:.5*(1-ease((t-9.5)/2.5));
+    for(let k=0;k<6;k++){const u=k/5,x=cx+d*(20-u*BL),r=k===0?7:k<3?8.5:k<5?6:4;dith(x,sy+1,r,r*.55,subD,'#0a2034');}
+    for(const sd of[-1,1])dith(cx+d*10,sy+1+sd*5,5,2,subD*.8,'#0a2034');dith(cx+d*-21,sy+1,6,2.2,subD*.8,'#0a2034');flush();                                                // flippers
+    if(t<2.8&&Math.random()<dt*14)spray(cx+d*(Math.random()*30-10),sy,1,0,-6,4,.6,['#dff4ff']);                   // bubbles
+    // the roll: a window of exposed back runs from head to tail
+    const roll=t<2.8?-1:t<7.8?(t-2.8)/5:-1;
+    if(roll>=0){const cpos=20-roll*BL;
+      for(let x=-24;x<=22;x++){const ex=Math.max(0,1-Math.pow(Math.abs(x-cpos)/17,1.6)),bodyH=x>14?Math.max(0,(22-x)/8):x<-16?Math.max(0,(x+24)/8):1,h=Math.round(6*ex*bodyH*Math.min(1,roll*6,(1-roll)*6+.2));
+        if(h<=0)continue;const X=cx+d*x;for(let y=0;y<h;y++)P(X,sy-y,y===h-1?'#7a8c9e':y===h-2?'#55677a':y>h-5?'#3e4e5e':'#2e3a46');
+        if(Math.random()<dt*10)spray(X,sy-h,1,d*-4,-12,8,.5,['#ffffff','#dff4ff']);P(X,sy+1,'#ffffff');}
+      if(Math.abs(-10-cpos)<9){const ex=1-Math.abs(-10-cpos)/9,fx2=cx+d*-10,fh=Math.round(5*ex);for(let y=0;y<fh;y++)P(fx2-d*Math.round(y*.6),sy-6*ex-y,'#2e3a46',2,1);}   // dorsal fin
+      if(Math.abs(14-cpos)<6)for(let y=0;y<2;y++)P(cx+d*14,sy-5+y,'#141a20');                                        // blowhole
+      if(t>3.3&&t<3.9||t>5.3&&t<5.8)for(let k=0;k<4;k++)e.fx.push({x:cx+d*14+X0+(Math.random()-.5)*2,y:sy-7+Y0,vx:(Math.random()-.5)*14+d*-3,vy:-34-Math.random()*16,t:0,m:1.4+Math.random()*.6,c:Math.random()<.5?'#ffffff':'#e8f6ff',g:16,mist:1,s:Math.random()<.4?2:1});   // the spout: a misty V
+      if(Math.random()<dt*30)e.fx.push({x:cx+d*(cpos+Math.random()*8-4)+X0,y:sy+1+Y0,vx:0,vy:0,t:0,m:2.2,c:'#ffffff',g:0,s:1});}   // foam left behind
+    if(t>2.8&&t<3.4)ring(head+drift*0,sy,3+(t-2.8)*14,.6);
+    // the flukes: the tail stock arches up out of the water leaning back, the flukes tilt with it, then the whole tail rolls
+    // forward over the top and slips under
+    if(t>8.2&&t<11.2){const q=(t-8.2)/3,rise=Math.sin(ease(Math.min(1,q*1.15))*Math.PI),bx=cx+d*-20,len=18*rise;
+      if(len>1.5){const lean=(-.42+q*.8)*d,tx=bx+Math.sin(lean)*len,ty=sy-Math.cos(lean)*len,mx=bx-d*2.5*rise,my=sy-len*.5;   // a gently curved stock
+        const pt=u=>[(1-u)*(1-u)*bx+2*u*(1-u)*mx+u*u*tx,(1-u)*(1-u)*sy+2*u*(1-u)*my+u*u*ty],L2=[],R2=[];
+        for(let k=0;k<=10;k++){const u=k/10,[x,y]=pt(u),[x2,y2]=pt(Math.min(1,u+.05)),[x1,y1]=pt(Math.max(0,u-.05)),dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy)||1,w=(2.2-u*1.1);L2.push([x-dy/l*w,y+dx/l*w]);R2.push([x+dy/l*w,y-dx/l*w]);}
+        c.fillStyle='#2e3a46';c.beginPath();c.moveTo(...L2[0]);for(const q2 of L2)c.lineTo(...q2);for(const q2 of R2.slice().reverse())c.lineTo(...q2);c.closePath();c.fill();
+        c.strokeStyle='#55677a';c.lineWidth=1;c.beginPath();c.moveTo(...(d>0?R2:L2)[1]);for(const q2 of(d>0?R2:L2).slice(1,9))c.lineTo(...q2);c.stroke();
+        c.save();c.translate(Math.round(tx),Math.round(ty));c.rotate(lean*.7);
+        for(const s2 of[-1,1]){c.fillStyle=s2===d?'#2a3540':'#3e4e5e';c.beginPath();c.moveTo(0,1);c.quadraticCurveTo(s2*6,0,s2*12,-4);c.quadraticCurveTo(s2*10,-1,s2*9,0);c.quadraticCurveTo(s2*4,3,0,4);c.closePath();c.fill();}
+        c.fillStyle='#7a8c9e';c.fillRect(-11,-4,4,1);c.fillRect(7,-4,3,1);c.restore();
+        if(Math.random()<dt*40)for(const s2 of[-1,1]){const ca=Math.cos(lean*.7),sa=Math.sin(lean*.7);e.fx.push({x:tx+s2*10*ca+X0,y:ty+s2*10*sa-3+Y0,vx:s2*2,vy:2,t:0,m:.7,c:'#e8f6ff',g:60});}   // water streaming off the tips
+        for(let x=-4;x<=4;x++)P(bx+x,sy+((x+((now/120)|0))&1),'#ffffff');}
+      if(q>.85&&!e.splashed){e.splashed=1;spray(bx,sy,18,0,-22,26,.8,['#ffffff','#dff4ff']);}}
+    if(t>10.8)ring(cx-d*22,sy,4+(t-10.8)*9,.5*(1-(t-10.8)/1.7));
     drawFx();return;}
   // giant squid
   const massD=t<2.6?ease(t/2.6)*.55:t<9.4?.55:.55*(1-ease((t-9.4)/2));
