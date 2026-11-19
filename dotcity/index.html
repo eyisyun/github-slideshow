@@ -1971,8 +1971,17 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         for(let k=0;k<5;k++)pb.put(cx+((hash(k,v,4)*8)|0)-6,cy+5+((hash(k,v,5)*2)|0),col('#5a5a62',.1));
         pb.ell(cx+10,cy+4,2.2,(dx)=>col('#a37b4c',dx>0?-.2:0));pb.put(cx+9,cy+2,col('#7a4a2a'));pb.put(cx+10,cy+2,col('#8a5a2a'));}));
     ;yield;
-    SP.firepit=mk1(36,(pb,cx,cy)=>{for(let k=0;k<12;k++){const a=k/12*6.283,x=Math.round(cx+Math.cos(a)*5),y=Math.round(cy+Math.sin(a)*2.5);pb.put(x,y,col('#8f8a80',Math.sin(a)>0?-.15:.1));}
-      pb.ell(cx,cy,3.5,()=>col('#2a2420'));[[cx-10,cy+1],[cx+9,cy-1],[cx-1,cy+6]].forEach(([x,y])=>{for(let i=-2;i<=2;i++)pb.put(x+i,y,col('#7a5233',i&1?-.15:0));});},(cx,cy)=>({em:[[cx,cy-6,'smoke']]}));
+    // 모닥불: a ring of big rounded grey stones round a charred pit with four crossed logs, on a packed-earth pad. The flame itself is
+    // animated in campfire()
+    SP.firepit=mk1(40,(pb,cx,cy)=>{pb.ell(cx,cy+1,13,(dx,dy,x,y)=>col('#a8865a',(dy<0?.04:-.08)+(hash(x,y,3)<.15?-.1:hash(x,y,4)<.06?.08:0)));
+      const stones=[];for(let k=0;k<10;k++){const a=k/10*6.283+.2;stones.push([cx+Math.cos(a)*8.6,cy+Math.sin(a)*4.3,1.6+hash(k,2,7)*.5,k]);}
+      const back=stones.filter(s=>s[1]<cy),front=stones.filter(s=>s[1]>=cy);
+      const stone=([x,y,r,k])=>{pb.ell(x+.5,y+1,r+.3,()=>col('#5a5248'));for(let b=0;b<3;b++)pb.ell(x,y-b,r*(1-b*.15),(dx,dy)=>{const e=dx*dx+dy*dy>.75;return col(['#a8a49a','#b4afa4','#9a958c'][k%3],e?-.32:(dy<-.2?.18:dy>.3?-.12:0)+(dx>.4?-.12:dx<-.4?.06:0)+b*.06);});};
+      back.forEach(stone);
+      pb.ell(cx,cy,6.6,(dx,dy,x,y)=>col(dx*dx+dy*dy<.35?'#3a1e14':'#2a2420',hash(x,y,5)<.2?.1:0));                                              // charred pit, ember bed
+      for(const[a,len]of[[.5,6],[2.1,6],[3.7,5.5],[5.3,6]]){const ex=Math.cos(a),ey=Math.sin(a)*.5;for(let t=0;t<=len;t+=.5){const x=Math.round(cx+ex*t),y=Math.round(cy+ey*t-t*.35);
+          pb.put(x,y,col('#7a4a2a',t>len-1?.12:0));pb.put(x,y-1,col('#9a6238',.06));if(t<2.5)pb.put(x,y,col('#3a2014'));}}                          // logs, burnt at the inner ends
+      front.forEach(stone);},(cx,cy)=>({em:[[cx,cy-18,'smoke']],lights:[[cx,cy-3],[cx,cy-8]]}));
     SP.parkE=[[],[],[]];
     for(let v=0;v<2;v++)SP.parkE[0].push(mk1(42,(pb,cx,cy)=>{const st=[];for(let k=0;k<7;k++){const a=k/7*6.283+v;st.push([cx+Math.cos(a)*9,cy+Math.sin(a)*4.5,5+hash(k,v,3)*5]);}
       st.sort((p,q)=>p[1]-q[1]);for(const[x,y,h]of st)pb.box({cx:Math.round(x),cy:Math.round(y),hw:1.5,h:Math.round(h),L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});}));
@@ -4504,8 +4513,19 @@ function parkIcon(){if(SP.parkIco)return SP.parkIco;const sp=SP.park[0],H=sp.h,c
   for(const[u,v,s2]of SP.parkTrees[0])if(u+v<.9)tr(u,v,s2);g.drawImage(sp.c,0,0);for(const[u,v,s2]of SP.parkTrees[0])if(u+v>=.9)tr(u,v,s2);return SP.parkIco={c,w:32,h:H};}
 // one look per age, so a row of parks matches: menhirs, the village tree (당산나무), a pavilion (정자), the strolling park, the sky garden
 function parkSprite(i){const e=Math.min(5,W.te[i]);return(e<3?SP.parkE[e]:e>=5?SP.parkF:SP.park)[0];}
-function campfire(c,sx,sy){const f=now/110|0,ga=c.globalAlpha;c.globalCompositeOperation='lighter';c.globalAlpha=.3+nightF*.6;c.drawImage(SP.glow.c,sx-15,sy+2);c.globalCompositeOperation='source-over';c.globalAlpha=ga;
-  for(let k=0;k<9;k++){const fx=sx-2+((hash(k,1,f)*5)|0),fy=sy+7-((hash(k,2,f)*6)|0);c.fillStyle=k%3===0?'#fff1a0':k%3===1?'#ff9a2a':'#ff4a1a';c.fillRect(fx,fy,1,2);}}
+// 모닥불 flame: layered tongues (red outside, orange, yellow, a white core) that lick upward and sway, an ember bed pulsing between the
+// logs, sparks rising and fading, and a ground glow that flickers with the flame (stronger after dusk)
+function campfire(c,sx,sy){const t=now/1000,X=sx,Y=sy+8,ga=c.globalAlpha,fl=.85+.15*Math.sin(t*9.1)*Math.sin(t*5.3+1);
+  c.globalCompositeOperation='lighter';c.globalAlpha=ga*(.25+nightF*.65)*fl;c.drawImage(SP.glow.c,X-15,Y-6);if(nightF>.1){c.globalAlpha=ga*nightF*.8*fl;c.drawImage(glowTexOf('warm',1),X-26,Y-9,52,18);c.globalAlpha=ga*nightF*.5*fl;c.drawImage(glowTexOf('warm'),X-10,Y-22,20,22);}c.globalCompositeOperation='source-over';c.globalAlpha=ga;
+  for(let k=0;k<7;k++){const a=k/7*6.283,b=.5+.5*Math.sin(t*4+k*1.7);c.fillStyle=b>.6?'#ffb03a':b>.3?'#ff6a1a':'#c83a14';c.fillRect(Math.round(X+Math.cos(a)*3),Math.round(Y+Math.sin(a)*1.5),1,1);}
+  const tongue=(ox,h,w,ph,cols)=>{const n=Math.max(2,Math.round(h));for(let r=0;r<n;r++){const q=r/n,wd=Math.max(.5,w*Math.pow(1-q,.75)*(1+.15*Math.sin(t*13+ph+r))),
+      sway=Math.sin(t*6+ph+r*.45)*q*1.6,x0=Math.round(X+ox+sway-wd),x1=Math.round(X+ox+sway+wd);c.fillStyle=cols[Math.min(cols.length-1,Math.floor(q*cols.length))];c.fillRect(x0,Y-1-r,Math.max(1,x1-x0),1);}};
+  const RED=['#ff7a1a','#f05a18','#d83a14','#b8280e'],ORG=['#ffb02a','#ff8a1a','#ff6a14'],YEL=['#fff0a0','#ffd23a','#ffb02a'],WHT=['#ffffff','#fff6c8'];
+  for(const[ox,ph]of[[-3,0],[3,2.1],[0,4.2]]){const h=8+3*Math.sin(t*3.1+ph)+2*Math.sin(t*7.7+ph*2);tongue(ox,h,2.6,ph,RED);}
+  for(const[ox,ph]of[[-1.5,1],[1.5,3]]){const h=10+3*Math.sin(t*3.7+ph)+2*Math.sin(t*8.3+ph);tongue(ox,h,2,ph,ORG);}
+  {const h=8+2.5*Math.sin(t*4.3)+1.5*Math.sin(t*9.7);tongue(0,h,1.7,5,YEL);tongue(0,h*.45,.9,6,WHT);}
+  for(let k=0;k<6;k++){const ph=(t*.6+hash(k,3,7))%1,x=Math.round(X+(hash(k,4,7)-.5)*7+Math.sin(t*2+k*3)*2*ph),y=Math.round(Y-8-ph*18);
+    c.globalAlpha=ga*(1-ph);c.fillStyle=ph<.4?'#fff0a0':'#ff8a2a';c.fillRect(x,y,1,1);}c.globalAlpha=ga;}
 // theme park motion (bx,by = footprint centre on screen, f = -1 when mirrored): windmill sails, the cable car, drifting balloons, a sparkling iron tower at night
 function themeAnimDraw(c,th,f,bx,by,t,night){const P=(x,y,cl,w=1,h=1)=>{c.fillStyle=cl;c.fillRect(Math.round(bx+f*x-(f<0?w-1:0)),Math.round(by+y),w,h);};
   if(th.l==='windmill'){const hx=4,hy=-41;for(let k=0;k<4;k++){const q=t*.8+k*Math.PI/2,cs=Math.cos(q),sn=Math.sin(q);
