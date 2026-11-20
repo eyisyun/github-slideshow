@@ -285,8 +285,22 @@
   // ---------- PixelLab 그림 덮어쓰기 ----------
   const overrides = {};
   const OVERRIDE_KEYS = [];
-  for (const c of ['jiwoo', 'oh', 'bujang', 'zombie']) for (const a of Object.keys(ANIMS)) OVERRIDE_KEYS.push(`${c}_${a}`);
-  OVERRIDE_KEYS.push('slime', 'slime_small', 'bat', 'copier');
+  for (const c of ['jiwoo', 'oh', 'bujang', 'zombie', 'worker']) for (const a of Object.keys(ANIMS)) OVERRIDE_KEYS.push(`${c}_${a}`);
+  OVERRIDE_KEYS.push('slime', 'bat', 'bat_b', 'copier', 'copier_b');
+  // 배경 소품 그림 (한 장짜리)
+  const imgs = {};
+  const BG_KEYS = ['bg_desk', 'bg_cabinet', 'bg_cooler', 'bg_door', 'bg_plant', 'bg_wall_day', 'bg_wall_night'];
+  function loadImages() {
+    for (const k of BG_KEYS) { const im = new Image(); im.onload = () => { imgs[k] = im; }; im.src = `sprites/${k}.png`; }
+  }
+  // 납작하게 눌린 프레임 (슬라임이 뛰기 전)
+  function squash(cv) {
+    const o = document.createElement('canvas'); o.width = cv.width; o.height = cv.height;
+    const c = o.getContext('2d'); c.imageSmoothingEnabled = false;
+    const w = Math.round(cv.width * 1.12), h = Math.round(cv.height * 0.84);
+    c.drawImage(cv, Math.round((cv.width - w) / 2), cv.height - h, w, h);
+    return o;
+  }
   // 고해상도(PixelLab) 캐릭터의 손·엉덩이 위치 정보 — 소품을 그릴 자리
   const metas = {};
   function loadMeta(ch) {
@@ -327,7 +341,8 @@
   }
 
   function loadOverrides(onChange) {
-    loadMeta('jiwoo');
+    loadImages();
+    for (const c of ['jiwoo', 'oh', 'bujang', 'worker', 'zombie']) loadMeta(c);
     for (const key of OVERRIDE_KEYS) {
       const img = new Image();
       img.onload = () => {
@@ -352,8 +367,9 @@
   function memo(key, make) { let v = cache.get(key); if (!v) { v = make(); cache.set(key, v); } return v; }
   function charFrames(ch, anim) {
     return memo(`c:${ch}:${anim}`, () => {
-      const base = ch.startsWith('zombie') ? 'zombie' : ch;
-      if (overrides[`${base}_${anim}`] && (ch === base)) return overrides[`${base}_${anim}`];
+      // 고해상도 그림이 있으면 같은 계열(zombie2→zombie, worker2→worker)도 그 그림을 씀
+      const base = ch.replace(/2$/, '');
+      if (overrides[`${base}_${anim}`]) return overrides[`${base}_${anim}`];
       const A = ANIMS[anim];
       const frames = [];
       for (let i = 0; i < A.n; i++) frames.push(drawPuppet(CHARS[ch], A.f(i)));
@@ -362,7 +378,10 @@
   }
   function enemyFrames(kind) {
     return memo(`e:${kind}`, () => {
-      if (overrides[kind]) return overrides[kind];
+      const hd = f => { f.hd = true; return f; };
+      if ((kind === 'slime' || kind === 'slime_small') && overrides.slime) return hd([overrides.slime[0], squash(overrides.slime[0])]);
+      if (kind === 'bat' && overrides.bat) return hd([...overrides.bat, ...(overrides.bat_b || [])]);
+      if (kind === 'copier' && overrides.copier) return hd([...overrides.copier, ...(overrides.copier_b || overrides.copier)]);
       if (kind === 'slime') return [slime(false, 0), slime(false, 1)];
       if (kind === 'slime_small') return [slime(true, 0), slime(true, 1)];
       if (kind === 'bat') return [bat(0), bat(1)];
@@ -382,7 +401,7 @@
     char: charFrames, enemy: enemyFrames, white,
     item: kind => memo(`i:${kind}`, () => small(kind)),
     tile: (type, th) => memo(`t:${type}:${th}`, () => tile(type, th)),
-    loadOverrides, shade, metas,
+    loadOverrides, shade, metas, img: k => imgs[k] || null,
     prop: kind => memo(`p:${kind}`, () => prop(kind)),
   };
 })();

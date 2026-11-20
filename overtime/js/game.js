@@ -486,7 +486,7 @@
   }
   function makeBat(x, y) {
     return enemyBase({
-      type: 'bat', flying: true, x, y, w: 14, h: 10, hp: 20, contact: 8, home: { x, y }, state: 'hover', cd: rand(0.5, 1.5), kbMul: 0.6,
+      type: 'bat', flying: true, x, y, w: 20, h: 14, hp: 20, contact: 8, home: { x, y }, state: 'hover', cd: rand(0.5, 1.5), kbMul: 0.6,
       update(dt) {
         const p = G.player; this.t += dt; this.animT += dt; this.cd -= dt;
         const dx = p.x - this.x;
@@ -520,7 +520,7 @@
   const RESCUED_LINES = ['…어? 내가 왜 여기 있지?', '퇴근… 퇴근해야지!', '고마워요, 신입 씨!', '나 오늘 몇 시간째야…?'];
   function makeZombie(x, y, id, look) {
     return enemyBase({
-      type: 'zombie', id, look: look || 'zombie', x, y, w: 16, h: 46, hp: 60, state: 'walk', grabCd: 0, kbMul: 0.5, contact: 0,
+      type: 'zombie', id, look: look || 'zombie', x, y, w: 16, h: 50, hp: 60, state: 'walk', grabCd: 0, kbMul: 0.5, contact: 0,
       update(dt) {
         const p = G.player, dx = p.x - this.x, dy = p.y - this.y;
         this.t += dt; this.animT += dt; this.grabCd -= dt;
@@ -584,7 +584,7 @@
   }
   function makeCopier(x, y, id, passive) {
     return enemyBase({
-      type: 'copier', id, passive, x, y, w: 24, h: 22, hp: 50, kbMul: 0, fireT: 1.5, contact: 0,
+      type: 'copier', id, passive, x, y, w: 30, h: 34, hp: 50, kbMul: 0, fireT: 1.5, contact: 0,
       update(dt) {
         this.animT += dt;
         const p = G.player, dx = p.x - this.x;
@@ -862,21 +862,26 @@
     return out;
   }
 
+  const WALL_W = 192, WALL_H = 160; // 벽 그림 한 장 = 월드 192×160 (고해상도 384×320)
   function drawWorld(now) {
-    const th = theme(), C = ART.THEMES[th];
+    const night = theme() === 'night';
+    const wallArt = ART.img(night ? 'bg_wall_night' : 'bg_wall_day') || ART.img('bg_wall_day');
+    // 벽 그림이 있으면 소품은 낮 색으로 그리고 밤에는 어둡게 덧칠함
+    const th = wallArt ? 'day' : (night ? 'night' : 'day'), C = ART.THEMES[th];
     const sx = G.shake ? Math.round(rand(-G.shake, G.shake)) : 0, sy = G.shake ? Math.round(rand(-G.shake, G.shake)) : 0;
     const cx = Math.round(G.cam.x) + sx, cy = Math.round(G.cam.y) + sy;
-    ctx.fillStyle = C.wall; ctx.fillRect(0, 0, VW, VH);
-    if (cy < 0) { ctx.fillStyle = C.ceil2; ctx.fillRect(0, 0, VW, -cy); }
-    if (cy + VH > MAP_H) { ctx.fillStyle = C.floor; ctx.fillRect(0, MAP_H - cy, VW, cy + VH - MAP_H); }
     const x0 = Math.floor(cx / TS) - 1, x1 = Math.ceil((cx + VW) / TS) + 1;
+    ctx.clearRect(0, 0, VW, VH);
 
-    // 벽: 줄무늬, 걸레받이
-    ctx.fillStyle = C.wall2;
-    for (let x = x0 * TS; x < x1 * TS; x += 32) ctx.fillRect(x - cx, 2 * TS - cy, 16, 10 * TS);
-    ctx.fillStyle = C.base; ctx.fillRect(0, 12 * TS - 5 - cy, VW, 5);
+    if (!wallArt) { // 그림이 없을 때의 코드 벽
+      ctx.fillStyle = C.wall; ctx.fillRect(0, 0, VW, VH);
+      ctx.fillStyle = C.wall2;
+      for (let x = x0 * TS; x < x1 * TS; x += 32) ctx.fillRect(x - cx, 2 * TS - cy, 16, 10 * TS);
+    }
+    ctx.fillStyle = C.base; ctx.fillRect(0, 12 * TS - 4 - cy, VW, 4);
 
     for (const d of L.decor) {
+      if (wallArt && (d.k === 'window' || d.k === 'light')) continue;
       const dx = (d.x !== undefined ? d.x : d.x0) * TS - cx;
       if (dx > VW + 80 || dx + (d.w || d.len || 4) * TS < -80) continue;
       drawDecor(d, dx, cy, C, th, now);
@@ -887,6 +892,8 @@
       const t = G.tiles[ty * L.W + tx];
       if (!t) continue;
       let name;
+      if (t === T.DESK && ART.img('bg_desk')) continue; // 책상 그림이 윗면까지 그림
+      if (t === T.CAB && ART.img('bg_cabinet')) { ctx.drawImage(ART.img('bg_cabinet'), tx * TS - cx, ty * TS - cy, TS, TS); continue; }
       if (t === T.SOLID) name = (ty > 0 && SOLID.has(G.tiles[(ty - 1) * L.W + tx])) ? 'under' : 'floor';
       else name = { [T.DESK]: 'desk', [T.CAB]: 'cab', [T.SHELF]: 'shelf', [T.GATE]: 'gate', [T.CEIL]: 'ceil' }[t];
       ctx.drawImage(ART.tile(name, th), tx * TS - cx, ty * TS - cy);
@@ -895,6 +902,18 @@
     if (G.tiles[5 * L.W + L.gateX] === T.GATE) {
       const d = L.decor.find(q => q.k === 'sign');
       drawSign(d.x * TS - 6 - cx, d.y * TS - cy, d.text, '#c0392b');
+    }
+    if (wallArt) {
+      // 밤: 지금까지 그린 소품만 어둡게
+      if (night) {
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = 'rgba(14,18,58,0.55)'; ctx.fillRect(0, 0, VW, VH);
+      }
+      // 벽 그림을 맨 뒤에 깔기
+      ctx.globalCompositeOperation = 'destination-over';
+      for (let wx = Math.floor(cx / WALL_W) * WALL_W; wx < cx + VW; wx += WALL_W) ctx.drawImage(wallArt, wx - cx, 2 * TS - cy, WALL_W, WALL_H);
+      ctx.fillStyle = night ? '#141626' : C.ceil2; ctx.fillRect(0, 0, VW, VH);
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     // 엔티티
@@ -1008,6 +1027,12 @@
       }
       case 'desk': {
         const x = Math.round(dx), top = 10 * TS - cy, w = d.len * TS;
+        const deskArt = ART.img('bg_desk');
+        if (deskArt) {
+          ctx.drawImage(deskArt, x + w / 2 - 24, 12 * TS - cy - 48, 48, 48);
+          if (d.name) { ctx.fillStyle = '#1b1626'; ctx.fillRect(x + 3, top - 6, 18, 6); ctx.fillStyle = '#e9c46a'; ctx.fillRect(x + 4, top - 5, 16, 4); }
+          break;
+        }
         ctx.fillStyle = ART.shade(C.desk2, 0.85);
         ctx.fillRect(x + 1, top + 4, 2, 2 * TS - 4); ctx.fillRect(x + w - 3, top + 4, 2, 2 * TS - 4);
         ctx.fillStyle = C.cab2; ctx.fillRect(x + w - 16, top + 4, 12, 18);
@@ -1033,8 +1058,16 @@
         ctx.fillStyle = '#5a4a3a'; ctx.fillRect(x - 9, y - 16, 2, 16);
         break;
       }
+      case 'plant': { const im = ART.img('bg_plant'); if (im) ctx.drawImage(im, Math.round(dx), 12 * TS - cy - 32, 16, 32); break; }
       case 'door': {
         const x = Math.round(dx), y = 12 * TS - cy - 52;
+        const doorArt = ART.img('bg_door');
+        if (doorArt) {
+          ctx.drawImage(doorArt, x, 12 * TS - cy - 56, 32, 56);
+          if (th === 'night' || G.night) { ctx.fillStyle = `rgba(255,240,180,${0.45 + Math.sin(now / 200) * 0.2})`; ctx.fillRect(x, 12 * TS - cy - 2, 32, 2); }
+          drawSign(x + 2, 12 * TS - cy - 74, d.text, '#3a6ad8');
+          break;
+        }
         ctx.fillStyle = '#1b1626'; ctx.fillRect(x - 2, y - 2, 36, 54);
         ctx.fillStyle = th === 'night' ? '#5a4030' : '#8a5a3a'; ctx.fillRect(x, y, 32, 52);
         ctx.fillStyle = '#1b1626'; ctx.fillRect(x + 15, y, 2, 52);
@@ -1105,13 +1138,14 @@
       }
       case 'zombie': {
         const { ch, a } = e.anim();
-        const A = ART.ANIMS[a];
-        drawFrames(ART.char(ch, a), Math.floor(e.animT * A.fps), x, y, e.face < 0, e.flash > 0, e.alpha, 1.75);
+        const A = ART.ANIMS[a], base = ch.replace(/2$/, '');
+        if (ART.metas[base]) drawHero(base, a, Math.floor(e.animT * A.fps), x, y, e.face < 0, e.flash > 0, e.alpha);
+        else drawFrames(ART.char(ch, a), Math.floor(e.animT * A.fps), x, y, e.face < 0, e.flash > 0, e.alpha, 1.75);
         break;
       }
-      case 'slime': drawFrames(ART.enemy(e.small ? 'slime_small' : 'slime'), e.frame(), x, y, e.face > 0, e.flash > 0); break;
-      case 'bat': drawFrames(ART.enemy('bat'), e.frame(), x, y + 7, false, e.flash > 0); break;
-      case 'copier': drawFrames(ART.enemy('copier'), e.frame(), x + e.shakeX(), y, e.face > 0, e.flash > 0); break;
+      case 'slime': { const f = ART.enemy(e.small ? 'slime_small' : 'slime'); drawFrames(f, e.frame(), x, y + (f.hd ? 2 : 0), e.face > 0, e.flash > 0, undefined, f.hd ? (e.small ? 0.3 : 0.5) : 1); break; }
+      case 'bat': { const f = ART.enemy('bat'); drawFrames(f, e.frame(), x, y + (f.hd ? 12 : 7), e.face > 0, e.flash > 0, undefined, f.hd ? 0.5 : 1); break; }
+      case 'copier': { const f = ART.enemy('copier'); drawFrames(f, e.frame(), x + e.shakeX(), y + (f.hd ? 2 : 0), e.face > 0, e.flash > 0, undefined, f.hd ? 0.5 : 1); break; }
       case 'pickup': {
         const img = ART.item(e.kind), bob = e.onGround && !e.magnet ? Math.round(Math.sin(G.time * 5 + e.x) * 1) : 0;
         ctx.drawImage(img, Math.round(x - img.width / 2), Math.round(y - img.height + bob));
@@ -1119,8 +1153,11 @@
       }
       case 'cooler': {
         const on = G.eventDone ? (e.cp === G.cp) : e.cp === 0;
-        const img = ART.item(on ? 'cooler_on' : 'cooler');
-        ctx.drawImage(img, Math.round(x - 8), Math.round(y - 32));
+        const art = ART.img('bg_cooler');
+        if (art) {
+          ctx.drawImage(art, Math.round(x - 8), Math.round(y - 32), 16, 32);
+          if (on) { ctx.fillStyle = Math.floor(G.time * 3) % 2 ? '#5fe07a' : '#3fb05a'; ctx.fillRect(Math.round(x + 4), Math.round(y - 20), 2, 2); }
+        } else ctx.drawImage(ART.item(on ? 'cooler_on' : 'cooler'), Math.round(x - 8), Math.round(y - 32));
         break;
       }
     }

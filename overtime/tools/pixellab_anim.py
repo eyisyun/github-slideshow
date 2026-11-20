@@ -46,9 +46,18 @@ POSES = {
     'talk': dict(RA=[0.8, 1.1], LA=[0.1, 0.2]),
     'grab1': dict(lean=-0.03, RA=[2.4, 0.5], LA=[1.9, 0.8], R=[0.2, 0.2], L=[-0.3, 0.2]),
     'grab2': dict(lean=-0.03, RA=[2.0, 0.9], LA=[2.5, 0.4], R=[0.1, 0.2], L=[-0.2, 0.2]),
+    # 야근 좀비: 두 팔을 앞으로 뻗고 구부정하게 질질 끌며 걸음
+    'zA': dict(lean=0.04, dy=0.01, R=[0.3, 0.2], L=[-0.25, 0.25], RA=[1.45, 0.1], LA=[1.3, 0.2]),
+    'zB': dict(lean=0.04, R=[0.05, 0.1], L=[0.1, 0.5], RA=[1.4, 0.15], LA=[1.35, 0.15]),
+    'zC': dict(lean=0.04, dy=0.01, R=[-0.25, 0.25], L=[0.3, 0.2], RA=[1.35, 0.15], LA=[1.45, 0.1]),
+    'zD': dict(lean=0.04, R=[0.1, 0.5], L=[0.05, 0.1], RA=[1.3, 0.2], LA=[1.4, 0.15]),
+    'zwind': dict(lean=-0.02, R=[0.2, 0.1], L=[-0.25, 0.15], RA=[2.6, 0.3], LA=[2.4, 0.4]),
+    'zgrab': dict(lean=0.07, dy=0.01, R=[0.6, 0.4], L=[-0.6, 0.2], RA=[1.6, 0.0], LA=[1.55, 0.05]),
+    'zdaze1': dict(lean=-0.03, RA=[0.2, 0.3], LA=[-0.2, 0.3], R=[0.1, 0.05], L=[-0.1, 0.05]),
+    'zdaze2': dict(lean=0.02, RA=[0.1, 0.4], LA=[0.2, 0.2], R=[0.05, 0.05], L=[-0.05, 0.05]),
 }
 # 요청 하나 = [기준 프레임, 새 프레임 2장]. 기준 프레임은 'ref' 또는 앞서 만든 프레임
-CALLS = {
+HERO_CALLS = {
     'idle': ['ref', 'idle1', 'idle1'],
     'run1': ['ref', 'runA', 'runB'],
     'run2': ['runB', 'runC', 'runD'],
@@ -62,12 +71,46 @@ CALLS = {
     'misc4': ['ref', 'grab1', 'grab2'],
 }
 # 게임 동작 → 프레임 목록
-ANIMS = {
+HERO_ANIMS = {
     'idle': ['ref', 'idle1'], 'run': ['runA', 'runB', 'runC', 'runD'], 'jump': ['jump'], 'fall': ['fall'],
     'atk1': ['windup', 'strike', 'strike'], 'atk2': ['low', 'upper', 'upper'], 'atk3': ['overhead', 'slam', 'slam'],
     'stamp': ['stamp'], 'dash': ['dash'], 'hurt': ['hurt'], 'dead': ['down'], 'shoot': ['strike'],
     'cast': ['cast', 'cast'], 'ult': ['runA', 'runB', 'runC', 'runD'], 'talk': ['ref', 'talk'], 'grabbed': ['grab1', 'grab2'],
 }
+
+NPC_CALLS = {'idle': ['ref', 'idle1', 'talk'], 'run1': ['ref', 'runA', 'runB'], 'run2': ['runB', 'runC', 'runD']}
+NPC_ANIMS = {'idle': ['ref', 'idle1'], 'talk': ['ref', 'talk'], 'run': ['runA', 'runB', 'runC', 'runD']}
+ZOMBIE_CALLS = {'zw1': ['ref', 'zA', 'zB'], 'zw2': ['zB', 'zC', 'zD'], 'zmisc': ['ref', 'zwind', 'zgrab'], 'zdaze': ['ref', 'zdaze1', 'zdaze2']}
+ZOMBIE_ANIMS = {'zwalk': ['zA', 'zB', 'zC', 'zD'], 'zwind': ['zwind', 'zwind'], 'zgrab': ['zgrab'], 'zdaze': ['zdaze1', 'zdaze2']}
+
+# 캐릭터별 설정. src: 기준 그림 폴더, recolor: 묶을 때 색 바꾸기
+PROFILES = {
+    'jiwoo': dict(calls=HERO_CALLS, anims=HERO_ANIMS),
+    'oh': dict(calls=NPC_CALLS, anims=NPC_ANIMS),
+    'bujang': dict(calls=NPC_CALLS, anims=NPC_ANIMS),
+    'worker': dict(calls={k: v for k, v in NPC_CALLS.items() if k != 'idle'}, anims={'run': NPC_ANIMS['run']}),
+    'zombie': dict(src='worker', calls=ZOMBIE_CALLS, anims=ZOMBIE_ANIMS, recolor='zombie'),
+}
+
+
+def zombify(im, eye):
+    """피부를 회녹색으로, 눈을 빨갛게"""
+    px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, a = px[x, y]
+            if a < 128:
+                continue
+            if r > g > b and r - b > 35 and r > 110:  # 피부 톤
+                L = 0.3 * r + 0.59 * g + 0.11 * b
+                px[x, y] = (int(L * 0.72), int(L * 0.9), int(L * 0.7), a)
+    ex, ey = eye
+    for dx in (0, 1):
+        for dy in (0, 1):
+            x, y = int(ex) + dx, int(ey) + dy
+            if 0 <= x < im.width and 0 <= y < im.height and px[x, y][3] > 0:
+                px[x, y] = (255, 60, 60, 255)
+    return im
 
 
 def b64img(path):
@@ -134,12 +177,14 @@ def main():
     if not args:
         print(__doc__); sys.exit(1)
     ch = args[0]
-    src = os.path.join(ROOT, 'art-src', ch)
+    prof = PROFILES[ch]
+    CALLS, ANIMS = prof['calls'], prof['anims']
+    src = os.path.join(ROOT, 'art-src', prof.get('src', ch))
     fdir = os.path.join(src, 'frames'); os.makedirs(fdir, exist_ok=True)
     base = json.load(open(os.path.join(src, 'ref_skeleton.json')))['keypoints']
     ref_path = os.path.join(src, 'ref.png')
     poses = {'ref': base, **{n: make_pose(base, p) for n, p in POSES.items()}}
-    json.dump(poses, open(os.path.join(src, 'poses.json'), 'w'))
+    json.dump(poses, open(os.path.join(src, f'poses_{ch}.json'), 'w'))
     only = args[args.index('--only') + 1:] if '--only' in args else None
     frame_path = lambda n: ref_path if n == 'ref' else os.path.join(fdir, f'{n}.png')
 
@@ -177,8 +222,10 @@ def main():
         hands = []
         for i, n in enumerate(names):
             im = Image.open(frame_path(n)).convert('RGBA').transpose(Image.FLIP_LEFT_RIGHT)
-            strip.paste(im, (i * SIZE, 0))
             k = {q['label']: q for q in poses[n]}
+            if prof.get('recolor') == 'zombie':
+                im = zombify(im, ((1 - k['RIGHT EYE']['x']) * SIZE, k['RIGHT EYE']['y'] * SIZE))
+            strip.paste(im, (i * SIZE, 0))
             e, h = k['RIGHT ELBOW'], k['RIGHT ARM']
             hx, hy = (1 - h['x']) * SIZE, h['y'] * SIZE
             ang = math.atan2((h['y'] - e['y']), (-(h['x'] - e['x'])))

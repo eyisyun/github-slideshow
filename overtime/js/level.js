@@ -31,6 +31,7 @@
     ];
     for (const [x, text] of posters) decor.push({ k: 'poster', x, text });
     decor.push({ k: 'clock', x: 16 });
+    for (const x of [13, 31, 50, 63, 90, 118, 139, 155, 178]) decor.push({ k: 'plant', x });
 
     // ===== 프롤로그 (아침 사무실) =====
     desk(4, 3, { name: '한지우' });
@@ -38,7 +39,7 @@
     sp('npc', 12, { who: 'oh', id: 'oh', face: -1 });
     desk(15, 3);
     cab(19, 2);
-    desk(21, 2);
+    desk(21, 3);
     sp('copier', 26, { id: 'tutCopier', passive: true });
     sp('cooler', 29, { id: 'cp0', cp: 0 });
     for (let y = 2; y <= 11; y++) set(33, y, T.GATE);
@@ -89,7 +90,7 @@
     desk(157, 3);
     sp('zombie', 160, { id: 'z5', look: 'zombie' });
     sp('slime', 163);
-    desk(165, 2);
+    desk(165, 3);
     sp('bat', 166, { y: 6 * TS });
     sp('zombie', 168, { id: 'z6', look: 'zombie2' });
     cab(170, 1);
