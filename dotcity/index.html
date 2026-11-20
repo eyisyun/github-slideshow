@@ -623,6 +623,8 @@ function polish(pb){const W2=pb.w,H2=pb.h,src=pb.d.slice(),srcN=pb.n.slice(),A=i
     pb.d[i]=dk(o);pb.n[i]=dk(on);}}
 function mk(pb,ox,oy,night=true,meta){if(night&&POLISH&&!(meta&&meta.raw))polish(pb);const s={c:toCanvas(pb.w,pb.h,pb.d),ox,oy,w:pb.w,h:pb.h};if(night)s.n=toCanvas(pb.w,pb.h,pb.n);
   let top=pb.h;for(let y=0;y<pb.h&&top===pb.h;y++)for(let x=0;x<pb.w;x++)if(pb.d[y*pb.w+x]>>>24){top=y;break;}s.top=oy+top;if(meta)Object.assign(s,meta);return s;}
+function G2(fn){const pb=new PB(64,32);for(let y=0;y<32;y++)for(let x=0;x<64;x++){const X0=(x>>1)+.5-16,Y0=(y>>1)+.5,u0=(Y0/8+X0/16)/2,v0=(Y0/8-X0/16)/2;if(u0<0||u0>=1||v0<0||v0>=1)continue;   // cover exactly the 1x tile's pixels, so neighbours still meet
+    const X=(x+.5)/2-16,Y=(y+.5)/2,u=Math.min(.999,Math.max(0,(Y/8+X/16)/2)),v=Math.min(.999,Math.max(0,(Y/8-X/16)/2));pb.put(x,y,fn(u,v,x,y));}const s=mk(pb,-16,0,false);s.hd=2;s.w=32;s.h=16;return s;}
 function G(fn){const pb=new PB(32,16);for(let y=0;y<16;y++)for(let x=0;x<32;x++){const X=x+.5-16,Y=y+.5,u=(Y/8+X/16)/2,v=(Y/8-X/16)/2;if(u<0||u>=1||v<0||v>=1)continue;pb.put(x,y,fn(u,v,x,y));}return mk(pb,-16,0,false);}
 
 const side=(hex,k=1)=>dx=>col(hex,dx<-.45?.14*k:dx<.15?0:dx<.6?-.2:-.34);
@@ -837,26 +839,43 @@ function* buildSpritesGen(){
   // railways (era 3 timber sleepers, era 4 concrete sleepers on ballast, era 5 maglev guideway), by link mask
   const RL=[,,,{bed:'#8f8576',tie:'#5e3f26',rail:'#d4d8de',n:9},{bed:'#7a5242',tie:'#5e5a5c',rail:'#e0e4ea',n:11},{bed:null,tie:null,rail:'#f2f5f8',glow:'#5fe6f2'}];
   ;yield;
-  const railPix=(R,m,u,v,x,y,ground)=>{const cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),corner=cnt===2&&(m&5)&&(m&10)&&!((m&5)===5)&&!((m&10)===10);
-    let along=-1,off=9;                                     // off: distance from the track centre line, along: position along it
+  const railPix=(R,m,u,v,x,y,ground,k=1)=>{const cnt=(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1),corner=cnt===2&&(m&5)&&(m&10)&&!((m&5)===5)&&!((m&10)===10);
+    let along=-1,off=9,ax=0;                                // off: distance from the track centre line, along: position along it
     if(corner){const cu=(m&1)?1:0,cv=(m&2)?1:0,d=Math.hypot(u-cu,v-cv);off=Math.abs(d-.5);along=Math.atan2(v-cv,u-cu)*.5;}
     else{const arms=cnt?m:5,full=a=>(arms&a)===a||cnt<=1;
-      if(arms&5){const ok=full(5)||((arms&1)?u>=.5:u<=.5);if(ok&&Math.abs(v-.5)<off){off=Math.abs(v-.5);along=u;}}
-      if(arms&10){const ok=full(10)||((arms&2)?v>=.5:v<=.5);if(ok&&Math.abs(u-.5)<off){off=Math.abs(u-.5);along=v;}}
+      if(arms&5){const ok=full(5)||((arms&1)?u>=.5:u<=.5);if(ok&&Math.abs(v-.5)<off){off=Math.abs(v-.5);along=u;ax=1;}}
+      if(arms&10){const ok=full(10)||((arms&2)?v>=.5:v<=.5);if(ok&&Math.abs(u-.5)<off){off=Math.abs(u-.5);along=v;ax=2;}}
       if(cnt===1&&((m&1)&&u<.18||(m&4)&&u>.82||(m&2)&&v<.18||(m&8)&&v>.82))off=9;}
     // future: a pale concrete guideway with dark slots and a glowing centre seam
     if(R.glow){if(off<.025)return[col(R.glow),col(R.glow,.4)];if(off<.045)return col('#3a4458');if(Math.abs(off-.1)<.018)return col('#3a4458');
       if(off<.15)return col('#a8aeb8',off>.125?.12:Math.floor(along*8)%4===0?-.08:-.02);if(off<.17)return col('#4a5060');return ground;}
+    // straight track is laid in screen pixels: 2:1 rails one pixel thick, sleepers as clean 2:1 slants, so the rails never zigzag
+    // 2x bends use the same gauge, sleeper spacing and bed width as the 2x straights (in uv, one 2x pixel across the track is 1/32)
+    if(k===2&&corner){const o=off*32;if(Math.abs(o-3.5)<.5)return col(R.rail,.04);if(Math.abs(o-4.5)<.5)return col(R.rail,-.38);
+      if(o<5.5&&(along*8%1+1)%1<3/8)return col(R.tie,(o>4.5?-.12:0)+(hash(x,y,71)<.12?-.1:0));
+      if(o<6.5)return col(R.bed,hash(x,y,72)<.22?-.14:hash(x,y,73)<.12?.12:0);if(o<7.5)return col(mixHex(R.bed,PAL.g1,.4),-.16);return ground;}
+    if(!R.glow&&!corner&&off<9&&k===2){const xx=ax===1?x:63-x,d=y-16-Math.floor((xx-32)/2),o=Math.abs(d+.5),t=(xx+2*y)&7;   // 2x tile: rails on their own rows, sleepers as clean slants
+      if(o===3.5)return col(R.rail,d<0?.1:0);if(o===2.5&&d>0||o===4.5&&d<0)return col(R.rail,-.38);
+      if(o<=5.5&&t<3)return col(R.tie,(t===2?-.16:0)+(o>4.5?-.12:0)+(hash(x,y,71)<.12?-.1:0));
+      if(o<=6.5)return col(R.bed,hash(x,y,72)<.22?-.14:hash(x,y,73)<.12?.12:0);if(o<=7.5)return col(mixHex(R.bed,PAL.g1,.4),-.16);return ground;}
+    if(!R.glow&&!corner&&off<9){const xx=ax===1?x:31-x,d=y-8-Math.floor((xx-16)/2),o=Math.abs(d+.5);
+      if(o===1.5)return col(R.rail,d<0?.04:-.06);
+      if(o<=2.5&&((xx+2*y)&3)<2)return col(R.tie,(o>2?-.18:0)+(hash(x,y,71)<.15?-.1:0));
+      if(o<=2.5)return col(R.bed,hash(x,y,72)<.22?-.14:hash(x,y,73)<.12?.12:0);if(o<=3.5)return col(mixHex(R.bed,PAL.g1,.4),-.16);return ground;}
     // steel rails with a bright top and a shadowed outer edge, sleepers with gaps and darker ends, a speckled ballast bed with a shaded shoulder
     if(Math.abs(off-.085)<.02)return col(R.rail,off>.085?-.3:.04);
     if(off<.15&&Math.floor(along*R.n*2)%2===0)return col(R.tie,(off>.12?-.18:0)+(hash(x,y,71)<.15?-.1:0));
     if(off<.2)return col(R.bed,(off>.17?-.2:0)+(hash(x,y,72)<.22?-.14:hash(x,y,73)<.12?.12:0));if(off<.22)return col(mixHex(R.bed,PAL.g1,.5),-.12);return ground;};
   ;yield;
   SP.rail=RL.map(R=>R&&Array.from({length:16},(_,m)=>G((u,v,x,y)=>railPix(R,m,u,v,x,y,col(PAL.g1,hash(x,y,74)<.06?-.12:0)))));
+  // the same track at 2x for the zoomed-in HD layer, so the rails read as straight steel lines instead of a pixel staircase
+  SP.railH=RL.map(R=>R&&Array.from({length:16},(_,m)=>G2((u,v,x,y)=>railPix(R,m,u,v,x,y,col(PAL.g1,hash(x>>1,y>>1,74)<.06?-.12:0),2))));
   // level crossings: just the rails over the asphalt, drawn on top of the road sprite (ax 0: rails run along u)
   SP.railX=RL.map(R=>R&&[5,10].map(m=>G((u,v,x,y)=>{const off=m===5?Math.abs(v-.5):Math.abs(u-.5);
     if(R.glow)return off<.05?(off<.018?[col(R.glow),col(R.glow,.4)]:col(R.rail)):null;
     if(Math.abs(off-.09)<.022)return col(R.rail,-.05);if(Math.abs(off-.09)<.045)return col('#2a2a30');return null;})));
+  SP.railXH=RL.map(R=>R&&!R.glow&&[5,10].map(m=>G2((u,v,x,y)=>{const xx=m===5?x:63-x,d=y-16-Math.floor((xx-32)/2),o=Math.abs(d+.5);
+    return o===3.5?col(R.rail,d<0?.08:-.05):o===2.5||o===4.5?col('#2a2a30'):null;})));
   // trains: [era][0 engine | 1 coach][direction]. s runs nose(+) to tail(-) along the travel direction
   const TR=[,,,{body:'#2e2b33',roof:'#1a1a1e',band:'#a0392b',coach:'#3f6a4a',croof:'#5a5a62',steam:1,H:6},
     {body:'#f0f0ea',roof:'#d8d8d4',band:'#2f6fc0',coach:'#f0f0ea',croof:'#d8d8d4',nose:1,H:7},
@@ -3945,11 +3964,12 @@ function dispatchPolice(dt){const w=W;for(let n=incidents.length-1;n>=0;n--){con
 function goHome(c){const p=c.path?c.path.slice(0,c.pi+1).reverse():null;if(!p||p.length<2){c.gone=true;return;}
   c.path=p;c.pi=0;c.t=0;c.st='ret';c.quiet=true;c.sp*=.7;const k=p[1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}
 function stepTruck(c,dt){
-  if(c.st==='ret'){c.t+=dt*c.sp*wxCar();while(c.t>=1&&c.pi<c.path.length-1){c.t-=1;c.pi++;const j=c.path[c.pi];c.x=j%N;c.y=j/N|0;
+  if(c.st==='ret'){c.t+=dt*c.sp*wxCar();{const j=c.path[c.pi+1];if(j!=null&&c.t>.28&&c.t<.62&&xShut(j%N,j/N|0)&&!xShut(c.x,c.y))c.t=.28;}while(c.t>=1&&c.pi<c.path.length-1){c.t-=1;c.pi++;const j=c.path[c.pi];c.x=j%N;c.y=j/N|0;
       if(c.pi<c.path.length-1){const k=c.path[c.pi+1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}}
     if(c.pi>=c.path.length-1)c.gone=true;return;}
   const live=c.fire!=null?W.fire[c.fire]>0:c.inc?!c.inc.done:false;
   if(c.st==='go'&&!live){goHome(c);return;}
+  {const j=c.path[c.pi+1];if(j!=null&&c.t>.28&&c.t<.62&&xShut(j%N,j/N|0)&&!xShut(c.x,c.y))c.t=.28;}   // even fire engines stop for a train
   if(c.st==='go'){c.t+=dt*c.sp;while(c.t>=1&&c.pi<c.path.length-1){c.t-=1;c.pi++;const j=c.path[c.pi];c.x=j%N;c.y=j/N|0;
       if(c.pi<c.path.length-1){const k=c.path[c.pi+1],d=DIRS.findIndex(([dx,dy])=>c.x+dx===k%N&&c.y+dy===(k/N|0));if(d>=0)c.d=d;}else{c.st='work';c.t=0;}}
     if(c.pi>=c.path.length-1){c.st='work';c.t=0;}return;}
@@ -3966,6 +3986,7 @@ function stepCars(dt){const S=W.st,target=Math.round(Math.min(240,Math.floor(S.r
     if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
     c.t+=dt*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
     if(!c.ped&&c.e>=4&&c.t>.28){const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(hasSignal(nx,ny)&&!hasSignal(c.x,c.y)&&!sigGo(nx,ny,c.d)&&c.t<.5)c.t=.28;}   // wait at the stop line
+    if(c.t>.28&&c.t<.62&&xShut(c.x+DIRS[c.d][0],c.y+DIRS[c.d][1],c.ped)&&!xShut(c.x,c.y,c.ped))c.t=.28;   // cars and people wait at a closed level crossing
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
@@ -3987,12 +4008,21 @@ function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boa
     b.hd+=Math.max(-2.4*dt,Math.min(2.4*dt,df));const v=b.sp*(1-Math.min(.65,Math.abs(df)/2));b.fx+=Math.cos(b.hd)*v*dt;b.fy+=Math.sin(b.hd)*v*dt;
     if((b.wt+=dt)>.1){b.wt=0;b.wake.unshift([b.fx,b.fy,b.hd,v]);if(b.wake.length>44)b.wake.pop();}}}
 // trains: an engine and coaches following the engine's trail along the rails; they halt at stations
+const xClosed=new Map(),xGate=new Map();   // crossing tiles a train is on or about to reach; gate arm position per crossing (0 up .. 1 down)
+const xShut=(x,y,slow)=>inb(x,y)&&xClosed.get(idx(x,y))<(slow?8:3.4)&&W.rail[idx(x,y)]&&W.kind[idx(x,y)]===K.ROAD;
 function stepTrains(dt){const S=W.st;let ds=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.DEPOT&&isRoot(i)&&aroundOf(i).some(([x,y])=>isRail(x,y)))ds.push(i);
   const target=W.era<3||(S.rails||0)<2?0:Math.min(12,ds.length);   // one train per station
   if(trains.length<target&&Math.random()<.03){const p0=ds[(Math.random()*ds.length)|0],rs=aroundOf(p0).filter(([x,y])=>isRail(x,y));
     if(rs.length){const[x,y]=rs[(Math.random()*rs.length)|0],opts=[0,1,2,3].filter(d=>isRail(x+DIRS[d][0],y+DIRS[d][1]));
       if(opts.length)trains.push({dep:p0,trail:[[x,y]],d:opts[(Math.random()*opts.length)|0],t:0,e:W.era,n:W.era>=4?4:3,sp:W.era>=5?1.5:W.era>=4?1.2:.8,wait:1.5,stop:true});}}
   if(trains.length>target)trains.shift();
+  // level crossings: close the road over the train's own tiles and the next few ahead (more at speed), then lift the gates behind it
+  // xClosed holds how many seconds off the train is: cars stop for one under about 3 s away, slow walkers much earlier
+  xClosed.clear();for(const tr of trains){for(const[x,y]of tr.trail)xClosed.set(idx(x,y),0);
+    {let[x,y]=tr.trail[0];const ah=Math.ceil(tr.sp*8)+1;let cd=tr.d;for(let k=0;k<ah;k++){if(!isRail(x+DIRS[cd][0],y+DIRS[cd][1])){const o=[0,1,2,3].filter(d=>d!==(cd+2)%4&&isRail(x+DIRS[d][0],y+DIRS[d][1]));if(!o.length)break;cd=o[0];}   // follow the track round bends
+      x+=DIRS[cd][0];y+=DIRS[cd][1];const i=idx(x,y),s=(k+1-(tr.t||0))/tr.sp+Math.max(0,tr.wait);if(!(xClosed.get(i)<=s))xClosed.set(i,s);}}}
+  for(const[i,s]of xClosed)if(s<3.4&&W.kind[i]===K.ROAD&&!xGate.has(i))xGate.set(i,0);
+  for(const[i,g]of xGate){const want=xClosed.get(i)<3.4?1:0,ng=want?Math.min(1,g+dt*1.6):Math.max(0,g-dt*.9);if(!ng&&!want||!W.rail[i]||W.kind[i]!==K.ROAD)xGate.delete(i);else xGate.set(i,ng);}
   for(let n=trains.length-1;n>=0;n--){const tr=trains[n];if(!tr.trail.every(([x,y])=>isRail(x,y))){trains.splice(n,1);continue;}
     if(tr.wait>0){tr.wait-=dt;tr.v=0;continue;}
     { const[hx,hy]=tr.trail[0],nx=hx+DIRS[tr.d][0],ny=hy+DIRS[tr.d][1],near=!tr.stop&&DIRS.some(([dx,dy])=>inb(nx+dx,ny+dy)&&W.kind[idx(nx+dx,ny+dy)]===K.DEPOT),end=!isRail(nx,ny);
@@ -4016,7 +4046,8 @@ function trainCars(tr){const out=[],T=tr.trail,dirOf=(a,b)=>{const dx=b[0]-a[0],
     out.push({gx,gy,d,arc,type:k?1:0,e:tr.e,m:tr.dep!=null?fleetAt(tr.dep):null});}return out;}
 function drawTrainCar(c,tc){const sp=(tc.m!=null&&SP.fleetT[tc.m]?SP.fleetT[tc.m]:SP.train[Math.max(3,Math.min(5,tc.e))])[tc.type][tc.d],X=(tc.gx-tc.gy)*16-X0,Y=(tc.gx+tc.gy)*8-Y0;
   // on a straight the car moves 2 px across for each 1 px down: round y and keep x on that same 2:1 line so it glides instead of stair-stepping
-  const sy=Math.round(Y),sx=tc.arc?Math.round(X):Math.round(X+(sy-Y)*2*(tc.d===0||tc.d===2?1:-1));
+  // snap to the canvas pixel grid (half a world pixel once zoomed in) so the car steps half as far, twice as often
+  const sy=Math.round(Y*HD)/HD,sx=tc.arc?Math.round(X*HD)/HD:Math.round((X+(sy-Y)*2*(tc.d===0||tc.d===2?1:-1))*HD)/HD;
   drawSpr(c,sp,sx,sy);if(tc.type===0){emit(sp,sx,sy);if(sp.head&&nightF>.05){c.fillStyle=`rgba(255,240,190,${nightF})`;c.fillRect(sx+sp.ox+sp.head[0],sy+sp.oy+sp.head[1],2,1);}}}
 // planes: one per airport. Comes in from far away (FAR tiles out, fading in) heading +x along the runway, lands, waits, takes off back the other way,
 // climbs to cruise height and flies far off (fading out) before the next arrival
@@ -4111,7 +4142,7 @@ function groundWeather(c,lh){const sn=W.snow||0,wet=wetAmt;if(sn<.03&&wet<.03)re
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0,k=w.kind[i];
     if(wet>.03){c.globalAlpha=wet;c.drawImage(SP.wetG.c,sx-16,sy);const h=hash(x,y,61);if(h<(k===K.ROAD?.3:k===K.NONE?.16:.08)){c.globalAlpha=Math.min(1,wet*1.4);c.drawImage(SP.puddle[(h*30|0)%3].c,sx-16,sy);}c.globalAlpha=1;}
     if(sn>.03){const rl=k===K.RAIL||w.rail[i],lv=sn*(k===K.ROAD&&!rl?.5:k===K.AIRPORT?.3:1)*4+hash(x,y,77)*.9-.6;
-      if(lv>=0){const sg=SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0];c.drawImage(rl?snowBeside(groundOf(i,x,y),sg):sg.c,sx-16,sy);}}}}   /* rails: snow only on the verge, the track stays clear */
+      if(lv>=0){const sg=SP.snowG[Math.min(3,lv|0)][(hash(x,y,78)*3)|0];c.drawImage(rl?snowBeside(groundOf(i,x,y,1),sg):sg.c,sx-16,sy);}}}}   /* rails: snow only on the verge, the track stays clear */
 // snow layer limited to the grassy pixels of a ground tile (so the rails and sleepers of a track tile stay visible)
 const snowBesideC=new Map();
 function snowBeside(g,sg){const key=(g.id||(g.id=++spIds))+'|'+(sg.id||(sg.id=++spIds));let cv=snowBesideC.get(key);if(cv)return cv;
@@ -4218,8 +4249,8 @@ function capOf(sp){let cp=capCache.get(sp);if(cp!==undefined)return cp;cp=null;
       const L=(x*7+y*3)%5===0?3:2;for(let k=0;k<L&&op(x,y+k);k++){const j=((y+k)*w+x)*4,sh=k===L-1;o[j]=sh?214:246;o[j+1]=sh?224:249;o[j+2]=sh?238:253;o[j+3]=sh?190:250;any=true;}}
     if(any){cx.putImageData(out,0,0);cp=cv;}}
   capCache.set(sp,cp);return cp;}
-function groundOf(i,x,y){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
-  if(k===K.RAIL)return SP.rail[Math.max(3,e)][railMask(x,y)];
+function groundOf(i,x,y,lo){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
+  if(k===K.RAIL)return(HD===2&&!lo?SP.railH:SP.rail)[Math.max(3,e)][railMask(x,y)];
   if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
   if(k>=K.RES&&k<=K.IND){if(w.build[i]>0)return SP.dirt;if(!w.level[i])return SP.zone[k];
     if(e<3)return k===K.IND?(e===0?SP.lotOld.dirt[v]:SP.lotOld.farm[v]):SP.lotOld[k][v];return SP.lot[k][v];}
@@ -4399,7 +4430,7 @@ function render(){seasonGrass();
       c.fillStyle=nightF>.5?`rgba(200,220,255,${a})`:`rgba(235,248,255,${a})`;c.fillRect(gx,gy,L,1);if(L>2){c.fillStyle=nightF>.5?`rgba(200,220,255,${a*.4})`:`rgba(235,248,255,${a*.4})`;c.fillRect(gx+1,gy-1,L-2,1);}}if(x===N-1)c.drawImage(SP.slab.w[1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab.w[0].c,sx-16,sy);}
   seaFx(c);c.globalAlpha=1;
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
-    c.drawImage(groundOf(i,x,y).c,sx-16,sy);if(w.rail[i]&&w.kind[i]===K.ROAD)c.drawImage(SP.railX[Math.max(3,Math.min(5,w.te[i]))][(railMask(x,y)&5)?0:1].c,sx-16,sy);const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
+    {const gs=groundOf(i,x,y);if(gs.hd)c.drawImage(gs.c,sx-16,sy,32,16);else c.drawImage(gs.c,sx-16,sy);}if(w.rail[i]&&w.kind[i]===K.ROAD){const re=Math.max(3,Math.min(5,w.te[i])),ro=(railMask(x,y)&5)?0:1;if(HD===2&&SP.railXH[re])c.drawImage(SP.railXH[re][ro].c,sx-16,sy,32,16);else c.drawImage(SP.railX[re][ro].c,sx-16,sy);}const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
   groundWeather(c,lh);
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
@@ -4437,12 +4468,14 @@ function render(){seasonGrass();
   // trains, boats and cars standing there would end up under the building, so draw them again on top
   const fronts=(a,sz)=>{const ax=a%N,ay=a/N|0,redo=j=>{const bs=bbk.get(j);if(bs)for(const b of bs)drawBoat(c,b);const ts=tbk.get(j);if(ts)for(const tc of ts)drawTrainCar(c,tc);const cs=bucket.get(j);if(cs)for(const car of cs)drawCar(c,car);};
     for(let k=0;k<=sz-2;k++)if(inb(ax+k,ay+sz))redo(idx(ax+k,ay+sz));for(let k=0;k<=sz-3;k++)if(inb(ax+sz,ay+k))redo(idx(ax+sz,ay+k));};
+  // the far gate of each level crossing goes down first, so trains on the neighbouring rail tiles pass in front of it
+  for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.rail[i]&&w.kind[i]===K.ROAD)drawGates(c,i,i%N,i/N|0,visBuf[n+1],visBuf[n+2],0);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2],x=i%N,y=i/N|0,k=w.kind[i];
     const bs=bbk.get(i);if(bs)for(const b of bs)drawBoat(c,b);
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
     if(k===K.RAIL)continue;
     if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
-      const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);continue;}
+      const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);if(w.rail[i])drawGates(c,i,x,y,sx,sy,1);continue;}
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const ph=now/(stormy?420:1700)+x*.9+y*.45;for(let j=0;j<pts.length;j++){const[u,v,s]=pts[j];bendDX=Math.round(Math.sin(ph+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(s,x,y,j),sx+(u-v)*16,sy+(u+v)*8);}bendDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
@@ -4699,6 +4732,17 @@ function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[
 // two mast-arm traffic lights on the corners of a crossing (one per axis), Korean style: a shaded steel pole on a base plate, an arm
 // reaching out over the road with a horizontal three-lamp head (red / amber / green under hoods) hanging from it, and a pedestrian
 // signal box on the pole showing a red or green figure. The lit lamp glows after dusk.
+// level crossing: a post on each side of the track with a red and white boom and twin lamps that flash in turn while the gate is down
+function drawGates(c,i,x,y,sx,sy,part){const g=xGate.get(i)||0,alongU=!!(railMask(x,y)&5),nf=nightF,T=(a,b)=>alongU?[sx+(a-b)*16,sy+(a+b)*8]:[sx+(b-a)*16,sy+(a+b)*8],
+    P=(px,py,w,h,cl,a)=>{c.fillStyle=nightCss(cl,nf*.85,a==null?1:a);c.fillRect(Math.round(px),Math.round(py),w,h);},fl=g>.05&&(now/420|0)%2;
+  for(const[pa,pb,da]of[[[.94,.08,-1]],[[.06,.92,1]]][part]){const[px,py]=T(pa,pb),top=py-9,[ex,ey]=T(pa+da*.82,pb),dx=ex-px,dy=ey-py,L=Math.hypot(dx,dy),q=g*g*(3-2*g);
+    // the boom pivots at the top of the post: straight up when open, laid across the lane when shut
+    const ux=dx/L*q,uy=dy/L*q-(1-q),ul=Math.hypot(ux,uy)||1,len=L*.92,bx=ux/ul,by=uy/ul;
+    P(px-1,py,3,1,'#6a6458');P(px,top,1,py-top,'#e8e8e8');P(px+1,top,1,py-top,'#8a8f98');                       // base and pole
+    P(px-2,top+2,5,2,'#202226');const on=g>.05;P(px-2,top+2,1,1,on&&fl?'#ff3a2a':'#5a1c16');P(px+2,top+2,1,1,on&&!fl?'#ff3a2a':'#5a1c16');   // twin lamps
+    P(px-1,top+5,3,1,'#f4f4f4');P(px,top+4,1,3,'#f4f4f4');                                                       // crossbuck
+    if(on&&nf>.05){c.fillStyle=`rgba(255,70,40,${.35*nf})`;c.fillRect(Math.round(px+(fl?-3:1)),top+1,3,4);}
+    for(let k=0;k<=len;k+=.5){const ax=px+.5+bx*k,ay=top+.5+by*k;P(ax-.5,ay-.5,1,1,((k/3)|0)%2?'#e33b2e':'#f6f2ea');}}}
 function drawSignals(c,x,y,sx,sy){const st=sigState(x,y),nf=nightF,P=(px,py,w,h,cl,a)=>{c.fillStyle=nightCss(cl,nf*.85,a==null?1:a);c.fillRect(px,py,w,h);};
   // post-mounted signals on each corner, at about the height of a two-storey house: a small base, a grey pole with a cap, a black
   // head of three lamps under visors on the road side, a pedestrian box (standing red / walking green) and a push button.
