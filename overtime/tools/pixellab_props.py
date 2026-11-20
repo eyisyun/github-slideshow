@@ -27,11 +27,20 @@ def desk_template():
     b = io.BytesIO(); im.save(b, 'PNG'); return base64.b64encode(b.getvalue()).decode()
 
 
+def bat_template():
+    """서류철 박쥐 모양 가이드: 가운데 노란 서류철 몸통, 양옆 위로 든 종이 날개"""
+    im = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    d.polygon([(26, 30), (4, 12), (8, 34)], fill=(246, 246, 240, 255)); d.polygon([(38, 30), (60, 12), (56, 34)], fill=(246, 246, 240, 255))
+    d.rectangle([20, 22, 44, 46], fill=(233, 196, 106, 255)); d.rectangle([20, 18, 30, 22], fill=(233, 196, 106, 255))
+    d.rectangle([20, 44, 44, 46], fill=(201, 154, 58, 255))
+    d.rectangle([25, 29, 28, 32], fill=(230, 40, 40, 255)); d.rectangle([36, 29, 39, 32], fill=(230, 40, 40, 255))
+    b = io.BytesIO(); im.save(b, 'PNG'); return base64.b64encode(b.getvalue()).decode()
+
+
 ITEMS = {
     # 적
     'slime': dict(size=(64, 64), dir='west', desc='small grumpy blob monster made of crumpled white office paper sheets, angry eyes, frowning mouth, side view'),
-    'bat': dict(size=(64, 64), dir='west', desc='small flying monster made of a yellow manila file folder with white paper sheet wings raised up, angry red eyes, tiny fangs, side view'),
-    'bat_b': dict(size=(64, 64), dir='west', init='bat', strength=280, desc='same small flying file folder monster, white paper sheet wings flapping down, angry red eyes, side view'),
+    'bat': dict(size=(64, 64), dir='west', desc='cute angry flying creature whose rectangular body is a closed yellow manila office document folder with a paper tab on top, a few white papers sticking out, two folded white paper sheets as bat wings, glowing red eyes, small fangs, not an insect, side view'),
     'copier': dict(size=(96, 96), dir='west', desc='angry office photocopier machine monster, grey plastic body, glowing red LED eyes, paper output tray like a mouth with sharp teeth, side view'),
     'copier_b': dict(size=(96, 96), dir='west', init='copier', strength=300, desc='same angry office photocopier monster, mouth wide open spitting a sheet of paper, glowing yellow eyes, side view'),
     # 배경 소품

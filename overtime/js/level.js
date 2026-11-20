@@ -30,7 +30,6 @@
       [97, '결재는 빠르게\n퇴근은 천천히'], [118, '이번 주도 파이팅!!'], [137, '내일 할 일을\n오늘 하자'], [160, '월요일 좋아'], [174, '야근 수당은\n마음으로'],
     ];
     for (const [x, text] of posters) decor.push({ k: 'poster', x, text });
-    decor.push({ k: 'clock', x: 16 });
     for (const x of [13, 31, 50, 63, 90, 118, 139, 155, 178]) decor.push({ k: 'plant', x });
 
     // ===== 프롤로그 (아침 사무실) =====

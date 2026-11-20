@@ -380,7 +380,7 @@
     return memo(`e:${kind}`, () => {
       const hd = f => { f.hd = true; return f; };
       if ((kind === 'slime' || kind === 'slime_small') && overrides.slime) return hd([overrides.slime[0], squash(overrides.slime[0])]);
-      if (kind === 'bat' && overrides.bat) return hd([...overrides.bat, ...(overrides.bat_b || [])]);
+      if (kind === 'bat' && overrides.bat) return hd([...overrides.bat, ...(overrides.bat_b || [squash(overrides.bat[0])])]);
       if (kind === 'copier' && overrides.copier) return hd([...overrides.copier, ...(overrides.copier_b || overrides.copier)]);
       if (kind === 'slime') return [slime(false, 0), slime(false, 1)];
       if (kind === 'slime_small') return [slime(true, 0), slime(true, 1)];

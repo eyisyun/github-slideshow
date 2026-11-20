@@ -862,7 +862,7 @@
     return out;
   }
 
-  const WALL_W = 192, WALL_H = 160; // 벽 그림 한 장 = 월드 192×160 (고해상도 384×320)
+  const WALL_W = 156, WALL_H = 160; // 벽 그림 한 장 = 월드 156×160 (고해상도 312×320)
   function drawWorld(now) {
     const night = theme() === 'night';
     const wallArt = ART.img(night ? 'bg_wall_night' : 'bg_wall_day') || ART.img('bg_wall_day');
