@@ -71,14 +71,16 @@
 
   // ===================== 화면 크기 =====================
   const canvas = $('game'), ctx = canvas.getContext('2d');
+  const RES = 2;
   let VW = 320, VH = 180, SCALE = 4, insetL = 0, insetR = 0;
   function resize() {
     const dpr = window.devicePixelRatio || 1;
     const pw = Math.round(innerWidth * dpr), ph = Math.round(innerHeight * dpr);
-    SCALE = Math.max(1, Math.round(ph / 192));
+    // SCALE = 월드 1단위당 기기 픽셀(짝수). 캔버스는 월드의 RES배 해상도 → 고해상도 캐릭터를 원래 픽셀대로 그림
+    SCALE = Math.max(2, 2 * Math.round(ph / 384));
     VW = Math.ceil(pw / SCALE); VH = Math.ceil(ph / SCALE);
-    if (VW / VH < 1.3) { SCALE = Math.max(1, Math.round(pw / 300)); VW = Math.ceil(pw / SCALE); VH = Math.ceil(ph / SCALE); }
-    canvas.width = VW; canvas.height = VH;
+    if (VW / VH < 1.3) { SCALE = Math.max(2, 2 * Math.round(pw / 600)); VW = Math.ceil(pw / SCALE); VH = Math.ceil(ph / SCALE); }
+    canvas.width = VW * RES; canvas.height = VH * RES;
     canvas.style.width = (VW * SCALE / dpr) + 'px'; canvas.style.height = (VH * SCALE / dpr) + 'px';
     const cs = getComputedStyle($('probe'));
     insetL = Math.ceil(parseFloat(cs.paddingLeft) * dpr / SCALE) || 0;
@@ -215,14 +217,14 @@
 
   // ===================== 플레이어 =====================
   function makePlayer(x, y) {
-    return { x, y, w: 10, h: 26, vx: 0, vy: 0, face: 1, state: 'normal', t: 0, anim: 'idle', animT: 0,
+    return { x, y, w: 14, h: 52, vx: 0, vy: 0, face: 1, state: 'normal', t: 0, anim: 'idle', animT: 0,
       hp: 100, maxHp: 100, mental: 100, gauge: 0, inv: 0, coyote: 0, jbuf: 0, dashCd: 0, combo: 0, queued: false, lastAtk: -9,
       dropping: 0, mash: 0, grabbedBy: null, safe: { x, y }, onGround: true, fired: 0, ultHit: new Set() };
   }
   const ATK = [null,
-    { dur: 0.26, a0: 0.06, a1: 0.15, dmg: 10, bx: 4, by: -26, bw: 24, bh: 20, kb: 110, anim: 'atk1', lunge: 60 },
-    { dur: 0.26, a0: 0.06, a1: 0.15, dmg: 12, bx: 0, by: -38, bw: 24, bh: 34, kb: 130, anim: 'atk2', lunge: 50 },
-    { dur: 0.42, a0: 0.15, a1: 0.27, dmg: 22, bx: 0, by: -34, bw: 30, bh: 36, kb: 240, anim: 'atk3', lunge: 110, big: true }];
+    { dur: 0.26, a0: 0.06, a1: 0.15, dmg: 10, bx: 2, by: -46, bw: 34, bh: 30, kb: 110, anim: 'atk1', lunge: 60 },
+    { dur: 0.26, a0: 0.06, a1: 0.15, dmg: 12, bx: -2, by: -66, bw: 32, bh: 56, kb: 130, anim: 'atk2', lunge: 50 },
+    { dur: 0.42, a0: 0.15, a1: 0.27, dmg: 22, bx: -2, by: -60, bw: 40, bh: 62, kb: 240, anim: 'atk3', lunge: 110, big: true }];
 
   function beginAttack(n) {
     const p = G.player;
@@ -281,7 +283,7 @@
       case 'stamp': {
         p.vy = 400; p.vx = approach(p.vx, 0, 400 * dt);
         anim = 'stamp';
-        if (meleeHit(-12, -6, 24, 16, 18, 60, false, true)) { p.state = 'normal'; p.vy = -270; pop(p.x, p.y - 30, '반려!', '#ff6464', true); G.hitstop = 0.06; break; }
+        if (meleeHit(-14, -8, 28, 18, 18, 60, false, true)) { p.state = 'normal'; p.vy = -270; pop(p.x, p.y - 58, '반려!', '#ff6464', true); G.hitstop = 0.06; break; }
         if (p.onGround) {
           p.state = 'landing'; p.t = 0; G.shake = Math.max(G.shake, 4); sfx('stamp');
           meleeHit(-22, -10, 44, 12, 8, 80, false, true);
@@ -307,7 +309,7 @@
       case 'shoot': {
         p.vx = approach(p.vx, 0, 900 * dt); anim = 'shoot';
         while (p.fired < 3 && p.t >= p.fired * 0.06) {
-          G.shots.push({ k: 'staple', x: p.x + p.face * 12, y: p.y - 17 + (p.fired - 1) * 2, vx: p.face * 340, vy: 0, g: 0, dmg: 7, friendly: true, life: 0.8, w: 6, h: 3 });
+          G.shots.push({ k: 'staple', x: p.x + p.face * 20, y: p.y - 34 + (p.fired - 1) * 3, vx: p.face * 340, vy: 0, g: 0, dmg: 7, friendly: true, life: 0.8, w: 6, h: 3 });
           p.fired++; sfx('staple');
         }
         if (p.t > 0.24) p.state = 'normal';
@@ -321,10 +323,10 @@
       }
       case 'ult': {
         p.vx = p.face * 330; anim = 'ult';
-        for (const e of G.ents) if (e.enemy && !e.dead && !p.ultHit.has(e) && overlap(box(e), { x0: p.x - 18, x1: p.x + 18, y0: p.y - 40, y1: p.y + 2 })) {
+        for (const e of G.ents) if (e.enemy && !e.dead && !p.ultHit.has(e) && overlap(box(e), { x0: p.x - 18, x1: p.x + 18, y0: p.y - 56, y1: p.y + 2 })) {
           p.ultHit.add(e); hitEnemy(e, 60, p.face, 260, true);
         }
-        if (Math.random() < 0.8) G.parts.push({ x: p.x - p.face * 10, y: p.y - rand(4, 30), vx: -p.face * 200, vy: 0, life: 0.2, max: 0.2, c: '#ffd34d', s: 1, g: 0 });
+        if (Math.random() < 0.8) G.parts.push({ x: p.x - p.face * 10, y: p.y - rand(4, 54), vx: -p.face * 200, vy: 0, life: 0.2, max: 0.2, c: '#ffd34d', s: 1, g: 0 });
         if (p.t > 0.95 || p.hitWall) { p.state = 'normal'; p.inv = 0.4; }
         break;
       }
@@ -341,7 +343,7 @@
       p.x = p.safe.x - p.face * 4; p.y = p.safe.y; p.vx = 0; p.vy = 0;
       if (p.state === 'dash' || p.state === 'ult') p.state = 'normal';
       p.inv = 0; hurtPlayer(15, p.x + p.face * 10, true);
-      pop(p.x, p.y - 34, '공사중이라니까!', '#ffd34d');
+      pop(p.x, p.y - 62, '공사중이라니까!', '#ffd34d');
     }
   }
   function startDash() {
@@ -351,14 +353,14 @@
   }
   function skillStapler() {
     const p = G.player;
-    if (p.mental < 12) return pop(p.x, p.y - 34, '멘탈 부족…', '#a8a3b8');
+    if (p.mental < 12) return pop(p.x, p.y - 62, '멘탈 부족…', '#a8a3b8');
     p.mental -= 12; p.state = 'shoot'; p.t = 0; p.fired = 0;
   }
   function skillMail() {
     const p = G.player;
-    if (p.mental < 45) return pop(p.x, p.y - 34, '멘탈 부족…', '#a8a3b8');
+    if (p.mental < 45) return pop(p.x, p.y - 62, '멘탈 부족…', '#a8a3b8');
     p.mental -= 45; p.state = 'cast'; p.t = 0; p.fired = 0;
-    pop(p.x, p.y - 40, '전체 회신!!', '#7fb4ff', true);
+    pop(p.x, p.y - 66, '전체 회신!!', '#7fb4ff', true);
   }
   function skillUlt() {
     const p = G.player;
@@ -390,7 +392,7 @@
       s.dead = true; pop(s.x, s.y - 8, '반려!', '#ff6464'); sfx('paper');
       for (let i = 0; i < 4; i++) G.parts.push({ x: s.x, y: s.y, vx: rand(-60, 60), vy: rand(-80, 0), life: 0.4, max: 0.4, c: '#f7f7f2', s: 2, g: 300 });
     }
-    if (any && big && !p.shouted) { p.shouted = true; pop(p.x + p.face * 4, p.y - 40, '넵!', '#ffffff', true); }
+    if (any && big && !p.shouted) { p.shouted = true; pop(p.x + p.face * 4, p.y - 66, '넵!', '#ffffff', true); }
     return any;
   }
 
@@ -417,7 +419,7 @@
     if (!silent && (p.inv > 0 || p.state === 'dash' || p.state === 'ult' || p.state === 'grabbed')) return;
     p.hp = Math.max(0, p.hp - dmg);
     G.stats.combo = 0;
-    pop(p.x, p.y - 34, `-${dmg}`, '#ff6464');
+    pop(p.x, p.y - 62, `-${dmg}`, '#ff6464');
     G.shake = Math.max(G.shake, 4); G.flash = Math.max(G.flash, 0.15); sfx('hurt');
     if (p.hp <= 0) return killPlayer();
     p.inv = 1.0; p.state = 'hurt'; p.t = 0; p.vx = (p.x < fromX ? -1 : 1) * 140; p.vy = -170;
@@ -430,7 +432,7 @@
 
   // ===================== 등장인물·적 =====================
   function makeNpc(who, x, y, face, id) {
-    return { type: 'npc', who, id, x, y, w: 10, h: 26, vx: 0, vy: 0, face: face || 1, anim: 'idle', animT: 0, keep: false, alpha: 1,
+    return { type: 'npc', who, id, x, y, w: 14, h: 46, vx: 0, vy: 0, face: face || 1, anim: 'idle', animT: 0, keep: false, alpha: 1,
       update(dt) { this.animT += dt; physics(this, dt); } };
   }
   function makeEnt(s) {
@@ -492,9 +494,9 @@
         if (this.state === 'hover') {
           this.x = approach(this.x, this.home.x + Math.sin(this.t * 1.3) * 14, 60 * dt);
           this.y = approach(this.y, this.home.y + Math.sin(this.t * 2.6) * 4, 60 * dt);
-          if (this.cd <= 0 && Math.abs(dx) < 120 && p.y > this.y + 10 && p.state !== 'dead') {
+          if (this.cd <= 0 && Math.abs(dx) < 120 && p.y - 30 > this.y && p.state !== 'dead') {
             this.state = 'swoop'; this.t2 = 0;
-            const tx = p.x, ty = p.y - 12, d = Math.hypot(tx - this.x, ty - this.y) || 1;
+            const tx = p.x, ty = p.y - 30, d = Math.hypot(tx - this.x, ty - this.y) || 1;
             this.svx = (tx - this.x) / d * 175; this.svy = (ty - this.y) / d * 175;
           }
         } else if (this.state === 'swoop') {
@@ -518,7 +520,7 @@
   const RESCUED_LINES = ['…어? 내가 왜 여기 있지?', '퇴근… 퇴근해야지!', '고마워요, 신입 씨!', '나 오늘 몇 시간째야…?'];
   function makeZombie(x, y, id, look) {
     return enemyBase({
-      type: 'zombie', id, look: look || 'zombie', x, y, w: 12, h: 26, hp: 60, state: 'walk', grabCd: 0, kbMul: 0.5, contact: 0,
+      type: 'zombie', id, look: look || 'zombie', x, y, w: 16, h: 46, hp: 60, state: 'walk', grabCd: 0, kbMul: 0.5, contact: 0,
       update(dt) {
         const p = G.player, dx = p.x - this.x, dy = p.y - this.y;
         this.t += dt; this.animT += dt; this.grabCd -= dt;
@@ -526,7 +528,7 @@
           case 'walk':
             if (Math.abs(dx) < 200 && Math.abs(dy) < 50 && p.state !== 'dead') { this.face = Math.sign(dx) || 1; this.vx = approach(this.vx, this.face * 26, 200 * dt); }
             else this.vx = approach(this.vx, 0, 200 * dt);
-            if (Math.abs(dx) < 26 && Math.abs(dy) < 20 && this.grabCd <= 0 && p.state !== 'dead' && p.state !== 'grabbed') {
+            if (Math.abs(dx) < 32 && Math.abs(dy) < 20 && this.grabCd <= 0 && p.state !== 'dead' && p.state !== 'grabbed') {
               this.state = 'wind'; this.t = 0; this.vx = 0; this.line = ZLINES[Math.floor(Math.random() * ZLINES.length)];
             }
             break;
@@ -535,18 +537,18 @@
             this.vx = approach(this.vx, 0, 300 * dt);
             if (p.state !== 'dash' && p.state !== 'ult' && p.state !== 'dead' && p.inv <= 0 && p.state !== 'grabbed' && overlap(box(this), box(p))) {
               this.state = 'grab'; this.t = 0; p.state = 'grabbed'; p.t = 0; p.mash = 0; p.grabbedBy = this; p.face = -this.face;
-              pop(p.x, p.y - 44, '연타로 탈출!', '#ffd34d', true);
+              pop(p.x, p.y - 70, '연타로 탈출!', '#ffd34d', true);
             } else if (this.t > 0.3) { this.state = 'recover'; this.t = 0; this.grabCd = 1.2; }
             break;
           }
           case 'grab':
-            this.vx = 0; this.x = approach(this.x, p.x - this.face * 12, 200 * dt);
+            this.vx = 0; this.x = approach(this.x, p.x - this.face * 18, 200 * dt);
             p.hp -= 7 * dt;
             if (p.hp <= 0) { killPlayer(); this.state = 'recover'; this.t = 0; break; }
             if (p.mash >= 6) {
               p.state = 'normal'; p.grabbedBy = null; p.inv = 0.8; p.vx = this.face * 120;
               this.state = 'stun'; this.t = 0; this.vx = -this.face * 120; this.grabCd = 2;
-              pop(p.x, p.y - 40, '칼같이 거절!', '#7fb4ff', true); G.shake = 3; sfx('hit');
+              pop(p.x, p.y - 66, '칼같이 거절!', '#7fb4ff', true); G.shake = 3; sfx('hit');
             }
             break;
           case 'stun': this.vx = approach(this.vx, 0, 300 * dt); if (this.t > 1.0) { this.state = 'walk'; } break;
@@ -574,7 +576,7 @@
         G.stats.kills++; G.rescued.add(this.id); sfx('cooler');
         const p = G.player;
         if (p.grabbedBy === this) { p.state = 'normal'; p.grabbedBy = null; }
-        G.pops.push({ x: this.x, y: this.y - 40, text: RESCUED_LINES[G.rescued.size % RESCUED_LINES.length], c: '#ffffff', t: 0, life: 2.8, bubble: true, follow: this });
+        G.pops.push({ x: this.x, y: this.y - 62, text: RESCUED_LINES[G.rescued.size % RESCUED_LINES.length], c: '#ffffff', t: 0, life: 2.8, bubble: true, follow: this });
         const c = makePickup('coffee', this.x, this.y - 20, 0); c.vy = -180; c.vx = 30; G.ents.push(c);
         dropMoney(this.x, this.y - 20, 2, 3000);
       },
@@ -605,13 +607,13 @@
     return { type: 'pickup', kind, value, x, y, w: 8, h: 7, vx: 0, vy: 0, t: 0, magnet: false,
       update(dt) {
         this.t += dt;
-        const p = G.player, d = Math.hypot(p.x - this.x, p.y - 12 - this.y);
+        const p = G.player, d = Math.hypot(p.x - this.x, p.y - 24 - this.y);
         if (d < 40 && this.t > 0.3 && p.state !== 'dead') this.magnet = true;
-        if (this.magnet) { this.x += (p.x - this.x) * Math.min(1, dt * 10); this.y += (p.y - 10 - this.y) * Math.min(1, dt * 10); }
+        if (this.magnet) { this.x += (p.x - this.x) * Math.min(1, dt * 10); this.y += (p.y - 24 - this.y) * Math.min(1, dt * 10); }
         else { this.vx = approach(this.vx, 0, (this.onGround ? 400 : 30) * dt); physics(this, dt); if (this.y > MAP_H + 40) this.gone = true; }
-        if (d < 12 && this.t > 0.2) {
+        if (d < 16 && this.t > 0.2) {
           this.gone = true;
-          if (this.kind === 'coffee') { p.hp = Math.min(p.maxHp, p.hp + 30); p.mental = Math.min(100, p.mental + 30); pop(p.x, p.y - 36, '커피 충전!', '#5fe07a'); sfx('cooler'); }
+          if (this.kind === 'coffee') { p.hp = Math.min(p.maxHp, p.hp + 30); p.mental = Math.min(100, p.mental + 30); pop(p.x, p.y - 64, '커피 충전!', '#5fe07a'); sfx('cooler'); }
           else { G.money += this.value; sfx('coin'); }
         }
       } };
@@ -811,7 +813,7 @@
     G.shots = G.shots.filter(s => !s.dead);
     for (const q of G.parts) { q.life -= dt; q.vy += (q.g || 0) * dt; q.x += q.vx * dt; q.y += q.vy * dt; }
     G.parts = G.parts.filter(q => q.life > 0);
-    for (const q of G.pops) { q.t += dt; if (q.follow) { q.x = q.follow.x; q.y = q.follow.y - 40; } }
+    for (const q of G.pops) { q.t += dt; if (q.follow) { q.x = q.follow.x; q.y = q.follow.y - 62; } }
     G.pops = G.pops.filter(q => q.t < q.life);
     if (G.banner) { G.banner.t += dt; if (G.banner.t > 1.8) G.banner = null; }
     if (G.hint) G.hint.t += dt;
@@ -825,7 +827,7 @@
     let tx = p.x + look - VW / 2, ty = p.y - VH * 0.66;
     const maxX = G.eventDone || G.night ? MAP_W - VW : Math.max(0, (L.gateX + 1) * TS - VW);
     tx = Math.max(0, Math.min(maxX, tx)); ty = Math.max(0, Math.min(MAP_H - VH, ty));
-    if (MAP_H < VH) ty = (MAP_H - VH) / 2;
+    if (MAP_H < VH) ty = MAP_H - VH;
     G.cam.x += (tx - G.cam.x) * Math.min(1, dt * 6);
     G.cam.y += (ty - G.cam.y) * Math.min(1, dt * 6);
 
@@ -865,6 +867,8 @@
     const sx = G.shake ? Math.round(rand(-G.shake, G.shake)) : 0, sy = G.shake ? Math.round(rand(-G.shake, G.shake)) : 0;
     const cx = Math.round(G.cam.x) + sx, cy = Math.round(G.cam.y) + sy;
     ctx.fillStyle = C.wall; ctx.fillRect(0, 0, VW, VH);
+    if (cy < 0) { ctx.fillStyle = C.ceil2; ctx.fillRect(0, 0, VW, -cy); }
+    if (cy + VH > MAP_H) { ctx.fillStyle = C.floor; ctx.fillRect(0, MAP_H - cy, VW, cy + VH - MAP_H); }
     const x0 = Math.floor(cx / TS) - 1, x1 = Math.ceil((cx + VW) / TS) + 1;
 
     // 벽: 줄무늬, 걸레받이
@@ -933,7 +937,7 @@
     }
     ctx.globalAlpha = 1;
     // 좀비 말풍선
-    for (const e of G.ents) if (e.type === 'zombie' && e.state === 'wind') bubble(e.x - cx, e.y - 40 - cy, e.line);
+    for (const e of G.ents) if (e.type === 'zombie' && e.state === 'wind') bubble(e.x - cx, e.y - 62 - cy, e.line);
   }
 
   function bubble(x, y, text) {
@@ -1042,14 +1046,37 @@
     }
   }
 
-  function drawFrames(frames, idx, x, y, flip, flash, alpha) {
+  function drawFrames(frames, idx, x, y, flip, flash, alpha, k = 1) {
     const img = frames[idx % frames.length];
     const S = img.width;
-    const dx = Math.round(x - S / 2), dy = Math.round(y - img.height + (S === 48 ? 2 : 1));
     ctx.save();
     if (alpha !== undefined) ctx.globalAlpha = alpha;
-    if (flip) { ctx.translate(dx + S, dy); ctx.scale(-1, 1); ctx.drawImage(flash ? ART.white(img) : img, 0, 0); }
-    else ctx.drawImage(flash ? ART.white(img) : img, dx, dy);
+    ctx.translate(Math.round(x * RES) / RES, Math.round(y * RES) / RES);
+    ctx.scale(flip ? -k : k, k);
+    ctx.drawImage(flash ? ART.white(img) : img, -Math.floor(S / 2), -img.height + (S === 48 ? 2 : 1));
+    ctx.restore();
+  }
+  // 고해상도(PixelLab) 캐릭터: 스프라이트 1픽셀 = 캔버스 1픽셀, 손 위치에 소품을 그림
+  const PROPS = { atk1: 'folder', atk2: 'folder', atk3: 'folder', stamp: 'stamp', shoot: 'stapler', cast: 'phone' };
+  function drawHero(ch, anim, idx, x, y, flip, flash, alpha) {
+    const meta = ART.metas[ch], frames = ART.char(ch, anim);
+    const img = frames[idx % frames.length];
+    if (!meta || img.width < 96) return drawFrames(frames, idx, x, y, flip, flash, alpha);
+    const S = img.width, k = 1 / RES, m = (meta.anims[anim] || [])[idx % frames.length];
+    ctx.save();
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+    ctx.translate(Math.round(x * RES) / RES, Math.round(y * RES) / RES);
+    ctx.scale(flip ? -k : k, k);
+    ctx.translate(-S / 2, -meta.foot - 1);
+    if (anim === 'dash' && m) ctx.drawImage(ART.prop('chair'), Math.round(m.hx - 26), Math.round(m.hy - 14));
+    ctx.drawImage(flash ? ART.white(img) : img, 0, 0);
+    const pk = PROPS[anim];
+    if (pk && m) {
+      const pr = ART.prop(pk);
+      ctx.translate(Math.round(m.x), Math.round(m.y));
+      ctx.rotate(m.a);
+      ctx.drawImage(pr, -3, -Math.floor(pr.height / 2));
+    }
     ctx.restore();
   }
   function drawPlayer(cx, cy) {
@@ -1059,11 +1086,11 @@
     let idx;
     if (p.state === 'attack') { const a = ATK[p.combo]; idx = p.t < a.a0 ? 0 : p.t < a.a1 ? 1 : 2; }
     else idx = Math.floor(p.animT * A.fps);
-    drawFrames(ART.char('jiwoo', p.anim), idx, p.x - cx, p.y - cy, p.face < 0);
+    drawHero('jiwoo', p.anim, idx, p.x - cx, p.y - cy, p.face < 0);
     if (p.state === 'attack' && ATK[p.combo].big && p.t >= ATK[p.combo].a0 && p.t < ATK[p.combo].a1 + 0.05) {
       ctx.fillStyle = '#ffffffaa';
-      const sx = p.x - cx + p.face * 18;
-      for (let i = 0; i < 6; i++) ctx.fillRect(Math.round(sx + p.face * i * 2), Math.round(p.y - cy - 30 + i * 4), 2, 3);
+      const sx = p.x - cx + p.face * 26;
+      for (let i = 0; i < 8; i++) ctx.fillRect(Math.round(sx + p.face * i * 2), Math.round(p.y - cy - 56 + i * 6), 2, 3);
     }
   }
   function drawEnt(e, cx, cy) {
@@ -1072,13 +1099,14 @@
     switch (e.type) {
       case 'npc': {
         const A = ART.ANIMS[e.anim] || ART.ANIMS.idle;
-        drawFrames(ART.char(e.who, e.anim), Math.floor(e.animT * A.fps), x, y, e.face < 0, false, e.alpha);
+        if (ART.metas[e.who]) drawHero(e.who, e.anim, Math.floor(e.animT * A.fps), x, y, e.face < 0, false, e.alpha);
+        else drawFrames(ART.char(e.who, e.anim), Math.floor(e.animT * A.fps), x, y, e.face < 0, false, e.alpha, 1.75);
         break;
       }
       case 'zombie': {
         const { ch, a } = e.anim();
         const A = ART.ANIMS[a];
-        drawFrames(ART.char(ch, a), Math.floor(e.animT * A.fps), x, y, e.face < 0, e.flash > 0, e.alpha);
+        drawFrames(ART.char(ch, a), Math.floor(e.animT * A.fps), x, y, e.face < 0, e.flash > 0, e.alpha, 1.75);
         break;
       }
       case 'slime': drawFrames(ART.enemy(e.small ? 'slime_small' : 'slime'), e.frame(), x, y, e.face > 0, e.flash > 0); break;
@@ -1159,6 +1187,7 @@
   }
 
   function render(now) {
+    ctx.setTransform(RES, 0, 0, RES, 0, 0);
     ctx.imageSmoothingEnabled = false;
     if (!G) { ctx.fillStyle = '#14121c'; ctx.fillRect(0, 0, VW, VH); return; }
     drawWorld(now);

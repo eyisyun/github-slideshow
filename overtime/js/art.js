@@ -287,7 +287,47 @@
   const OVERRIDE_KEYS = [];
   for (const c of ['jiwoo', 'oh', 'bujang', 'zombie']) for (const a of Object.keys(ANIMS)) OVERRIDE_KEYS.push(`${c}_${a}`);
   OVERRIDE_KEYS.push('slime', 'slime_small', 'bat', 'copier');
+  // 고해상도(PixelLab) 캐릭터의 손·엉덩이 위치 정보 — 소품을 그릴 자리
+  const metas = {};
+  function loadMeta(ch) {
+    fetch(`sprites/${ch}_meta.json`).then(r => r.ok ? r.json() : null).then(m => { if (m) metas[ch] = m; }).catch(() => { });
+  }
+
+  // 고해상도 소품 (스프라이트 픽셀 단위, 오른쪽을 봄, 손잡이가 왼쪽 가운데)
+  function prop(kind) {
+    let g;
+    switch (kind) {
+      case 'folder':
+        g = grid(28, 14);
+        rect(g, 2, 1, 24, 12, '#e9c46a'); rect(g, 2, 1, 24, 2, '#f6dc94'); rect(g, 2, 11, 24, 2, '#c99a3a');
+        rect(g, 20, 0, 6, 2, '#e9c46a'); rect(g, 4, 4, 18, 1, '#ffffff'); rect(g, 4, 7, 14, 1, '#ffffff');
+        rect(g, 0, 5, 3, 4, '#c99a3a');
+        break;
+      case 'stamp':
+        g = grid(18, 12);
+        rect(g, 0, 4, 9, 4, '#6a3a24'); rect(g, 0, 4, 9, 1, '#8a5234'); rect(g, 9, 2, 3, 8, '#3a3a44'); rect(g, 12, 0, 5, 12, '#d23a3a'); rect(g, 12, 0, 5, 2, '#ff6a6a');
+        break;
+      case 'stapler':
+        g = grid(24, 10);
+        rect(g, 0, 1, 22, 4, '#5a6070'); rect(g, 0, 1, 22, 1, '#8a90a0'); rect(g, 0, 6, 23, 3, '#3a3e4a'); rect(g, 18, 4, 4, 2, '#c8ccd8');
+        break;
+      case 'phone':
+        g = grid(16, 10);
+        rect(g, 0, 0, 16, 10, '#24242c'); rect(g, 2, 1, 12, 8, '#7fd8ff'); rect(g, 3, 2, 5, 1, '#ffffff'); rect(g, 3, 4, 8, 1, '#3a6ad8');
+        break;
+      case 'chair':
+        g = grid(44, 50);
+        rect(g, 2, 0, 7, 26, '#2b2b33'); rect(g, 3, 1, 5, 24, '#3d3d48');
+        rect(g, 4, 24, 34, 6, '#2b2b33'); rect(g, 5, 25, 32, 3, '#3d3d48');
+        rect(g, 19, 30, 4, 12, '#8a8a96'); rect(g, 6, 42, 32, 3, '#3a3a44');
+        for (const x of [6, 21, 36]) rect(g, x - 2, 45, 4, 4, '#141418');
+        break;
+    }
+    return toCanvas(g);
+  }
+
   function loadOverrides(onChange) {
+    loadMeta('jiwoo');
     for (const key of OVERRIDE_KEYS) {
       const img = new Image();
       img.onload = () => {
@@ -342,6 +382,7 @@
     char: charFrames, enemy: enemyFrames, white,
     item: kind => memo(`i:${kind}`, () => small(kind)),
     tile: (type, th) => memo(`t:${type}:${th}`, () => tile(type, th)),
-    loadOverrides, shade,
+    loadOverrides, shade, metas,
+    prop: kind => memo(`p:${kind}`, () => prop(kind)),
   };
 })();
