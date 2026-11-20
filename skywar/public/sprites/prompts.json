@@ -1,0 +1,38 @@
+{
+  "_설명": "PixelLab 생성용 설정. style은 모든 부품에 공통으로 붙고, parts의 각 문장이 부품별 설명입니다. 원하는 대로 고쳐 쓰세요.",
+  "style": "pixel art, top-down view seen from directly above, aircraft pointing up (north), centered, game sprite, clean shapes, transparent background",
+  "settings": {
+    "view": "high top-down",
+    "direction": "north",
+    "outline": "single color black outline",
+    "shading": "basic shading",
+    "detail": "medium detail",
+    "init_image_strength": 450,
+    "text_guidance_scale": 8
+  },
+  "parts": {
+    "b1": "slim training jet fuselage only, light blue cockpit canopy near the nose, no wings",
+    "b2": "reinforced fighter fuselage only, grey armor plate bands, blue cockpit canopy, no wings",
+    "b3": "wide heavy armored fighter fuselage only, thick riveted metal plates, small cockpit, no wings",
+    "b4": "dark grey angular stealth fighter fuselage only, faceted diamond shape, gold visor cockpit, no wings",
+
+    "w1": "straight rectangular airplane main wings and small tail wings only, blue paint, no fuselage",
+    "w2": "swept-back fighter jet wings and swept tail wings only, blue paint, no fuselage",
+    "w3": "large triangular delta wing only, blue paint, no fuselage",
+    "w4": "variable-geometry swing wings with small front canards and tail fins, blue paint, no fuselage",
+
+    "e1": "small propeller at the nose tip and short tail cone, grey metal, nothing else",
+    "e2": "single jet engine exhaust nozzle at the tail, dark metal, nothing else",
+    "e3": "twin afterburner exhaust nozzles at the tail, dark metal, nothing else",
+    "e4": "large ramjet exhaust nozzle at the tail with two side air intakes, dark metal, nothing else",
+
+    "g1": "two small machine gun barrels beside the nose, grey metal, nothing else",
+    "g2": "single heavy cannon barrel at the very nose tip, dark metal, nothing else",
+    "g3": "twin long autocannon barrels at the nose, grey metal, nothing else",
+    "g4": "glowing cyan laser emitter at the nose tip, nothing else",
+
+    "s1": "rocket pods under both wings, grey tubes with red tips, symmetric, nothing else",
+    "s2": "one white air-to-air missile with red tip under each wing, symmetric, nothing else",
+    "s3": "three small white missiles with red tips under each wing, symmetric, nothing else"
+  }
+}

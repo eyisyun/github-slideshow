@@ -11,20 +11,43 @@
     const f = v => Math.max(0, Math.min(255, Math.round(v * k)));
     return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => f(v).toString(16).padStart(2, '0')).join('');
   }
-  const N = 24, PAD = 1, SZ = N + PAD * 2;
-  // 엔진 노즐 위치(스프라이트 좌표) — 불꽃을 그릴 곳
-  const NOZZLES = { e1: [], e2: [[12, 23]], e3: [[10, 23], [15, 23]], e4: [[12, 24]] };
+  // 스프라이트 캔버스: 32×32 (PixelLab 최소 크기와 같음), 기수는 위쪽(북쪽)
+  // 코드로 그리는 기본 그림은 24×24 설계를 가운데(OFF)로 옮겨서 그림
+  const N = 32, OFF = 4, PAD = 1, SZ = N + PAD * 2;
+  const LAYER_ORDER = ['wing', 'engine', 'body', 'gun', 'special'];
+  // 엔진 노즐 위치(32×32 스프라이트 좌표) — 불꽃을 그릴 곳
+  const NOZZLES = { e1: [], e2: [[16, 27]], e3: [[14, 27], [19, 27]], e4: [[16, 28]] };
 
-  function buildSprite(lo, color, frame = 0) {
+  // PixelLab 등에서 만든 부품 그림: public/sprites/<부품ID>.png (없으면 코드 그림 사용)
+  const partImages = {};
+  function loadPartImages() {
+    for (const id of Object.keys(PARTS)) {
+      if (PARTS[id].kind === 'none') continue;
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = N;
+        const cx = cv.getContext('2d');
+        cx.imageSmoothingEnabled = false;
+        cx.drawImage(img, 0, 0, N, N);
+        partImages[id] = cx.getImageData(0, 0, N, N).data;
+        spriteCache.clear();
+        if (!G) renderHangar();
+      };
+      img.src = `/sprites/${id}.png`;
+    }
+  }
+
+  // 코드로 그리는 부품 한 개 (격자 배열 반환)
+  function proceduralLayer(slot, id, color, frame) {
     const g = new Array(N * N).fill(null);
-    const set = (x, y, c) => { if (x >= 0 && y >= 0 && x < N && y < N) g[y * N + x] = c; };
-    const sym = (x, y, c) => { set(x, y, c); set(N - 1 - x, y, c); };
+    const set = (x, y, c) => { x += OFF; y += OFF; if (x >= 0 && y >= 0 && x < N && y < N) g[y * N + x] = c; };
+    const sym = (x, y, c) => { set(x, y, c); set(23 - x, y, c); };
     const rect = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) sym(x, y, c); };
     const C = color, D = shade(color, 0.62), L = shade(color, 1.35);
     const M = '#9aa0a8', MD = '#5b616b', K = '#2b2e36', G = '#8fe3ff', W = '#f4f4f4', R = '#e43b44';
 
-    // 날개
-    switch (lo.wing) {
+    if (slot === 'wing') switch (id) {
       case 'w1':
         rect(1, 10, 11, 12, C); rect(1, 13, 11, 13, D); rect(1, 10, 1, 12, L);
         rect(7, 19, 11, 20, C); rect(7, 21, 11, 21, D);
@@ -43,8 +66,7 @@
         for (let r = 0; r <= 2; r++) { const y = 19 + r; rect(8 - r, y, 11, y, D); }
         break;
     }
-    // 엔진
-    switch (lo.engine) {
+    if (slot === 'engine') switch (id) {
       case 'e1':
         rect(11, 20, 11, 21, D);
         if (frame === 0) rect(6, 2, 10, 2, M); else { rect(10, 1, 10, 1, M); rect(9, 3, 9, 3, M); }
@@ -53,8 +75,7 @@
       case 'e3': rect(8, 19, 10, 21, MD); sym(8, 22, MD); sym(9, 22, K); sym(10, 22, MD); break;
       case 'e4': rect(9, 18, 11, 22, MD); rect(10, 23, 11, 23, K); sym(9, 23, MD); rect(8, 8, 8, 12, MD); break;
     }
-    // 동체
-    switch (lo.body) {
+    if (slot === 'body') switch (id) {
       case 'b1':
         rect(10, 3, 11, 19, C); rect(10, 4, 10, 19, D); sym(11, 2, C);
         rect(11, 6, 11, 8, G); sym(11, 6, W);
@@ -81,30 +102,51 @@
         break;
       }
     }
-    // 주무기
-    switch (lo.gun) {
+    if (slot === 'gun') switch (id) {
       case 'g1': rect(9, 3, 9, 5, MD); sym(9, 3, K); break;
       case 'g2': rect(11, 0, 11, 2, MD); sym(11, 0, K); break;
       case 'g3': rect(9, 1, 9, 5, MD); sym(9, 1, K); rect(8, 4, 8, 6, M); break;
       case 'g4': rect(10, 1, 10, 3, M); rect(11, 0, 11, 2, '#aaffff'); sym(11, 0, '#ffffff'); break;
     }
-    // 보조무기 (날개 아래 포드)
-    switch (lo.special) {
+    if (slot === 'special') switch (id) {
       case 's1': for (const x of [5, 7]) { rect(x, 11, x, 14, MD); sym(x, 10, R); } break;
       case 's2': rect(6, 9, 6, 15, W); sym(6, 8, R); sym(5, 15, MD); sym(7, 15, MD); break;
       case 's3': for (const x of [3, 5, 7]) { rect(x, 11, x, 14, W); sym(x, 10, R); } break;
     }
+    return g;
+  }
 
+  // 그림 파일 → 격자 배열 (반투명 픽셀은 버림 — 픽셀 아트 유지)
+  function imageLayer(data) {
+    const g = new Array(N * N).fill(null);
+    for (let i = 0; i < N * N; i++) {
+      if (data[i * 4 + 3] < 128) continue;
+      g[i] = '#' + [data[i * 4], data[i * 4 + 1], data[i * 4 + 2]].map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    return g;
+  }
+
+  function gridToCanvas(g, outline, pad = PAD) {
     const cv = document.createElement('canvas');
-    cv.width = cv.height = SZ;
+    cv.width = cv.height = N + pad * 2;
     const cx = cv.getContext('2d');
     const filled = (x, y) => x >= 0 && y >= 0 && x < N && y < N && g[y * N + x];
-    for (let y = -1; y <= N; y++) for (let x = -1; x <= N; x++) {
+    for (let y = -pad; y < N + pad; y++) for (let x = -pad; x < N + pad; x++) {
       let c = filled(x, y) ? g[y * N + x] : null;
-      if (!c && (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))) c = OUT;
-      if (c) { cx.fillStyle = c; cx.fillRect(x + PAD, y + PAD, 1, 1); }
+      if (!c && outline && (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))) c = OUT;
+      if (c) { cx.fillStyle = c; cx.fillRect(x + pad, y + pad, 1, 1); }
     }
     return cv;
+  }
+
+  function buildSprite(lo, color, frame = 0) {
+    const g = new Array(N * N).fill(null);
+    for (const slot of LAYER_ORDER) {
+      const id = lo[slot];
+      const layer = partImages[id] ? imageLayer(partImages[id]) : proceduralLayer(slot, id, color, frame);
+      for (let i = 0; i < g.length; i++) if (layer[i]) g[i] = layer[i];
+    }
+    return gridToCanvas(g, true);
   }
   function silhouette(src) {
     const cv = document.createElement('canvas');
@@ -122,11 +164,31 @@
     let s = spriteCache.get(key);
     if (!s) {
       const f0 = buildSprite(lo, color, 0);
-      s = { frames: lo.engine === 'e1' ? [f0, buildSprite(lo, color, 1)] : [f0], shadow: silhouette(f0), noz: NOZZLES[lo.engine] };
+      const animated = lo.engine === 'e1' && !partImages.e1;
+      s = { frames: animated ? [f0, buildSprite(lo, color, 1)] : [f0], shadow: silhouette(f0), noz: NOZZLES[lo.engine] };
       spriteCache.set(key, s);
     }
     return s;
   }
+
+  // PixelLab 초기 이미지(init_image)로 쓸 위치 템플릿 — tools/export-templates.js 가 호출
+  window.SKYWAR_TEMPLATES = (color = PAINTS[0]) => {
+    const out = {};
+    for (const id of Object.keys(PARTS)) {
+      const p = PARTS[id];
+      if (p.kind === 'none') continue;
+      out[id] = gridToCanvas(proceduralLayer(p.slot, id, color, 0), true, 0).toDataURL('image/png');
+    }
+    // 전체 조립 예시 (참고용): 부품을 모두 겹친 모습
+    const lo = { body: 'b2', wing: 'w2', engine: 'e2', gun: 'g2', special: 's2' };
+    const g = new Array(N * N).fill(null);
+    for (const slot of LAYER_ORDER) {
+      const l = proceduralLayer(slot, lo[slot], color, 0);
+      for (let i = 0; i < g.length; i++) if (l[i]) g[i] = l[i];
+    }
+    out.example = gridToCanvas(g, true, 0).toDataURL('image/png');
+    return out;
+  };
 
   // ===================== 지형 (시드 노이즈) =====================
   const TPAD = 320, TS = 2; // 지도 1픽셀 = 월드 2단위
@@ -356,7 +418,7 @@
 
   function drawPreview(t) {
     if (!profile || G) return;
-    const W = 130; // 내부 해상도 (CSS로 확대)
+    const W = 150; // 내부 해상도 (CSS로 확대)
     if (previewCv.width !== W) { previewCv.width = previewCv.height = W; }
     pctx.imageSmoothingEnabled = false;
     // 격납고 바닥
@@ -656,7 +718,7 @@
       // 엔진 불꽃
       for (const [nx, ny] of sp.noz) {
         const len = (p.thr > 0 ? 5 : p.thr < 0 ? 1 : 3) + Math.floor(Math.random() * 2);
-        const bx = nx - SZ / 2 + PAD - 1, by = ny - SZ / 2 + PAD;
+        const bx = nx + PAD - SZ / 2 - 1, by = ny + PAD - SZ / 2;
         ctx.fillStyle = '#ff7a2a'; ctx.fillRect(bx, by, 2, len + 1);
         ctx.fillStyle = '#ffe066'; ctx.fillRect(bx, by, 2, Math.ceil(len / 2));
       }
@@ -798,6 +860,7 @@
     } else if (!isTouch) text('Tab 순위표 · Esc 격납고', VW - 8, VH - 18, '#ffffff80', 'right');
   }
 
+  loadPartImages();
   connect();
   requestAnimationFrame(frame);
 })();
