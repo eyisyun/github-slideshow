@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14121c">
+<title>퇴근하겠습니다!</title>
+<style>
+  @font-face { font-family: 'G11'; src: url('fonts/Galmuri11.woff2') format('woff2'); font-display: block; }
+  @font-face { font-family: 'G9'; src: url('fonts/Galmuri9.woff2') format('woff2'); font-display: block; }
+  :root {
+    --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px);
+    --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+    --ink: #f4f1ea; --dim: #a8a3b8; --gold: #ffd34d; --red: #ff6464; --blue: #7fb4ff; --bg: #14121c;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; font-family: 'G11', monospace; font-size: 14px;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .hidden { display: none !important; }
+  #probe { position: fixed; left: 0; top: 0; width: 0; height: 0; padding: var(--st) var(--sr) var(--sb) var(--sl); visibility: hidden; pointer-events: none; }
+  #game { position: fixed; left: 0; top: 0; display: block; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; }
+
+  /* 화면(오버레이) */
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+    padding: calc(16px + var(--st)) calc(16px + var(--sr)) calc(16px + var(--sb)) calc(16px + var(--sl)); }
+  .dim { background: #0c0a12cc; }
+  .logo { font-size: clamp(30px, 8vw, 56px); color: var(--ink); text-shadow: 4px 4px 0 #c0392b, 7px 7px 0 #000; letter-spacing: 2px; line-height: 1.1; }
+  .sub { color: var(--gold); font-size: 15px; text-shadow: 2px 2px 0 #000; }
+  .menu { display: flex; flex-direction: column; gap: 10px; min-width: 220px; margin-top: 8px; }
+  .btn { background: #2a2638; border: 3px solid #f4f1ea; padding: 10px 18px; font-size: 17px; box-shadow: 4px 4px 0 #000; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+  .btn.main { background: #c0392b; }
+  .btn.small { font-size: 13px; padding: 6px 12px; border-width: 2px; }
+  .note { color: var(--dim); font-size: 12px; text-shadow: 1px 1px 0 #000; }
+  .big { font-size: clamp(26px, 6vw, 42px); text-shadow: 3px 3px 0 #000; }
+  .stats { display: grid; grid-template-columns: auto auto; gap: 4px 20px; font-size: 15px; text-align: left; background: #0008; padding: 12px 18px; border: 2px solid #fff4; }
+  .stats b { color: var(--gold); font-weight: normal; text-align: right; }
+
+  /* 터치 조작 */
+  #pad { position: fixed; inset: 0; pointer-events: none; }
+  #pad button { position: absolute; pointer-events: auto; background: #ffffff1c; border: 2px solid #ffffff55; color: #fff; border-radius: 14px; font-size: 13px; text-shadow: 1px 1px 0 #000; touch-action: none; }
+  #pad button.on { background: #ffffff55; }
+  #pad button.off { opacity: .35; }
+  #pad .dir { width: 64px; height: 64px; font-size: 22px; bottom: calc(18px + var(--sb)); }
+  #pad [data-a=left] { left: calc(14px + var(--sl)); }
+  #pad [data-a=right] { left: calc(14px + 64px + 62px + var(--sl)); }
+  #pad [data-a=down] { left: calc(14px + 64px + 6px + var(--sl)); width: 50px; height: 46px; font-size: 16px; }
+  #pad .act { width: 66px; height: 66px; border-radius: 50%; bottom: calc(18px + var(--sb)); }
+  #pad [data-a=atk] { width: 82px; height: 82px; right: calc(14px + var(--sr)); bottom: calc(14px + var(--sb)); background: #c0392b88; font-size: 16px; }
+  #pad [data-a=jump] { right: calc(14px + 90px + var(--sr)); }
+  #pad [data-a=dash] { right: calc(14px + 90px + var(--sr)); bottom: calc(18px + 74px + var(--sb)); width: 56px; height: 56px; }
+  #pad .sk { width: 60px; height: 40px; font-size: 11px; border-radius: 10px; background: #3a6ad855; }
+  #pad [data-a=s1] { right: calc(14px + var(--sr)); bottom: calc(14px + 92px + var(--sb)); }
+  #pad [data-a=s2] { right: calc(14px + var(--sr)); bottom: calc(14px + 138px + var(--sb)); }
+  #pad [data-a=ult] { right: calc(14px + 154px + var(--sr)); bottom: calc(18px + 74px + var(--sb)); width: 56px; height: 56px; border-radius: 50%; background: #ff9a2a88; font-size: 12px; }
+  #pad [data-a=ult].ready { animation: glow .5s infinite alternate; }
+  @keyframes glow { to { background: #ffd34dcc; box-shadow: 0 0 12px #ffd34d; } }
+  #pauseBtn { position: fixed; top: calc(6px + var(--st)); right: calc(8px + var(--sr)); width: 34px; height: 30px; background: #0006; border: 2px solid #fff6; font-size: 13px; padding: 0; }
+
+  #rotate { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 50; text-align: center; padding: 20px; }
+  #rotate .phone { width: 40px; height: 70px; border: 4px solid var(--ink); border-radius: 8px; animation: rot 1.6s infinite; }
+  @keyframes rot { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (orientation: portrait) and (max-width: 900px) { #rotate { display: flex; } }
+</style>
+</head>
+<body>
+<div id="probe"></div>
+<canvas id="game"></canvas>
+
+<div id="pad" class="hidden">
+  <button class="dir" data-a="left">◀</button>
+  <button class="dir" data-a="down">▼</button>
+  <button class="dir" data-a="right">▶</button>
+  <button class="sk" data-a="s2">전체회신</button>
+  <button class="sk" data-a="s1">스테이플러</button>
+  <button class="act" data-a="ult">필살</button>
+  <button class="act" data-a="dash">대시</button>
+  <button class="act" data-a="jump">점프</button>
+  <button class="act" data-a="atk">공격</button>
+</div>
+<button id="pauseBtn" class="btn hidden" aria-label="일시정지">II</button>
+
+<div id="title" class="screen">
+  <div class="logo">퇴근하겠습니다!</div>
+  <div class="sub">챕터 1 · 입사 첫날</div>
+  <div class="menu">
+    <button class="btn main" id="bNew">새로 입사하기</button>
+    <button class="btn hidden" id="bCont">이어하기</button>
+    <button class="btn small" id="bSound">소리: 켜짐</button>
+  </div>
+  <div class="note" id="keysNote">←→ 이동 · Space 점프 · J 공격 · K 대시 · U/I/O 스킬 · Esc 일시정지</div>
+</div>
+
+<div id="pause" class="screen dim hidden">
+  <div class="big">잠깐 휴식 중</div>
+  <div class="menu">
+    <button class="btn main" id="bResume">계속하기</button>
+    <button class="btn small" id="bSound2">소리: 켜짐</button>
+    <button class="btn small" id="bQuit">타이틀로</button>
+  </div>
+</div>
+
+<div id="dead" class="screen dim hidden">
+  <div class="big" style="color:var(--red)">퇴사 처리되었습니다</div>
+  <div class="note">사회생활 배터리가 방전되었습니다…</div>
+  <div class="menu">
+    <button class="btn main" id="bRetry">재입사하기</button>
+    <button class="btn small" id="bQuit2">타이틀로</button>
+  </div>
+</div>
+
+<div id="clear" class="screen dim hidden">
+  <div class="big" style="color:var(--gold)">스테이지 1 클리어!</div>
+  <div class="stats" id="clearStats"></div>
+  <div class="note">회의실 편은 다음 업데이트에서 계속됩니다…</div>
+  <div class="menu"><button class="btn main" id="bQuit3">타이틀로</button></div>
+</div>
+
+<div id="rotate"><div class="phone"></div><div>기기를 가로로 돌려 주세요</div></div>
+
+<script src="js/art.js"></script>
+<script src="js/level.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

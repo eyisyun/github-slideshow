@@ -1,0 +1,23 @@
+{
+  "appId": "com.eyisyun.overtime",
+  "appName": "퇴근하겠습니다",
+  "webDir": "www",
+  "backgroundColor": "#14121c",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#14121c"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "launchAutoHide": true,
+      "backgroundColor": "#14121c",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "overtime-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "퇴근하겠습니다! — 직장인 코믹 픽셀 액션 RPG (iOS 앱)",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "sync": "npm run build && cap sync",
+    "ios": "npm run sync && cap open ios",
+    "assets": "capacitor-assets generate --ios --iconBackgroundColor '#14121c' --iconBackgroundColorDark '#14121c' --splashBackgroundColor '#14121c' --splashBackgroundColorDark '#14121c'"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  }
+}
