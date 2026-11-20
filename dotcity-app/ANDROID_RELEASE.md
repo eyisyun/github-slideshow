@@ -1,6 +1,6 @@
 # 도트시티 Android(Google Play) 출시 순서표
 
-위에서부터 순서대로 하면 됩니다. ☐ 칸은 직접 체크하세요. 첫 안드로이드 버전은 iOS와 같은 **1.0.9**입니다.
+위에서부터 순서대로 하면 됩니다. ☐ 칸은 직접 체크하세요. 첫 안드로이드 버전은 iOS와 같은 **1.1.0**입니다.
 
 ---
 
@@ -76,7 +76,7 @@ cd android
 결과 파일: `android/app/build/outputs/bundle/release/app-release.aab`
 (Android Studio에서 하려면 `npm run android` → **Build → Generate Signed App Bundle or APK → Android App Bundle → release**)
 
-☐ 버전: `android/app/build.gradle`의 `versionCode`(매 업로드마다 +1)와 `versionName`. 지금 `versionCode 11`, `versionName "1.0.9"`.
+☐ 버전: `android/app/build.gradle`의 `versionCode`(매 업로드마다 +1)와 `versionName`. 지금 `versionCode 12`, `versionName "1.1.0"`.
 
 ## 4. 내 폰에서 먼저 실행
 
