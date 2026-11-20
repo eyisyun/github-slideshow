@@ -433,7 +433,7 @@
   // ===================== 등장인물·적 =====================
   function makeNpc(who, x, y, face, id) {
     return { type: 'npc', who, id, x, y, w: 14, h: 46, vx: 0, vy: 0, face: face || 1, anim: 'idle', animT: 0, keep: false, alpha: 1,
-      update(dt) { this.animT += dt; physics(this, dt); } };
+      update(dt) { this.animT += dt; this.x += this.vx * dt; } }; // 컷신 인물은 장애물을 무시하고 걸어감
   }
   function makeEnt(s) {
     const x = s.x + (s.xOff || 0), y = s.y;
