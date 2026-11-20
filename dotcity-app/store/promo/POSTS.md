@@ -275,3 +275,33 @@ Giant squid and whales live in the deep, and now and then an unknown craft shows
 ```
 Something's watching my pixel city 🛸🦑 #dotcity #pixelart #indiegame #citybuilder #cozygames #cyberpunk #fyp
 ```
+
+## 1.0.8 사계절 편 (`dotcity-seasons-ko.mp4` / `dotcity-seasons-en.mp4`)
+
+`node scripts/make-social-promo.cjs seasons [ko|en]` · 1080×1920, 약 27초, 무음. 잔잔한 lo-fi나 칩튠 음악을 고르면 잘 어울려요.
+해 질 녘 불이 하나씩 켜지는 타임랩스 → 퇴근길 전조등 → 봄 벚꽃 한옥 마을 → 비 오는 날 우산 → 가을 단풍이 번지는 타임랩스 → 눈 내리는 겨울밤.
+
+**틱톡 · 유튜브 쇼츠**
+```
+해가 지면 창문 불이 하나씩 켜지는 도시 🌇
+봄엔 벚꽃, 가을엔 단풍, 겨울엔 눈까지 ❄
+혼자 만든 픽셀 도시 게임이에요. 어느 계절이 제일 예뻐요? 👇
+#도트시티 #픽셀아트 #인디게임 #게임추천 #힐링게임 #도시건설 #사계절 #fyp
+```
+
+**인스타그램 (릴스)**
+```
+하루가 흐르고 계절이 바뀌는 나만의 픽셀 도시 🌸🍁❄
+저녁이면 불이 하나씩 켜지고, 비 오는 날엔 사람들이 우산을 써요.
+App Store에서 「도트시티」 무료
+#도트시티 #픽셀아트 #도트그래픽 #인디게임 #1인개발 #모바일게임 #힐링게임 #도시건설 #pixelart #indiegame #citybuilder
+```
+
+**TikTok / Reels / Shorts (English)**
+```
+A pixel city where the lights come on one by one at dusk 🌇
+Cherry blossom in spring, autumn colours, snowy winter nights ❄
+Made solo. Which season is your favourite? 👇
+Free on the App Store · search "Dot City"
+#DotCity #pixelart #cozygames #indiegame #citybuilder #isometric
+```
