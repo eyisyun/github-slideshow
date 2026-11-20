@@ -850,6 +850,10 @@ function* buildSpritesGen(){
     if(R.glow){if(off<.025)return[col(R.glow),col(R.glow,.4)];if(off<.045)return col('#3a4458');if(Math.abs(off-.1)<.018)return col('#3a4458');
       if(off<.15)return col('#a8aeb8',off>.125?.12:Math.floor(along*8)%4===0?-.08:-.02);if(off<.17)return col('#4a5060');return ground;}
     // straight track is laid in screen pixels: 2:1 rails one pixel thick, sleepers as clean 2:1 slants, so the rails never zigzag
+    // 2x bends use the same gauge, sleeper spacing and bed width as the 2x straights (in uv, one 2x pixel across the track is 1/32)
+    if(k===2&&corner){const o=off*32;if(Math.abs(o-3.5)<.5)return col(R.rail,.04);if(Math.abs(o-4.5)<.5)return col(R.rail,-.38);
+      if(o<5.5&&(along*8%1+1)%1<3/8)return col(R.tie,(o>4.5?-.12:0)+(hash(x,y,71)<.12?-.1:0));
+      if(o<6.5)return col(R.bed,hash(x,y,72)<.22?-.14:hash(x,y,73)<.12?.12:0);if(o<7.5)return col(mixHex(R.bed,PAL.g1,.4),-.16);return ground;}
     if(!R.glow&&!corner&&off<9&&k===2){const xx=ax===1?x:63-x,d=y-16-Math.floor((xx-32)/2),o=Math.abs(d+.5),t=(xx+2*y)&7;   // 2x tile: rails on their own rows, sleepers as clean slants
       if(o===3.5)return col(R.rail,d<0?.1:0);if(o===2.5&&d>0||o===4.5&&d<0)return col(R.rail,-.38);
       if(o<=5.5&&t<3)return col(R.tie,(t===2?-.16:0)+(o>4.5?-.12:0)+(hash(x,y,71)<.12?-.1:0));
