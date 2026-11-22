@@ -900,7 +900,6 @@
       if (!t) continue;
       let name;
       if (t === T.DESK && ART.img('bg_desk')) continue; // 책상 그림이 윗면까지 그림
-      if (t === T.GATE && ART.img('bg_gate')) continue; // 부장실 문 그림을 아래에서 따로 그림
       const inner = tx > 0 && tx < L.W - 1;
       if (t === T.SOLID && ty >= 12 && inner && ART.img('bg_floor')) { ctx.drawImage(ART.img('bg_floor'), (tx % 2) * 32, (ty - 12) * 32, 32, 32, tx * TS - cx, ty * TS - cy, TS, TS); continue; }
       if (t === T.CEIL && inner && ART.img('bg_ceiling')) { ctx.drawImage(ART.img('bg_ceiling'), (tx % 2) * 32, ty * 32, 32, 32, tx * TS - cx, ty * TS - cy, TS, TS); continue; }
@@ -911,7 +910,7 @@
       ctx.drawImage(ART.tile(name, th), tx * TS - cx, ty * TS - cy);
     }
     // 부장실 문·표지판
-    if (G.tiles[5 * L.W + L.gateX] === T.GATE && ART.img('bg_gate')) ctx.drawImage(ART.img('bg_gate'), L.gateX * TS + 8 - 16 - cx, 2 * TS - cy, 32, 160);
+    if (G.tiles[5 * L.W + L.gateX] === T.GATE && ART.img('bg_gate')) ctx.drawImage(ART.img('bg_gate'), L.gateX * TS + 8 - 16 - cx, 12 * TS - 75 - cy, 32, 75);
     if (G.tiles[5 * L.W + L.gateX] === T.GATE) {
       const d = L.decor.find(q => q.k === 'sign');
       drawSign(d.x * TS - 6 - cx, d.y * TS - cy, d.text, '#c0392b');

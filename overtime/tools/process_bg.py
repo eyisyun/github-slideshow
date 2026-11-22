@@ -61,11 +61,35 @@ for _ in range(260):
         n[x, y] = c; n[x + 1, y] = c
 night.save(os.path.join(SP, 'bg_wall_night.png'))
 
+def baseboard(im):
+    q = im.load()
+    for x in range(im.width):
+        for y in range(306, 320): q[x, y] = (150, 128, 96, 255)
+        q[x, 305] = (120, 100, 74, 255)
+
+
+def fix_wall_b(im):
+    """화이트보드 벽: 왼쪽 아래 책상과 바닥을 지우고, 바닥선(y=246)을 게임 걸레받이(y=305)에 맞춤"""
+    WB = (250, 235, 203, 255)
+    q = im.load()
+    for y in range(205, 320):
+        for x in range(0, 135): q[x, y] = WB
+    for y in range(246, 320):
+        for x in range(im.width):
+            if q[x, y][:3] in ((181, 188, 196), (131, 139, 144)) or y > 253: q[x, y] = WB
+    out = Image.new('RGBA', (312, 320), WB)
+    out.paste(im.crop((0, 0, 312, 254)), (0, 51))
+    baseboard(out)
+    return out
+
+
 # ---- 다른 벽들: 원본 보관 후 밤 버전은 어둡게 (창이 있으면 창밖도 밤으로) ----
 for name in ['bg_wall_b', 'bg_wall_c']:
     if not os.path.exists(os.path.join(SP, f'{name}.png')) and not os.path.exists(os.path.join(SRC, f'{name}.png')):
         continue
     im = original(name).resize((312, 320), Image.NEAREST)
+    if name == 'bg_wall_b':
+        im = fix_wall_b(im)
     im.save(os.path.join(SP, f'{name}.png'))
     nn = im.copy(); q = nn.load()
     for y in range(320):
@@ -76,6 +100,10 @@ for name in ['bg_wall_b', 'bg_wall_c']:
             else:
                 q[x, y] = (int(r * 0.30), int(g * 0.32), int(b * 0.48), a)
     nn.save(os.path.join(SP, f'{name}_night.png'))
+
+# ---- 부장실 문: 방 전체 높이 문은 어색해서 위쪽(문패 포함)만 잘라 문 높이로 ----
+if os.path.exists(os.path.join(SP, 'bg_gate.png')) or os.path.exists(os.path.join(SRC, 'bg_gate.png')):
+    original('bg_gate').crop((0, 0, 64, 150)).save(os.path.join(SP, 'bg_gate.png'))
 
 # ---- 서랍장 ----
 cab = original('bg_cabinet')
