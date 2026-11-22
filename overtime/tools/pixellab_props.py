@@ -50,6 +50,15 @@ ITEMS = {
     'bg_door': dict(size=(64, 112), bg=True, desc='closed wooden double door of a meeting room with small glass windows and metal handles, front view, fills the whole image'),
     'bg_plant': dict(size=(32, 64), desc='tall potted office plant with green leaves in a white pot'),
     'bg_wall_day': dict(size=(384, 320), bg=True, desc='interior wall of a modern office in daytime seen straight on, two large windows showing a sunny city skyline with skyscrapers, beige wall panels, ceiling with fluorescent light panels at the top, carpet floor edge at the bottom, no furniture, no people, flat side view'),
+    # 맵 (2차): 벽 종류 늘리기, 바닥·천장 단면, 선반, 공사장, 부장실 칸막이, 자판기
+    'bg_wall_b': dict(size=(312, 320), bg=True, desc='flat beige office wall seen straight on, a large whiteboard with marker scribbles and bar charts, a wooden bookshelf full of colorful binders, a framed poster, orthographic front view, no perspective, no ceiling, no floor, no windows'),
+    'bg_wall_c': dict(size=(312, 320), bg=True, desc='flat office pantry wall seen straight on, light green tiles, kitchen counter with a coffee machine, microwave and mugs, upper cabinets, a small round wall clock, orthographic front view, no perspective, no ceiling, no floor'),
+    'bg_floor': dict(size=(64, 64), bg=True, desc='side cross-section of an office floor, dark blue grey carpet strip along the top edge, thick grey concrete slab underneath with small cracks, seamless horizontal texture, flat'),
+    'bg_ceiling': dict(size=(64, 64), bg=True, desc='side cross-section of an office ceiling, white acoustic drop ceiling panels with a thin metal grid along the bottom edge, dark ceiling void with pipes and cables above, seamless horizontal texture, flat'),
+    'bg_shelf': dict(size=(64, 16), desc='long wooden wall shelf plank seen from the side with small metal brackets underneath, flat'),
+    'bg_barrier': dict(size=(48, 48), desc='construction caution barricade with yellow and black diagonal stripes and an orange traffic cone, side view'),
+    'bg_gate': dict(size=(64, 320), bg=True, desc='tall grey office partition wall with a closed dark wooden door of the department manager office, gold nameplate on the door, front view, flat, fills the whole image'),
+    'bg_vending': dict(size=(48, 96), desc='office drink vending machine with glowing front panel full of cans and bottles, side view slightly from front'),
     'bg_wall_night': dict(size=(384, 320), bg=True, init='bg_wall_day', strength=420, desc='the same interior office wall late at night, dark blue lighting, two large windows showing a night city skyline with lit windows and moon, dim fluorescent ceiling lights, no furniture, no people, flat side view'),
 }
 

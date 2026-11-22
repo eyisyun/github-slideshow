@@ -289,7 +289,8 @@
   OVERRIDE_KEYS.push('slime', 'bat', 'bat_b', 'copier', 'copier_b');
   // 배경 소품 그림 (한 장짜리)
   const imgs = {};
-  const BG_KEYS = ['bg_desk', 'bg_cabinet', 'bg_cooler', 'bg_door', 'bg_plant', 'bg_wall_day', 'bg_wall_night'];
+  const BG_KEYS = ['bg_desk', 'bg_cabinet', 'bg_cooler', 'bg_door', 'bg_plant', 'bg_wall_day', 'bg_wall_night',
+    'bg_wall_b', 'bg_wall_b_night', 'bg_wall_c', 'bg_wall_c_night', 'bg_floor', 'bg_ceiling', 'bg_shelf', 'bg_barrier', 'bg_gate', 'bg_vending'];
   function loadImages() {
     for (const k of BG_KEYS) { const im = new Image(); im.onload = () => { imgs[k] = im; }; im.src = `sprites/${k}.png`; }
   }

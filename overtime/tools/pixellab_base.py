@@ -3,6 +3,7 @@
 
   python3 tools/pixellab_base.py oh "설명..."                 # 새로 생성
   python3 tools/pixellab_base.py zombie "설명..." --init worker  # 다른 캐릭터 그림에서 출발 (같은 사람으로 보이게)
+  ... --strength 120   # 출발 그림을 따르는 정도 (낮을수록 새로 그림, 기본 350)
   python3 tools/pixellab_base.py oh --skeleton-only           # 이미 있는 ref.png 로 관절만 다시 추정
 
 결과: art-src/<캐릭터>/ref.png (왼쪽을 봄), art-src/<캐릭터>/ref_skeleton.json
@@ -52,7 +53,7 @@ def main():
         }
         if '--init' in a:
             body['init_image'] = {'type': 'base64', 'base64': b64(os.path.join(ROOT, 'art-src', a[a.index('--init') + 1], 'ref.png'))}
-            body['init_image_strength'] = 350
+            body['init_image_strength'] = int(a[a.index('--strength') + 1]) if '--strength' in a else 350
         if '--seed' in a:
             body['seed'] = int(a[a.index('--seed') + 1])
         d = post('https://api.pixellab.ai/v1/generate-image-pixflux', body)

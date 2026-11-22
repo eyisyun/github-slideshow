@@ -862,6 +862,13 @@
     return out;
   }
 
+  // 벽 조각 순서: 창문(a) / 화이트보드·책장(b) / 탕비실(c)
+  const WALL_PATTERN = ['a', 'b', 'a', 'a', 'c', 'a', 'b', 'a'];
+  function wallFor(i, night) {
+    const v = WALL_PATTERN[((i % WALL_PATTERN.length) + WALL_PATTERN.length) % WALL_PATTERN.length];
+    if (v === 'a') return ART.img(night ? 'bg_wall_night' : 'bg_wall_day');
+    return ART.img(`bg_wall_${v}${night ? '_night' : ''}`) || ART.img(night ? 'bg_wall_night' : 'bg_wall_day');
+  }
   const WALL_W = 156, WALL_H = 160; // 벽 그림 한 장 = 월드 156×160 (고해상도 312×320)
   function drawWorld(now) {
     const night = theme() === 'night';
@@ -893,12 +900,18 @@
       if (!t) continue;
       let name;
       if (t === T.DESK && ART.img('bg_desk')) continue; // 책상 그림이 윗면까지 그림
+      if (t === T.GATE && ART.img('bg_gate')) continue; // 부장실 문 그림을 아래에서 따로 그림
+      const inner = tx > 0 && tx < L.W - 1;
+      if (t === T.SOLID && ty >= 12 && inner && ART.img('bg_floor')) { ctx.drawImage(ART.img('bg_floor'), (tx % 2) * 32, (ty - 12) * 32, 32, 32, tx * TS - cx, ty * TS - cy, TS, TS); continue; }
+      if (t === T.CEIL && inner && ART.img('bg_ceiling')) { ctx.drawImage(ART.img('bg_ceiling'), (tx % 2) * 32, ty * 32, 32, 32, tx * TS - cx, ty * TS - cy, TS, TS); continue; }
+      if (t === T.SHELF && ART.img('bg_shelf')) { ctx.drawImage(ART.img('bg_shelf'), (tx % 2) * 32, 0, 32, 16, tx * TS - cx, ty * TS - cy, TS, 8); continue; }
       if (t === T.CAB && ART.img('bg_cabinet')) { ctx.drawImage(ART.img('bg_cabinet'), tx * TS - cx, ty * TS - cy, TS, TS); continue; }
       if (t === T.SOLID) name = (ty > 0 && SOLID.has(G.tiles[(ty - 1) * L.W + tx])) ? 'under' : 'floor';
       else name = { [T.DESK]: 'desk', [T.CAB]: 'cab', [T.SHELF]: 'shelf', [T.GATE]: 'gate', [T.CEIL]: 'ceil' }[t];
       ctx.drawImage(ART.tile(name, th), tx * TS - cx, ty * TS - cy);
     }
-    // 부장실 표지판
+    // 부장실 문·표지판
+    if (G.tiles[5 * L.W + L.gateX] === T.GATE && ART.img('bg_gate')) ctx.drawImage(ART.img('bg_gate'), L.gateX * TS + 8 - 16 - cx, 2 * TS - cy, 32, 160);
     if (G.tiles[5 * L.W + L.gateX] === T.GATE) {
       const d = L.decor.find(q => q.k === 'sign');
       drawSign(d.x * TS - 6 - cx, d.y * TS - cy, d.text, '#c0392b');
@@ -911,7 +924,7 @@
       }
       // 벽 그림을 맨 뒤에 깔기
       ctx.globalCompositeOperation = 'destination-over';
-      for (let wx = Math.floor(cx / WALL_W) * WALL_W; wx < cx + VW; wx += WALL_W) ctx.drawImage(wallArt, wx - cx, 2 * TS - cy, WALL_W, WALL_H);
+      for (let wx = Math.floor(cx / WALL_W) * WALL_W; wx < cx + VW; wx += WALL_W) ctx.drawImage(wallFor(Math.round(wx / WALL_W), night) || wallArt, wx - cx, 2 * TS - cy, WALL_W, WALL_H);
       ctx.fillStyle = night ? '#141626' : C.ceil2; ctx.fillRect(0, 0, VW, VH);
       ctx.globalCompositeOperation = 'source-over';
     }
@@ -1054,10 +1067,12 @@
         const x = Math.round(d.x0 * TS - G.cam.x), w = (d.x1 - d.x0 + 1) * TS, y = 12 * TS - cy;
         for (let i = 0; i < w; i += 4) { ctx.fillStyle = (i / 4) % 2 ? '#1b1626' : '#ffd34d'; ctx.fillRect(x + i, y - 1, 4, 2); }
         ctx.fillStyle = '#0a0810'; ctx.fillRect(x, y + 1, w, 2 * TS);
-        drawSign(x - 22, y - 30, '공사중', '#ffd34d');
-        ctx.fillStyle = '#5a4a3a'; ctx.fillRect(x - 9, y - 16, 2, 16);
+        const bar = ART.img('bg_barrier');
+        if (bar) { ctx.drawImage(bar, x - 24, y - 24, 24, 24); drawSign(x - 22, y - 44, '공사중', '#ffd34d'); }
+        else { drawSign(x - 22, y - 30, '공사중', '#ffd34d'); ctx.fillStyle = '#5a4a3a'; ctx.fillRect(x - 9, y - 16, 2, 16); }
         break;
       }
+      case 'vending': { const im = ART.img('bg_vending'); if (im) ctx.drawImage(im, Math.round(dx), 12 * TS - cy - 48, 24, 48); break; }
       case 'plant': { const im = ART.img('bg_plant'); if (im) ctx.drawImage(im, Math.round(dx), 12 * TS - cy - 32, 16, 32); break; }
       case 'door': {
         const x = Math.round(dx), y = 12 * TS - cy - 52;

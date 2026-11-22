@@ -31,6 +31,7 @@
     ];
     for (const [x, text] of posters) decor.push({ k: 'poster', x, text });
     for (const x of [13, 31, 50, 63, 90, 118, 139, 155, 178]) decor.push({ k: 'plant', x });
+    for (const x of [27, 94, 149]) decor.push({ k: 'vending', x });
 
     // ===== 프롤로그 (아침 사무실) =====
     desk(4, 3, { name: '한지우' });

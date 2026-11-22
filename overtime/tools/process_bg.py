@@ -61,6 +61,22 @@ for _ in range(260):
         n[x, y] = c; n[x + 1, y] = c
 night.save(os.path.join(SP, 'bg_wall_night.png'))
 
+# ---- 다른 벽들: 원본 보관 후 밤 버전은 어둡게 (창이 있으면 창밖도 밤으로) ----
+for name in ['bg_wall_b', 'bg_wall_c']:
+    if not os.path.exists(os.path.join(SP, f'{name}.png')) and not os.path.exists(os.path.join(SRC, f'{name}.png')):
+        continue
+    im = original(name).resize((312, 320), Image.NEAREST)
+    im.save(os.path.join(SP, f'{name}.png'))
+    nn = im.copy(); q = nn.load()
+    for y in range(320):
+        for x in range(312):
+            r, g, b, a = q[x, y]
+            if b > r + 30 and (r + g + b) / 3 > 200:
+                q[x, y] = (24, 30, 70, a)
+            else:
+                q[x, y] = (int(r * 0.30), int(g * 0.32), int(b * 0.48), a)
+    nn.save(os.path.join(SP, f'{name}_night.png'))
+
 # ---- 서랍장 ----
 cab = original('bg_cabinet')
 cp = cab.load()
