@@ -3932,10 +3932,11 @@ function roadDrawMask(x,y){let m=roadMask(x,y);
 // bridges: road on water. Height above the water by era; an end that meets the bank ramps down to it.
 // the deck climbs from each bank over BRIDGE_R tiles, so boats fit under the middle of a longer bridge; dlo/dhi count bridge tiles
 // between this one and the bank behind / ahead of it (capped at 2, and 2 also when that end still stops out over the water)
-// road bridges climb from each bank on an ease that starts and ends level. Railway bridges stay level with the banks (the river runs
-// lower, so their sides and piers drop into it): trains never ride a slope, and boats cannot pass under them
-const BRIDGE_H=[9,18,22,19,18,14],BRIDGE_R=1.5;   // each a little taller than that era's boats
-function bridgeLift(e,dlo,dhi,a,rail){if(rail)return 0;const t=Math.min(1,Math.min(dlo+a,dhi+1-a)/BRIDGE_R);return BRIDGE_H[e]*t*t*(3-2*t);}
+// road bridges sit a little above the water and ramp down on the tiles that meet a bank. Railway bridges stay level with the banks
+// (the river runs lower, so their sides and piers drop into it), so trains never ride a slope. Boats only pass under a bridge tile
+// that clears them, which these low decks do not
+const BRIDGE_H=[1,2,5,2,3,4];
+function bridgeLift(e,dlo,dhi,a,rail){if(rail)return 0;const H=BRIDGE_H[e],lo=dlo===0,hi=dhi===0;return H*(lo&&hi?Math.sin(Math.PI*a):lo?Math.sin(a*Math.PI/2):hi?Math.sin((1-a)*Math.PI/2):1);}
 function bridgeEnds(x,y,ax,on,cap=2){const run=sg=>{for(let k=1;k<=cap;k++){const xx=x+(ax?0:sg*k),yy=y+(ax?sg*k:0);if(!on(xx,yy))return dry(xx,yy)?k-1:cap;}return cap;};return[run(-1),run(1)];}
 const isRailBr=(x,y)=>isRail(x,y)&&W.terrain[idx(x,y)]===1;
 function railBridgeKey(x,y){const ax=isRail(x+1,y)||isRail(x-1,y)?0:isRail(x,y+1)||isRail(x,y-1)?1:dry(x+1,y)||dry(x-1,y)?0:1;const[dl,dh]=bridgeEnds(x,y,ax,isRailBr,3);return ax*16+dl*4+dh;}
