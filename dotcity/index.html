@@ -819,13 +819,13 @@ function* buildSpritesGen(){
   const BRA=[,,,{...BR[3],w:.46,piers:[.3,.7],deck:aveDeck('#5a5550','#8e887c',PAL.line,PAL.white)},
     {...BR[4],w:.46,piers:[.3,.7],deck:aveDeck('#3f4350','#c8c8c2',PAL.line,PAL.white)},
     {...BR[5],w:.46,deck:aveDeck('#2c3246','#9fdce4','#5fe6f2','#ff6ad5')}];
-  const mkBridge=(B,e)=>{if(!B)return null;const out=[],Q=B.railB?4:3;for(let ax=0;ax<2;ax++)for(let ends=0;ends<Q*Q;ends++){const lo=ends/Q|0,hi=ends%Q,TOP=BRIDGE_H[e]+(B.rh||0)+4,pb=new PB(32,16+TOP+2),S=120;
+  const mkBridge=(B,e)=>{if(!B)return null;const out=[],Q=B.railB?4:3;for(let ax=0;ax<2;ax++)for(let ends=0;ends<Q*Q;ends++){const lo=ends/Q|0,hi=ends%Q,TOP=(B.railB?0:BRIDGE_H[e])+(B.rh||0)+4,pb=new PB(32,16+TOP+2+(B.drop||0)),S=120;
       const at=(a,c,lift)=>{const u=ax?.5+c:a,v=ax?a:.5+c;return[Math.floor((u-v)*16+16),Math.floor((u+v)*8+TOP-lift)];};
       const lf=a=>bridgeLift(e,lo,hi,a,B.railB),Wd=B.w;
       for(let i=0;i<=S;i++)for(let j=0;j<=24;j++){const a=i/S,c=-Wd+2*Wd*j/24,[px,py]=at(a,Math.min(.49,c+.1),0);pb.put(px,py+1,col('#123058',0,80));}   // shadow on the water
       for(const p0 of B.piers){const pw=B.pierW||.05;for(let i=0;i<=24;i++)for(let j=0;j<=24;j++){const a=p0-pw+2*pw*i/24,c=-Wd+.03+(2*Wd-.06)*j/24,L=Math.round(lf(a));
-        const[px,py]=at(a,c,L);for(let d=1;d<=L+1;d++)pb.put(px,py+d,col(B.pier,c>0?-.18:0));}}
-      for(let i=0;i<=S;i++){const a=i/S,L=lf(a),[px,py]=at(a,Wd,L);let depth=B.arch?Math.round(L)+2:Math.min(B.th,Math.round(L)+1);
+        const[px,py]=at(a,c,L);for(let d=1;d<=L+1+(B.drop||0);d++)pb.put(px,py+d,col(B.pier,c>0?-.18:0));}}
+      for(let i=0;i<=S;i++){const a=i/S,L=lf(a),[px,py]=at(a,Wd,L);let depth=B.arch?Math.round(L)+2+(B.drop||0):B.drop?B.th:Math.min(B.th,Math.round(L)+1);
         const open=B.arch&&a>.1&&a<.9?Math.max(0,(depth-2.2)*Math.sqrt(Math.sin(Math.PI*(a-.1)/.8))):0;
         for(let d=1;d<=depth;d++){if(B.arch&&d>depth-open)continue;pb.put(px,py+d,col(B.face,d===1?-.08:-.24));}}
       // deck: solved per pixel (16a - lift(a) is monotonic), so thin lane lines stay crisp
@@ -833,7 +833,7 @@ function* buildSpritesGen(){
         if(16*lo2-lf(lo2)>k||16*hi2-lf(hi2)<=k)continue;for(let it=0;it<18;it++){const m=(lo2+hi2)/2;if(16*m-lf(m)<=k)lo2=m;else hi2=m;}
         const a=lo2,c=ax?a-.5+X/16:a-.5-X/16;if(Math.abs(c)<=Wd)pb.put(px,py,B.deck(a,c));}
       // on a railway bridge the near side goes in its own sprite, drawn after the train so the train runs inside the truss
-      const pf=B.railB?new PB(32,16+TOP+2):pb;
+      const pf=B.railB?new PB(32,pb.h):pb;
       if(B.rh)for(const c of[-Wd,Wd])for(let i=0;i<=S;i++){const a=i/S,[px,py]=at(a,c,lf(a));for(let k=1;k<=B.rh;k++)(c>0?pf:pb).put(px,py-k,B.rail(a,k));}
       const sp=mk(pb,-16,-TOP);if(B.railB&&B.rh){sp.front=mk(pf,-16,-TOP);sp.front.noSh=true;}out[ax*Q*Q+ends]=sp;}return out;};
   ;yield;
@@ -843,13 +843,13 @@ function* buildSpritesGen(){
   const rDeck=(R,plate)=>(a,c)=>{const o=Math.abs(c);if(R.glow){if(o<.03)return[col(R.glow),col(R.glow,.4)];if(Math.abs(o-.1)<.02)return col('#3a4458');return col('#a8aeb8',Math.floor(a*8)%4===0?-.08:-.02);}
     if(Math.abs(o-.085)<.02)return col(R.rail,c<0?.06:-.12);if(o<.15&&(a*8)%1<.4)return col(R.tie,o>.12?-.14:0);return col(plate||R.bed,Math.floor(a*16)%5===0?-.06:0);};
   const truss=(H,cl)=>(a,k)=>{const f=(a*2)%1,t=(k-1)/(H-1);return k===H||k===1||Math.abs(f-t)<.05||Math.abs(f-(1-t))<.05||f<.03?col(cl,k===H?.12:k===1?-.12:-.02):null;};
-  const RBA=[,,,{w:.26,th:3,rh:9,piers:[.5],pierW:.07,pier:'#8f897d',face:'#3e2620',deck:rDeck(RLB[3]),rail:truss(9,'#a0492f')},                    // red steel through-truss on stone piers
-    {w:.27,th:4,rh:2,piers:[.5],pierW:.1,pier:'#a4a49e',face:'#bcbcb6',deck:rDeck(RLB[4]),rail:(a,k)=>col('#d8d8d2',k===2?.08:-.04)},                // concrete viaduct
-    {w:.19,th:2,rh:0,piers:[.5],pierW:.03,pier:'#e6ecf2',face:'#c8d0da',deck:rDeck(RLB[5])}];                                                 // maglev guideway on slim pylons
-  const RBB=[,,,{w:.27,th:3,rh:2,piers:[],arch:1,pier:'#9a4e36',face:'#a65a3e',deck:rDeck(RLB[3],'#7a6a5a'),rail:(a,k)=>col('#b8664a',k===2?.1:(a*16)%1<.5?-.06:0)},   // brick arch viaduct
-    {w:.27,th:3,rh:12,piers:[.5],pierW:.08,pier:'#a4a49e',face:'#4a5a6a',deck:rDeck(RLB[4]),
+  const RBA=[,,,{w:.26,th:4,drop:5,rh:6,piers:[.5],pierW:.07,pier:'#8f897d',face:'#3e2620',deck:rDeck(RLB[3]),rail:truss(6,'#a0492f')},                    // red steel through-truss on stone piers
+    {w:.27,th:5,drop:5,rh:2,piers:[.5],pierW:.1,pier:'#a4a49e',face:'#bcbcb6',deck:rDeck(RLB[4]),rail:(a,k)=>col('#d8d8d2',k===2?.08:-.04)},                // concrete viaduct
+    {w:.19,th:2,drop:6,rh:0,piers:[.5],pierW:.03,pier:'#e6ecf2',face:'#c8d0da',deck:rDeck(RLB[5])}];                                                 // maglev guideway on slim pylons
+  const RBB=[,,,{w:.27,th:3,drop:3,rh:2,piers:[],arch:1,pier:'#9a4e36',face:'#a65a3e',deck:rDeck(RLB[3],'#7a6a5a'),rail:(a,k)=>col('#b8664a',k===2?.1:(a*16)%1<.5?-.06:0)},   // brick arch viaduct
+    {w:.27,th:4,drop:5,rh:12,piers:[.5],pierW:.08,pier:'#a4a49e',face:'#4a5a6a',deck:rDeck(RLB[4]),
       rail:(a,k)=>{const top=Math.round(2+10*Math.sin(Math.PI*a));return k===top||k===top-1&&k>2?col('#e8eef4',k===top?.1:-.1):k===1?col('#5a6a7a'):k<top&&(a*7)%1<.12?col('#c8d2dc',-.08):null;}},   // white tied-arch bridge
-    {w:.22,th:2,rh:9,piers:[.5],pierW:.03,pier:'#e6ecf2',face:'#c8d0da',deck:rDeck(RLB[5]),rail:(a,k)=>k===9||k===8&&(a*6)%1<.1?col('#dff6fa',.2):k===1?col('#9fdce4',.1):col('#9fdce4',0,90)}];  // glass tube
+    {w:.22,th:2,drop:6,rh:9,piers:[.5],pierW:.03,pier:'#e6ecf2',face:'#c8d0da',deck:rDeck(RLB[5]),rail:(a,k)=>k===9||k===8&&(a*6)%1<.1?col('#dff6fa',.2):k===1?col('#9fdce4',.1):col('#9fdce4',0,90)}];  // glass tube
   SP.railBrA=RBA.map((B,e)=>B&&mkBridge({...B,railB:1},e));SP.railBrB=RBB.map((B,e)=>B&&mkBridge({...B,railB:1},e));SP.railBr=SP.railBrA;
   // railways (era 3 timber sleepers, era 4 concrete sleepers on ballast, era 5 maglev guideway), by link mask
   const RL=[,,,{bed:'#8f8576',tie:'#5e3f26',rail:'#d4d8de',n:9},{bed:'#7a5242',tie:'#5e5a5c',rail:'#e0e4ea',n:11},{bed:null,tie:null,rail:'#f2f5f8',glow:'#5fe6f2'}];
@@ -3932,14 +3932,13 @@ function roadDrawMask(x,y){let m=roadMask(x,y);
 // bridges: road on water. Height above the water by era; an end that meets the bank ramps down to it.
 // the deck climbs from each bank over BRIDGE_R tiles, so boats fit under the middle of a longer bridge; dlo/dhi count bridge tiles
 // between this one and the bank behind / ahead of it (capped at 2, and 2 also when that end still stops out over the water)
-// railway bridges climb gently over 3 tiles, as real lines keep their grades low; the ease starts and ends level, so nothing kinks at the bank
-const BRIDGE_H=[9,18,22,19,18,14],BRIDGE_R=1.5,RBRIDGE_R=3;   // each a little taller than that era's boats
-function bridgeLift(e,dlo,dhi,a,rail){const R=rail?RBRIDGE_R:BRIDGE_R,t=Math.min(1,Math.min(dlo+a,dhi+1-a)/R);return BRIDGE_H[e]*t*t*(3-2*t);}
+// road bridges climb from each bank on an ease that starts and ends level. Railway bridges stay level with the banks (the river runs
+// lower, so their sides and piers drop into it): trains never ride a slope, and boats cannot pass under them
+const BRIDGE_H=[9,18,22,19,18,14],BRIDGE_R=1.5;   // each a little taller than that era's boats
+function bridgeLift(e,dlo,dhi,a,rail){if(rail)return 0;const t=Math.min(1,Math.min(dlo+a,dhi+1-a)/BRIDGE_R);return BRIDGE_H[e]*t*t*(3-2*t);}
 function bridgeEnds(x,y,ax,on,cap=2){const run=sg=>{for(let k=1;k<=cap;k++){const xx=x+(ax?0:sg*k),yy=y+(ax?sg*k:0);if(!on(xx,yy))return dry(xx,yy)?k-1:cap;}return cap;};return[run(-1),run(1)];}
 const isRailBr=(x,y)=>isRail(x,y)&&W.terrain[idx(x,y)]===1;
 function railBridgeKey(x,y){const ax=isRail(x+1,y)||isRail(x-1,y)?0:isRail(x,y+1)||isRail(x,y-1)?1:dry(x+1,y)||dry(x-1,y)?0:1;const[dl,dh]=bridgeEnds(x,y,ax,isRailBr,3);return ax*16+dl*4+dh;}
-function railBridgeLiftAt(gx,gy){const tx=Math.floor(gx),ty=Math.floor(gy);if(!isRailBr(tx,ty))return 0;const k=railBridgeKey(tx,ty),ax=k>=16?1:0,r=k%16;
-  return bridgeLift(Math.max(3,Math.min(5,W.te[idx(tx,ty)])),r>>2,r&3,ax?gy-ty:gx-tx,true);}
 // a railway bridge is laid out from a bank or from the end of one, and runs straight
 function railBridgeBad(x,y){const r=(xx,yy)=>(xx===x&&yy===y)||isRailBr(xx,yy);if(!DIRS.some(([dx,dy])=>isRail(x+dx,y+dy)||dry(x+dx,y+dy)))return true;
   for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(!inb(xx,yy)||W.terrain[idx(xx,yy)]!==1||!r(xx,yy))continue;
@@ -4079,7 +4078,7 @@ function trainCars(tr){const out=[],T=tr.trail,dirOf=(a,b)=>{const dx=b[0]-a[0],
     const inA=T[k+1]?dirOf(T[k+1],A):ab,outB=k>=2?dirOf(B,T[k-2]):k===1?tr.d:ab;let gx,gy,d,arc;
     if(tr.t<.5){const p=.5+tr.t;[gx,gy,arc]=place(A[0],A[1],inA,ab,p);d=p<.5?inA:ab;}else{const p=tr.t-.5;[gx,gy,arc]=place(B[0],B[1],ab,outB,p);d=p<.5?ab:outB;}
     out.push({gx,gy,d,arc,type:k?1:0,e:tr.e,m:tr.dep!=null?fleetAt(tr.dep):null});}return out;}
-function drawTrainCar(c,tc){const sp=(tc.m!=null&&SP.fleetT[tc.m]?SP.fleetT[tc.m]:SP.train[Math.max(3,Math.min(5,tc.e))])[tc.type][tc.d],X=(tc.gx-tc.gy)*16-X0,Y=(tc.gx+tc.gy)*8-Y0-railBridgeLiftAt(tc.gx,tc.gy);
+function drawTrainCar(c,tc){const sp=(tc.m!=null&&SP.fleetT[tc.m]?SP.fleetT[tc.m]:SP.train[Math.max(3,Math.min(5,tc.e))])[tc.type][tc.d],X=(tc.gx-tc.gy)*16-X0,Y=(tc.gx+tc.gy)*8-Y0;
   // on a straight the car moves 2 px across for each 1 px down: round y and keep x on that same 2:1 line so it glides instead of stair-stepping
   // snap to the canvas pixel grid (half a world pixel once zoomed in) so the car steps half as far, twice as often
   const sy=Math.round(Y*HD)/HD,sx=tc.arc?Math.round(X*HD)/HD:Math.round((X+(sy-Y)*2*(tc.d===0||tc.d===2?1:-1))*HD)/HD;
@@ -4467,6 +4466,8 @@ function render(){seasonGrass();
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
     {const gs=groundOf(i,x,y);if(gs.hd)c.drawImage(gs.c,sx-16,sy,32,16);else c.drawImage(gs.c,sx-16,sy);}if(w.rail[i]&&w.kind[i]===K.ROAD){const re=Math.max(3,Math.min(5,w.te[i])),ro=(railMask(x,y)&5)?0:1;if(HD===2&&SP.railXH[re])c.drawImage(SP.railXH[re][ro].c,sx-16,sy,32,16);else c.drawImage(SP.railX[re][ro].c,sx-16,sy);}const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
+  // railway bridge decks lie level with the banks, so they go down with the ground and every train runs over them
+  for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.terrain[i]!==1||w.kind[i]!==K.RAIL)continue;const x=i%N,y=i/N|0;drawSpr(c,SP.railBr[Math.max(3,Math.min(5,w.te[i]))][railBridgeKey(x,y)],visBuf[n+1],visBuf[n+2]);}
   groundWeather(c,lh);
   if(nightF>.01){c.globalCompositeOperation='source-atop';c.fillStyle=`rgba(${NC[0]},${NC[1]},${NC[2]},${NA*nightF})`;c.fillRect(0,0,lw,lh);
     c.globalCompositeOperation='lighter';c.globalAlpha=nightF*.9;
@@ -4507,10 +4508,10 @@ function render(){seasonGrass();
   for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.rail[i]&&w.kind[i]===K.ROAD)drawGates(c,i,i%N,i/N|0,visBuf[n+1],visBuf[n+2],0);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2],x=i%N,y=i/N|0,k=w.kind[i];
     const bs=bbk.get(i);if(bs)for(const b of bs)drawBoat(c,b);
-    const rbs=k===K.RAIL&&w.terrain[i]===1?SP.railBr[Math.max(3,Math.min(5,w.te[i]))][railBridgeKey(x,y)]:null;
-    if(rbs){const ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,rbs,sx,sy);c.globalAlpha=ga;}
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
-    if(rbs&&rbs.front){const ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,rbs.front,sx,sy);c.globalAlpha=ga;}
+    if(ts||k===K.RAIL&&w.terrain[i]===1){const ga=c.globalAlpha;c.globalAlpha=1;   // near-side truss over the train, here and on the tile behind it
+      for(const[dx,dy]of[[0,0],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRailBr(xx,yy)||(dx||dy)&&!ts)continue;const f=SP.railBr[Math.max(3,Math.min(5,w.te[idx(xx,yy)]))][railBridgeKey(xx,yy)].front;
+        if(f)drawSpr(c,f,sx+(dx-dy)*16,sy+(dx+dy)*8);}c.globalAlpha=ga;}
     if(k===K.RAIL)continue;
     if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
       const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);if(w.rail[i])drawGates(c,i,x,y,sx,sy,1);continue;}
