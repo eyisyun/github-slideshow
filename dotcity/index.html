@@ -4133,7 +4133,8 @@ function huntTest(){if(W.era!==0){toast(L2('사냥은 석기시대에서 볼 수
     if(j===0){hu.tgt=fauna[fauna.length-5];hu.st='go';}else{hu.st='home';hu.t=6;hu.tgt=null;}});
   cam.x=(x-y)*16;cam.y=(x+y)*8;toast(L2('사슴 무리와 멧돼지가 나타났어요. 사냥꾼이 쫓아가요! 동물을 누르면 사냥꾼을 보낼 수 있어요.','A deer herd and a boar appeared and a hunter is on the way! Tap an animal to send a hunter.'),'good');}
 const put2=(m,o)=>{const x=Math.floor(o.fx),y=Math.floor(o.fy);if(!inb(x,y))return;const k=idx(x,y);let a=m.get(k);if(!a)m.set(k,a=[]);a.push(o);};
-function stepHunt(dt){if(W.era!==0){if(fauna.length||hunters.length){fauna=[];hunters=[];spears=[];huntFx=[];}return;}if(!dt)return;
+function stepHunt(dt){for(let n=huntFx.length-1;n>=0;n--)if((huntFx[n].t+=dt)>1.6)huntFx.splice(n,1);   // floating '+money' labels age in every era (carts and couriers use them too)
+  if(W.era!==0){if(fauna.length||hunters.length){fauna=[];hunters=[];spears=[];}return;}if(!dt)return;
   if((huntAcc+=dt)>3){huntAcc=0;let F=0;for(let i=0;i<N*N;i++)if(W.trees[i]&&W.kind[i]===0)F++;const want=F<8?0:Math.min(16,3+Math.floor(F/25));
     if(fauna.filter(a=>a.st!=='fall').length<want)spawnHerd();
     const{h,f}=huntHomes(),nh=Math.max(h.length?Math.min(4,1+h.length):W.st.pop>=20&&f.length?1:0,now<huntTestEnd?2:0),homes=h.length?h:f.length?f:hunters.map(o=>o.home);
@@ -4166,7 +4167,7 @@ function stepHunt(dt){if(W.era!==0){if(fauna.length||hunters.length){fauna=[];hu
   for(let n=spears.length-1;n>=0;n--){const s=spears[n];s.t+=dt/.45;s.fx=s.sx+(s.ex-s.sx)*Math.min(1,s.t);s.fy=s.sy+(s.ey-s.sy)*Math.min(1,s.t);
     if(s.t>=1){spears.splice(n,1);const a=s.a;if(!fauna.includes(a)||a.st==='fall')continue;
       if(s.hit&&Math.hypot(a.fx-s.ex,a.fy-s.ey)<.9){a.st='fall';a.t=60;bolt(a.h,a.fx-.5,a.fy-.5);a.st='fall';}else bolt(a.h,s.sx,s.sy);}}
-  for(let n=huntFx.length-1;n>=0;n--)if((huntFx[n].t+=dt)>1.6)huntFx.splice(n,1);}
+}
 function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='go'||o.st==='back'||o.st==='fetch'||o.st==='carry'||o.st==='sneak';
   if(k==='hunter'){const st=((o.ph/(o.st==='sneak'?.42:o.st==='carry'?.3:.26))|0)%2;return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?(st?'carry1':'carry0'):st?'walk1':'walk0';}
   if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
