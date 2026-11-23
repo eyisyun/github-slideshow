@@ -4020,7 +4020,9 @@ function stepCars(dt){const S=W.st,target=Math.round(Math.min(240,Math.floor(S.r
   if(cars.length<target&&Math.random()<.5)spawnCar();if(cars.length>target&&Math.random()<.08)for(let n=cars.length-1;n>=0;n--)if(!cars[n].path){cars.splice(n,1);break;}   // thin out gently
   for(let n=cars.length-1;n>=0;n--){const c=cars[n];if(!isRoad(c.x,c.y)){cars.splice(n,1);continue;}
     if(c.path){stepTruck(c,dt);if(c.gone)cars.splice(n,1);continue;}if(c.ttl!=null&&(c.ttl-=dt)<=0){cars.splice(n,1);continue;}
-    c.t+=dt*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
+    let slow=1;if(oxCarts.length){const gx=c.x+.5+DIRS[c.d][0]*c.t,gy=c.y+.5+DIRS[c.d][1]*c.t;let near=false;   // walkers and handcarts step to the edge and slow while an ox cart goes by
+      for(const o of oxCarts)if(o.fx!=null&&Math.hypot(o.fx-gx,o.fy-gy)<1.5){near=true;break;}c.dodge=(c.dodge||0)+((near?1:0)-(c.dodge||0))*Math.min(1,dt*3);if(near)slow=.25;}
+    c.t+=dt*slow*c.sp*wxCar()/(c.ped?1:1+2.2*Math.max(0,W.traf[idx(c.x,c.y)]-.6));
     if(!c.ped&&c.e>=4&&c.t>.28){const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(hasSignal(nx,ny)&&!hasSignal(c.x,c.y)&&!sigGo(nx,ny,c.d)&&c.t<.5)c.t=.28;}   // wait at the stop line
     if(c.t>.28&&c.t<.62&&xShut(c.x+DIRS[c.d][0],c.y+DIRS[c.d][1],c.ped)&&!xShut(c.x,c.y,c.ped))c.t=.28;   // cars and people wait at a closed level crossing
     while(c.t>=1){c.t-=1;const nx=c.x+DIRS[c.d][0],ny=c.y+DIRS[c.d][1];if(!isRoad(nx,ny)){c.d=(c.d+2)%4;continue;}c.x=nx;c.y=ny;
@@ -4142,6 +4144,7 @@ function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='g
   if(k==='hunter'){const st=((o.ph/(o.st==='sneak'?.42:o.st==='carry'?.3:.26))|0)%2;return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?(st?'carry1':'carry0'):st?'walk1':'walk0';}
   if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
   return o.look&&((o.ph/2.2)|0)%3!==2?'look':((o.ph/3.1)|0)%4===3?'look':'graze';}
+const drawFaunaObj=(c,o)=>(o.k==='cart'||o.k==='farmer'?drawOxObj:drawHuntObj)(c,o);
 function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=o.k==='hunter'?fr[(o.up?2:0)+(o.face>0?0:1)]:fr[o.face>0?0:1];
   drawSpr(c,sp,Math.round((o.fx-o.fy)*16-X0),Math.round((o.fx+o.fy)*8-Y0));
 }
@@ -4758,14 +4761,15 @@ function render(){seasonGrass();
   for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.rail[i]&&w.kind[i]===K.ROAD)drawGates(c,i,i%N,i/N|0,visBuf[n+1],visBuf[n+2],0);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2],x=i%N,y=i/N|0,k=w.kind[i];
     const bs=bbk.get(i);if(bs)for(const b of bs)drawBoat(c,b);
-    const fs=fbk.get(i);if(fs){if(fs.length>1)fs.sort((p,q)=>(p.fx+p.fy)-(q.fx+q.fy));}if(fs)for(const o of fs)(o.k==='cart'||o.k==='farmer'?drawOxObj:drawHuntObj)(c,o);
+    const fs=fbk.get(i);if(fs&&k!==K.ROAD)for(const o of fs.sort((p,q)=>(p.fx+p.fy)-(q.fx+q.fy)))drawFaunaObj(c,o);   // on a road they are drawn with the traffic, back to front
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
     if(ts||k===K.RAIL&&w.terrain[i]===1){const ga=c.globalAlpha;c.globalAlpha=1;   // near-side truss over the train, here and on the tile behind it
       for(const[dx,dy]of[[0,0],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRailBr(xx,yy)||(dx||dy)&&!ts)continue;const f=SP.railBr[Math.max(3,Math.min(5,w.te[idx(xx,yy)]))][railBridgeKey(xx,yy)].front;
         if(f)drawSpr(c,f,sx+(dx-dy)*16,sy+(dx+dy)*8);}c.globalAlpha=ga;}
     if(k===K.RAIL)continue;
     if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
-      const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);if(w.rail[i])drawGates(c,i,x,y,sx,sy,1);continue;}
+      const cs=bucket.get(i);if(fs){const all=[];if(cs)for(const car of cs)all.push([carDepth(car),car,0]);for(const o of fs)all.push([o.fx+o.fy,o,1]);all.sort((p,q)=>p[0]-q[0]);for(const[,o,f]of all)f?drawFaunaObj(c,o):drawCar(c,o);}
+      else if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);if(w.rail[i])drawGates(c,i,x,y,sx,sy,1);continue;}
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
         pts.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);const ph=now/(stormy?420:1700)+x*.9+y*.45;for(let j=0;j<pts.length;j++){const[u,v,s]=pts[j];bendDX=Math.round(Math.sin(ph+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(s,x,y,j),sx+(u-v)*16,sy+(u+v)*8);}bendDX=0;}}
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
@@ -5011,8 +5015,10 @@ function flames(c,i,sx,sy){const k=W.kind[i],sp=k>=K.RES&&k<=K.IND&&W.level[i]?F
 function bigAt(x,y){const ax=x&~1,ay=y&~1;if(ax+1>=N||ay+1>=N||hash(ax,ay,5)>.6)return-1;const a=ax+ay*N,k=W.kind[a];if(k<K.RES||k>K.IND)return-1;
   const mL=k===K.IND?2:3;for(const j of[a,a+1,a+N,a+N+1])if(W.kind[j]!==k||W.te[j]!==4||W.level[j]<mL||W.build[j]||W.fire[j])return-1;return a;}
 function bigSprite(a){const k=W.kind[a];let mn=9;for(const j of[a,a+1,a+N,a+N+1])mn=Math.min(mn,W.level[j]);const arr=SP.big[k][k!==K.IND&&mn>=4?1:0];return arr[(hash(a%N,a/N|0,6)*arr.length)|0];}
+const carLat=car=>car.ped?(.36+.1*(car.dodge||0))*car.side:.16+.26*(car.dodge||0);
+function carDepth(car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,lo=carLat(car);return gx+gy+(DIRS[car.d][0]-DIRS[car.d][1])*lo;}
 function drawCar(c,car){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t,pd=[-DIRS[car.d][1],DIRS[car.d][0]];
-  const lo=car.ped?.36*car.side:.16,lx=gx+pd[0]*lo,ly=gy+pd[1]*lo,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
+  const lo=carLat(car),lx=gx+pd[0]*lo,ly=gy+pd[1]*lo,sx=Math.round((lx-ly)*16-X0);let sy=Math.round((lx+ly)*8-Y0);
   const tx=Math.floor(gx),ty=Math.floor(gy);if(isBridge(tx,ty)){const bk=bridgeKey(tx,ty),ax=bk>=9?1:0,r=bk%9;sy-=Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),r/3|0,r%3,ax?gy-ty:gx-tx));}let sp=car.em>=0&&SP.emer[car.e]?SP.emer[car.e][car.em][car.d]:(SP.veh[car.e]||SP.car)[car.c][car.d];if(sp.alt&&((now/(car.ped?260:190)+car.x*3+car.y*5)|0)%2)sp=sp.alt;drawSpr(c,sp,sx,sy);if(nightF>.15&&car.e>=3&&!car.ped)carLights(c,car,sx,sy);if(sp.ped&&car.e>=2&&(photoWx??W.wx)===1)umbrella(c,car,sp,sx,sy);
   if(car.st==='work'&&car.fire!=null){const f=car.fire,tx=(f%N-(f/N|0))*16-X0,ty=((f%N)+(f/N|0))*8+8-Y0-8,x0=sx,y0=sy-5;   // water arc onto the fire
     for(let k=0;k<16;k++){const u=((now/420+k/16)%1),x=x0+(tx-x0)*u,y=y0+(ty-y0)*u-Math.sin(u*Math.PI)*14;c.fillStyle=nightCss(k%2?'#8fd0ff':'#ffffff',nightF*.4,.95);c.fillRect(Math.round(x),Math.round(y),2,k%3?1:2);}
