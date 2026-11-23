@@ -2132,6 +2132,23 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         pb.put(cx-9,cy-13,[col('#c0392b'),col('#ff9a4a')]);pb.put(cx-8,cy-13,[col('#d04a3a'),col('#ffd27a')]);
         pb.box({cx:cx-3,cy:cy+4,hw:3,h:2,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col(WOOD,.15)});pb.put(cx-4,cy+1,col('#f2ede0'));pb.put(cx-2,cy+1,col('#f2ede0'));
         jangdok(pb,cx+9,cy+5);},(cx,cy)=>({lights:[[cx-8,cy-13]]})));
+    // 역참 (relay station) drafts, two looks: A an office and an open stable with a horse at the manger and a signal flag;
+    // B a walled compound behind a tiled gate with a horse tied outside. Not placeable yet
+    const horseHead=(pb,x,y,c='#6a3e22')=>{for(let r=0;r<4;r++)for(let k=0;k<3;k++)pb.put(x+k,y+r,col(c,k===0?.1:r===3?-.15:0));pb.put(x+1,y+1,col('#f2ede0'));pb.put(x+1,y+2,col('#f2ede0'));
+      pb.put(x,y-1,col(c,-.2));pb.put(x+2,y-1,col(c,-.2));pb.put(x+2,y+1,col('#140c06'));for(let r=0;r<3;r++)pb.put(x-1,y+r,col('#2a1a10'));};
+    const sigFlag=(pb,x,y)=>{posts(pb,[[x,y]],22,'#5a3a22');pb.put(x,y-22,col('#e8c070'));for(let r=0;r<6;r++)for(let k=1;k<8;k++){const wv=Math.round(Math.sin(k*.9)*0.6);
+        const edge=r===0||r===5||k===7,inner=r>=2&&r<=3&&k>=3&&k<=5;pb.put(x+k,y-21+r+wv,col(edge?'#f2c140':inner?'#f2ede0':'#c0392b',k>4?-.1:0));}};
+    SP.yeok=[mk1(60,(pb,cx,cy)=>{hanok(pb,cx-5,cy-4,7,5,4);giwa(pb,cx-5,cy-9,9,6);
+        pb.box({cx:cx+7,cy:cy+2,hw:6,h:6,L:(a,b)=>(a|0)%3===0?col(WOOD,.08):b>4.5?col(WOOD):col('#2a1e16'),R:(a,b)=>(a|0)%3===0?col(WOOD,-.2):col(WOOD,-.32)});
+        pb.roof(cx+7,cy-4,8,4,STRAW[0]);horseHead(pb,cx+3,cy+1);horseHead(pb,cx+8,cy+3,'#a8a49a');
+        pb.box({cx:cx-1,cy:cy+8,hw:3,h:1.5,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col('#6aa8c0',.1)});                   // water trough
+        for(let k=0;k<3;k++)pb.put(cx-10+k,cy+5+k%2,col('#d9b45a'));pb.put(cx-9,cy+4,col('#e8c860'));                         // a little hay
+        sigFlag(pb,cx-13,cy+2);}),
+      mk1(60,(pb,cx,cy)=>{hanok(pb,cx+3,cy-6,9,6,6);giwa(pb,cx+3,cy-12,11,7);
+        damjang(pb,cx-14,cy+1,cx-3,cy+7);damjang(pb,cx+4,cy+7,cx+14,cy+2);
+        posts(pb,[[cx-3,cy+7],[cx+3,cy+7]],8,'#7a3a22');for(let k=-2;k<=2;k++)pb.put(cx+k,cy,col('#7a3a22'));                   // red gate posts and lintel
+        giwa(pb,cx,cy-1,5,3);horseHead(pb,cx+8,cy+6);posts(pb,[[cx+11,cy+9]],4);
+        sigFlag(pb,cx-12,cy-1);})];
     // 가게: an open shop front with goods on the veranda and a cloth awning
     for(let v=0;v<3;v++)add(2,C,2,mk1(52,(pb,cx,cy)=>{hanok(pb,cx,cy-1,10,6,v*17,true);giwa(pb,cx,cy-8,13,6);pb.roof(cx-4,cy-3,5,2,CLOTH[v]);
         for(let k=-5;k<=5;k+=2)pb.put(cx-4+k,cy-3+Math.round(Math.abs(k)/2),col('#f2ede0'));for(let k=0;k<3;k++)pb.box({cx:cx+8-k*2,cy:cy+5+k,hw:1.4,h:2,L:()=>col('#a37b4c'),R:()=>col('#8a6238'),T:()=>col(['#e04a3a','#f2c140','#7aa84a'][(k+v)%3])});}));
