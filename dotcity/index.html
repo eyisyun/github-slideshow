@@ -2219,7 +2219,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     const roadSet=fn=>{const out=[];for(let m=0;m<16;m++){const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};out.push(G((u,v,x,y)=>fn(inB,u,v,x,y)));}return out;};
     const dirtRoad=(base,edge,w0)=>roadSet((inB,u,v,x,y)=>{if(inB(u,v,w0))return col(base,hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0);if(inB(u,v,w0+.08))return col(edge,hash(x,y,83)<.4?0:-.1);return col(PAL.g1,hash(x,y,84)<.06?.1:0);});
     ;yield;
-    SP.roadE=[dirtRoad('#a8865a','#7a8a44',.2),dirtRoad('#b0905e','#8a8a4a',.24),
+    SP.roadE=[dirtRoad('#a8865a','#7a8a44',.2),dirtRoad('#b0905e','#8a8a4a',.34),   // the bronze age road is wide enough for two ox carts to pass
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.27))return col('#b9b3a6',((Math.floor(u*10)+Math.floor(v*10))%2)?-.08:.04);if(inB(u,v,.33))return col('#8a8478');return col(PAL.g1,hash(x,y,85)<.06?.1:0);}),
       roadSet((inB,u,v,x,y)=>{if(inB(u,v,.3))return col('#6a6a70',((Math.floor(u*12)+Math.floor(v*12))%2)?-.06:.04);if(inB(u,v,.37))return col('#a9a49a',hash(x,y,86)<.1?-.1:0);return col(PAL.side,hash(x,y,87)<.1?-.06:0);})];
     const lotSet=(base,kerb)=>{const out=[];for(let m=0;m<16;m++)out.push(G((u,v,x,y)=>{
@@ -4176,7 +4176,7 @@ function render(parts,d,W,H,cx,cy){const pb=new PB(W,H),zb=new Float32Array(W*H)
 return{render,rot};})();
 const OX4=(()=>{
 const OX='#a8622c',OXD='#4a2c16',WOOD='#7e6a54',RIM='#3a2616',SPK='#b08858';
-function parts(load,leg,ph){const st=leg?.9:-.9,P=[],TS=.62;   // TS: the whole rig is narrowed to fit the village's single-track dirt roads
+function parts(load,leg,ph){const st=leg?.9:-.9,P=[],TS=.52;   // TS: the whole rig is narrowed to fit the village's single-track dirt roads
   const B=(box,c,f)=>P.push({box:[box[0],box[1],box[2]*TS,box[3]*TS,box[4],box[5]],c,f});
   // ox (front at +s): four legs stepping in diagonal pairs, body, hump, head, pale muzzle, dark eyes, cream horns, tail
   B([5+st,6+st,-2.6,-1.6,0,3.4],OXD);B([5-st,6-st,1.6,2.6,0,3.4],OXD);B([11-st,12-st,-2.6,-1.6,0,3.4],OXD);B([11+st,12+st,1.6,2.6,0,3.4],OXD);
@@ -4234,8 +4234,8 @@ function newCartTrip(force){const mk=[],hm=[];for(let i=0;i<N*N;i++){if(!isBld(i
   if(!mk.length||!hm.length)return null;for(let n=0;n<12;n++){const m=mk[(Math.random()*mk.length)|0],h=hm[(Math.random()*hm.length)|0],p=roadPath(roadNextTo(h),roadNextTo(m));
     if(p&&p.length>=(force?2:4)&&p.length<=40)return{path:p,i:0,t:0,load:true,wait:force?0:1+Math.random()*2,ph:Math.random()*9,k:'cart'};}return null;}
 function cartPos(c){const p=c.path,a=p[Math.min(c.i,p.length-1)],b=p[Math.min(c.i+1,p.length-1)],ax=a%N+.5,ay=(a/N|0)+.5,bx=b%N+.5,by=(b/N|0)+.5,dx=bx-ax,dy=by-ay;
-  const d=dx>0?0:dy>0?1:dx<0?2:dy<0?3:(c.d||0);c.d=d;const lx=-DIRS[d][1],ly=DIRS[d][0];   // down the middle of the single-track road
-  c.fx=ax+dx*c.t+lx*.03;c.fy=ay+dy*c.t+ly*.03;}
+  const d=dx>0?0:dy>0?1:dx<0?2:dy<0?3:(c.d||0);c.d=d;const lx=-DIRS[d][1],ly=DIRS[d][0];   // down the middle, or pulled over onto the verge while another cart passes
+  const L=c.lat||0;c.fx=ax+dx*c.t+lx*L;c.fy=ay+dy*c.t+ly*L;}
 function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];farmers=[];}return;}if(!dt)return;
   if((oxAcc+=dt)>2.5){oxAcc=0;let mk=0;for(let i=0;i<N*N;i++)if(W.kind[i]===K.COM&&isBld(i))mk++;const want=mk?Math.min(5,1+Math.floor(mk/3)):0;
     if(oxCarts.length<want){const c=newCartTrip();if(c)oxCarts.push(c);}else if(oxCarts.length>want&&!seasonPreview)oxCarts.pop();
@@ -4247,8 +4247,17 @@ function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];
     // the harvest bonus, once each time the fields are cut
     const st=farmStage();if(farmStageLast===1&&st===2&&fs.length){const g=Math.round(fs.length*8*PRICE[1]);W.funds+=g;updateHud(true);sfx('win');
       toast(L2(`🌾 추수가 끝났어요! 논밭 ${fs.length}곳에서 거둔 곡식으로 +${money(g)}`,`🌾 The harvest is in! ${fs.length} paddies bring in +${money(g)}`),'good');}farmStageLast=st;}
+  // passing on a single-track road: when two carts close in head-on, the empty one (or the later one) pulls over and waits until
+  // the other has gone by, then steers back into the middle
+  for(const a of oxCarts){a.yield=false;if(a.fx==null)continue;const[ax,ay]=DIRS[a.d||0];
+    for(const b of oxCarts){if(a===b||b.fx==null)continue;const dx=b.fx-a.fx,dy=b.fy-a.fy;if(Math.hypot(dx,dy)>3.4)continue;const[bx,by]=DIRS[b.d||0];
+      const ahead=dx*ax+dy*ay>-.15,toward=-(dx*bx+dy*by)>-.15,give=!a.load&&b.load||a.load===b.load&&oxCarts.indexOf(a)>oxCarts.indexOf(b);
+      if(ahead&&toward&&ax*bx+ay*by<0&&give){a.yield=true;break;}}
+    if(a.yield&&!a.side){const tx=Math.floor(a.fx),ty=Math.floor(a.fy),lx=-ay,ly=ax,free=(x,y)=>inb(x,y)&&!W.kind[idx(x,y)]&&W.terrain[idx(x,y)]!==1;   // pull onto open ground beside the road
+      a.side=free(tx+lx,ty+ly)?1:free(tx-lx,ty-ly)?-1:0;}if(!a.yield)a.side=0;}
   for(let n=oxCarts.length-1;n>=0;n--){const c=oxCarts[n];c.ph+=dt;if(!c.path.every(isRoadI)){oxCarts.splice(n,1);continue;}
-    if(c.wait>0){c.wait-=dt;cartPos(c);continue;}c.t+=dt*.45;
+    c.lat=(c.lat||0)+((c.yield?.9*(c.side||0):0)-(c.lat||0))*Math.min(1,dt*(c.yield?2.5:1.5));
+    if(c.wait>0||c.yield&&Math.abs(c.lat)>.6*Math.abs(c.side||0)){if(c.wait>0)c.wait-=dt;cartPos(c);continue;}c.t+=dt*(c.yield?.15:.45);
     while(c.t>=1){c.t-=1;c.i++;if(c.i>=c.path.length-1){c.i=c.path.length-1;c.t=0;
       if(c.load){const g=Math.round((6+c.path.length*.8)*PRICE[1]);W.funds+=g;cartPos(c);huntFx.push({fx:c.fx,fy:c.fy,t:0,txt:'+'+money(g)});updateHud(true);}
       c.load=!c.load;c.path=c.path.slice().reverse();c.i=0;c.wait=c.load?2.5:1.5;break;}}
@@ -4256,13 +4265,13 @@ function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];
   for(const f of farmers){f.ph+=dt;if(f.pose==='sheaf'){f.fx+=f.dir*dt*.12;if(f.fx<f.i%N+.15||f.fx>f.i%N+.85){f.dir=-f.dir;}f.face=f.dir;}}}
 const isRoadI=i=>W.kind[i]===K.ROAD;
 function drawOxObj(c,o){const S=oxSprites(),X=Math.round((o.fx-o.fy)*16-X0),Y=Math.round((o.fx+o.fy)*8-Y0);
-  if(o.k==='cart'){const set=o.load?S.F:S.E,base=set[o.d],moving=o.wait<=0,sp=moving&&((o.ph/.28)|0)%2?base.alt:base,w=S.drv[o.d],ws=moving&&((o.ph/.28)|0)%2?w.alt:w;
+  if(o.k==='cart'){const set=o.load?S.F:S.E,base=set[o.d],moving=o.wait<=0&&!(o.yield&&Math.abs(o.lat)>.6*Math.abs(o.side||0)),sp=moving&&((o.ph/.28)|0)%2?base.alt:base,w=S.drv[o.d],ws=moving&&((o.ph/.28)|0)%2?w.alt:w;
     const back=base.drv[1]<0,dr=()=>drawSpr(c,ws,X+base.drv[0],Y+base.drv[1]);if(back)dr();drawSpr(c,sp,X,Y);if(!back)dr();return;}
   const fr=S.fm[o.pose==='sheaf'?'sheaf':o.pose]||S.fm.walk,sp=fr[((o.ph/(o.pose==='plant'?.7:o.pose==='reap'?.35:.3))|0)%2];drawSpr(c,sp,X,Y);}
 // test button: start a fast run through the farming year (a season every few seconds) and send two carts out at once
 function oxTest(){if(W.era!==1){toast(L2('소달구지와 논은 청동기 시대에서 볼 수 있어요. 청동기 게임에서 눌러 주세요.','Ox carts and paddies belong to the Bronze Age. Try this in a Bronze Age game.'),'info');return;}
   seasonPreview={t0:now,len:48};farmStageLast=-1;farmers=[];oxAcc=99;
-  const a=newCartTrip(true),b=newCartTrip(true);if(b){b.load=false;b.path.reverse();}for(const c of[a,b])if(c){c.wait=0;oxCarts.unshift(c);cartPos(c);}
+  const a=newCartTrip(true),b=a&&{...a,path:a.path.slice().reverse(),load:false,ph:3};for(const c of[a,b])if(c){c.wait=0;oxCarts.unshift(c);cartPos(c);}
   if(!a){toast(L2('집과 장터를 길로 이어 주세요. 그러면 소달구지가 오가요. (논밭 계절 미리보기는 시작했어요)','Connect houses and a market with a road and ox carts will run. (The paddy season preview has started.)'),'info');return;}
   cam.x=(a.fx-a.fy)*16;cam.y=(a.fx+a.fy)*8;toast(L2('소달구지가 장터로 출발했어요! 논밭은 48초 동안 봄부터 겨울까지 빠르게 지나가요.','An ox cart sets off for the market! The paddies run through a whole year in 48 seconds.'),'good');}
 // boats: sail over water from tile to tile (under bridges too), one for each port
@@ -4749,7 +4758,7 @@ function render(){seasonGrass();
   for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.rail[i]&&w.kind[i]===K.ROAD)drawGates(c,i,i%N,i/N|0,visBuf[n+1],visBuf[n+2],0);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2],x=i%N,y=i/N|0,k=w.kind[i];
     const bs=bbk.get(i);if(bs)for(const b of bs)drawBoat(c,b);
-    const fs=fbk.get(i);if(fs)for(const o of fs)(o.k==='cart'||o.k==='farmer'?drawOxObj:drawHuntObj)(c,o);
+    const fs=fbk.get(i);if(fs){if(fs.length>1)fs.sort((p,q)=>(p.fx+p.fy)-(q.fx+q.fy));}if(fs)for(const o of fs)(o.k==='cart'||o.k==='farmer'?drawOxObj:drawHuntObj)(c,o);
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
     if(ts||k===K.RAIL&&w.terrain[i]===1){const ga=c.globalAlpha;c.globalAlpha=1;   // near-side truss over the train, here and on the tile behind it
       for(const[dx,dy]of[[0,0],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRailBr(xx,yy)||(dx||dy)&&!ts)continue;const f=SP.railBr[Math.max(3,Math.min(5,w.te[idx(xx,yy)]))][railBridgeKey(xx,yy)].front;
