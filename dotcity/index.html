@@ -2138,17 +2138,26 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       pb.put(x,y-1,col(c,-.2));pb.put(x+2,y-1,col(c,-.2));pb.put(x+2,y+1,col('#140c06'));for(let r=0;r<3;r++)pb.put(x-1,y+r,col('#2a1a10'));};
     const sigFlag=(pb,x,y)=>{posts(pb,[[x,y]],22,'#5a3a22');pb.put(x,y-22,col('#e8c070'));for(let r=0;r<6;r++)for(let k=1;k<8;k++){const wv=Math.round(Math.sin(k*.9)*0.6);
         const edge=r===0||r===5||k===7,inner=r>=2&&r<=3&&k>=3&&k<=5;pb.put(x+k,y-21+r+wv,col(edge?'#f2c140':inner?'#f2ede0':'#c0392b',k>4?-.1:0));}};
-    SP.yeok=[mk1(60,(pb,cx,cy)=>{hanok(pb,cx-5,cy-4,7,5,4);giwa(pb,cx-5,cy-9,9,6);
-        pb.box({cx:cx+7,cy:cy+2,hw:6,h:6,L:(a,b)=>(a|0)%3===0?col(WOOD,.08):b>4.5?col(WOOD):col('#2a1e16'),R:(a,b)=>(a|0)%3===0?col(WOOD,-.2):col(WOOD,-.32)});
-        pb.roof(cx+7,cy-4,8,4,STRAW[0]);horseHead(pb,cx+3,cy+1);horseHead(pb,cx+8,cy+3,'#a8a49a');
-        pb.box({cx:cx-1,cy:cy+8,hw:3,h:1.5,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col('#6aa8c0',.1)});                   // water trough
-        for(let k=0;k<3;k++)pb.put(cx-10+k,cy+5+k%2,col('#d9b45a'));pb.put(cx-9,cy+4,col('#e8c860'));                         // a little hay
-        sigFlag(pb,cx-13,cy+2);}),
-      mk1(60,(pb,cx,cy)=>{hanok(pb,cx+3,cy-6,9,6,6);giwa(pb,cx+3,cy-12,11,7);
-        damjang(pb,cx-14,cy+1,cx-3,cy+7);damjang(pb,cx+4,cy+7,cx+14,cy+2);
-        posts(pb,[[cx-3,cy+7],[cx+3,cy+7]],8,'#7a3a22');for(let k=-2;k<=2;k++)pb.put(cx+k,cy,col('#7a3a22'));                   // red gate posts and lintel
-        giwa(pb,cx,cy-1,5,3);horseHead(pb,cx+8,cy+6);posts(pb,[[cx+11,cy+9]],4);
-        sigFlag(pb,cx-12,cy-1);})];
+    // both stations take a 2x2 lot so the buildings have real walls and eaves: A a hall and a long open stable, B a walled compound
+    const stable=(pb,cx,cy,hw,n,roofHex)=>{pb.box({cx,cy:cy+1,hw:hw+1,h:1.5,L:()=>col('#b9b3a6'),R:()=>col('#b9b3a6',-.3),T:()=>col('#a89a7c')});   // stone footing
+      pb.box({cx,cy,hw,h:8,L:(a,b)=>{const st=a/hw*n,k=st|0,f=st-k;if(f<.14)return col(WOOD,.06);if(b>6.6)return col(WOOD,-.05);if(b<1.2)return col('#5a3e26');return col('#2a1e16',b>4?-.1:0);},   // open stalls toward the yard
+        R:(a,b)=>((a*2)|0)%3===0?col(WOOD,-.22):col('#8a6440',-.3+(b>6.6?.05:0)),T:()=>col(WOOD)});
+      for(let k=0;k<n;k++){const a=(k+.55)/n*hw,x=Math.round(cx-hw+a),y=Math.round(cy+a/2-5);horseHead(pb,x-1,y,['#6a3e22','#a8a49a','#3a2a20','#8a5a30'][k%4]);}
+      pb.roof(cx,cy-8,hw+3,5,roofHex);};
+    SP.yeok=[mk2(84,(pb,cx,cy)=>{
+        pb.diamond(cx,cy,30,(u,v,x,y)=>col('#b49a72',hash(x,y,31)<.12?-.1:hash(x,y,32)<.06?.1:0));                                     // packed-earth yard
+        hanok(pb,cx+9,cy-9,13,8,4);giwa(pb,cx+9,cy-18,16,9);                                                                           // the station hall at the back
+        stable(pb,cx-13,cy+1,10,4,STRAW[1]);                                                                                           // the long stable at the front left
+        pb.box({cx:cx+8,cy:cy+9,hw:4,h:2,L:()=>col(WOOD),R:()=>col(WOOD,-.3),T:()=>col('#6aa8c0',.1)});                              // water trough
+        for(let k=0;k<5;k++)pb.put(cx+1+k,cy+12+(k%2),col('#d9b45a',k%2?-.1:0));                                                        // spilled hay
+        posts(pb,[[cx+17,cy+8]],5);sigFlag(pb,cx+24,cy-2);}),
+      mk2(88,(pb,cx,cy)=>{
+        pb.diamond(cx,cy,30,(u,v,x,y)=>col('#b49a72',hash(x,y,33)<.12?-.1:0));
+        hanok(pb,cx+4,cy-11,14,8,6);giwa(pb,cx+4,cy-20,17,9);                                                                         // main hall
+        hanok(pb,cx-14,cy-1,7,6,9);giwa(pb,cx-14,cy-8,9,6);                                                                           // side wing
+        damjang(pb,cx-30,cy+1,cx-6,cy+13);damjang(pb,cx+6,cy+13,cx+30,cy+1);                                                          // walls along the two front edges
+        pb.box({cx:cx,cy:cy+13,hw:6,h:9,L:(a,b)=>a>4.5||b>7.5?col('#7a3a22'):col('#3a2a20'),R:(a,b)=>a<1.5||b>7.5?col('#7a3a22',-.25):col('#5a2e1e',-.2)});   // the gatehouse: red frame, dark doors
+        giwa(pb,cx,cy+4,8,5);horseHead(pb,cx+11,cy+10);posts(pb,[[cx+14,cy+13]],4);sigFlag(pb,cx-22,cy-4);})];
     // 가게: an open shop front with goods on the veranda and a cloth awning
     for(let v=0;v<3;v++)add(2,C,2,mk1(52,(pb,cx,cy)=>{hanok(pb,cx,cy-1,10,6,v*17,true);giwa(pb,cx,cy-8,13,6);pb.roof(cx-4,cy-3,5,2,CLOTH[v]);
         for(let k=-5;k<=5;k+=2)pb.put(cx-4+k,cy-3+Math.round(Math.abs(k)/2),col('#f2ede0'));for(let k=0;k<3;k++)pb.box({cx:cx+8-k*2,cy:cy+5+k,hw:1.4,h:2,L:()=>col('#a37b4c'),R:()=>col('#8a6238'),T:()=>col(['#e04a3a','#f2c140','#7aa84a'][(k+v)%3])});}));
@@ -4186,7 +4195,8 @@ function render(parts,d,W,H,cx,cy){const pb=new PB(W,H),zb=new Float32Array(W*H)
     const dep=(u+v)/2+z*.999,k=y*W+x;if(dep<zb[k]-1e-6)return;zb[k]=dep;pb.put(x,y,c);};
   for(const p of parts){
     if(p.box){const[s0,s1,t0,t1,z0,z1]=p.box,c=p.c,F=p.f;const st=.25;
-      const face=(nm,a,b)=>F?F(nm,a,b):nm==='top'?col(c,.12):(nm==='+t'||nm==='-t')?col(c,(()=>{const[u,v]=rot(0,nm==='+t'?1:-1,d);return v>0?-.02:u>0?-.2:-.02;})()):col(c,(()=>{const[u,v]=rot(nm==='+s'?1:-1,0,d);return v>0?-.02:-.2;})());
+      const lit=nm=>{const[u,v]=nm==='+t'||nm==='-t'?rot(0,nm==='+t'?1:-1,d):rot(nm==='+s'?1:-1,0,d);return v>0?.02:u>0?-.3:.02;};   // the face toward the lower left is lit, the one toward the lower right in shade
+      const face=(nm,a,b)=>{if(F){const v=F(nm,a,b);return nm==='top'||v==null?v:tone(v,lit(nm)*.6+(b<.25?-.08:0));}return nm==='top'?col(c,.2):col(c,lit(nm)+(b<.25?-.1:b>.85?.05:0));};
       for(let s=s0;s<=s1+1e-6;s+=st)for(let t=t0;t<=t1+1e-6;t+=st)plot(s,t,z1,face('top',(s-s0)/(s1-s0||1),(t-t0)/(t1-t0||1)));
       for(let s=s0;s<=s1+1e-6;s+=st)for(let z=z0;z<=z1+1e-6;z+=st){plot(s,t1,z,face('+t',(s-s0)/(s1-s0||1),(z-z0)/(z1-z0||1)));plot(s,t0,z,face('-t',(s-s0)/(s1-s0||1),(z-z0)/(z1-z0||1)));}
       for(let t=t0;t<=t1+1e-6;t+=st)for(let z=z0;z<=z1+1e-6;z+=st){plot(s1,t,z,face('+s',(t-t0)/(t1-t0||1),(z-z0)/(z1-z0||1)));plot(s0,t,z,face('-s',(t-t0)/(t1-t0||1),(z-z0)/(z1-z0||1)));}}
