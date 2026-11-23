@@ -4176,13 +4176,13 @@ function render(parts,d,W,H,cx,cy){const pb=new PB(W,H),zb=new Float32Array(W*H)
 return{render,rot};})();
 const OX4=(()=>{
 const OX='#a8622c',OXD='#4a2c16',WOOD='#7e6a54',RIM='#3a2616',SPK='#b08858';
-function parts(load,leg,ph){const st=leg?.9:-.9,P=[];
-  const B=(box,c,f)=>P.push({box,c,f});
+function parts(load,leg,ph){const st=leg?.9:-.9,P=[],TS=.62;   // TS: the whole rig is narrowed to fit the village's single-track dirt roads
+  const B=(box,c,f)=>P.push({box:[box[0],box[1],box[2]*TS,box[3]*TS,box[4],box[5]],c,f});
   // ox (front at +s): four legs stepping in diagonal pairs, body, hump, head, pale muzzle, dark eyes, cream horns, tail
   B([5+st,6+st,-2.6,-1.6,0,3.4],OXD);B([5-st,6-st,1.6,2.6,0,3.4],OXD);B([11-st,12-st,-2.6,-1.6,0,3.4],OXD);B([11+st,12+st,1.6,2.6,0,3.4],OXD);
   B([4,13,-2.8,2.8,3.2,7.6],OX);B([10,12.5,-2,2,7.6,8.6],OX);
   B([13,16,-1.8,1.8,4.6,8.2],OX);B([16,17,-1.4,1.4,4.6,6.2],'#e6c49c');
-  P.push({pt:[15.6,-1.9,7.2],c:col('#140c06')},{pt:[15.6,1.9,7.2],c:col('#140c06')});
+  P.push({pt:[15.6,-1.9*TS,7.2],c:col('#140c06')},{pt:[15.6,1.9*TS,7.2],c:col('#140c06')});
   B([13.6,14.4,-3.6,-1.8,8.0,8.8],'#f0e6cc');B([13.6,14.4,1.8,3.6,8.0,8.8],'#f0e6cc');B([13.6,14.4,-4.2,-3.4,8.8,10],'#f0e6cc');B([13.6,14.4,3.4,4.2,8.8,10],'#f0e6cc');
   B([3.4,4,-.4,.4,4,7],OXD);
   B([12,13,-3.4,3.4,8.2,9],'#5e4026');                           // yoke
@@ -4192,7 +4192,7 @@ function parts(load,leg,ph){const st=leg?.9:-.9,P=[];
   B([-12,-.5,-4.6,-4,4.6,6],WOOD);B([-12,-.5,4,4.6,4.6,6],WOOD);B([-12,-11.4,-4.6,4.6,4.6,6],WOOD);B([-1.1,-.5,-4.6,4.6,4.6,6],WOOD);
   B([-7.4,-6.6,-5.6,5.6,3.4,4.2],'#3a2616');
   const wheel=f=>(rr,a)=>rr>.82?col(RIM):rr<.2?col('#22140a'):(((a/(Math.PI/3)+ph)%1+1)%1<.2?col(SPK):null);
-  P.push({disc:[-7,-5.6,4.2,4.2],f:wheel()},{disc:[-7,5.6,4.2,4.2],f:wheel()});
+  P.push({disc:[-7,-5.6*TS,4.2,4.2],f:wheel()},{disc:[-7,5.6*TS,4.2,4.2],f:wheel()});
   if(load){const sack=(s,t,z)=>B([s-2,s+2,t-1.6,t+1.6,z,z+2.4],'#cdb888',(nm,a,b)=>nm==='top'?col(Math.abs(a-.5)<.13?'#8a6a3e':'#e2d2a8'):col(Math.abs(a-.5)<.12?'#8a6a3e':'#c8b282',nm==='+s'||nm==='-s'?-.1:0));
     const pot=(s,t,z)=>B([s-1.2,s+1.2,t-1.2,t+1.2,z,z+3],'#c4622e',(nm,a,b)=>nm==='top'?col('#4a2010'):col(b>.75?'#8a4020':'#c4622e',nm==='+t'||nm==='-t'?0:-.12));
     sack(-9,-2,4.6);sack(-9,2,4.6);sack(-5,-2,4.6);pot(-4.6,2.2,4.6);pot(-2.2,-.6,4.6);sack(-7.6,0,7);}
@@ -4201,7 +4201,7 @@ function parts(load,leg,ph){const st=leg?.9:-.9,P=[];
 function sprite(load,leg,ph,d){const W=46,H=34,pb=ISO.render(parts(load,leg,ph),d,W,H,23,24);const s=mk(pb,-23,-24);s.g=0;return s;}
 function set(load){const drv=SP.walker('#e8e0c8','#8a6a44');return[0,1,2,3].map(d=>{const a=sprite(load,0,0,d);a.alt=sprite(load,1,.5,d);
   // the driver walks just ahead of the ox, on its near side
-  const[u,v]=ISO.rot(23,1,d);a.drv=[Math.round(u-v),Math.round((u+v)/2)];a.alt.drv=a.drv;return a;});}
+  const[u,v]=ISO.rot(23,0,d);a.drv=[Math.round(u-v),Math.round((u+v)/2)];a.alt.drv=a.drv;return a;});}
 return{set};})();
 // ancient age (청동기): ox carts carry grain and pots from the village to the market along the roads and earn money there,
 // then come back empty; paddies follow the year (green in spring and summer, gold in early autumn, cut with sheaves after),
@@ -4234,8 +4234,8 @@ function newCartTrip(force){const mk=[],hm=[];for(let i=0;i<N*N;i++){if(!isBld(i
   if(!mk.length||!hm.length)return null;for(let n=0;n<12;n++){const m=mk[(Math.random()*mk.length)|0],h=hm[(Math.random()*hm.length)|0],p=roadPath(roadNextTo(h),roadNextTo(m));
     if(p&&p.length>=(force?2:4)&&p.length<=40)return{path:p,i:0,t:0,load:true,wait:force?0:1+Math.random()*2,ph:Math.random()*9,k:'cart'};}return null;}
 function cartPos(c){const p=c.path,a=p[Math.min(c.i,p.length-1)],b=p[Math.min(c.i+1,p.length-1)],ax=a%N+.5,ay=(a/N|0)+.5,bx=b%N+.5,by=(b/N|0)+.5,dx=bx-ax,dy=by-ay;
-  const d=dx>0?0:dy>0?1:dx<0?2:dy<0?3:(c.d||0);c.d=d;const lx=-DIRS[d][1],ly=DIRS[d][0];   // keep to the right of the road
-  c.fx=ax+dx*c.t+lx*.16;c.fy=ay+dy*c.t+ly*.16;}
+  const d=dx>0?0:dy>0?1:dx<0?2:dy<0?3:(c.d||0);c.d=d;const lx=-DIRS[d][1],ly=DIRS[d][0];   // down the middle of the single-track road
+  c.fx=ax+dx*c.t+lx*.03;c.fy=ay+dy*c.t+ly*.03;}
 function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];farmers=[];}return;}if(!dt)return;
   if((oxAcc+=dt)>2.5){oxAcc=0;let mk=0;for(let i=0;i<N*N;i++)if(W.kind[i]===K.COM&&isBld(i))mk++;const want=mk?Math.min(5,1+Math.floor(mk/3)):0;
     if(oxCarts.length<want){const c=newCartTrip();if(c)oxCarts.push(c);}else if(oxCarts.length>want&&!seasonPreview)oxCarts.pop();
