@@ -681,7 +681,7 @@ function bitmapPB(rows,map,outline){const h=rows.length,w=Math.max(...rows.map(r
 
 // Vehicles are small 3D box models (s along the heading -.5..5 * L tiles, t across -1..1 * W tiles, z in px) drawn per direction
 // with a depth buffer and face lighting: a body, a glass cabin, wheels, head/tail lights - so they read as cars, not blobs.
-function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].map(d=>{const W0=24,H0=opt.h||20,CX=12,CY=H0-6,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9);
+function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].map(d=>{const W0=opt.w||24,H0=opt.h||20,CX=W0>>1,CY=H0-6,pb=new PB(W0,H0),zb=new Float32Array(W0*H0).fill(-1e9);
     const hx=DIRS[d][0],hy=DIRS[d][1],lx=-hy,ly=hx;
     const plot=(s,t,z,c,n)=>{z*=VSC;const X=(s*L*hx+t*Wd*lx)*VSC,Y=(s*L*hy+t*Wd*ly)*VSC,px=Math.round(CX+(X-Y)*16),py=Math.round(CY+(X+Y)*8-z);if(px<0||py<0||px>=W0||py>=H0||c==null)return;
       const dep=(X+Y)*8+z,k=py*W0+px;if(dep<zb[k])return;zb[k]=dep;if(Array.isArray(c)||typeof c==='number'){pb.put(px,py,c);return;}
