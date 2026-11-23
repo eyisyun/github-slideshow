@@ -4329,14 +4329,16 @@ function pabSprites(){if(SP.pab)return SP.pab;const skin=col('#e0aa7e'),skinD=co
     const sp=mk(pb,-4,-15);sp.g=0;return sp;};
   return SP.pab=[0,1,2,3].map(d=>{const back=d>=2,flip=d===1||d===2,a=fig(back,flip,0);a.alt=fig(back,flip,1);return a;});}
 function yeokServes(st){const x0=st%N+1,y0=(st/N|0)+1;let n=0;for(let y=y0-6;y<=y0+6;y++)for(let x=x0-6;x<=x0+6;x++)if(inb(x,y)&&isBld(idx(x,y)))n++;return n;}   // buildings within 6 tiles
+const yeokNight=()=>clockT>=21||clockT<5.5;
 function yeokList(){const o=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.YEOK&&isRoot(i))o.push(i);return o;}
 function courierFor(st,list){let best=null;for(const o of list){if(o===st)continue;const p=roadPath(roadNextTo(st),roadNextTo(o));if(p&&p.length>=3&&(!best||p.length<best.path.length))best={path:p,home:st,to:o};}
   return best&&{...best,i:0,t:0,wait:1+Math.random()*2,ph:Math.random()*9,k:'pabal',coat:(st*7)%3,out:true};}
 function stepPabal(dt){if(W.era!==2){if(couriers.length)couriers=[];return;}if(!dt)return;
   if((pabAcc+=dt)>3){pabAcc=0;const L=yeokList();couriers=couriers.filter(c=>W.kind[c.home]===K.YEOK&&W.kind[c.to]===K.YEOK);
     for(const st of L)if(!couriers.some(c=>c.home===st||c.to===st&&c.home!==st&&couriers.filter(o=>o.home===c.home).length)){const c=courierFor(st,L);if(c&&!couriers.some(o=>o.home===c.to&&o.to===c.home))couriers.push(c);}}   // one rider per pair of stations
+  const night=yeokNight();   // runners finish the run they are on, then rest inside the station until morning
   for(let n=couriers.length-1;n>=0;n--){const c=couriers[n];c.ph+=dt;if(!c.path.every(isRoadI)){couriers.splice(n,1);continue;}
-    if(c.wait>0){c.wait-=dt;cartPos(c);continue;}c.t+=dt*.9;   // a brisk run, about twice a walker's pace
+    if(c.wait>0){if(night){c.rest=true;cartPos(c);continue;}c.rest=false;c.wait-=dt;cartPos(c);continue;}c.t+=dt*.9;   // a brisk run, about twice a walker's pace
     while(c.t>=1){c.t-=1;c.i++;if(c.i>=c.path.length-1){c.i=c.path.length-1;c.t=0;cartPos(c);
         {const n=yeokServes(c.out?c.to:c.home),g=Math.round((4+c.path.length*1.2)*PRICE[2]*Math.min(1,n/12));   // paid at whichever station it reaches   // a dispatch is worth something only where there is a town to receive it
           if(g>0){W.funds+=g;huntFx.push({fx:c.fx,fy:c.fy,t:0,txt:'+'+money(g)});updateHud(true);}
@@ -4362,9 +4364,11 @@ function yeokTest(){if(W.era!==2){toast(L2('역참은 왕조 시대에서 볼 �
         for(const[px,py]of pick)for(let q=0;q<2;q++)for(let r2=0;r2<2;r2++)clearTile(px+q,py+r2);bd=6;}}
     if(!pick||bd<5){toast(L2('화면 가운데 근처 길가에 역참 두 곳을 지을 빈 땅이 없어요. 길이 지나는 빈 곳으로 옮겨 보세요.','No room for two relay stations by a road near the middle of the screen. Move over open ground with a road.'),'info');return;}
     for(const[x,y]of pick){placeRaw(K.YEOK,x,y);}recompute();L=yeokList();}
-  pabAcc=99;stepPabal(.01);for(const c of couriers)c.wait=0;const c=couriers[0];
+  pabAcc=99;stepPabal(.01);if(!yeokNight())for(const c of couriers)c.wait=0;const c=couriers[0];
   if(!c){toast(L2('역참끼리 길로 이어 주세요. 그러면 역졸이 공문을 날라요.','Connect the relay stations with a road and runners will carry dispatches.'),'info');return;}
-  cartPos(c);cam.x=(c.fx-c.fy)*16;cam.y=(c.fx+c.fy)*8;toast(L2('역졸이 공문 보따리를 메고 다음 역참으로 달려가요!','A runner sets off for the next relay station with the dispatches!'),'good');}
+  cartPos(c);cam.x=(c.fx-c.fy)*16;cam.y=(c.fx+c.fy)*8;
+  if(yeokNight()){toast(L2('밤에는 역졸이 역참에서 쉬어요. 아침이 되면 공문을 들고 출발해요.','Runners rest at the relay station at night and set off again in the morning.'),'info');return;}
+  toast(L2('역졸이 공문 보따리를 메고 다음 역참으로 달려가요!','A runner sets off for the next relay station with the dispatches!'),'good');}
 // boats: sail over water from tile to tile (under bridges too), one for each port
 const isWater=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]===1;
 function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boat per port
@@ -4833,7 +4837,7 @@ function render(){seasonGrass();
   // objects, back to front
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){if(b.fx==null)continue;const k=idx(Math.floor(b.fx),Math.floor(b.fy));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
-  const fbk=new Map();for(const o of fauna)put2(fbk,o);for(const o of hunters)if(o.st!=='home')put2(fbk,o);for(const o of oxCarts)if(o.fx!=null)put2(fbk,o);for(const o of couriers)if(o.fx!=null)put2(fbk,o);for(const o of farmers)put2(fbk,o);
+  const fbk=new Map();for(const o of fauna)put2(fbk,o);for(const o of hunters)if(o.st!=='home')put2(fbk,o);for(const o of oxCarts)if(o.fx!=null)put2(fbk,o);for(const o of couriers)if(o.fx!=null&&!o.rest)put2(fbk,o);for(const o of farmers)put2(fbk,o);
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
   const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);sunB=sunOf(clockT);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh+'|'+sunB;
