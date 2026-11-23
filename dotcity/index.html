@@ -4046,9 +4046,8 @@ const BOAR={R:'#2a1e18',G:'#4e3d31',M:'#6e5746',m:'#8a7058',g:'#33261d',T:'#f2ea
 const boar={walk0:[".....RRRR......","...RRGGGGRR....","..RGGmmmGGGR...",".GGMMmmMMMGGG..","GGMMMMMMMMMGGGK.","GMMMMMMMMMMMGGGN","GGMMMMMMMMMGgGTN",".gGGGGGGGGGg..T.","..g.g....g.g....",".H...H..H...H...",],walk1:[".....RRRR......","...RRGGGGRR....","..RGGmmmGGGR...",".GGMMmmMMMGGG..","GGMMMMMMMMMGGGK.","GMMMMMMMMMMMGGGN","GGMMMMMMMMMGgGTN",".gGGGGGGGGGg..T.","...gg....gg.....","...HH....HH.....",],graze:["................",".....RRRR.......","...RRGGGGRR.....","..RGGmmmGGGR....",".GGMMmmMMMGGG...","GGMMMMMMMMMGGG..","GMMMMMMMMMMMGGK.","GGMMMMMMMMMGgGGN",".gGGGGGGGGGg.TNN",".Hg.gH..Hg.gH...",]};boar.look=boar.walk0;boar.run0=boar.walk0;boar.run1=boar.walk1;boar.fall=boar.walk0;
 // hunter: fur tunic, hair tied up, stone-tipped spear
 const HUN={h:'#2a1c14',f:'#d8a47c',F:'#b47e58',U:'#8a5a34',u:'#c49460',D:'#5e3a20',s:'#9a6e40',T:'#cfcac0',t:'#8e8a80',k:'#c48c64',e:'#5a4030',K:'#140c08',M:'#b0402a',m:'#e0c8a8'};
-const hunter={walk0:["..........T",".........Tt","...hh...s..","..hhhh.s...","..hhfKs....","..hfffF....","...ff.s....","..UuUsU....",".UUUsUUf...",".UUsuUU....",".DsUUUD....","..sk..k....",".s.k..k....","...e..e....",],walk1:["..........T",".........Tt","...hh...s..","..hhhh.s...","..hhfKs....","..hfffF....","...ff.s....","..UuUsU....",".UUUsUUf...",".UUsuUU....",".DsUUUD....","..s.kk.....",".s..kk.....","....ee.....",],throw:["...........","...........","...hh......","..hhhh.....","..hhfK.....","..hfffF....","...ff......","f.UuUU.....",".fUUUUU....","..UuuUU....","..DUUUD....","..k...k....",".k.....k...",".e.....e...",],carry:["..MMMMm....",".MmMMMMM...","...hhMM....","..hhhh.....","..hhfK.....","..hfffF....","...ff......","..UuUUf....",".UUUUUU....",".UUuuUU....",".DUUUUD....","..k..k.....","..k..k.....","..e..e.....",]};
 const spear=["TTssssss"];
-return{DEER,stag,doe,FAWN,fawn,BOAR,boar,HUN,hunter,spear};})();
+return{DEER,stag,doe,FAWN,fawn,BOAR,boar,HUN,spear};})();
 // stone-age hunting: deer herds and boars roam the woods and meadows, graze and keep watch, and bolt from people; hunters from the
 // hunting lodge (or the campfire, before there is one) stalk them, throw a spear and carry the catch home for money.
 // Tapping an animal sends the nearest free hunter after it. Nothing here is saved: the wildlife simply restocks.
@@ -4057,8 +4056,28 @@ const wild=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]!==1&&W.kind[idx(x,y)]===0;
 function builtNear(x,y,r){for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&W.kind[idx(xx,yy)]&&W.kind[idx(xx,yy)]!==K.ROAD)return true;}return false;}
 function huntSprites(){if(SP.hunt)return SP.hunt;const A=HUNT_ART,flip=r=>r.map(s=>s.split('').reverse().join('')),out={};
   const mkS=(rows,pal)=>[0,1].map(l=>{const pb=bitmapPB(l?flip(rows):rows,pal,'#1a120c'),s=mk(pb,-(pb.w>>1),-pb.h+2);s.g=0;return s;});
-  for(const[k,set,pal]of[['stag',A.stag,A.DEER],['doe',A.doe,A.DEER],['fawn',A.fawn,A.FAWN],['boar',A.boar,A.BOAR],['hunter',A.hunter,A.HUN]]){out[k]={};for(const f in set)out[k][f]=mkS(set[f],pal);}
-  out.spear=mkS(A.spear,A.HUN);return SP.hunt=out;}
+  for(const[k,set,pal]of[['stag',A.stag,A.DEER],['doe',A.doe,A.DEER],['fawn',A.fawn,A.FAWN],['boar',A.boar,A.BOAR]]){out[k]={};for(const f in set)out[k][f]=mkS(set[f],pal);}
+  out.spear=mkS(A.spear,A.HUN);
+  // hunters share the townsfolk's 7x11 figure (same head, body and legs, front and back views), dressed in a spotted fur tunic with
+  // bare legs and a top knot, holding a stone-tipped spear; they raise an arm to throw and carry the catch over their shoulders
+  const hair=col('#2a1d14'),skin=col('#e0aa7e'),skinD=col('#e0aa7e',-.18),sh=col('#8a5a34'),shD=col('#8a5a34',-.24),shL=col('#c49460'),shoe=col('#5a4030'),
+    pole=col('#8a6038'),tip=col('#d4d0c6'),tipD=col('#8e8a80'),meat=col('#a8402a'),meatD=col('#7a2a1c'),bone=col('#efe4cc');
+  const fig=(back,flip,step,pose)=>{const pb=new PB(9,15),P=(x,y,c)=>pb.put(flip?7-x:x+1,y+4,c);
+    P(3,0,hair);P(2,1,hair);P(3,1,hair);P(4,1,hair);
+    if(back){P(2,2,hair);P(3,2,hair);P(4,2,hair);P(2,3,hair);P(3,3,col('#2a1d14',-.15));P(4,3,hair);}
+    else{P(2,2,hair);P(3,2,skin);P(4,2,skin);P(2,3,skinD);P(3,3,skin);P(4,3,skin);}
+    for(let x=1;x<=5;x++)P(x,4,x===1||x===5?shD:x===2?shL:sh);
+    P(1,5,shD);P(2,5,sh);P(3,5,sh);P(4,5,sh);P(5,5,shD);
+    P(1,6,step?shD:skinD);P(2,6,sh);P(3,6,shL);P(4,6,shD);P(5,6,step?skinD:shD);if(!step)P(1,6,skin);
+    P(2,7,shD);P(3,7,shD);P(4,7,shD);   // tunic hem
+    if(step){P(2,8,skin);P(4,8,skinD);P(2,9,shoe);P(4,9,shoe);}else{P(3,8,skin);P(2,8,skinD);P(3,9,shoe);P(2,9,shoe);}
+    if(pose==='walk'){for(let y=-2;y<=7;y++)P(6,y,pole);P(6,-3,tip);P(5,6,skin);}
+    else if(pose==='throw'){P(5,3,skin);P(6,2,skin);P(6,1,skinD);P(5,6,shD);}
+    else if(pose==='carry'){for(let x=1;x<=5;x++){P(x,-1,meat);P(x,0,x===3?hair:meatD);}P(2,-2,meat);P(3,-2,meat);P(4,-2,meatD);P(0,-1,bone);P(6,-1,bone);P(6,0,bone);P(1,4,skin);P(5,4,skin);}
+    const sp=mk(pb,-4,-14);sp.g=0;return sp;};
+  out.hunter={};for(const[f,pose,step]of[['walk0','walk',0],['walk1','walk',1],['throw','throw',0],['carry0','carry',0],['carry1','carry',1]])
+    out.hunter[f]=[fig(false,false,step,pose),fig(false,true,step,pose),fig(true,false,step,pose),fig(true,true,step,pose)];
+  return SP.hunt=out;}
 function huntHomes(){const h=[],f=[];for(let i=0;i<N*N;i++){if(W.kind[i]===K.DECO&&W.level[i]===14)h.push(i);else if(W.kind[i]===K.FIREPIT&&isRoot(i))f.push(i);}return{h,f};}
 function spawnHerd(){const c=[];for(let n=0;n<60&&!c.length;n++){const x=(Math.random()*N)|0,y=(Math.random()*N)|0;if(wild(x,y)&&W.trees[idx(x,y)]>=1&&!builtNear(x,y,3))c.push([x,y]);}
   if(!c.length)return;const[x,y]=c[0],h=++huntHerd,boar=Math.random()<.3,ks=boar?['boar']:['stag','doe',...(Math.random()<.6?['doe']:[]),...(Math.random()<.5?['fawn']:[])];
@@ -4068,7 +4087,7 @@ function threatAt(a){let d=9;for(const hu of hunters)if(hu.st!=='home'){const r=
 function bolt(h,fromX,fromY){for(const a of fauna)if(a.h===h&&a.st!=='fall'){let vx=a.fx-fromX,vy=a.fy-fromY;const L=Math.hypot(vx,vy)||1;vx/=L;vy/=L;
   a.st='run';a.t=2+Math.random();a.tx=a.fx+vx*4+(Math.random()-.5)*1.5;a.ty=a.fy+vy*4+(Math.random()-.5)*1.5;}}
 function moveTo(o,sp,dt){const dx=o.tx-o.fx,dy=o.ty-o.fy,L=Math.hypot(dx,dy);if(L<.05)return true;const s=Math.min(L,sp*dt);const nx=o.fx+dx/L*s,ny=o.fy+dy/L*s;
-  if(o.k&&o.k!=='hunter'&&!wild(Math.floor(nx),Math.floor(ny))){o.tx=o.fx;o.ty=o.fy;return true;}o.fx=nx;o.fy=ny;if(Math.abs(dx-dy)>.01)o.face=dx-dy>0?1:-1;return L-s<.05;}
+  if(o.k&&o.k!=='hunter'&&!wild(Math.floor(nx),Math.floor(ny))){o.tx=o.fx;o.ty=o.fy;return true;}o.fx=nx;o.fy=ny;if(Math.abs(dx-dy)>.01)o.face=dx-dy>0?1:-1;o.up=dx+dy<-.01;return L-s<.05;}
 // test button: a herd and a boar right in view, two hunters sent after them at once (kept for three minutes even without a lodge)
 let huntTestEnd=0;
 function huntTest(){if(W.era!==0){toast(L2('사냥은 석기시대에서 볼 수 있어요. 석기시대 게임에서 눌러 주세요.','Hunting happens in the Stone Age. Try this in a Stone Age game.'),'info');return;}
@@ -4119,12 +4138,12 @@ function stepHunt(dt){if(W.era!==0){if(fauna.length||hunters.length){fauna=[];hu
       if(s.hit&&Math.hypot(a.fx-s.ex,a.fy-s.ey)<.9){a.st='fall';a.t=60;bolt(a.h,a.fx-.5,a.fy-.5);a.st='fall';}else bolt(a.h,s.sx,s.sy);}}
   for(let n=huntFx.length-1;n>=0;n--)if((huntFx[n].t+=dt)>1.6)huntFx.splice(n,1);}
 function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='go'||o.st==='back'||o.st==='fetch'||o.st==='carry'||o.st==='sneak';
-  if(k==='hunter')return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?'carry':((o.ph/(o.st==='sneak'?.42:.26))|0)%2?'walk1':'walk0';
+  if(k==='hunter'){const st=((o.ph/(o.st==='sneak'?.42:o.st==='carry'?.3:.26))|0)%2;return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?(st?'carry1':'carry0'):st?'walk1':'walk0';}
   if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
   return o.look&&((o.ph/2.2)|0)%3!==2?'look':((o.ph/3.1)|0)%4===3?'look':'graze';}
-function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=fr[o.face>0?0:1];
+function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=o.k==='hunter'?fr[(o.up?2:0)+(o.face>0?0:1)]:fr[o.face>0?0:1];
   drawSpr(c,sp,Math.round((o.fx-o.fy)*16-X0),Math.round((o.fx+o.fy)*8-Y0));
-  if(o.k==='hunter'&&o.st==='carry'&&o.carry==='boar'){}}
+}
 function drawHuntTop(c){if(!spears.length&&!huntFx.length)return;const S=huntSprites();
   for(const s of spears){const sp=S.spear[s.face>0?0:1],X=Math.round((s.fx-s.fy)*16-X0),Y=Math.round((s.fx+s.fy)*8-Y0-10-Math.sin(Math.PI*Math.min(1,s.t))*7);drawSpr(c,sp,X,Y);}
   c.save();c.font='bold 7px sans-serif';c.textAlign='center';c.lineWidth=2;c.strokeStyle='rgba(40,24,8,.85)';
