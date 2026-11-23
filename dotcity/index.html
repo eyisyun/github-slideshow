@@ -4026,6 +4026,103 @@ function stepCars(dt){const S=W.st,target=Math.round(Math.min(240,Math.floor(S.r
       const opts=[0,1,2,3].filter(d=>d!==(c.d+2)%4&&isRoad(c.x+DIRS[d][0],c.y+DIRS[d][1]));
       c.d=opts.length?(opts.includes(c.d)&&Math.random()<.55?c.d:opts[(Math.random()*opts.length)|0]):(c.d+2)%4;}}}
 
+// stone-age wildlife and hunters as ASCII pixel art (right-facing; flipped for left)
+const HUNT_ART=(()=>{
+const DEER={B:'#9c6b3e',b:'#74492a',S:'#bd8a58',L:'#dcbc92',W:'#f4eee0',K:'#1e140c',A:'#e6d6ae',a:'#ad9a72',H:'#2a1c12',E:'#5a3a22'};
+const stag={
+walk0:["............a.a..","............aAa..",".............AA..","............EBB..","............BBBBK","...........BBWb..","..........BBb....","W.SSSSSSSBBb.....","WBBBBBBBBBBb.....",".BBBBBBBBBBb.....",".bBBLLLLLBb......","..b.b...b.b......",".b...b.b...b.....","H.....HH....H....",],
+walk1:["............a.a..","............aAa..",".............AA..","............EBB..","............BBBBK","...........BBWb..","..........BBb....","W.SSSSSSSBBb.....","WBBBBBBBBBBb.....",".BBBBBBBBBBb.....",".bBBLLLLLBb......","..bb....bb.......","..bb....bb.......","..HH....HH.......",],
+graze:[".................",".................",".................",".................",".................",".................",".................","W.SSSSSSSS.......","WBBBBBBBBBBB.....",".BBBBBBBBBBBB....",".bBBLLLLLBbBBa.a.","..b.b...b.bEBBaA.",".b...b.b...bBBBK.","H.....HH....H....",],
+look:[".............a.a.",".............aAa.","..............AA.",".............EBB.",".............BBBK","............BWb..","...........BBb...","W.SSSSSSSSBBb....","WBBBBBBBBBBb.....",".BBBBBBBBBBb.....",".bBBLLLLLBb......","..b.b...b.b......","..b.b...b.b......",".H..H..H..H......",],
+run0:["...........a.a...","...........aAa...","............AA...","...........EBB...","...........BBBBK.","..........BBWb...","W.SSSSSSBBBb.....","WBBBBBBBBBb......",".BBBBBBBBBb......","bbBBLLLLLbbb.....","b...........b....","b............b...","H.............H..","..................",],
+run1:["...........a.a...","...........aAa...","............AA...","...........EBB...","...........BBBBK.","..........BBWb...","W.SSSSSSBBBb.....","WBBBBBBBBBb......",".BBBBBBBBBb......",".bBBLLLLLBb......","...bb..bb........","...HH..HH........",".................",".................",],
+fall:["...............a.a","...............aA.","..SSSSSSSSSSS.EBB.","WBBBBBBBBBBBBBBBBK",".bBBBBBBBBBBBb....","..LLLLLLLLLLL.....","..b.b.....b.b.....",".b...b...b...b....","H.....H.H.....H...",]};
+// doe: same body, no antlers, a little paler; fawn: smaller with white spots
+const noAntler=f=>f.map(r=>r.replace(/[Aa]/g,'.'));
+const doe={};for(const k in stag)doe[k]=noAntler(stag[k]);
+const FAWN={...DEER,B:'#b07a48',S:'#c89462',P:'#f2e6cc'};
+const fawn={walk0:["........E.","........BBK",".......BW.","W.....BB..","SPSSPSB...","BBPBBBb...",".LLLLb....",".b.b.bb...","H..H.H.H..",],walk1:["........E.","........BBK",".......BW.","W.....BB..","SPSSPSB...","BBPBBBb...",".LLLLb....","..bb.bb...","..HH.HH...",]};fawn.graze=fawn.walk0;fawn.look=fawn.walk0;fawn.run0=fawn.walk0;fawn.run1=fawn.walk1;fawn.fall=fawn.walk0;
+const BOAR={R:'#2a1e18',G:'#4e3d31',M:'#6e5746',m:'#8a7058',g:'#33261d',T:'#f2ead6',N:'#c99a88',K:'#140c08',H:'#1e140e'};
+const boar={walk0:[".....RRRR......","...RRGGGGRR....","..RGGmmmGGGR...",".GGMMmmMMMGGG..","GGMMMMMMMMMGGGK.","GMMMMMMMMMMMGGGN","GGMMMMMMMMMGgGTN",".gGGGGGGGGGg..T.","..g.g....g.g....",".H...H..H...H...",],walk1:[".....RRRR......","...RRGGGGRR....","..RGGmmmGGGR...",".GGMMmmMMMGGG..","GGMMMMMMMMMGGGK.","GMMMMMMMMMMMGGGN","GGMMMMMMMMMGgGTN",".gGGGGGGGGGg..T.","...gg....gg.....","...HH....HH.....",],graze:["................",".....RRRR.......","...RRGGGGRR.....","..RGGmmmGGGR....",".GGMMmmMMMGGG...","GGMMMMMMMMMGGG..","GMMMMMMMMMMMGGK.","GGMMMMMMMMMGgGGN",".gGGGGGGGGGg.TNN",".Hg.gH..Hg.gH...",]};boar.look=boar.walk0;boar.run0=boar.walk0;boar.run1=boar.walk1;boar.fall=boar.walk0;
+// hunter: fur tunic, hair tied up, stone-tipped spear
+const HUN={h:'#2a1c14',f:'#d8a47c',F:'#b47e58',U:'#8a5a34',u:'#c49460',D:'#5e3a20',s:'#9a6e40',T:'#cfcac0',t:'#8e8a80',k:'#c48c64',e:'#5a4030',K:'#140c08',M:'#b0402a',m:'#e0c8a8'};
+const hunter={walk0:["..........T",".........Tt","...hh...s..","..hhhh.s...","..hhfKs....","..hfffF....","...ff.s....","..UuUsU....",".UUUsUUf...",".UUsuUU....",".DsUUUD....","..sk..k....",".s.k..k....","...e..e....",],walk1:["..........T",".........Tt","...hh...s..","..hhhh.s...","..hhfKs....","..hfffF....","...ff.s....","..UuUsU....",".UUUsUUf...",".UUsuUU....",".DsUUUD....","..s.kk.....",".s..kk.....","....ee.....",],throw:["...........","...........","...hh......","..hhhh.....","..hhfK.....","..hfffF....","...ff......","f.UuUU.....",".fUUUUU....","..UuuUU....","..DUUUD....","..k...k....",".k.....k...",".e.....e...",],carry:["..MMMMm....",".MmMMMMM...","...hhMM....","..hhhh.....","..hhfK.....","..hfffF....","...ff......","..UuUUf....",".UUUUUU....",".UUuuUU....",".DUUUUD....","..k..k.....","..k..k.....","..e..e.....",]};
+const spear=["TTssssss"];
+return{DEER,stag,doe,FAWN,fawn,BOAR,boar,HUN,hunter,spear};})();
+// stone-age hunting: deer herds and boars roam the woods and meadows, graze and keep watch, and bolt from people; hunters from the
+// hunting lodge (or the campfire, before there is one) stalk them, throw a spear and carry the catch home for money.
+// Tapping an animal sends the nearest free hunter after it. Nothing here is saved: the wildlife simply restocks.
+let fauna=[],hunters=[],spears=[],huntFx=[],huntAcc=0,huntHerd=0;
+const wild=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]!==1&&W.kind[idx(x,y)]===0;
+function builtNear(x,y,r){for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&W.kind[idx(xx,yy)]&&W.kind[idx(xx,yy)]!==K.ROAD)return true;}return false;}
+function huntSprites(){if(SP.hunt)return SP.hunt;const A=HUNT_ART,flip=r=>r.map(s=>s.split('').reverse().join('')),out={};
+  const mkS=(rows,pal)=>[0,1].map(l=>{const pb=bitmapPB(l?flip(rows):rows,pal,'#1a120c'),s=mk(pb,-(pb.w>>1),-pb.h+2);s.g=0;return s;});
+  for(const[k,set,pal]of[['stag',A.stag,A.DEER],['doe',A.doe,A.DEER],['fawn',A.fawn,A.FAWN],['boar',A.boar,A.BOAR],['hunter',A.hunter,A.HUN]]){out[k]={};for(const f in set)out[k][f]=mkS(set[f],pal);}
+  out.spear=mkS(A.spear,A.HUN);return SP.hunt=out;}
+function huntHomes(){const h=[],f=[];for(let i=0;i<N*N;i++){if(W.kind[i]===K.DECO&&W.level[i]===14)h.push(i);else if(W.kind[i]===K.FIREPIT&&isRoot(i))f.push(i);}return{h,f};}
+function spawnHerd(){const c=[];for(let n=0;n<60&&!c.length;n++){const x=(Math.random()*N)|0,y=(Math.random()*N)|0;if(wild(x,y)&&W.trees[idx(x,y)]>=1&&!builtNear(x,y,3))c.push([x,y]);}
+  if(!c.length)return;const[x,y]=c[0],h=++huntHerd,boar=Math.random()<.3,ks=boar?['boar']:['stag','doe',...(Math.random()<.6?['doe']:[]),...(Math.random()<.5?['fawn']:[])];
+  ks.forEach((k,j)=>fauna.push({k,h,fx:x+.3+Math.random()*.4+(j%2)*.5,fy:y+.3+Math.random()*.4+(j>>1)*.4,tx:0,ty:0,st:'idle',t:1+Math.random()*3,face:Math.random()<.5?1:-1,ph:Math.random()*9,lead:j===0}));}
+function threatAt(a){let d=9;for(const hu of hunters)if(hu.st!=='home'){const r=Math.hypot(hu.fx-a.fx,hu.fy-a.fy)+(hu.st==='sneak'||hu.st==='throw'||hu.st==='wait'?.7:0);if(r<d)d=r;}
+  for(const c of cars)if(c.ped||c.e<1){const r=Math.hypot(c.x+.5-a.fx,c.y+.5-a.fy)+.4;if(r<d)d=r;}return d;}
+function bolt(h,fromX,fromY){for(const a of fauna)if(a.h===h&&a.st!=='fall'){let vx=a.fx-fromX,vy=a.fy-fromY;const L=Math.hypot(vx,vy)||1;vx/=L;vy/=L;
+  a.st='run';a.t=2+Math.random();a.tx=a.fx+vx*4+(Math.random()-.5)*1.5;a.ty=a.fy+vy*4+(Math.random()-.5)*1.5;}}
+function moveTo(o,sp,dt){const dx=o.tx-o.fx,dy=o.ty-o.fy,L=Math.hypot(dx,dy);if(L<.05)return true;const s=Math.min(L,sp*dt);const nx=o.fx+dx/L*s,ny=o.fy+dy/L*s;
+  if(o.k&&o.k!=='hunter'&&!wild(Math.floor(nx),Math.floor(ny))){o.tx=o.fx;o.ty=o.fy;return true;}o.fx=nx;o.fy=ny;if(Math.abs(dx-dy)>.01)o.face=dx-dy>0?1:-1;return L-s<.05;}
+const put2=(m,o)=>{const x=Math.floor(o.fx),y=Math.floor(o.fy);if(!inb(x,y))return;const k=idx(x,y);let a=m.get(k);if(!a)m.set(k,a=[]);a.push(o);};
+function stepHunt(dt){if(W.era!==0){if(fauna.length||hunters.length){fauna=[];hunters=[];spears=[];huntFx=[];}return;}if(!dt)return;
+  if((huntAcc+=dt)>3){huntAcc=0;let F=0;for(let i=0;i<N*N;i++)if(W.trees[i]&&W.kind[i]===0)F++;const want=F<8?0:Math.min(16,3+Math.floor(F/25));
+    if(fauna.filter(a=>a.st!=='fall').length<want)spawnHerd();
+    const{h,f}=huntHomes(),nh=h.length?Math.min(4,1+h.length):W.st.pop>=20&&f.length?1:0,homes=h.length?h:f;
+    while(hunters.length<nh){const i=homes[hunters.length%homes.length];hunters.push({home:i,fx:i%N+.5,fy:(i/N|0)+.5,st:'home',t:2+Math.random()*4,face:1,ph:Math.random()*9,k:'hunter'});}
+    if(hunters.length>nh)hunters.length=nh;for(const hu of hunters)if(!homes.includes(hu.home)){hu.home=homes[0];}}
+  for(let n=fauna.length-1;n>=0;n--){const a=fauna[n];a.ph+=dt;
+    if(a.st==='fall'){if((a.t-=dt)<0)fauna.splice(n,1);continue;}
+    if(a.st!=='run'&&threatAt(a)<(a.k==='boar'?1.2:a.k==='stag'&&huntFrame(a)==='look'&&Math.random()<dt*.1?2.5:1.5)){const src=hunters.find(h=>h.st!=='home'&&Math.hypot(h.fx-a.fx,h.fy-a.fy)<2.6)||{fx:a.fx-1,fy:a.fy-1};bolt(a.h,src.fx,src.fy);}
+    if(a.st==='run'){if(moveTo(a,a.k==='boar'?1.05:a.k==='fawn'?1.2:1.35,dt)||(a.t-=dt)<0){a.st='idle';a.t=1+Math.random()*2;}continue;}
+    if(a.st==='walk'){if(moveTo(a,a.k==='boar'?.18:.22,dt)){a.st='idle';a.t=2+Math.random()*5;a.look=a.k==='stag'&&Math.random()<.5;}continue;}
+    if((a.t-=dt)<0){const L=a.lead?a:fauna.find(b=>b.h===a.h&&b.lead)||a;let ok=false;
+      for(let k=0;k<8&&!ok;k++){const r=a.lead?1.5+Math.random()*2:.4+Math.random()*1.1,th=Math.random()*6.28,tx=L.fx+Math.cos(th)*r,ty=L.fy+Math.sin(th)*r;
+        if(wild(Math.floor(tx),Math.floor(ty))&&W.trees[idx(Math.floor(tx),Math.floor(ty))]<=2&&!builtNear(Math.floor(tx),Math.floor(ty),1)){a.tx=tx;a.ty=ty;ok=true;}}   // graze in meadows and light woods, where they can be seen
+      if(ok)a.st='walk';else a.t=1;}}
+  for(const hu of hunters){hu.ph+=dt;const tg=hu.tgt;
+    if(hu.st==='home'){if((hu.t-=dt)<0){hu.t=3;const hx=hu.home%N+.5,hy=(hu.home/N|0)+.5;let best=null,bd=14;
+        for(const a of fauna)if(a.st!=='fall'&&a.k!=='fawn'&&!hunters.some(o=>o!==hu&&o.tgt===a)){const d=Math.hypot(a.fx-hx,a.fy-hy);if(d<bd){bd=d;best=a;}}
+        if(best){hu.tgt=best;hu.st='go';hu.fx=hx;hu.fy=hy;}}continue;}
+    if((hu.st==='go'||hu.st==='sneak')&&(!tg||!fauna.includes(tg)||tg.st==='fall'&&hu.st!=='fetch')){hu.st='back';hu.tgt=null;}
+    if(hu.st==='go'||hu.st==='sneak'){const d=Math.hypot(tg.fx-hu.fx,tg.fy-hu.fy);hu.tx=tg.fx;hu.ty=tg.fy;
+      if(d>9){hu.st='back';hu.tgt=null;continue;}
+      if(d<2.1){hu.st='throw';hu.t=.4;hu.face=(tg.fx-tg.fy)-(hu.fx-hu.fy)>0?1:-1;continue;}
+      hu.st=d<3.2||hu.st==='sneak'&&d<3.9?'sneak':'go';moveTo(hu,hu.st==='sneak'?.28:.42,dt);continue;}
+    if(hu.st==='throw'){if((hu.t-=dt)<0){const ok=Math.random()<(tg.k==='boar'?.55:.7);spears.push({fx:hu.fx,fy:hu.fy,sx:hu.fx,sy:hu.fy,ex:tg.fx,ey:tg.fy,t:0,hit:ok,a:tg,hu,face:hu.face});hu.st='wait';hu.t=.6;}continue;}
+    if(hu.st==='wait'){if((hu.t-=dt)<0)hu.st=tg&&tg.st==='fall'?'fetch':(tg&&fauna.includes(tg)&&Math.hypot(tg.fx-hu.fx,tg.fy-hu.fy)<6?'go':'back');continue;}
+    if(hu.st==='fetch'){if(!fauna.includes(tg)){hu.st='back';continue;}hu.tx=tg.fx;hu.ty=tg.fy;if(moveTo(hu,.4,dt)){fauna.splice(fauna.indexOf(tg),1);hu.carry=tg.k;hu.st='carry';}continue;}
+    if(hu.st==='back'||hu.st==='carry'){hu.tx=hu.home%N+.5;hu.ty=(hu.home/N|0)+.5;if(moveTo(hu,hu.st==='carry'?.32:.42,dt)){
+        if(hu.st==='carry'){const g=Math.round((hu.carry==='boar'?50:30)*PRICE[0]);W.funds+=g;huntFx.push({fx:hu.fx,fy:hu.fy,t:0,txt:'+'+money(g)});sfx('click');updateHud(true);}
+        hu.st='home';hu.t=4+Math.random()*5;hu.tgt=null;hu.carry=null;}}}
+  for(let n=spears.length-1;n>=0;n--){const s=spears[n];s.t+=dt/.45;s.fx=s.sx+(s.ex-s.sx)*Math.min(1,s.t);s.fy=s.sy+(s.ey-s.sy)*Math.min(1,s.t);
+    if(s.t>=1){spears.splice(n,1);const a=s.a;if(!fauna.includes(a)||a.st==='fall')continue;
+      if(s.hit&&Math.hypot(a.fx-s.ex,a.fy-s.ey)<.9){a.st='fall';a.t=60;bolt(a.h,a.fx-.5,a.fy-.5);a.st='fall';}else bolt(a.h,s.sx,s.sy);}}
+  for(let n=huntFx.length-1;n>=0;n--)if((huntFx[n].t+=dt)>1.6)huntFx.splice(n,1);}
+function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='go'||o.st==='back'||o.st==='fetch'||o.st==='carry'||o.st==='sneak';
+  if(k==='hunter')return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?'carry':((o.ph/(o.st==='sneak'?.42:.26))|0)%2?'walk1':'walk0';
+  if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
+  return o.look&&((o.ph/2.2)|0)%3!==2?'look':((o.ph/3.1)|0)%4===3?'look':'graze';}
+function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=fr[o.face>0?0:1];
+  drawSpr(c,sp,Math.round((o.fx-o.fy)*16-X0),Math.round((o.fx+o.fy)*8-Y0));
+  if(o.k==='hunter'&&o.st==='carry'&&o.carry==='boar'){}}
+function drawHuntTop(c){if(!spears.length&&!huntFx.length)return;const S=huntSprites();
+  for(const s of spears){const sp=S.spear[s.face>0?0:1],X=Math.round((s.fx-s.fy)*16-X0),Y=Math.round((s.fx+s.fy)*8-Y0-10-Math.sin(Math.PI*Math.min(1,s.t))*7);drawSpr(c,sp,X,Y);}
+  c.save();c.font='bold 7px sans-serif';c.textAlign='center';c.lineWidth=2;c.strokeStyle='rgba(40,24,8,.85)';
+  for(const f of huntFx){const X=Math.round((f.fx-f.fy)*16-X0),Y=Math.round((f.fx+f.fy)*8-Y0-16-f.t*10);c.globalAlpha=Math.min(1,(1.6-f.t)*1.5);c.strokeText(f.txt,X,Y);c.fillStyle='#ffd84a';c.fillText(f.txt,X,Y);}
+  c.restore();}
+function huntTap(e){if(W.era!==0||!fauna.length)return false;const[wx,wy]=toWorld(e.clientX,e.clientY);let best=null,bd=11;
+  for(const a of fauna)if(a.st!=='fall'){const d=Math.hypot(wx-(a.fx-a.fy)*16,wy-((a.fx+a.fy)*8-5));if(d<bd){bd=d;best=a;}}if(!best)return false;
+  if(!hunters.length){toast(L2('사냥꾼 움막(발견)을 지으면 사냥꾼이 생겨요.','Build a Hunting Lodge (discovery) to get hunters.'),'info');return true;}
+  if(best.k==='fawn'){toast(L2('새끼 사슴은 사냥하지 않아요.','Hunters leave fawns alone.'),'info');return true;}
+  const free=hunters.filter(h=>h.st==='home'||h.st==='back'||h.st==='go'),hu=(free.length?free:hunters).sort((p,q)=>Math.hypot(p.fx-best.fx,p.fy-best.fy)-Math.hypot(q.fx-best.fx,q.fy-best.fy))[0];
+  if(hu.st==='home'){hu.fx=hu.home%N+.5;hu.fy=(hu.home/N|0)+.5;}if(hu.st==='carry'||hu.st==='fetch'||hu.st==='throw'||hu.st==='wait')return true;
+  hu.tgt=best;hu.st='go';toast(L2(best.k==='boar'?'사냥꾼이 멧돼지를 쫓아가요!':'사냥꾼이 사슴을 쫓아가요!',best.k==='boar'?'A hunter goes after the boar!':'A hunter goes after the deer!'),'info');sfx('click');return true;}
 // boats: sail over water from tile to tile (under bridges too), one for each port
 const isWater=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]===1;
 function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boat per port
@@ -4494,6 +4591,7 @@ function render(){seasonGrass();
   // objects, back to front
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){if(b.fx==null)continue;const k=idx(Math.floor(b.fx),Math.floor(b.fy));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
+  const fbk=new Map();for(const o of fauna)put2(fbk,o);for(const o of hunters)if(o.st!=='home')put2(fbk,o);
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
   const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);sunB=sunOf(clockT);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh+'|'+sunB;
@@ -4509,6 +4607,7 @@ function render(){seasonGrass();
   for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.rail[i]&&w.kind[i]===K.ROAD)drawGates(c,i,i%N,i/N|0,visBuf[n+1],visBuf[n+2],0);}
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2],x=i%N,y=i/N|0,k=w.kind[i];
     const bs=bbk.get(i);if(bs)for(const b of bs)drawBoat(c,b);
+    const fs=fbk.get(i);if(fs)for(const o of fs)drawHuntObj(c,o);
     const ts=tbk.get(i);if(ts)for(const tc of ts)drawTrainCar(c,tc);
     if(ts||k===K.RAIL&&w.terrain[i]===1){const ga=c.globalAlpha;c.globalAlpha=1;   // near-side truss over the train, here and on the tile behind it
       for(const[dx,dy]of[[0,0],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRailBr(xx,yy)||(dx||dy)&&!ts)continue;const f=SP.railBr[Math.max(3,Math.min(5,w.te[idx(xx,yy)]))][railBridgeKey(xx,yy)].front;
@@ -4552,7 +4651,7 @@ function render(){seasonGrass();
     c.fillStyle='#1a1404';c.fillRect(bx-3,by-9,7,11);
     if(o.type==='med'){c.fillStyle=on?'#ffffff':'#ffd8d8';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#e0302a';c.fillRect(bx,by-7,1,7);c.fillRect(bx-2,by-4,5,1);}
     else{c.fillStyle=on?'#ff3a3a':'#3a7dff';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#ffffff';c.fillRect(bx,by-7,1,4);c.fillRect(bx,by-2,1,1);}}
-  funFx(c);xmasLights(c,lh);scoutFx(c);festFx(c,lw,lh);drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
+  funFx(c);drawHuntTop(c);xmasLights(c,lh);scoutFx(c);festFx(c,lw,lh);drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
   // the picked tile's edge and pin go on top of trees and buildings
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
     for(let dy=0;dy<sz;dy++)for(let dx=0;dx<sz;dx++)if(inb(x+dx,y+dy))tileSp(SP.tgt.edge,x+dx,y+dy);
@@ -5102,7 +5201,7 @@ view.addEventListener('pointermove',e=>{if(pointers.has(e.pointerId))pointers.se
   updateCost(e);});
 function endPointer(e){pointers.delete(e.pointerId);view.classList.remove('panning');if(pinch){if(pointers.size<2)pinch=null;drag=null;return;}if(!drag)return;
   const d=drag;drag=null;
-  if(e.type==='pointerup'&&((d.mode==='pan'&&!d.moved)||d.mode==='tap')&&funTap(e)){updateCost(e);return;}
+  if(e.type==='pointerup'&&((d.mode==='pan'&&!d.moved)||d.mode==='tap')&&(funTap(e)||huntTap(e))){updateCost(e);return;}
   if(d.mode==='pan'){if(!d.moved&&d.btn===0&&tool==='inspect'){const g=d.g;if(inb(g[0],g[1])){selected=g;goalsOpen=false;$('#info').hidden=false;renderInfo();sfx('click');}else{selected=null;$('#info').hidden=true;}}}
   else if(d.mode==='build'&&e.type==='pointerup')applyTool(T(tool),tilesFor(T(tool),d.a,d.b));
   else if(d.mode==='tap'&&e.type==='pointerup'&&inb(d.a[0],d.a[1])){const t=T(tool);
@@ -5167,7 +5266,7 @@ function frame(t){frameDt=Math.min(.1,(t-(last||t))/1000);last=t;now=t;const dt=
   clockT=dayMode==='day'?14.5:dayMode==='night'?21.5:td;
   duskF=dayMode!=='auto'&&dayMode!=='dusk'?0:Math.max(0,1-Math.abs(td-18.4)/1.5)+Math.max(0,1-Math.abs(td-6.2)/1.2);
   const pan=600*dt*DPR/cam.s*2;if(keys.has('w')||keys.has('arrowup'))cam.y-=pan;if(keys.has('s')||keys.has('arrowdown'))cam.y+=pan;if(keys.has('a')||keys.has('arrowleft'))cam.x-=pan;if(keys.has('d')||keys.has('arrowright'))cam.x+=pan;if(keys.size)clampCam();
-  stepCars(dt*mul*1.1);stepBoats(dt*mul*1.1);stepTrains(dt*mul*1.1);stepPlanes(dt*Math.min(mul,2));stepParts(dt);{const t0=performance.now();render();hdCost(performance.now()-t0);}placeTarget();updateHud(false);evTick(dt);
+  stepCars(dt*mul*1.1);stepBoats(dt*mul*1.1);stepHunt(dt*mul*1.1);stepTrains(dt*mul*1.1);stepPlanes(dt*Math.min(mul,2));stepParts(dt);{const t0=performance.now();render();hdCost(performance.now()-t0);}placeTarget();updateHud(false);evTick(dt);
   if(t-miniT>300){miniT=t;drawMini();const a=mixHex('#2b3a66','#0d1226',nightF),b=mixHex('#141a30','#070a16',nightF);document.body.style.setProperty('--sky-a',a);document.body.style.setProperty('--sky-b',b);}
   requestAnimationFrame(frame);}
 
