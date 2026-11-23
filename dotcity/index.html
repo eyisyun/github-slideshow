@@ -696,6 +696,7 @@ function vehModel(boxes,L,Wd,opt={}){const LG=[-.35,-.55,.76];return[0,1,2,3].ma
     if(opt.siren){const[s0,z0]=opt.siren,X=s0*L*hx*VSC,Y=s0*L*hy*VSC;meta.siren=[Math.round(CX+(X-Y)*16),Math.round(CY+(X+Y)*8-z0*VSC)];}   // light bar, blinked in drawCar
     return mk(pb,-CX,-CY,true,meta);});}
 const VSC=.78;   // overall vehicle size
+const VW=1.6;   // cars are modelled this much wider than first built, so they read as solid boxes, not cut-outs
 const GLASS='#8fb4d4',HEAD=[0,0].map((_,i)=>i?col('#fff2a0'):col('#fff6d0')),TAIL=[col('#a8322a'),col('#ff3a3a')];
 const wheels=(z1=1.4,r=.1,front=.32,back=-.3)=>[front,back].flatMap(s=>[[s-r,s+r,.62,1],[s-r,s+r,-1,-.62]].map(([a,b,c,d])=>({b:[a,b,c,d,0,z1],c:'#1e2026'})));
 // old-era traffic: a cart or litter modelled like the cars (so it turns with the road), with the regular pixel people
@@ -736,32 +737,32 @@ function palanquin(){const box=vehModel([
   return withPeople(box,[{s:.4,set:SP.walker('#f2ede0'),ph:0},{s:-.4,set:SP.walker('#e8e4dc'),ph:1}]);}
 function carSedan(c,extra=[]){return vehModel([...wheels(),
   {b:[-.5,.5,-.95,.95,.7,2.3],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.28&&b>.35?HEAD:f==='-s'&&Math.abs(a-.5)>.3&&b>.3?TAIL:c},
-  {b:[-.3,.16,-.82,.82,2.3,4.0],f:(f,a,b)=>f==='top'?col(c,.06):(f==='+t'||f==='-t')?(b<.8&&a>.08&&a<.92&&Math.abs(a-.55)>.07?GLASS:c):(b<.82?GLASS:c)},...extra],.48,.072);}
+  {b:[-.3,.16,-.82,.82,2.3,4.0],f:(f,a,b)=>f==='top'?col(c,.06):(f==='+t'||f==='-t')?(b<.8&&a>.08&&a<.92&&Math.abs(a-.55)>.07?GLASS:c):(b<.82?GLASS:c)},...extra],.48,.072*VW);}
 function carBus(c,stripe){return vehModel([...wheels(1.4,.1,.32,-.3),
-  {b:[-.5,.5,-.95,.95,.7,5.2],f:(f,a,b)=>f==='top'?'#e6e8ea':f==='+s'?(b>.45&&b<.85?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:c):f==='-s'?(b<.3&&Math.abs(a-.5)>.3?TAIL:c):(b>.5&&b<.82&&(a*9|0)%2===0?GLASS:b>.32&&b<.42?stripe:c)}],.8,.085);}
+  {b:[-.5,.5,-.95,.95,.7,5.2],f:(f,a,b)=>f==='top'?'#e6e8ea':f==='+s'?(b>.45&&b<.85?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:c):f==='-s'?(b<.3&&Math.abs(a-.5)>.3?TAIL:c):(b>.5&&b<.82&&(a*9|0)%2===0?GLASS:b>.32&&b<.42?stripe:c)}],.8,.085*VW);}
 function carTruck(cab,box){return vehModel([...wheels(1.4,.1,.36,-.3),
   {b:[.16,.5,-.9,.9,.7,4.1],f:(f,a,b)=>f==='+s'?(b>.55?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:cab):(f==='+t'||f==='-t')&&b>.55&&a>.35?GLASS:cab},
-  {b:[-.5,.15,-.95,.95,.7,5.2],f:(f,a,b)=>f==='-s'&&b<.2&&Math.abs(a-.5)>.3?TAIL:col(box,f==='top'?.06:0)}],.7,.085);}
+  {b:[-.5,.15,-.95,.95,.7,5.2],f:(f,a,b)=>f==='-s'&&b<.2&&Math.abs(a-.5)>.3?TAIL:col(box,f==='top'?.06:0)}],.7,.085*VW);}
 function carVintage(c){return vehModel([...wheels(1.7,.14,.3,-.32),
   {b:[.02,.5,-.6,.6,1,2.4],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.3&&b>.4?HEAD:c},
   {b:[-.45,.02,-.85,.85,1,2.4],f:(f,a,b)=>f==='-s'&&Math.abs(a-.5)>.35&&b>.5?TAIL:c},
   {b:[-.42,0,-.8,.8,2.4,4.8],f:(f,a,b)=>f==='top'?col(c,.1):b>.35&&b<.85&&!(f==='+t'||f==='-t')||(f==='+t'||f==='-t')&&b>.35&&b<.85&&a>.15&&a<.85?GLASS:c},
-  {b:[-.5,.5,.95,1.05,1.2,1.5],c:'#2a2a2e'},{b:[-.5,.5,-1.05,-.95,1.2,1.5],c:'#2a2a2e'}],.46,.07);}
+  {b:[-.5,.5,.95,1.05,1.2,1.5],c:'#2a2a2e'},{b:[-.5,.5,-1.05,-.95,1.2,1.5],c:'#2a2a2e'}],.46,.07*VW);}
 // emergency vehicles: police car, ambulance, fire engine (light bars flash red/blue while they drive)
 function carPolice(){return vehModel([...wheels(),
   {b:[-.5,.5,-.95,.95,.7,2.3],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.28&&b>.35?HEAD:f==='-s'&&Math.abs(a-.5)>.3&&b>.3?TAIL:(f==='+t'||f==='-t')&&a>.25&&a<.75&&b>.3?'#f6f6f2':'#1e2a4a'},
   {b:[-.3,.16,-.82,.82,2.3,4.0],f:(f,a,b)=>f==='top'?'#f6f6f2':(f==='+t'||f==='-t')?(b<.8&&a>.08&&a<.92&&Math.abs(a-.55)>.07?GLASS:'#f6f6f2'):(b<.82?GLASS:'#f6f6f2')},
-  {b:[-.12,.02,-.6,.6,4.0,4.7],c:'#3a3f4a'}],.48,.072,{siren:[-.05,5]});}
+  {b:[-.12,.02,-.6,.6,4.0,4.7],c:'#3a3f4a'}],.48,.072*VW,{siren:[-.05,5]});}
 function carAmbulance(){return vehModel([...wheels(1.4,.1,.34,-.3),
   {b:[.2,.5,-.9,.9,.7,3.6],f:(f,a,b)=>f==='+s'?(b>.5?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:'#f6f6f2'):(f==='+t'||f==='-t')&&b>.5&&a>.3?GLASS:'#f6f6f2'},
-  {b:[-.5,.2,-.95,.95,.7,4.8],f:(f,a,b)=>f==='-s'&&b<.25&&Math.abs(a-.5)>.3?TAIL:(f==='+t'||f==='-t')&&b>.3&&b<.42?'#e0302a':(f==='+t'||f==='-t')&&Math.abs(a-.5)<.12&&b>.5&&b<.9||(f==='+t'||f==='-t')&&Math.abs(b-.7)<.08&&Math.abs(a-.5)<.3?'#e0302a':f==='top'&&Math.abs(a-.5)<.12&&Math.abs(b-.5)<.4||f==='top'&&Math.abs(b-.5)<.12&&Math.abs(a-.5)<.4?'#e0302a':'#f6f6f2'}],.6,.082,{siren:[.32,4.4]});}
+  {b:[-.5,.2,-.95,.95,.7,4.8],f:(f,a,b)=>f==='-s'&&b<.25&&Math.abs(a-.5)>.3?TAIL:(f==='+t'||f==='-t')&&b>.3&&b<.42?'#e0302a':(f==='+t'||f==='-t')&&Math.abs(a-.5)<.12&&b>.5&&b<.9||(f==='+t'||f==='-t')&&Math.abs(b-.7)<.08&&Math.abs(a-.5)<.3?'#e0302a':f==='top'&&Math.abs(a-.5)<.12&&Math.abs(b-.5)<.4||f==='top'&&Math.abs(b-.5)<.12&&Math.abs(a-.5)<.4?'#e0302a':'#f6f6f2'}],.6,.082*VW,{siren:[.32,4.4]});}
 function carFire(){return vehModel([...wheels(1.5,.09,.36,-.32),
   {b:[.18,.5,-.95,.95,.7,4.2],f:(f,a,b)=>f==='+s'?(b>.55?GLASS:b<.3&&Math.abs(a-.5)>.3?HEAD:'#d8302a'):(f==='+t'||f==='-t')&&b>.55&&a>.35?GLASS:'#d8302a'},
   {b:[-.5,.18,-.95,.95,.7,3.6],f:(f,a,b)=>f==='-s'&&b<.25&&Math.abs(a-.5)>.3?TAIL:(f==='+t'||f==='-t')&&b>.4&&b<.5?'#f2f2ee':(f==='+t'||f==='-t')&&b<.38&&(a*8|0)%2===0?'#a8221e':'#d8302a'},
-  {b:[-.48,.12,-.35,.35,3.6,4.3],f:(f,a,b)=>(f==='top'&&(a*10|0)%2===0)||(f!=='top'&&b>.5)?'#e8e8ea':'#9aa3ad'}],.8,.085,{siren:[.34,4.6]});}
+  {b:[-.48,.12,-.35,.35,3.6,4.3],f:(f,a,b)=>(f==='top'&&(a*10|0)%2===0)||(f!=='top'&&b>.5)?'#e8e8ea':'#9aa3ad'}],.8,.085*VW,{siren:[.34,4.6]});}
 function carHover(c,glow,sir){const g=[col(glow),col(glow,.4)];return vehModel([
   {b:[-.5,.5,-.9,.9,2.6,3.9],f:(f,a,b)=>f==='+s'&&Math.abs(a-.5)>.25?[col('#ffffff'),col('#ffffff')]:f==='-s'&&Math.abs(a-.5)>.25?[col('#ff4a6a'),col('#ff6a8a')]:b<.25&&f!=='top'?g:c},
-  {b:[-.28,.26,-.7,.7,3.9,5.1],f:(f,a,b)=>f==='top'?col(GLASS,.15):GLASS}],.46,.075,{shadowGlow:1,siren:sir?[0,5.6]:null});}
+  {b:[-.28,.26,-.7,.7,3.9,5.1],f:(f,a,b)=>f==='top'?col(GLASS,.15):GLASS}],.46,.075*VW,{shadowGlow:1,siren:sir?[0,5.6]:null});}
 // built in slices (generator) so the loading screen can paint its progress between them
 function* buildSpritesGen(){
   /* ground ---------------------------------------------------- */
