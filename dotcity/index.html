@@ -1951,7 +1951,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     SP.E=[{},{},{},{},SP.bld,{}];for(const e of[0,1,2,3])SP.E[e]={[R]:[null],[C]:[null],[I]:[null]};
     const add=(e,k,L,sp)=>{(SP.E[e][k][L]=SP.E[e][k][L]||[]).push(sp);};
     const STRAW=['#c9a45a','#b8944e','#d1b06a','#a98a4a'],WOOD='#7a5233',HW='#f2ede0',TILE='#4e535e',STONE='#a9a49a';
-    const mk1=(H,fn,meta)=>{const pb=new PB(32,H),cx=16,cy=H-8;fn(pb,cx,cy);return mk(pb,-16,16-H,true,meta&&meta(cx,cy));};
+    const mk1=(H,fn,meta)=>{const pb=new PB(32,H),cx=16,cy=H-8;fn(pb,cx,cy);let m=meta&&meta(cx,cy);if(pb.torches){m=Object.assign({},m);m.torches=pb.torches;}return mk(pb,-16,16-H,true,m);};
     const mk2=(H,fn,meta)=>{const pb=new PB(64,H),cx=32,cy=H-16;fn(pb,cx,cy);let m=meta&&meta(cx,cy);if(pb.torches){m=Object.assign({},m);m.torches=pb.torches;}return mk(pb,-32,32-H,true,m);};
     const cone=(pb,cx,cy,r,h,hex)=>{for(let b=0;b<=h;b++){const rb=r*(1-b/h);if(rb<.5)break;pb.ell(cx,cy-b,rb,(dx,dy,x,y)=>col(hex,(dx<-.4?.12:dx<.25?0:-.26)+(b%3===0?-.06:0)+(hash(x,y,7)<.12?-.1:0)));}};
     const door=(pb,x,y,w,h)=>{for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)pb.put(x+xx,y-yy,[col('#2a1d14'),col(yy<h-1?'#ffb04a':'#d88a3a')]);};
@@ -2063,8 +2063,8 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       pb.roof(x,y-8,6,2,cloth);for(let k=-6;k<=6;k+=2)pb.put(x+k,y-8+Math.round(Math.abs(k)/2),col('#f2ede0',.05));trader(pb,x+5,y+2,['#c9a070','#8a6a44','#a8865a'][s%3]);};
     const sack=(pb,x,y)=>{pb.ell(x,y,2,dx=>col('#d8c8a0',dx>0?-.2:0));pb.ell(x,y-2,1.5,dx=>col('#e8d8b0',dx>0?-.2:0));pb.put(x,y-3,col('#8a6a44'));};
     const CLOTH=['#c0503a','#3a6fa0','#d9a43a','#5a8a4a'];
-    for(let v=0;v<3;v++)add(1,C,1,mk1(44,(pb,cx,cy)=>{stall(pb,cx+1,cy-1,CLOTH[v],v);jar(pb,cx-10,cy+2,.9,'#8a5a38');sack(pb,cx-7,cy+5);if(v!==1)sack(pb,cx-4,cy+6);}));
-    for(let v=0;v<3;v++)add(1,C,2,mk1(46,(pb,cx,cy)=>{stall(pb,cx+5,cy-3,CLOTH[v],v);stall(pb,cx-5,cy+1,CLOTH[(v+1)%4],v+1);goods(pb,cx+7,cy+4,3,v);sack(pb,cx-12,cy+4);}));
+    for(let v=0;v<3;v++)add(1,C,1,mk1(44,(pb,cx,cy)=>{stall(pb,cx+1,cy-1,CLOTH[v],v);jar(pb,cx-10,cy+2,.9,'#8a5a38');sack(pb,cx-7,cy+5);if(v!==1)sack(pb,cx-4,cy+6);const TL=[];torch(pb,cx+11,cy+3,8,TL);pb.torches=TL;}));
+    for(let v=0;v<3;v++)add(1,C,2,mk1(46,(pb,cx,cy)=>{stall(pb,cx+5,cy-3,CLOTH[v],v);stall(pb,cx-5,cy+1,CLOTH[(v+1)%4],v+1);goods(pb,cx+7,cy+4,3,v);sack(pb,cx-12,cy+4);const TL=[];torch(pb,cx+12,cy+1,8,TL);torch(pb,cx-13,cy,8,TL);pb.torches=TL;}));
     // 논밭: flooded paddies in rows behind earth ridges (논두렁), young green rice (v0), ripe gold rice (v1), half-harvested with sheaves (v2),
     // a scarecrow in a straw hat and a patched coat, and a white heron wading in the water
     const fieldAt=(cx,cy,u,v)=>[Math.round(cx+(u-v)*15.5),Math.round(cy+(u+v-1)*7.75)];
@@ -2126,7 +2126,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       (cx,cy)=>({em:[[cx-6,cy-10,'smoke']],lights:[[cx-6,cy-1]]})));
     ;yield;
     SP.well=mk1(42,(pb,cx,cy)=>{pb.cyl(cx,cy-1,4.5,3,side(STONE),(dx,dy)=>dx*dx+dy*dy>.55?col('#c9c4ba'):col(PAL.w1,-.2));posts(pb,[[cx-5,cy-1],[cx+5,cy-1]],9);
-      pb.line(cx-5,cy-9,cx+5,cy-9,col('#6a4428'));pb.roof(cx,cy-11,7,4,STRAW[0]);for(let i=0;i<3;i++)pb.put(cx+1,cy-8+i,col('#8a7a6a'));pb.put(cx+1,cy-5,col('#6a4428'));});
+      pb.line(cx-5,cy-9,cx+5,cy-9,col('#6a4428'));pb.roof(cx,cy-11,7,4,STRAW[0]);for(let i=0;i<3;i++)pb.put(cx+1,cy-8+i,col('#8a7a6a'));pb.put(cx+1,cy-5,col('#6a4428'));const TL=[];torch(pb,cx+9,cy+4,8,TL);pb.torches=TL;});
     SP.parkE[1].push(mk1(52,(pb,cx,cy)=>{treeInto(pb,cx,cy+1,0,7,77);pb.box({cx:cx-6,cy:cy+3,hw:3,h:2,L:()=>col(STONE),R:()=>col(STONE,-.3),T:()=>col(STONE,.15)});
       [['#e04a3a',-1],['#3a6fd0',0],['#f2c140',1]].forEach(([c2,dx])=>{pb.put(cx+dx,cy-3,col(c2));pb.put(cx+dx,cy-2,col(c2,-.2));});}));
     SP.parkE[1].push(mk1(48,(pb,cx,cy)=>{treeInto(pb,cx+5,cy-1,0,6,78);for(let k=0;k<4;k++)pb.ell(cx-6,cy+2-k*2,3.4-k*.7,dx=>col(STONE,dx>.2?-.25:.05));}));
