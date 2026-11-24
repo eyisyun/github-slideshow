@@ -2055,7 +2055,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     // 큰 초가집: an ㄱ-shaped pair round a swept yard, a jar terrace and a fence
     for(let v=0;v<4;v++)add(1,R,2,mk1(50,(pb,cx,cy)=>{pb.ell(cx,cy+1,13,(dx,dy,x,y)=>col('#a8966e',0,hash(x,y,3)<.5?150:120));
         choga(pb,cx+3,cy-3,8,6);thatchRoof(pb,cx+3,cy-9,10,6,STRAW[v]);choga(pb,cx-6,cy+1,5,5,'#c2a070');thatchRoof(pb,cx-6,cy-4,7,5,STRAW[(v+2)%4]);
-        hangCorn(pb,cx+6,cy-8);if(v&1)jarTerrace(pb,cx+8,cy+5,4);else brushFence(pb,[[cx+2,cy+10],[cx+10,cy+6],[cx+14,cy+4]]);}));
+        hangCorn(pb,cx+6,cy-8);if(v&1)jarTerrace(pb,cx+8,cy+5,4);else brushFence(pb,[[cx+2,cy+10],[cx+10,cy+6],[cx+14,cy+4]]);},(cx,cy)=>({work:{k:'mortar',at:[cx-8,cy+6]}})));
     // market stalls: striped awnings over tables of pottery, cloth bolts, bronze mirrors, fish and grain sacks, a trader under each
     const trader=(pb,x,y,c)=>{pb.put(x,y,col('#3a3020'));pb.put(x,y-1,col(c));pb.put(x,y-2,col(c,-.1));pb.put(x,y-3,col('#e8b890'));pb.put(x,y-4,col('#2a1d14'));};
     const stall=(pb,x,y,cloth,s)=>{posts(pb,[[x-4,y-1],[x+4,y-1],[x,y+1]],8,'#5a3a22');
@@ -2123,7 +2123,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         pb.box({cx:cx,cy:cy+5,hw:2,h:2,L:()=>col('#6a6a6a'),R:()=>col('#555'),T:()=>col('#8a8a8a')});
         for(let k=0;k<3;k++){pb.put(cx+5+k*2,cy+6-k,col('#c88a3a',.2));pb.put(cx+6+k*2,cy+6-k,col('#a86a2a'));}                                                // bronze ingots
         if(v!==1)for(let k=0;k<2;k++)pb.box({cx:cx+9+k*3,cy:cy+2-k,hw:1.2,h:1,L:()=>col('#8f8a80'),R:()=>col('#6f6a60'),T:()=>col('#a9a49a')});},
-      (cx,cy)=>({em:[[cx-6,cy-10,'smoke']],lights:[[cx-6,cy-1]]})));
+      (cx,cy)=>({em:[[cx-6,cy-10,'smoke']],lights:[[cx-6,cy-1]],work:{k:'forge',at:[cx+4,cy+5]}})));
     ;yield;
     SP.well=mk1(42,(pb,cx,cy)=>{pb.cyl(cx,cy-1,4.5,3,side(STONE),(dx,dy)=>dx*dx+dy*dy>.55?col('#c9c4ba'):col(PAL.w1,-.2));posts(pb,[[cx-5,cy-1],[cx+5,cy-1]],9);
       pb.line(cx-5,cy-9,cx+5,cy-9,col('#6a4428'));pb.roof(cx,cy-11,7,4,STRAW[0]);for(let i=0;i<3;i++)pb.put(cx+1,cy-8+i,col('#8a7a6a'));pb.put(cx+1,cy-5,col('#6a4428'));const TL=[];torch(pb,cx+9,cy+4,8,TL);pb.torches=TL;});
@@ -2420,7 +2420,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       for(let k=0;k<3;k++){const[x,y]=P(2+k*1.4,2);pb.put(Math.round(x),Math.round(y),col('#c88a3a',.2));pb.put(Math.round(x)+1,Math.round(y),col('#a86a2a'));pb.put(Math.round(x),Math.round(y)-1,col('#d89a4a',.25));}   // ingots
       if(v===1){const[x,y]=P(12,1);pb.ell(x,y,1.6,()=>col('#d8b050',.25));pb.ell(x+3,y-1,1.6,()=>col('#c9a040',.1));}
       if(v===2){const[x,y]=P(14,8);firewood(pb,x-2,y,4);}},
-      (cx,cy)=>{const P=P1(cx,cy),f=P(3,10),m=P(7,3);return{em:[[f[0],f[1]-18,'smoke']],lights:[[f[0]-1,f[1]-2],[m[0],m[1]-1]]};}));
+      (cx,cy)=>{const P=P1(cx,cy),f=P(3,10),m=P(7,3);return{em:[[f[0],f[1]-18,'smoke']],lights:[[f[0]-1,f[1]-2],[m[0],m[1]-1]],work:{k:'pour',at:[m[0],m[1]],fur:[f[0],f[1]]}};}));
     SP.b3.R.forEach(sp=>add(1,R,3,sp));SP.b3.C.forEach(sp=>add(1,C,3,sp));SP.b3.I.forEach(sp=>add(1,I,3,sp));
 
     /* ---- early modern ---- */
@@ -4772,8 +4772,12 @@ function jangTest(){if(W.era!==2){toast(L2('장날은 왕조 시대에서 볼 �
   if(jangNight())toast(L2('지금은 밤이라 난전을 걷었어요. 낮에 다시 열려요.','It is night, so the stalls are packed away until morning.'),'info');}
 // boats: sail over water from tile to tile (under bridges too), one for each port
 const isWater=(x,y)=>inb(x,y)&&W.terrain[idx(x,y)]===1;
-function stepBoats(dt){const S=W.st,target=Math.min(36,S.ports||0);   // one boat per port
-  if(boats.length<target&&Math.random()<.04){const ps=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.PORT&&isRoot(i))ps.push(i);
+function stepBoats(dt){const S=W.st,fish=W.era<=1?Math.min(3,Math.floor((S.pop||0)/150)):0,target=Math.min(36,S.ports||0)+fish;   // one boat per port, and a few fishing canoes in the early ages
+  if(fish&&boats.filter(b=>b.fish).length<fish&&Math.random()<.03){const bl=[];for(let i=0;i<N*N;i+=3)if(isBld(i))bl.push(i);   // a canoe sets out from open water near the town
+    for(let n=0;n<200&&bl.length;n++){const x=(Math.random()*N)|0,y=(Math.random()*N)|0;if(!isWater(x,y))continue;const opts=[0,1,2,3].filter(d=>isWater(x+DIRS[d][0],y+DIRS[d][1]));if(opts.length<2)continue;
+      let near=false;for(let k=0;k<bl.length;k+=Math.max(1,bl.length/150|0)){const j=bl[k];if(Math.abs(j%N-x)+Math.abs((j/N|0)-y)<=14){near=true;break;}}if(!near)continue;
+      const d=opts[(Math.random()*opts.length)|0];boats.push({port:null,fish:1,fx:x+.5,fy:y+.5,tx:x+DIRS[d][0],ty:y+DIRS[d][1],d,hd:Math.atan2(DIRS[d][1],DIRS[d][0]),e:0,sp:.14+Math.random()*.06,ph:Math.random()*6,wake:[],wt:0});break;}}
+  if(boats.filter(b=>!b.fish).length<target-fish&&Math.random()<.04){const ps=[];for(let i=0;i<N*N;i++)if(W.kind[i]===K.PORT&&isRoot(i))ps.push(i);
     const p0=ps[(Math.random()*ps.length)|0],ws=aroundOf(p0).filter(([x,y])=>isWater(x,y));
     if(ws.length){const[x,y]=ws[(Math.random()*ws.length)|0],opts=[0,1,2,3].filter(d=>isWater(x+DIRS[d][0],y+DIRS[d][1]));
       if(opts.length){const d=opts[(Math.random()*opts.length)|0];
@@ -5268,7 +5272,7 @@ function render(){seasonGrass();
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);litNow=nightF>.01?litOf(ba):1;drawSpr(c,spb,asx,asy);litNow=1;emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
-      else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.torches)torchFlicker(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.torches)torchFlicker(c,sp,sx,sy);if(sp.work)workAnim(c,sp,sx,sy,i);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK){const sp=FL(parkSprite(i),i),e=Math.min(5,w.te[i]),pt=e>=3&&e<=4?SP.parkTrees[0]:null,fl=W.flip[anc(i)];
       const tree=(j,back)=>{const[u0,v0,ts]=pt[j],u=fl?v0:u0,v=fl?u0:v0;if((u+v<.9)!==back)return;bendDX=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(ts,x,y,j+7),sx+(u-v)*16,sy+(u+v)*8);bendDX=0;};
@@ -5320,7 +5324,7 @@ const DECO_ROT={1:2,3:2,4:4,5:2,6:4,7:2,9:2,10:2,12:2};let decoRot=0;
 function flipped(sp){if(sp._f)return sp._f;const fl=src=>{if(!src)return null;const cv=document.createElement('canvas');cv.width=src.width;cv.height=src.height;const g=cv.getContext('2d');g.translate(src.width,0);g.scale(-1,1);g.drawImage(src,0,0);return cv;};
   const mx=v=>v&&v.map(a=>[sp.w-1-a[0],...a.slice(1)]);
   const m1=v=>v&&[sp.w-1-v[0],...v.slice(1)];
-  return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,sil:null,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em),torches:mx(sp.torches),siren:m1(sp.siren),nose:m1(sp.nose),head:m1(sp.head),hub:m1(sp.hub)});}
+  return sp._f=Object.assign({},sp,{c:fl(sp.c),n:fl(sp.n),ox:-sp.ox-sp.w,sh:undefined,sil:null,id:0,_f:null,lights:mx(sp.lights),blink:mx(sp.blink),em:mx(sp.em),torches:mx(sp.torches),work:sp.work&&Object.assign({},sp.work,{at:m1(sp.work.at),fur:m1(sp.work.fur),fl:!sp.work.fl}),siren:m1(sp.siren),nose:m1(sp.nose),head:m1(sp.head),hub:m1(sp.hub)});}
 // 건물 돌리기: any building can be mirrored (W.flip on its anchor tile); multi-tile ground art is mirrored with it
 const anc=i=>W.anchor[i]>=0?W.anchor[i]:i,FL=(sp,i)=>sp&&W.flip[anc(i)]?flipped(sp):sp;
 let buildFlip=0;const canTurn=t=>t&&!t.items&&t.kind>=K.POLICE&&t.kind!==K.WIND&&t.kind!==K.DECO&&t.kind!==K.AD;
@@ -5500,6 +5504,29 @@ function landmarkAnim(c,k,a,X,Y){const S=lmkSprites(),fl=!!W.flip[a],day=clockT>
   if(k===K.CHIEF){   // the banners by the gate flap: the loose end ripples
     for(const[s0,col0,dx0]of[[30.5,'#c0392b',-3],[21.5,'#2f5f8f',1]]){const[gx,gy]=at(s0,1,0),bx=gx+(fl?-dx0-4:dx0),q=t*5+s0;
       for(let r=0;r<9;r++){const w=Math.sin(q+r*.7);c.fillStyle=nightCss(col0,nightF*.8,1);c.fillRect(bx+(fl?0:4),gy+1-15+2+r+2+(w>.3?1:0),1,1);if(w>.6){c.fillStyle=nightCss(col0,nightF*.8,.6);c.fillRect(bx+(fl?-1:5),gy-12+r+2,1,1);}}}}}
+// people at work in the bronze age, drawn over the building: a smith hammering at the anvil with sparks flying off each blow,
+// the foundry's furnace mouth flickering and the pour shimmering with sparks rising off the mould, and at some houses a woman
+// pounding grain in a wooden mortar. Smiths keep at it into the evening; the pounding stops at dusk.
+function workAnim(c,sp,sx,sy,i){const w=sp.work,f=w.fl?-1:1,X=sx+sp.ox,Y=sy+sp.oy,x0=X+w.at[0],y0=Y+w.at[1],nf=nightF*.85,ga=c.globalAlpha,
+    P=(dx,dy,cl,a)=>{c.fillStyle=a==null?nightCss(cl,nf):nightCss(cl,nf,a);c.fillRect(x0+dx*f,y0+dy,1,1);},L=(dx,dy,cl,a)=>{c.fillStyle=`rgba(${rgbOf(cl).join(',')},${a==null?1:a})`;c.fillRect(x0+dx*f,y0+dy,1,1);},
+    seed=hash(i%N,i/N|0,77),work=clockT>=6.5&&clockT<(w.k==='mortar'?18.5:21);
+  if(w.k==='forge'){L(-4,-2,'#ff8a3a');L(-5,-2,'#ffb04a');if(!work)return;
+    const q=(now/520+seed*3)%1,up=q<.55;
+    for(const[dx,dy,cl]of[[-1,0,'#3a2a1a'],[1,0,'#3a2a1a'],[-1,-1,'#3a2a1a'],[1,-1,'#3a2a1a'],[-1,-2,'#6a5236'],[0,-2,'#6a5236'],[1,-2,'#6a5236'],
+      [-1,-3,'#b07a4a'],[0,-3,'#c98a54'],[1,-3,'#a8703f'],[-1,-4,'#b07a4a'],[0,-4,'#c98a54'],[1,-4,'#a8703f'],[-1,-5,'#e0aa7e'],[0,-5,'#d0986c'],[-1,-6,'#2a1d14'],[0,-6,'#2a1d14']])P(dx,dy,cl);
+    if(up){P(-2,-4,'#c98a54');P(-2,-5,'#c98a54');P(-2,-6,'#6a4428');P(-3,-7,'#6a4428');P(-3,-8,'#8a8a8a');P(-4,-8,'#6a6a6a');}
+    else{P(-2,-3,'#c98a54');P(-3,-3,'#c98a54');P(-4,-4,'#6a4428');P(-5,-3,'#8a8a8a');P(-5,-4,'#6a6a6a');
+      const t2=(q-.55)/.45;for(let k=0;k<5;k++){const a=k*1.25+seed*6,dx=Math.round(-4.5+Math.cos(a)*t2*6),dy=Math.round(-3-Math.abs(Math.sin(a))*t2*5+t2*t2*4);c.globalAlpha=ga*(1-t2);L(dx,dy,k%2?'#ffd27a':'#fff0a0');}c.globalAlpha=ga;}
+    return;}
+  if(w.k==='pour'){const fx=X+w.fur[0],fy=Y+w.fur[1];for(let k=-2;k<=0;k++)for(const r of[1,2]){const v=hash(k,r,(now/110|0)+i);c.fillStyle=v<.33?'#ffd27a':v<.66?'#ff8a3a':'#ff6a2a';c.fillRect(fx+k*f-(f<0?0:0),fy-r,1,1);}
+    const v=(now/90|0)%3;L(2,-3,['#ffe090','#ffb04a','#ff8a3a'][v]);L(2,-2,['#ff8a3a','#ffd070','#ffb04a'][v]);
+    for(let k=0;k<3;k++){const q=(now/1400+k/3+seed)%1;c.globalAlpha=ga*(1-q);L(Math.round(Math.sin(q*9+k)*2),Math.round(-1-q*9),q<.4?'#fff0a0':'#ff8a3a');}c.globalAlpha=ga;return;}
+  if(w.k==='mortar'){if(seed>.55)return;P(2,0,'#4a2e1a');P(3,0,'#5a3a22');P(4,0,'#4a2e1a');P(2,-1,'#6a4428');P(3,-1,'#7a5233');P(4,-1,'#6a4428');P(3,-2,'#efe6c8');
+    if(!work)return;const q=(now/680+seed*5)%1,up=q<.5;
+    for(const[dx,dy,cl]of[[-1,0,'#3a2a1a'],[0,0,'#3a2a1a'],[-1,-1,'#d8c8a0'],[0,-1,'#d8c8a0'],[1,-1,'#c8b890'],[-1,-2,'#d8c8a0'],[0,-2,'#d8c8a0'],[1,-2,'#c8b890'],
+      [-1,-3,'#e8e0c8'],[0,-3,'#e8e0c8'],[1,-3,'#d8d0b8'],[-1,-4,'#e8e0c8'],[0,-4,'#e8e0c8'],[0,-5,'#e0aa7e'],[-1,-5,'#d0986c'],[-1,-6,'#2a1d14'],[0,-6,'#2a1d14'],[-2,-6,'#2a1d14']])P(dx,dy,cl);
+    if(up){P(1,-4,'#e8e0c8');P(2,-5,'#e0aa7e');for(let k=4;k<=10;k++)P(3,-k,'#9a7448');}
+    else{P(1,-3,'#e8e0c8');P(2,-3,'#e0aa7e');for(let k=2;k<=8;k++)P(3,-k,'#9a7448');if(q<.62){c.globalAlpha=ga*.7;L(1,-3,'#efe6c8');L(5,-3,'#efe6c8');c.globalAlpha=ga;}}}}
 // torch flames flicker: a tip that leaps and sways over the static flame, brighter at night, with a rising spark now and then
 function torchFlicker(c,sp,x,y){const ga=c.globalAlpha;for(const[lx,ly]of sp.torches){const X=Math.round(x+sp.ox+lx),Y=Math.round(y+sp.oy+ly),q=now/95+lx*1.7+ly*.9,h=Math.sin(q)+Math.sin(q*2.3+1)*.6;
     if(nightF>.05){c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*(.42+.08*h);c.drawImage(glowTexOf('warm'),X-24,Y-10);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
