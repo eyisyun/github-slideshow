@@ -2213,6 +2213,132 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       giwa(pb,cx,cy-19,21,6);pb.box({cx,cy:cy-22,hw:12,h:4,L:(a,b)=>b>=3?col('#3f8a6a'):(a|0)%4===0?col('#a8382e'):col('#efe2c0',-.1),R:(a,b)=>b>=3?col('#3f8a6a',-.2):col('#a8382e',-.25),T:()=>col('#a8382e')});giwa(pb,cx,cy-26,16,8);},
       (cx,cy)=>({lights:[[cx-14,cy-6],[cx+14,cy-6]]}));
 
+    /* ---- grand landmarks (3x3): drafts ---- */
+    const mk3=(H,fn,meta)=>{const pb=new PB(96,H),cx=48,cy=H-24;fn(pb,cx,cy);return mk(pb,-48,48-H,true,meta&&meta(cx,cy));};
+    // rectangular iso box: bottom corner (bx,by), the front-left face runs A px left, the front-right face B px right. Shaders get (a,b)
+    // like PB.box: a from the left corner along the left face, from the bottom corner along the right face
+    const rbox=(pb,bx,by,A,B,h,L,R,T)=>{
+      if(L)for(let x=Math.floor(bx-A);x<Math.ceil(bx);x++){const s=bx-(x+.5);if(s<0||s>A)continue;const eb=by-s/2;
+        for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h){let v=L(A-s,b,A,h);if(v==null)continue;if(h>=3&&b<1)v=tone(v,-.2);pb.put(x,y,v);}}}
+      if(R)for(let x=Math.floor(bx);x<Math.ceil(bx+B);x++){const t=x+.5-bx;if(t<0||t>B)continue;const eb=by-t/2;
+        for(let y=Math.floor(eb-h-1);y<=Math.ceil(eb+1);y++){const b=eb-(y+.5);if(b>=0&&b<h){let v=R(t,b,B,h);if(v==null)continue;if(h>=3&&b<1)v=tone(v,-.2);pb.put(x,y,v);}}}
+      if(T)for(let y=Math.floor(by-h-(A+B)/2-1);y<=Math.ceil(by-h);y++)for(let x=Math.floor(bx-A);x<Math.ceil(bx+B);x++){
+        const X=x+.5-bx,Y=y+.5-(by-h),t=(X-2*Y)/2,s=(-2*Y-X)/2;if(s>=0&&s<=A&&t>=0&&t<=B){const v=T(s,t,x,y);if(v!=null)pb.put(x,y,v);}}};
+    // a hip roof over a rectangle as a height field: rise px per px inward, curved like a tiled roof when sweep>0, eaves corners
+    // lifted by lift px. style 'giwa' draws tile rows and a white ridge, 'straw' draws thatch courses and a rope net
+    const rroof=(pb,bx,by,A,B,rise,hex,o={})=>{const buf=new Map(),dm=Math.min(A,B)/2,sw=o.sweep||0,lift=o.lift||0,st=o.style||'giwa',cap=o.cap||1e9;
+      for(let s=0;s<=A;s+=.3)for(let t=0;t<=B;t+=.3){const ds=Math.min(s,A-s),dt=Math.min(t,B-t),d=Math.min(ds,dt),f=Math.min(cap,d)/dm;
+        let z=rise*dm*(sw?Math.pow(f,1+sw):f);const other=ds<dt?dt:ds;if(d<2.2&&lift)z+=lift*Math.max(0,1-other/5)*(1-d/2.2);
+        const x=Math.round(bx-s+t-.5),y=Math.round(by-s/2-t/2-z-.5),key=s+t,k=x*4096+y,old=buf.get(k);if(old&&old[0]<=key)continue;
+        const face=ds<dt?(s<A-s?'R':'B'):(t<B-t?'L':'B');let sh=face==='L'?.06:face==='R'?-.26:-.12;
+        if(d>=Math.min(cap,dm)-.45)sh=.3;
+        if(st==='giwa'){const along=face==='L'?s:t;if(Math.floor(d*1.25)%3===2)sh-=.1;else if((Math.round(along)%3)===0)sh-=.05;if(d<.8)sh=-.5;}
+        else{if(Math.floor(d)%3===0)sh-=.1;if(hash(x,y,o.seed||5)<.14)sh-=.12;if(d<.8)sh-=.22;const along=face==='L'?s:t;if(Math.round(along)%5===0&&d>1)sh-=.18;}
+        buf.set(k,[key,x,y,col(hex,sh)]);}
+      for(const[,x,y,c]of buf.values())pb.put(x,y,c);
+      if(st==='giwa'&&o.ridge!==false){const ry=Math.min(cap,dm);// white ridge along the long axis
+        const along=A>=B,len=(along?A:B)-2*ry;for(let u=-.5;u<=len+.5;u+=.5){const s=along?ry+u:ry,t=along?ry:ry+u,z=rise*dm*(sw?Math.pow(Math.min(cap,ry)/dm,1+sw):Math.min(cap,ry)/dm);
+          const x=Math.round(bx-s+t-.5),y=Math.round(by-s/2-t/2-z-.5);pb.put(x,y-1,col('#e8e4dc',.05));pb.put(x,y,col('#cfcac0',-.1));}
+        for(const u of[-1,len+1]){const s=along?ry+u:ry,t=along?ry:ry+u,z=rise*dm*(sw?Math.pow(Math.min(cap,ry)/dm,1+sw):Math.min(cap,ry)/dm);const x=Math.round(bx-s+t-.5),y=Math.round(by-s/2-t/2-z-.5);
+          pb.put(x,y-2,col('#4a4e58'));pb.put(x,y-3,col('#3a3e48'));}}};
+    // sharpened-log palisade between two points: posts of mixed height with pointed tips and a lashing band
+    const palisade=(pb,x0,y0,x1,y1,h,seed)=>{const n=Math.max(Math.abs(x1-x0),1);for(let i=0;i<=n;i++){const x=Math.round(x0+(x1-x0)*i/n),y=Math.round(y0+(y1-y0)*i/n);
+        const hh=h+(hash(x,seed,1)<.3?1:0),sh=(x%2?-.1:.05)+(hash(x,y,seed)<.2?-.12:0);
+        for(let k=0;k<hh;k++)pb.put(x,y-k,col(k===3||k===hh-4?'#4a3020':'#8a6440',sh+(k===0?-.2:0)));pb.put(x,y-hh,col('#b89468',.1));if(x%2===0)pb.put(x,y-hh-1,col('#a8845a'));}};
+    const banner=(pb,x,y,h,c)=>{posts(pb,[[x,y]],h,'#5a3a22');for(let r=0;r<9;r++)for(let k=1;k<4;k++)pb.put(x+k,y-h+2+r+(k>>1),col(c,(k===3?-.15:0)+(r%3===0?-.08:0)));};
+    const sotdae=(pb,x,y,h)=>{posts(pb,[[x,y]],h,'#7a5233');pb.put(x-1,y-h,col('#5a3a22'));pb.put(x,y-h-1,col('#5a3a22'));pb.put(x+1,y-h-1,col('#6a4428'));pb.put(x+2,y-h-2,col('#5a3a22'));pb.put(x-2,y-h+1,col('#5a3a22'));};
+    // lot coordinates for a 3x3 sprite: s runs from the bottom corner up the front-left edge, t up the front-right edge, both 0..48
+    const lotP=(cx,cy)=>(s,t,z=0)=>[cx-s+t,cy+24-(s+t)/2-z];
+    // 족장의 목책 마을: the chief's compound. A palisade with a gate of bird poles, a watchtower, a great raised-floor hall,
+    // a granary on stilts, two thatched houses, a ritual pole hung with bronze bells and mirrors, a firepit and a jar terrace
+    SP.chiefDraft=mk3(124,(pb,cx,cy)=>{const P=lotP(cx,cy);
+      pb.diamond(cx,cy,47,(u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);return col(e<.06?PAL.g1:'#b49a72',e<.06?(hash(x,y,41)<.3?-.08:0):hash(x,y,42)<.12?-.1:hash(x,y,43)<.06?.08:0);});
+      for(let t=1;t<20;t+=.5)for(let w=-2;w<=2;w++){const[x,y]=P(26+w,t);pb.put(Math.round(x),Math.round(y),col('#a08660',hash(x|0,y|0,44)<.2?-.06:.03));}   // the worn path from the gate
+      const fence=(s0,t0,s1,t1,h,sd)=>{const[x0,y0]=P(s0,t0),[x1,y1]=P(s1,t1);palisade(pb,x0,y0,x1,y1,h,sd);};
+      fence(47,1,47,47,8,1);fence(47,47,1,47,8,2);                                                                                       // back walls
+      // watchtower near the back corner: four stilts, braces, a railed platform, a hipped thatch roof and a watchman
+      {const[tx,ty]=P(41,41);for(const[dx,dy]of[[-5,0],[5,0],[0,-2.5],[0,2.5]])posts(pb,[[tx+dx,Math.round(ty+dy)]],30,'#6a4428');
+        for(let k=0;k<3;k++){pb.line(tx-5,ty-5-k*9,tx,ty-2-k*9-6,col('#5a3a22'));pb.line(tx+5,ty-5-k*9,tx,ty-2-k*9-6,col('#5a3a22'));}
+        pb.box({cx:tx,cy:ty-29,hw:7,h:2,L:()=>col('#8a6440'),R:()=>col('#8a6440',-.3),T:()=>col('#a37b4c')});
+        for(let r=0;r<5;r++){pb.put(tx+1,ty-32-r,col(r<2?'#7a5a3a':r<4?'#c9a077':'#2a1a10'));pb.put(tx+2,ty-32-r,col(r<2?'#6a4a2a':r<4?'#b88c64':'#2a1a10'));}
+        for(let k=-7;k<=7;k++){if(k%2===0)for(let r=0;r<3;r++)pb.put(tx+k,ty-31-r+Math.round(Math.abs(k)/2),col('#6a4428'));pb.put(tx+k,ty-34+Math.round(Math.abs(k)/2),col('#7a5233'));}
+        posts(pb,[[tx-7,ty-31],[tx+7,ty-31]],7,'#6a4428');thatchRoof(pb,tx,ty-38,10,10,STRAW[2]);}
+      // granary on stilts behind the hall's left end, with a notched-log ladder
+      {const[gx,gy]=P(42,14);posts(pb,[[gx-4,gy],[gx+4,gy],[gx,gy+2],[gx,gy-2]],6,'#6a4428');for(const[dx,dy]of[[-4,0],[4,0],[0,2]])pb.ell(gx+dx,gy+dy-5,1.4,()=>col('#9a958a'));
+        pb.box({cx:gx,cy:gy-6,hw:6,h:6,L:(a,b)=>col('#8a6440',((b|0)%2?-.08:.04)+((a|0)%3===0?-.1:0)),R:(a,b)=>col('#8a6440',-.3+((b|0)%2?-.06:0))});thatchRoof(pb,gx,gy-12,8,8,STRAW[3]);
+        for(let k=0;k<7;k++)pb.put(gx+8-(k>>2),gy+2-k,col('#7a5233',k%2?.1:-.1));}
+      // the great raised-floor hall (고상가옥): stilts, a plank floor with a porch rail, mud-and-timber walls, a tall long thatch
+      {const s0=16,t0=20,A=24,B=13,Z=8,[bx,by]=P(s0,t0);
+        for(let k=0;k<=6;k++){const[x,y]=P(s0+k/6*A,t0);posts(pb,[[Math.round(x),Math.round(y)]],Z,'#5a3a22');}for(let k=1;k<=3;k++){const[x,y]=P(s0,t0+k/3*B);posts(pb,[[Math.round(x),Math.round(y)]],Z,'#5a3a22');}
+        for(let k=0;k<6;k++){const[x,y]=P(s0+k/6*A+2,t0);pb.line(Math.round(x),Math.round(y)-1,Math.round(x)-4,Math.round(y)-Z+2,col('#4a3020'));}   // braces
+        rbox(pb,bx,by-Z+1,A,B,2,(a)=>col('#9a7448',(a|0)%3===0?-.12:0),()=>col('#9a7448',-.3),(s)=>col('#a37b4c',Math.round(s)%2?-.06:.04));
+        const W=(t)=>(a,b,AA,h)=>{if((a|0)%5===0||b>=h-1)return col('#6a4428',t);if(b<1)return col('#7a5233',t);
+            if(!t&&a>AA*.45&&a<AA*.45+3&&b<6)return col('#2a1a10');
+            if(((a|0)%10>=2&&(a|0)%10<5)&&b>=2.5&&b<5)return((a*2|0)+(b*2|0))%2?[col('#efe6c8',t-.05),col('#ffcf7a')]:col('#6a4428',t);return col('#c9a77a',t+(hash(a|0,b|0,6)<.18?-.08:0));};
+        rbox(pb,bx,by-Z-1-1,A-3,B-3,9,W(0),W(-.24));
+        for(let k=0;k<=A;k+=2){const[x,y]=P(s0+k,t0,Z+1);pb.put(Math.round(x),Math.round(y)-1,col('#7a5233',.1));if(k%4===0)pb.put(Math.round(x),Math.round(y),col('#6a4428'));}   // porch rail
+        const[rx,ry]=P(s0-1.5,t0-1.5,Z+10);rroof(pb,rx,ry,A+1,B+1,1.35,STRAW[0],{style:'straw',seed:71});
+        const[k1,k2]=P(s0+B/2+.5-1.5+.5,t0+B/2-1.5+.5,Z+10+1.35*(B+1)/2);for(let k=0;k<A+1-B;k++){pb.put(Math.round(k1-k),Math.round(k2-k/2)-1,col(STRAW[0],.28));}   // ridge bundle
+        for(const e of[0,A+1-B]){const x=Math.round(k1-e),y=Math.round(k2-e/2)-1;pb.line(x,y,x-2,y-4,col('#5a3a22'));pb.line(x,y,x+2,y-4,col('#5a3a22'));}
+        const[lx,ly]=P(s0+A*.45+1,t0-1);for(let k=0;k<8;k++)pb.put(Math.round(lx)+(k>>2)-1,Math.round(ly)+1-k,col('#7a5233',k%2?.12:-.1));}       // ladder
+      // two thatched houses down the right side
+      {const[x,y]=P(9,40);choga(pb,x,y,7,5);thatchRoof(pb,x,y-6,9.5,8,STRAW[1]);}
+      {const[x,y]=P(8,28);choga(pb,x,y,6,5,'#bfa070');thatchRoof(pb,x,y-6,8.5,7,STRAW[3]);firewood(pb,x-12,y+1,4);}
+      // the ritual pole: bronze mirrors and bells on a tall pole, straw rope with strips of cloth
+      {const[px,py]=P(13,9);posts(pb,[[px,py]],28,'#6a4428');for(let k=-3;k<=3;k++)pb.put(px+k,py-26,col('#5a3a22'));
+        for(const dx of[-3,3]){pb.put(px+dx,py-25,col('#8a6a3a'));pb.put(px+dx,py-24,[col('#c9a040',.2),col('#e8c060')]);}pb.ell(px,py-30,1.7,()=>[col('#d8b050',.3),col('#ffe090')]);
+        for(let k=0;k<7;k++)pb.put(px-3+k,py-19+(k%2),col('#e8d8a0'));for(const k of[-2,1,3])for(let r=0;r<3;r++)pb.put(px+k,py-18+r,col(['#c0392b','#f2ede0','#2f5f8f'][(k+3)%3]));}
+      // the yard: firepit with a ring of stones, a jar terrace and a grinding stone
+      {const[x,y]=P(18,10);stoneRing(pb,x,y,3.8);pb.ell(x,y,2.5,()=>col('#3a2014'));pb.put(x,y-1,[col('#7a3a1a'),col('#ffb04a')]);}
+      {const[x,y]=P(36,9);jarTerrace(pb,x,y,5);}
+      // front walls with the gate: two tall posts with a double lintel topped by wooden birds, flanked by banners
+      fence(1,47,1,1,5,5);fence(47,1,31,1,5,3);fence(21,1,1,1,5,4);
+      {const[ax,ay]=P(30.5,1),[bx2,by2]=P(21.5,1);posts(pb,[[ax,ay],[bx2,by2]],16,'#5a3a22');
+        pb.line(ax-1,ay-14,bx2+1,by2-14,col('#6a4428'));pb.line(ax-1,ay-15,bx2+1,by2-15,col('#7a5233'));pb.line(ax,ay-11,bx2,by2-11,col('#6a4428'));
+        for(let k=0;k<4;k++){const[x,y]=P(29.5-k*2.6,1);sotdae(pb,Math.round(x),Math.round(y)-16,3);}
+        banner(pb,ax-3,ay+1,15,'#c0392b');banner(pb,bx2+1,by2+1,15,'#2f5f8f');}},
+      (cx,cy)=>{const P=lotP(cx,cy),f=P(18,10);return{em:[[f[0],f[1]-4,'smoke']],lights:[[f[0],f[1]-1],[cx-6,cy-16]]};});
+    // 궁궐 정전: the throne hall. A courtyard of grey flagstones, covered corridors with red pillars on the back sides, a two-tier
+    // stone terrace with balustrades and a central stair, a two-storey hall with red pillars, latticed doors and painted brackets,
+    // bronze water vats, rank stones lining the royal path and a low tiled wall with a gate in front
+    SP.jeongDraft=mk3(150,(pb,cx,cy)=>{const RED='#a8382e',GRN='#3f8a6a',ST='#dcd7cc',P=lotP(cx,cy);
+      pb.diamond(cx,cy,47,(u,v,x,y)=>{const gu=Math.floor(u*20+(Math.floor(v*20)%2)*.5),gv=Math.floor(v*20),e=(u*20+(gv%2)*.5)%1<.12||(v*20)%1<.12;return col('#a7a093',(e?-.14:0)+(hash(gu,gv,5)-.5)*.12);});
+      const RB=(s,t,z,A,B,h,L,R,T)=>{const[x,y]=P(s,t,z);rbox(pb,x,y,A,B,h,L,R,T);};
+      const RR=(s,t,z,A,B,rise,hex,o)=>{const[x,y]=P(s,t,z);rroof(pb,x,y,A,B,rise,hex,o);};
+      // corridors (회랑) on the two back edges: stone footing, red pillars, a dark open gallery, a green bracket band and a tiled roof
+      const cor=(s,t,A,B)=>{RB(s,t,0,A,B,1.5,()=>col(ST,-.12),()=>col(ST,-.34),()=>col(ST,.02));
+        RB(s+.6,t+.6,1.5,A-1.2,B-1.2,8,(a,b,AA,h)=>(a|0)%4===0?col(RED,.05):b>=h-1.6?col(GRN,(a|0)%2?0:-.12):col('#3a2a24',-.1),(a,b,BB,h)=>(a|0)%4===0?col(RED,-.2):b>=h-1.6?col(GRN,-.25):col('#3a2a24',-.25));
+        RR(s-.6,t-.6,9.5,A+1.2,B+1.2,.7,TILE,{sweep:.4,lift:1.5});};
+      cor(41,1,6,46);cor(1,41,40,6);
+      // the two-tier terrace (월대) with white balustrades
+      const fl=(t)=>(a,b)=>col(ST,t+((((a|0)+((b|0)%2?2:0))%4===0)?-.08:0));
+      const rail=(s,t,z,A,B)=>{for(let k=0;k<=A;k+=.5){const[x,y]=P(s+k,t,z);pb.put(Math.round(x),Math.round(y)-1,col('#f4f1ea'));if(Math.round(k*2)%6===0)pb.put(Math.round(x),Math.round(y)-2,col('#f4f1ea'));}
+        for(let k=0;k<=B;k+=.5){const[x,y]=P(s,t+k,z);pb.put(Math.round(x),Math.round(y)-1,col('#d8d4cc'));if(Math.round(k*2)%6===0)pb.put(Math.round(x),Math.round(y)-2,col('#d8d4cc'));}};
+      RB(9,10,0,32,28,3,fl(0),fl(-.28),(s,t,x,y)=>col('#d4cfc4',hash(x,y,9)<.1?-.06:0));rail(9,10,3,32,28);
+      RB(12,13,3,26,22,3,fl(.02),fl(-.26),(s,t,x,y)=>col('#dcd7cd',hash(x,y,8)<.1?-.06:0));rail(12,13,6,26,22);
+      // the hall: stone plinth, red pillars, latticed doors that glow at night, a blue-and-green bracket band (단청)
+      const s0=15,t0=17,A=20,B=14,z0=6;
+      RB(s0-.8,t0-.8,z0,A+1.6,B+1.6,1.5,()=>col('#b9b3a6'),()=>col('#b9b3a6',-.3),()=>col('#a39d90'));
+      const wall=(t)=>(a,b,W,h)=>{if((a|0)%4===0)return col(RED,t+.04);if(b>=h-2.4)return((a*2|0)%3===0)?col('#2f6fa8',t):((a*2|0)%3===1)?col('#d8a83a',t):col(GRN,t);
+          if(b<1)return col('#8a6a44',t);if(b<h-2.8)return((a*2|0)%2===0||(b*2|0)%3===0)?col('#9a6a40',t-.1):[col('#f4e6c0',t-.05),col('#ffd38a')];return col(RED,t);};
+      RB(s0,t0,z0+1.5,A,B,13,wall(0),wall(-.26));
+      RR(s0-3.5,t0-3.5,z0+14.5,A+7,B+7,.6,TILE,{sweep:.5,lift:3,cap:5,ridge:false});                                                         // lower roof skirt
+      RB(s0+2,t0+2,z0+16,A-4,B-4,6,(a,b,W,h)=>(a|0)%4===0?col(RED):b>=h-2?col(GRN,(a|0)%3?0:-.12):[col('#f4e6c0',-.08),col('#ffd38a')],(a,b,W,h)=>(a|0)%4===0?col(RED,-.25):b>=h-2?col(GRN,-.25):[col('#efe2c0',-.32),col('#ffcf7a')]);
+      RR(s0-2,t0-2,z0+21.5,A+4,B+4,1.0,TILE,{sweep:.7,lift:3.5});
+      // the central stair up the front-left faces of both tiers, with the carved royal slab (답도) down the middle
+      for(let j=6;j>=0;j--){const sw=j<3?7:7;RB(21.5,10-(6-j)*1.1-1,0,sw,1.2,j+1,(a)=>col(Math.abs(a-sw/2)<1.2?'#c9c3b4':'#e4e0d8',a<1||a>sw-1?-.12:0),()=>col('#b9b4aa'),(s)=>col(Math.abs(s-21.5-sw/2)<1.2?'#cfc9ba':'#efebe4'));}
+      // bronze vats (드므) at the terrace corners, rank stones (품계석) along the path, stone lanterns
+      for(const[s,t]of[[11,12],[39,12]]){const[x,y]=P(s,t,3);pb.cyl(x,y,2.2,3,(dx)=>col('#6a6040',dx<-.3?.15:dx>.4?-.3:0),()=>col('#3a5a6a'));}
+      for(let k=0;k<4;k++)for(const sd of[-1,1]){const[x,y]=P(25+sd*6,1.8+k*1.6);pb.box({cx:Math.round(x),cy:Math.round(y),hw:.9,h:2,L:()=>col('#c9c3b6'),R:()=>col('#c9c3b6',-.3),T:()=>col('#e0dbd0')});}
+      for(let k=0;k<11;k++){const[x,y]=P(25,k*.8);pb.put(Math.round(x),Math.round(y),col('#c9c3b6',.08));pb.put(Math.round(x)+1,Math.round(y),col('#c9c3b6',-.05));}
+      // a low tiled wall along the front edges with a gate on the royal path
+      {const D=(s0,t0,s1,t1)=>{const[a,b]=P(s0,t0),[c,d]=P(s1,t1);damjang(pb,a,b,c,d);};D(1,47,1,1);D(47,1,30,1);D(20,1,1,1);
+        RB(19.5,-.5,0,11,4,1,()=>col(ST,-.1),()=>col(ST,-.32),()=>col(ST));
+        RB(20,0,1,10,3,8,(a,b,AA,h)=>(a|0)%5===0?col(RED,.05):b>=h-1.6?col(GRN,(a|0)%2?0:-.12):Math.abs(a-5)<2.4?col('#7a2a22',(a|0)===5?-.2:0):col(RED,-.08),
+          (a,b,BB,h)=>b>=h-1.6?col(GRN,-.25):col(RED,-.3));
+        RR(18.5,-1.5,9,13,6,.75,TILE,{sweep:.5,lift:2.5});}},
+      (cx,cy)=>{const P=lotP(cx,cy),a=P(22,17,14),b=P(15,26,14),c=P(25,19,25);return{lights:[a,b,c]};});
+
     /* ---- early modern ---- */
     const brick=(hex,t)=>(a,b)=>col(hex,t+((((b|0)%2===0)&&(((a|0)+(((b|0)%4)?0:2))%4===0))?-.15:0));
     const BR=['#a8553d','#8a4a3a','#b8664a','#9a5a48'];
