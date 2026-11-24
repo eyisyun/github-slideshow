@@ -2078,6 +2078,33 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         for(let r=0;r<6;r++){const hw=r<2?2:r===2?1:r<5?2:1;for(let k=-hw;k<=hw;k++)pb.put(x+k,y-r,col(r===2?'#6a4a1a':'#f4d870',(k<0?.15:k>0?-.2:0)+(r>4?.12:0)));}}
       if(v<2){const[x,y]=fieldAt(cx,cy,.5,.62);scarecrow(pb,x,y);}
       if(v!==1){const[x,y]=fieldAt(cx,cy,.25,.3);heron(pb,x,y);}}));
+    // 논밭 through the year, four stages x two looks, for the seasonal fields (SP.paddy[stage][look]):
+    // 0 spring: flooded and newly planted, sky reflected in the water; 1 summer: tall dense green; 2 early autumn: heavy gold heads bowing;
+    // 3 after the harvest: stubble in rows with straw stacks (볏가리) and sheaves drying on the ridges
+    {const ridge=(u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.05)return col('#7a5a36',(x+y)%3===0?-.12:-.04);if(e<.085)return col('#9a7a4c',(x*3+y)%5===0?.1:.03);
+        if(Math.abs(u-.5)<.025)return col('#8a6a40',.04);return null;};   // a raised earth bank all round and a footpath ridge across the middle
+      const plant=(pb,x,y,h,cs,tip)=>{for(let k=0;k<h;k++)pb.put(x,y-k,col(cs[Math.min(cs.length-1,k)]));if(tip)pb.put(x+1,y-h+1,col(tip));};
+      const stack=(pb,x,y)=>{for(let r=0;r<9;r++){const hw=r<3?4:r<5?3:r<7?2:1;for(let k=-hw;k<=hw;k++)pb.put(x+k,y-r,col(k===-hw||k===hw?'#8a6a2e':'#e8c460',(k<0?.12:k>0?-.22:0)+(r%2?-.06:.06)));}pb.put(x,y-9,col('#6a4a2a'));pb.put(x,y-10,col('#6a4a2a'));pb.put(x-4,y-2,col('#6a4a1e'));pb.put(x+3,y-2,col('#6a4a1e'));};   // a straw rick with a binding band
+      const sparrows=(pb,x,y)=>{for(const[dx,dy]of[[0,0],[3,1],[5,0]]){pb.put(x+dx,y+dy,col('#5a4030'));pb.put(x+dx+1,y+dy,col('#8a6a4a'));}};
+      SP.paddy=[0,1,2,3].map(st=>[0,1].map(look=>mk1(40,(pb,cx,cy)=>{
+        pb.diamond(cx,cy,15.5,(u,w,x,y)=>{const r=ridge(u,w,x,y);if(r)return r;const sky=(1-u)*.5+(1-w)*.3;
+          if(st===0)return col('#7ea8b8',sky*.25+((x*2+y)%11===0?.28:(x+y*3)%13===0?-.08:0));                                      // still water with sky light
+          if(st===1)return col('#5a8a7a',sky*.2+((x*2+y)%9===0?.22:0));                                                 // water glinting between the rows
+          if(st===2)return col('#7a6a3a',(x+y)%3?-.06:.04);
+          const furrow=Math.floor((look?u:w)*9)%2;return col(furrow?'#7a5a3a':'#94784a',hash(x,y,7)<.2?-.12:hash(x,y,8)<.1?.1:0);}); // stubble field: wet earth in furrows
+        for(let i=1;i<11;i++)for(let j=1;j<11;j++){const u=i/11,w=j/11;if(Math.abs(u-.5)<.06)continue;const[x,y]=fieldAt(cx,cy,u,w),h=hash(i,j,st*7+look);
+          if((st===1||st===2)&&j%2)continue;   // planted in rows, with a strip of water or earth showing between them
+          if(st===0){if((i+j)%2||h<.15)continue;plant(pb,x,y,2,['#3e8a34','#7ac85a']);if(h>.7)pb.put(x+1,y,col('#a8d0dc',.2));}                 // seedlings in neat rows, a glint
+          else if(st===1){plant(pb,x,y,4+(h>.6?1:0),['#2a5a26','#3e8a34','#4e9a3e','#6ab84e','#8ad86a'],h>.5?'#7ac85a':null);if(h<.5)plant(pb,x-1,y,3,['#2a5a26','#3e8a34','#5aa84a']);}   // tall and lush, two stalks a clump
+          else if(st===2){plant(pb,x,y,4,['#6a7a30','#8a8a38','#b09a38','#d0a838']);pb.put(x+1,y-3,col('#f0c850'));pb.put(x+1,y-2,col(h>.5?'#d8a830':'#f4d878'));pb.put(x+2,y-2,col('#e0b040'));if(h<.5)plant(pb,x-1,y,3,['#6a7a30','#8a8a38','#c8a038']);}   // heavy heads bowing over
+          else{if((look?i:j)%2===0&&h<.7){pb.put(x,y,col('#b89850'));if(h<.35)pb.put(x,y-1,col('#d0b468'));}}}                         // short stubble
+        if(st===3){for(const[u,w]of look?[[.25,.3],[.72,.62]]:[[.3,.7],[.7,.3],[.75,.75]]){const[x,y]=fieldAt(cx,cy,u,w);stack(pb,x,y);}
+          for(let k=0;k<4;k++){const[x,y]=fieldAt(cx,cy,.04,.2+k*.18);for(let r=0;r<3;r++)pb.put(x+r%2,y-r,col('#e8c860',r?-.1:.1));}   // sheaves leaning on the bank
+          if(!look){const[x,y]=fieldAt(cx,cy,.4,.45);sparrows(pb,x,y);}}
+        if(st===2&&look===0){const[x,y]=fieldAt(cx,cy,.5,.62);scarecrow(pb,x,y);}
+        if(st===2&&look===1){const[x,y]=fieldAt(cx,cy,.3,.2);sparrows(pb,x,y-6);}
+        if(st===1&&look===1){const[x,y]=fieldAt(cx,cy,.5,.35);scarecrow(pb,x,y);}
+        if(st===0){const[x,y]=fieldAt(cx,cy,look?.75:.25,.3);heron(pb,x,y);if(look){const[x2,y2]=fieldAt(cx,cy,.2,.75);heron(pb,x2,y2);}}})));}
     // 청동 공방: a clay furnace glowing at the mouth, bellows, a stone anvil, moulds and ingots, and a thatched shed
     for(let v=0;v<3;v++)add(1,I,2,mk1(50,(pb,cx,cy)=>{pb.ell(cx,cy+1,12,(dx,dy,x,y)=>col('#7a6a4a',0,hash(x,y,2)<.4?160:120));
         choga(pb,cx+4,cy-3,7,5,'#b89a70');thatchRoof(pb,cx+4,cy-8,9,5,STRAW[v]);
@@ -4257,7 +4284,9 @@ function farmer(pose,step){const hat=col('#e2c27a'),hatD=col('#b8984e'),skin=col
 function oxSprites(){if(SP.ox)return SP.ox;const F=OX4.set(true),E=OX4.set(false),drv=SP.walker('#e8e0c8','#8a6a44');
   const fm={};for(const p of['plant','reap','sheaf','walk'])fm[p]=[farmer(p,0),farmer(p,1)];return SP.ox={F,E,drv,fm};}
 function farmMonth(){if(seasonPreview){const t=(now-seasonPreview.t0)/1000;if(t<seasonPreview.len)return(3+t/seasonPreview.len*12)%12;seasonPreview=null;}return((W.cm%12)+(W.ct||0)/CAL_T)%12;}   // the test preview also drives the snow and trees
-function farmStage(){const m=farmMonth();return m<3||m>=10?2:m<8?0:1;}   // 0 young green rice, 1 ripe gold, 2 cut, with sheaves
+const stageOf=m=>m>=3&&m<5.5?0:m>=5.5&&m<8?1:m>=8&&m<10?2:3;   // 0 flooded and planted, 1 summer green, 2 ripe gold, 3 cut, with ricks
+function farmStage(){return stageOf(farmMonth());}
+function fieldStage(i){const m=farmMonth()+(hash(i%N,i/N|0,61)-.5)*1.6;return stageOf((m+12)%12);}   // each field runs a little ahead of or behind the season
 const roadNextTo=i=>{for(const[x,y]of aroundOf(i))if(isRoad(x,y))return idx(x,y);return -1;};
 function roadPath(a,b){if(a<0||b<0)return null;const prev=new Map([[a,-1]]),q=[a];for(let h=0;h<q.length&&q.length<4000;h++){const i=q[h];if(i===b)break;const x=i%N,y=i/N|0;
     for(const[dx,dy]of DIRS){const xx=x+dx,yy=y+dy;if(!isRoad(xx,yy))continue;const j=idx(xx,yy);if(!prev.has(j)){prev.set(j,i);q.push(j);}}}
@@ -4277,7 +4306,7 @@ function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];
     if(!pose)farmers=[];else{farmers=farmers.filter(f=>f.pose===pose&&W.kind[f.i]===K.IND);const wantF=Math.min(10,Math.ceil(fs.length*.6));
       while(farmers.length<wantF&&fs.length){const i=fs[(Math.random()*fs.length)|0];farmers.push({k:'farmer',i,pose,fx:i%N+.2+Math.random()*.6,fy:(i/N|0)+.2+Math.random()*.6,ph:Math.random()*9,face:Math.random()<.5?1:-1,dir:Math.random()<.5?1:-1});}}
     // the harvest bonus, once each time the fields are cut
-    const st=farmStage();if(farmStageLast===1&&st===2&&fs.length){const g=Math.round(fs.length*8*PRICE[1]);W.funds+=g;updateHud(true);sfx('win');
+    const st=farmStage();if(farmStageLast===2&&st===3&&fs.length){const g=Math.round(fs.length*8*PRICE[1]);W.funds+=g;updateHud(true);sfx('win');
       toast(L2(`🌾 추수가 끝났어요! 논밭 ${fs.length}곳에서 거둔 곡식으로 +${money(g)}`,`🌾 The harvest is in! ${fs.length} paddies bring in +${money(g)}`),'good');}farmStageLast=st;}
   // passing on a single-track road: when two carts close in head-on, the empty one (or the later one) pulls over and waits until
   // the other has gone by, then steers back into the middle
@@ -5051,7 +5080,7 @@ function civSprite(k,e,lv){e=Math.min(5,e);if(e>=5){if(k===K.HALL&&SP.hallF)retu
   if(k===K.POLICE)return e<=2?SP.police2:e>=5?SP.policeF:SP.police;if(k===K.SCHOOL)return e<=2?SP.seodang:e>=5?SP.schoolF:SP.school;if(k===K.FIRE)return e>=5?SP.fireF:SP.fire;
   if(k===K.FIREPIT)return SP.firepit;if(k===K.WELL)return SP.well;if(k===K.DOLMEN)return SP.dolmen;if(k===K.MOUND)return SP.mound;if(k===K.PALACE)return SP.palace;if(k===K.STATION)return SP.station;
   return SPK[k]?SPK[k]():null;}
-function bldSprite(i){const e=Math.min(5,W.te[i]),k=W.kind[i],set=SP.E[e][k];if(e===1&&k===K.IND&&W.level[i]===1)return set[1][farmStage()]||set[1][0];const arr=set[Math.min(W.level[i],set.length-1)];return arr[W.vari[i]%arr.length];}
+function bldSprite(i){const e=Math.min(5,W.te[i]),k=W.kind[i],set=SP.E[e][k];if(e===1&&k===K.IND&&W.level[i]===1&&SP.paddy)return SP.paddy[fieldStage(i)][W.vari[i]&1];const arr=set[Math.min(W.level[i],set.length-1)];return arr[W.vari[i]%arr.length];}
 // the present-day park for the toolbar: its ground, trees and sprite put together on one canvas
 function parkIcon(){if(SP.parkIco)return SP.parkIco;const sp=SP.park[0],H=sp.h,c=document.createElement('canvas');c.width=32;c.height=H;const g=c.getContext('2d');
   g.drawImage(SP.parkGV[0][0].c,0,H-16);const tr=(u,v,s2)=>{const t=SP.tree[s2];g.drawImage(t.c,16+(u-v)*16+t.ox,H-16+(u+v)*8+t.oy);};
