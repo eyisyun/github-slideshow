@@ -2491,7 +2491,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     SP.walker=walker;
     SP.veh=[['#8a6a44','#a8865a','#6a5236','#c9a070'].map(b=>walker(b)),
       [...['#e8e0c8','#c9b896'].map(b=>walker(b)),handCart(),handCart('#c9b896')],
-      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),oxCart(),oxCart('#7a5030','#e8d6a8'),palanquin()],
+      [...['#f2ede0','#e8e4dc','#3a5a8a'].map(b=>walker(b)),OX4.traffic(1,'#a8622c','#f2ede0','#8a7a62'),OX4.traffic(2,'#6a4026','#e8e4dc','#5a4a3a'),palanquin()],
       [carVintage('#2a2a30'),carVintage('#5a2a2a'),carVintage('#2f4a3a'),...['#3a3a4a','#6a4a3a'].map(b=>walker(b))],
       [...SP.car,walker('#2a2e3a','#2a2e3a'),walker('#d9463b'),walker('#f2ede0','#3a5a8a'),walker('#f2c140','#3a3a42'),walker('#5a8a6a','#e8e4dc')]];
     SP.icoFire=mk(bitmapPB(["..#.",".##.","####",".##."],{'#':'#ff8a2a'},'#2a1005'),-2,0,false);
@@ -4379,12 +4379,15 @@ function render(parts,d,W,H,cx,cy){const pb=new PB(W,H),zb=new Float32Array(W*H)
       for(let s=s0;s<=s1+1e-6;s+=st)for(let z=z0;z<=z1+1e-6;z+=st){plot(s,t1,z,face('+t',(s-s0)/(s1-s0||1),(z-z0)/(z1-z0||1)));plot(s,t0,z,face('-t',(s-s0)/(s1-s0||1),(z-z0)/(z1-z0||1)));}
       for(let t=t0;t<=t1+1e-6;t+=st)for(let z=z0;z<=z1+1e-6;z+=st){plot(s1,t,z,face('+s',(t-t0)/(t1-t0||1),(z-z0)/(z1-z0||1)));plot(s0,t,z,face('-s',(t-t0)/(t1-t0||1),(z-z0)/(z1-z0||1)));}}
     else if(p.disc){const[s0,t0,z0,r]=p.disc;for(let rr=0;rr<=r;rr+=.2)for(let a=0;a<6.3;a+=.04/(rr+.3)){plot(s0+Math.cos(a)*rr,t0,z0+Math.sin(a)*rr,p.f(rr/r,a));}}
+    else if(p.cyl){const[s0,s1,t0,z0,r]=p.cyl;   // a log lying along s: shaded round side, pale end grain with rings at both ends
+      for(let s=s0;s<=s1+1e-6;s+=.25)for(let a=0;a<6.3;a+=.12/(r+.2)){const ct=Math.cos(a),sz=Math.sin(a);plot(s,t0+ct*r,z0+sz*r,p.f('side',ct,sz,(s-s0)/(s1-s0||1)));}
+      for(const se of[s0,s1])for(let rr=0;rr<=r;rr+=.2)for(let a=0;a<6.3;a+=.1/(rr+.3))plot(se,t0+Math.cos(a)*rr,z0+Math.sin(a)*rr,p.f(se===s1?'end1':'end0',rr/r,a));}
     else if(p.pt){const[s,t,z]=p.pt;plot(s,t,z,p.c);}}
   return pb;}
 return{render,rot};})();
 const OX4=(()=>{
-const OX='#a8622c',OXD='#4a2c16',WOOD='#7e6a54',RIM='#3a2616',SPK='#b08858';
-function parts(load,leg,ph){const st=leg?.9:-.9,P=[],TS=.52;   // TS: the whole rig is narrowed to fit the village's single-track dirt roads
+const OXD='#4a2c16',WOOD='#7e6a54',RIM='#3a2616',SPK='#b08858';
+function parts(load,leg,ph,sty=0,OX='#a8622c'){const st=leg?.9:-.9,P=[],TS=.52;   // TS: the whole rig is narrowed to fit the village's single-track dirt roads
   const B=(box,c,f)=>P.push({box:[box[0],box[1],box[2]*TS,box[3]*TS,box[4],box[5]],c,f});
   // ox (front at +s): four legs stepping in diagonal pairs, body, hump, head, pale muzzle, dark eyes, cream horns, tail
   B([5+st,6+st,-2.6,-1.6,0,3.4],OXD);B([5-st,6-st,1.6,2.6,0,3.4],OXD);B([11-st,12-st,-2.6,-1.6,0,3.4],OXD);B([11+st,12+st,1.6,2.6,0,3.4],OXD);
@@ -4401,16 +4404,33 @@ function parts(load,leg,ph){const st=leg?.9:-.9,P=[],TS=.52;   // TS: the whole 
   B([-7.4,-6.6,-5.6,5.6,3.4,4.2],'#3a2616');
   const wheel=f=>(rr,a)=>rr>.82?col(RIM):rr<.2?col('#22140a'):(((a/(Math.PI/3)+ph)%1+1)%1<.2?col(SPK):null);
   P.push({disc:[-7,-5.6*TS,4.2,4.2],f:wheel()},{disc:[-7,5.6*TS,4.2,4.2],f:wheel()});
-  if(load){const sack=(s,t,z)=>B([s-2,s+2,t-1.6,t+1.6,z,z+2.4],'#cdb888',(nm,a,b)=>nm==='top'?col(Math.abs(a-.5)<.13?'#8a6a3e':'#e2d2a8'):col(Math.abs(a-.5)<.12?'#8a6a3e':'#c8b282',nm==='+s'||nm==='-s'?-.1:0));
+  if(sty){   // dynasty: a slatted rack of stakes and rails round the bed, a harness bell, and a load of straw bundles or firewood
+    for(const t of[-4.3,4.3])for(const s of[-11.7,-8.6,-5.4,-2.2,-.8])B([s-.3,s+.3,t-.3,t+.3,4.6,9],'#6a4a2c');
+    for(const t of[-4.3,4.3])for(const z of[7.2,8.8])B([-12,-.5,t-.25,t+.25,z,z+.4],'#8a6a44');
+    B([13.6,14.6,-.5,.5,3.6,4.6],'#d8a830');
+    if(load&&sty===1){const bundle=(s,t,z)=>B([s-1.7,s+1.7,t-1.5,t+1.5,z,z+2.4],'#e2c878',(nm,a,b)=>nm==='top'?col(Math.abs(a-.5)<.1?'#a8843e':'#ecd690',((a*7|0)%2)*-.06):col(Math.abs(a-.5)<.1&&nm!=='+s'&&nm!=='-s'?'#a8843e':'#dcc070',(nm==='+s'||nm==='-s'?((b*5|0)+(a*6|0))%2*-.12:((b*6|0)%2)*-.06)));
+      for(const s of[-10,-6.6,-3.2])for(const t of[-2.4,0,2.4].slice(0,s<-8?3:3))bundle(s,t,4.6);for(const s of[-8.4,-5])for(const t of[-1.3,1.3])bundle(s,t,7);bundle(-6.6,0,9.4);}
+    else if(load){const log=(t,z,s0,s1)=>P.push({cyl:[s0,s1,t*TS,z,1.05],f:(nm,a,b)=>nm==='side'?col('#7a5434',(b>.4?.12:b<-.4?-.22:0)+(Math.abs(a)>.9?-.1:0)):col(a>.78?'#8a6040':((a*4|0)%2)?'#d8b888':'#c8a070',nm==='end1'?.06:-.04)});
+      for(const[t,z]of[[-2.4,5.6],[0,5.6],[2.4,5.6],[-1.2,7.5],[1.2,7.5],[0,9.3]])log(t,z,-11.8+(t*7%2+2)%1.2,-1+(z%2)*.2);}
+    else B([-10,-3,-2.5,2,4.6,5],'#d8bc6a');}
+  else if(load){const sack=(s,t,z)=>B([s-2,s+2,t-1.6,t+1.6,z,z+2.4],'#cdb888',(nm,a,b)=>nm==='top'?col(Math.abs(a-.5)<.13?'#8a6a3e':'#e2d2a8'):col(Math.abs(a-.5)<.12?'#8a6a3e':'#c8b282',nm==='+s'||nm==='-s'?-.1:0));
     const pot=(s,t,z)=>B([s-1.2,s+1.2,t-1.2,t+1.2,z,z+3],'#c4622e',(nm,a,b)=>nm==='top'?col('#4a2010'):col(b>.75?'#8a4020':'#c4622e',nm==='+t'||nm==='-t'?0:-.12));
     sack(-9,-2,4.6);sack(-9,2,4.6);sack(-5,-2,4.6);pot(-4.6,2.2,4.6);pot(-2.2,-.6,4.6);sack(-7.6,0,7);}
   else B([-10,-3,-2.5,2,4.6,5],'#d8bc6a');
   return P;}
-function sprite(load,leg,ph,d){const W=46,H=34,pb=ISO.render(parts(load,leg,ph),d,W,H,23,24);const s=mk(pb,-23,-24);s.g=0;return s;}
-function set(load){const drv=SP.walker('#e8e0c8','#8a6a44');return[0,1,2,3].map(d=>{const a=sprite(load,0,0,d);a.alt=sprite(load,1,.5,d);
+function sprite(load,leg,ph,d,sty,oxc){const W=46,H=38,pb=ISO.render(parts(load,leg,ph,sty,oxc),d,W,H,23,28);const s=mk(pb,-23,-28);s.g=0;return s;}
+// a dynasty road vehicle: the cart with its driver walking at the ox's side, flattened into one sprite per heading (with a step frame)
+function traffic(sty,oxc,shirt,pants){const drv=SP.walker(shirt,pants);return[0,1,2,3].map(d=>{const one=(leg,ph,alt)=>{const base=sprite(true,leg,ph,d,sty,oxc),w=alt?drv[d].alt||drv[d]:drv[d];
+      const sd=[3.6,-3.6].map(t=>ISO.rot(10,t,d)).sort((p,q)=>(q[0]+q[1])-(p[0]+p[1]))[0],[u,v]=sd,dx=Math.round(u-v),dy=Math.round((u+v)/2),back=false;   // the driver always walks on the side toward the viewer
+      const x0=Math.min(base.ox,dx+w.ox),y0=Math.min(base.oy,dy+w.oy),x1=Math.max(base.ox+base.w,dx+w.ox+w.w),y1=Math.max(base.oy+base.h,dy+w.oy+w.h);
+      const cv=document.createElement('canvas'),cn=document.createElement('canvas');cv.width=cn.width=x1-x0;cv.height=cn.height=y1-y0;const g=cv.getContext('2d'),gn=cn.getContext('2d');
+      const put=(sp,ox,oy)=>{g.drawImage(sp.c,ox+sp.ox-x0,oy+sp.oy-y0);gn.drawImage(sp.n||sp.c,ox+sp.ox-x0,oy+sp.oy-y0);};
+      if(back)put(w,dx,dy);put(base,0,0);if(!back)put(w,dx,dy);return{c:cv,n:cn,ox:x0,oy:y0,w:x1-x0,h:y1-y0,top:y0,g:0};};
+    const a=one(0,0,false);a.alt=one(1,.5,true);return a;});}
+function set(load){const drv=SP.walker('#e8e0c8','#8a6a44');return[0,1,2,3].map(d=>{const a=sprite(load,0,0,d,0,'#a8622c');a.alt=sprite(load,1,.5,d,0,'#a8622c');
   // the driver walks just ahead of the ox, on its near side
   const[u,v]=ISO.rot(23,0,d);a.drv=[Math.round(u-v),Math.round((u+v)/2)];a.alt.drv=a.drv;return a;});}
-return{set};})();
+return{set,traffic};})();
 // ancient age (청동기): ox carts carry grain and pots from the village to the market along the roads and earn money there,
 // then come back empty; paddies follow the year (green in spring and summer, gold in early autumn, cut with sheaves after),
 // farmers plant in spring and reap in autumn, and the end of the harvest pays a bonus. Nothing here is saved.
@@ -5187,7 +5207,7 @@ function render(){seasonGrass();
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
     else if(k===K.WIND){drawSpr(c,SP.wind,sx,sy);blades(c,sx,sy,i);}
     else if(k===K.TOWER){const sp=FL(civSprite(K.TOWER,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
-    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a],w.level[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);if(cs2.crane)craneAnim(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8,a+dy*N+dx,blinkOn);}}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);if(k===K.THEME)themeAnim(c,a,asx,asy+24);if(k===K.AD)adAnim(c,sp,asx,asy);}fronts(a,sz);}}
+    else if(k>=K.COAL){const a=w.anchor[i],sz=sizeOf(k);if(a>=0&&i===a+(sz-1)*(N+1)){const ax=a%N,ay=a/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,sp=FL(civSprite(k,w.te[a],w.level[a]),a);if(w.wb&&w.wb.a===a){const ga=c.globalAlpha;c.globalAlpha=ga*(.25+.5*wbFrac());drawSpr(c,sp,asx,asy);c.globalAlpha=ga;const cs2=w.era<3?SP.consOld:SP.cons;for(const[dx,dy]of[[0,0],[1,0],[0,1],[1,1]]){drawSpr(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8);if(cs2.crane)craneAnim(c,cs2,asx+(dx-dy)*16,asy+(dx+dy)*8,a+dy*N+dx,blinkOn);}}else{drawSpr(c,sp,asx,asy);emit(sp,asx,asy);extras(c,sp,asx,asy,blinkOn);if(k===K.CHIEF||k===K.JEONG)landmarkAnim(c,k,a,asx,asy);if(k===K.THEME)themeAnim(c,a,asx,asy+24);if(k===K.AD)adAnim(c,sp,asx,asy);}fronts(a,sz);}}
     if(w.fire[i])flames(c,i,sx,sy);
     const cs=bucket.get(i);if(cs)for(const car of cs)drawCar(c,car);}
   c.globalAlpha=1;castSh=false;capA=0;
@@ -5383,6 +5403,30 @@ function drawGlows(c,sp,x,y){const ga=c.globalAlpha,ks=lightKinds(sp),base=y+8;c
     if(base-Y>2&&base-Y<30){c.globalAlpha=ga*nightF*.7*fl*(1-(base-Y)/34);c.drawImage(glowTexOf(k,1),X-20,base-7);}   // the pool of light on the ground
     c.globalAlpha=ga*nightF*.85;c.fillStyle='#fffaf0';c.fillRect(X,Y,1,1);});   // the hot core
   c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
+// life on the grand landmarks, drawn over the sprite in lot coordinates (s up the front-left edge, t up the front-right, z up):
+// villagers walk the chief's yard between the gate, the firepit, the hall ladder and the jar terrace, and the banners flap;
+// at the throne hall officials in red and blue robes walk the royal path, climb the stair to the hall and come back down,
+// and two gate guards with spears stand watch, shifting their weight. People go in after dark; the guards stay.
+const LMK={};
+function lmkSprites(){if(LMK.ok)return LMK;LMK.vil=[SP.walker('#c9b896','#8a6a44'),SP.walker('#d8c8a0','#6a5236'),SP.walker('#b8a27a','#7a5a3a')];
+  LMK.off=[SP.walker('#b83a2e','#3a2a2a'),SP.walker('#2f4f8f','#2a2a3a'),SP.walker('#3f7a5a','#2a2a2a')];LMK.grd=SP.walker('#c0392b','#2a2a30');LMK.ok=1;return LMK;}
+const LMK_ROUTES={[K.CHIEF]:[[[26,4],[26,9],[20,12],[24,15],[28,17],[33,12],[36,11],[30,8],[26,6]],[[34,12],[28,17],[21,13],[17,9],[22,8],[30,9]],[[19,11],[25,8],[33,11],[29,16],[22,14]]],
+  [K.JEONG]:[[[25,4,0],[25,10.5,6],[25,15.6,6],[25,15.6,6],[25,10.5,6],[25,4,0],[25,4,0]],[[14,14.5,6],[36,14.5,6]],[[5,12,0],[5,34,0]]]};
+function lmkPos(rt,u){const segs=[];let L=0;for(let n=0;n<rt.length;n++){const a=rt[n],b=rt[(n+1)%rt.length],l=Math.hypot(b[0]-a[0],b[1]-a[1]);segs.push([a,b,l]);L+=l;}
+  let d=((u%L)+L)%L;for(const[a,b,l]of segs){if(d<=l){const f=l?d/l:0;return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,(a[2]||0)+((b[2]||0)-(a[2]||0))*f,b[0]-a[0],b[1]-a[1]];}d-=l;}return[rt[0][0],rt[0][1],0,1,0];}
+function landmarkAnim(c,k,a,X,Y){const S=lmkSprites(),fl=!!W.flip[a],day=clockT>=6.5&&clockT<19.5,t=now/1000;
+  const at=(s,tt,z)=>[Math.round(fl?X+s-tt:X-s+tt),Math.round(Y+48-(s+tt)/2-z)];
+  const dirOf=(ds,dt)=>Math.abs(ds)>=Math.abs(dt)?(ds>0?(fl?3:2):(fl?1:0)):(dt>0?(fl?2:3):(fl?0:1));
+  const ppl=[];
+  if(day){const R=LMK_ROUTES[k],set=k===K.CHIEF?S.vil:S.off,sp=k===K.CHIEF?5:4;
+    R.forEach((rt,n)=>{const[s,tt,z,ds,dt]=lmkPos(rt,t*sp+n*23+a*.37),fr=set[n%set.length][dirOf(ds,dt)],st=((t*4+n)|0)%2;ppl.push([s+tt,s,tt,z,st&&fr.alt?fr.alt:fr]);});}
+  if(k===K.JEONG)for(const[s,tt,sd]of[[31.5,3.5,1],[18.5,3.5,-1]]){const fr=S.grd[fl?0:1],sway=Math.sin(t*.8+sd)>.85?1:0;ppl.push([s+tt,s,tt,0,fr,sd,sway]);}
+  ppl.sort((p,q)=>q[0]-p[0]);   // farther (larger s+t) first
+  for(const[,s,tt,z,fr,sd,sway]of ppl){const[x,y]=at(s,tt,z);drawSpr(c,fr,x+(sway||0),y);
+    if(sd){c.fillStyle=nightCss('#6a4a2a',nightF*.8,1);c.fillRect(x+2+(sway||0),y-14,1,14);c.fillStyle=nightCss('#d8dce2',nightF*.8,1);c.fillRect(x+2+(sway||0),y-16,1,2);}}   // the spear
+  if(k===K.CHIEF){   // the banners by the gate flap: the loose end ripples
+    for(const[s0,col0,dx0]of[[30.5,'#c0392b',-3],[21.5,'#2f5f8f',1]]){const[gx,gy]=at(s0,1,0),bx=gx+(fl?-dx0-4:dx0),q=t*5+s0;
+      for(let r=0;r<9;r++){const w=Math.sin(q+r*.7);c.fillStyle=nightCss(col0,nightF*.8,1);c.fillRect(bx+(fl?0:4),gy+1-15+2+r+2+(w>.3?1:0),1,1);if(w>.6){c.fillStyle=nightCss(col0,nightF*.8,.6);c.fillRect(bx+(fl?-1:5),gy-12+r+2,1,1);}}}}}
 // torch flames flicker: a tip that leaps and sways over the static flame, brighter at night, with a rising spark now and then
 function torchFlicker(c,sp,x,y){const ga=c.globalAlpha;for(const[lx,ly]of sp.torches){const X=Math.round(x+sp.ox+lx),Y=Math.round(y+sp.oy+ly),q=now/95+lx*1.7+ly*.9,h=Math.sin(q)+Math.sin(q*2.3+1)*.6;
     if(nightF>.05){c.globalCompositeOperation='lighter';c.globalAlpha=ga*nightF*(.42+.08*h);c.drawImage(glowTexOf('warm'),X-24,Y-10);c.globalCompositeOperation='source-over';c.globalAlpha=ga;}
