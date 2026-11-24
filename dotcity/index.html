@@ -5175,13 +5175,13 @@ function render(){seasonGrass();
     else if(k>=K.RES&&k<=K.IND){const L=w.level[i];let sp=null;const ba=L>=2&&!w.build[i]?bigAt(x,y):-1;
       if(ba>=0){if(i===ba+N+1){const ax=ba%N,ay=ba/N|0,asx=(ax-ay)*16-X0,asy=(ax+ay)*8-Y0,spb=FL(bigSprite(ba),ba);litNow=nightF>.01?litOf(ba):1;drawSpr(c,spb,asx,asy);litNow=1;emit(spb,asx,asy);extras(c,spb,asx,asy,blinkOn);fronts(ba,2);}}
       else if(w.build[i]>0){sp=w.te[i]<3?SP.consOldV[w.vari[i]%2]:SP.consV[w.vari[i]%3];drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.crane)craneAnim(c,sp,sx,sy,i,blinkOn);}
-      else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
+      else if(L>0){sp=FL(bldSprite(i),i);const lt=nightF>.01?litOf(i):1;litNow=lt;drawSpr(c,sp,sx,sy);litNow=1;emit(sp,sx,sy);if(nightF>.05&&lt)winGlow(c,sp,sx,sy);if(sp.torches)torchFlicker(c,sp,sx,sy);if(sp.blink&&blinkOn)for(const[bx,by,bc]of sp.blink){c.fillStyle=bc;c.fillRect(sx+sp.ox+bx,sy+sp.oy+by,1,1);}}
       if(blinkOn&&!overlay){const top=sp?sy+sp.top-11:sy-4;const ic=!w.powered[i]?(W.era===0?SP.icoFire:W.era<3?SP.icoWater:SP.icoPow):!w.road[i]?SP.icoRoad:null;if(ic)c.drawImage(ic.c,sx-ic.w,top-ic.h,ic.w*2,ic.h*2);}}
     else if(k===K.PARK){const sp=FL(parkSprite(i),i),e=Math.min(5,w.te[i]),pt=e>=3&&e<=4?SP.parkTrees[0]:null,fl=W.flip[anc(i)];
       const tree=(j,back)=>{const[u0,v0,ts]=pt[j],u=fl?v0:u0,v=fl?u0:v0;if((u+v<.9)!==back)return;bendDX=Math.round(Math.sin(now/(stormy?420:1700)+x*.9+y*.45+j*1.7)*(stormy?2.6:.8)+(stormy?.9:0));drawSpr(c,treeLook(ts,x,y,j+7),sx+(u-v)*16,sy+(u+v)*8);bendDX=0;};
       if(pt)for(let j=0;j<pt.length;j++)tree(j,true);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(pt)for(let j=0;j<pt.length;j++)tree(j,false);}
     else if(k===K.FIREPIT){drawSpr(c,FL(SP.firepit,i),sx,sy);campfire(c,sx,sy);emit(SP.firepit,sx,sy);}
-    else if(k===K.WELL)drawSpr(c,FL(SP.well,i),sx,sy);
+    else if(k===K.WELL){const sp=FL(SP.well,i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.DECO){const sp=decoSprite(i),oy=sp.gp?8:0;drawSpr(c,sp,sx,sy+oy);extras(c,sp,sx,sy+oy,blinkOn);emit(sp,sx,sy+oy);if(sp.fount)fountAnim(c,sp,sx,sy+oy,i);if(sp.xm)xmasAnim(c,sp,sx,sy+oy);}
     else if((k===K.DEPOT||k===K.PORT)&&w.anchor[i]<0){const e=Math.min(5,w.te[i]),sp=FL(k===K.DEPOT?SP.depot[Math.max(3,e)]:SP.port[e],i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);}
     else if(k===K.POLICE||k===K.FIRE||k===K.HOSP){const sp=FL(civSprite(k,w.te[i]),i);drawSpr(c,sp,sx,sy);extras(c,sp,sx,sy,blinkOn);if(sp.siren){const[px,py]=sp.siren,ph=(now/180|0)%2;c.fillStyle=ph?'#ff4040':k===K.FIRE?'#ffb040':'#4a7dff';c.fillRect(sx+sp.ox+px+(ph?0:2),sy+sp.oy+py,1,1);}}
