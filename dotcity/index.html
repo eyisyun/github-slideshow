@@ -2357,6 +2357,70 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
         for(const[s,t]of[[32.5,-1],[17.5,-1],[2,2],[44,2],[2,44]]){const[x,y]=P(s,t);torch(pb,x,y+1,12,TL);}}
       pb.torches=TL;},
       (cx,cy)=>{const P=lotP(cx,cy),a=P(22,17,14),b=P(15,26,14),c=P(25,19,25);return{lights:[a,b,c]};});
+    /* ---- bronze age, level 3 (drafts) ---- */
+    // one-tile lot coordinates: s up the front-left edge, t up the front-right, both 0..16
+    const P1=(cx,cy)=>(s,t,z=0)=>[cx-s+t,cy+8-(s+t)/2-z];
+    const yard=(pb,cx,cy,hex,seed)=>pb.diamond(cx,cy,15.5,(u,v,x,y)=>{const e=Math.min(u,v,1-u,1-v);return col(e<.06?'#8a7450':hex,e<.06?0:hash(x,y,seed)<.14?-.08:hash(x,y,seed+1)<.06?.08:0);});
+    const strawWall=(t)=>(a,b,AA,h)=>{if((a|0)%4===0)return col('#6a4428',t);if(b>=h-1)return col('#6a4428',t-.05);if(b<1)return col('#7a5a3a',t);return col('#c9a77a',t+(hash(a|0,b|0,6)<.18?-.08:0));};
+    const ladder=(pb,x,y,n)=>{for(let k=0;k<n;k++){pb.put(x,y-k,col('#6a4428'));pb.put(x+2,y-k-1,col('#6a4428'));if(k%2===0)pb.put(x+1,y-k-1,col('#8a6440',.1));}};
+    SP.b3={R:[],C:[],I:[]};
+    // 군장의 큰 집 (R3): v0 a hall raised on stilts with a porch rail, a ladder and a granary on stilts behind;
+    // v1 a long timber-and-mud house with a deep thatch, a bird pole (솟대), a jar terrace and a rack of drying fish;
+    // v2 a cluster of two round houses (송국리형) inside a brushwood fence, with a hanging string of corn
+    SP.b3.R.push(mk1(60,(pb,cx,cy)=>{const P=P1(cx,cy);yard(pb,cx,cy,'#a8966e',3);
+      const s0=3,t0=2,A=11,B=7,Z=5;for(let k=0;k<=3;k++){const[x,y]=P(s0+k/3*A,t0);posts(pb,[[Math.round(x),Math.round(y)]],Z,'#5a3a22');}for(let k=1;k<=2;k++){const[x,y]=P(s0,t0+k/2*B);posts(pb,[[Math.round(x),Math.round(y)]],Z,'#5a3a22');}
+      const[bx,by]=P(s0,t0,Z-1);rbox(pb,bx,by,A,B,1.5,()=>col('#9a7448'),()=>col('#9a7448',-.3),(s)=>col('#a37b4c',Math.round(s)%2?-.06:.04));
+      const[wx,wy]=P(s0+1,t0+1,Z+.5);rbox(pb,wx,wy,A-2,B-2,6,(a,b,AA,h)=>a>AA*.45&&a<AA*.45+2.5&&b<4.5?col('#2a1a10'):(a>1.5&&a<3.5&&b>=2&&b<4)?[col('#efe6c8',-.05),col('#ffcf7a')]:strawWall(0)(a,b,AA,h),(a,b,BB,h)=>(a>2&&a<4&&b>=2&&b<4)?[col('#efe6c8',-.25),col('#ffcf7a')]:strawWall(-.24)(a,b,BB,h));
+      for(let k=0;k<=A;k+=2){const[x,y]=P(s0+k,t0,Z+1.5);pb.put(Math.round(x),Math.round(y)-1,col('#7a5233',.1));}
+      const[rx,ry]=P(s0-.5,t0-.5,Z+6.5);rroof(pb,rx,ry,A+1,B+1,1.3,STRAW[0],{style:'straw',seed:81});
+      const[lx,ly]=P(s0+A*.5,t0-1.2);ladder(pb,Math.round(lx),Math.round(ly),6);
+      {const[x,y]=P(13,1);jar(pb,x,y,.9,'#8a5a38');}
+      const TL=[];{const[x,y]=P(1.5,1.5);torch(pb,x,y,9,TL);}pb.torches=TL;}));
+    SP.b3.R.push(mk1(56,(pb,cx,cy)=>{const P=P1(cx,cy);yard(pb,cx,cy,'#a8966e',5);
+      {const[x,y]=P(13,13);sotdae(pb,x,y,16);}
+      const s0=3,t0=4,A=11,B=6;const[bx,by]=P(s0,t0);rbox(pb,bx,by,A,B,6,(a,b,AA,h)=>a>3&&a<5.5&&b<4.5?col('#2a1a10'):(a>7&&a<9.5&&b>=2&&b<4.2)?[col('#efe6c8',-.05),col('#ffcf7a')]:strawWall(0)(a,b,AA,h),strawWall(-.24));
+      const[rx,ry]=P(s0-1.2,t0-1.2,6);rroof(pb,rx,ry,A+2.4,B+2.4,1.25,STRAW[1],{style:'straw',seed:83});
+      {const[x,y]=P(2,8);jarTerrace(pb,x,y,4);}
+      {const[x,y]=P(12,1.5);posts(pb,[[x-3,y+1],[x+3,y-2]],6,'#5a3a22');pb.line(x-3,y-5,x+3,y-8,col('#5a3a22'));for(let k=-2;k<=2;k+=2){pb.put(x+k,y-4-Math.round(k/2),col('#9aa6b8'));pb.put(x+k,y-3-Math.round(k/2),col('#c9d2dc'));}}
+      const TL=[];{const[x,y]=P(7.5,2);torch(pb,x,y,8,TL);}pb.torches=TL;}));
+    SP.b3.R.push(mk1(54,(pb,cx,cy)=>{const P=P1(cx,cy);yard(pb,cx,cy,'#a89a70',7);
+      const round=(s,t,r,h,hex,seed)=>{const[x,y]=P(s,t);pb.cyl(x,y,r,4,(dx,b,px,py)=>col('#b89870',(dx<-.3?.1:dx>.4?-.26:0)+(hash(px,py,seed)<.15?-.08:0)),()=>col('#a08060'));
+        thatch(pb,x,y-4,r+1.5,h,hex,seed);const dx=Math.round(x-r*.5);for(let k=0;k<3;k++){pb.put(dx,y-k,col('#2a1a10'));pb.put(dx+1,y-k,col('#2a1a10'));}};
+      round(10,4,3.8,8,STRAW[2],91);round(4,10,4.4,9,STRAW[0],92);
+      brushFence(pb,[P(1,15),P(1,1),P(15,1)].map(([x,y])=>[Math.round(x),Math.round(y)]));
+      {const[x,y]=P(3,3);jar(pb,x,y,1,'#8a5a38');jar(pb,x+3,y+1,.8,'#6a4a30');}
+      const TL=[];{const[x,y]=P(9,1.5);torch(pb,x,y,8,TL);}pb.torches=TL;},(cx,cy)=>({em:[[cx-6,cy-14,'smoke']]})));
+    // 누각 장터 (C3): a two-storey market pavilion on tall posts with a railed floor and a hipped thatch, stalls round its feet;
+    // v0 a drum on the upper floor, v1 a signal pole with streamers, v2 an ox cart unloading sacks
+    for(let v=0;v<3;v++)SP.b3.C.push(mk1(64,(pb,cx,cy)=>{const P=P1(cx,cy);yard(pb,cx,cy,'#b49a72',11+v);
+      if(v===1){const[x,y]=P(14,14);posts(pb,[[x,y]],26,'#6a4428');for(let r=0;r<6;r++)for(let k=1;k<3;k++)pb.put(x+k,y-25+r+(k>>1),col(['#c0392b','#f2c140','#3a6fa0'][r>>1]));pb.ell(x,y-27,1.3,()=>[col('#c9a040',.2),col('#e8c060')]);}
+      const s0=5,t0=5,A=8,B=8,Z=11;
+      for(const[s,t]of[[s0,t0],[s0+A,t0],[s0,t0+B],[s0+A,t0+B]]){const[x,y]=P(s,t);posts(pb,[[Math.round(x),Math.round(y)]],Z,'#5a3a22');}
+      {const[x,y]=P(s0+A/2,t0+B/2);stall(pb,x,y+2,CLOTH[(v+2)%4],v);}
+      const[bx,by]=P(s0-.5,t0-.5,Z);rbox(pb,bx,by,A+1,B+1,1.5,()=>col('#9a7448'),()=>col('#9a7448',-.3),(s,t)=>col('#a37b4c',Math.round(s+t)%2?-.06:.04));
+      for(let k=0;k<=A;k+=1.5){for(const[s,t]of[[s0+k,t0-.5],[s0-.5,t0+k]]){const[x,y]=P(s,t,Z+1.5);pb.put(Math.round(x),Math.round(y)-1,col('#7a5233',.1));if(Math.round(k*2)%3===0)pb.put(Math.round(x),Math.round(y),col('#6a4428'));}}
+      if(v===0){const[x,y]=P(s0+A/2,t0+B/2,Z+1.5);pb.cyl(x,y,2.4,3,(dx)=>col('#b0402e',dx<-.3?.12:dx>.4?-.3:0),()=>col('#e8d8b8'));pb.put(x-1,y-3,col('#5a3a22'));}
+      for(const[s,t]of[[s0,t0],[s0+A,t0],[s0,t0+B],[s0+A,t0+B]]){const[x,y]=P(s,t,Z+1.5);posts(pb,[[Math.round(x),Math.round(y)]],4,'#5a3a22');}
+      const[rx,ry]=P(s0-1.5,t0-1.5,Z+5.5);rroof(pb,rx,ry,A+3,B+3,1.0,STRAW[v],{style:'straw',seed:95+v});
+      {const[x,y]=P(13,2);stall(pb,x,y,CLOTH[v],v+1);}{const[x,y]=P(2,10);sack(pb,x,y);sack(pb,x+3,y+1);}
+      if(v===2){const[x,y]=P(2,4);jar(pb,x,y,1,'#c4622e');jar(pb,x-3,y-1,.8,'#8a5a38');}
+      const TL=[];{const[x,y]=P(1,1);torch(pb,x,y,9,TL);}pb.torches=TL;}));
+    // 청동 주조장 (I3): a long open shed on posts over the casting floor, a tall clay furnace glowing at the mouth, a crucible pouring
+    // into a mould that glows orange, stacked ingots and mirrors, a charcoal heap and a smith; v0..v2 differ in the yard goods
+    for(let v=0;v<3;v++)SP.b3.I.push(mk1(60,(pb,cx,cy)=>{const P=P1(cx,cy);yard(pb,cx,cy,'#7a6a4a',21+v);
+      const s0=6,t0=6,A=8,B=7;for(const[s,t]of[[s0,t0],[s0+A,t0],[s0,t0+B]]){const[x,y]=P(s,t);posts(pb,[[Math.round(x),Math.round(y)]],8,'#5a3a22');}
+      {const[x,y]=P(s0+A/2,t0+B/2);for(let k=0;k<4;k++)pb.box({cx:x-3+k*2,cy:y+1-k,hw:1.2,h:2,L:()=>col('#8a6a44'),R:()=>col('#6a4a2a'),T:()=>col('#a87a50')});}   // workbench and racks in the shed
+      const[rx,ry]=P(s0-1,t0-1,8);rroof(pb,rx,ry,A+2,B+2,.95,STRAW[(v+1)%4],{style:'straw',seed:101+v});
+      {const[x,y]=P(13,3);for(let k=0;k<6;k++)pb.ell(x+(k%3)*2-2,y-(k/3|0)*1.5,1.6,()=>col('#2a2624',(k%2)*.08));}                                    // charcoal heap
+      {const[x,y]=P(3,10);for(let b=0;b<16;b++){const r=3.8-b*.15;pb.ell(x,y-b,r,(dx,dy,px,py)=>col('#a0623a',(dx<-.3?.12:dx>.4?-.26:0)+(hash(px,py,b)<.2?-.1:0)+(b%5===0?-.06:0)));}   // the tall clay furnace
+        pb.ell(x,y-16,1.6,()=>col('#2a1a12'));for(let k=-1;k<=1;k++){pb.put(x+k-1,y-1,[col('#ff6a2a'),col('#ffd27a')]);pb.put(x+k-1,y-2,[col('#ff8a3a'),col('#ffe090')]);}
+        pb.box({cx:x-6,cy:y+1,hw:2,h:2,L:()=>col('#8a6a44'),R:()=>col('#6a4a2a'),T:()=>col('#a87a50')});pb.line(x-5,y-1,x-2,y-2,col('#6a4428'));}       // bellows
+      {const[x,y]=P(7,3);pb.box({cx:x,cy:y,hw:3,h:1,L:()=>col('#6a5a48'),R:()=>col('#4a3a2a'),T:(u,w)=>Math.abs(u-.5)<.3&&Math.abs(w-.5)<.25?[col('#ff8a2a'),col('#ffc060')]:col('#7a6a58')});   // the mould, glowing
+        trader(pb,x+5,y-1,'#8a6a44');pb.put(x+3,y-5,col('#5a5a5a'));pb.put(x+4,y-5,col('#6a6a6a'));pb.put(x+3,y-4,col('#4a4a4a'));pb.put(x+2,y-3,[col('#ff9a3a'),col('#ffe090')]);pb.put(x+2,y-2,[col('#ff8a2a'),col('#ffd070')]);}   // smith pouring from the crucible
+      for(let k=0;k<3;k++){const[x,y]=P(2+k*1.4,2);pb.put(Math.round(x),Math.round(y),col('#c88a3a',.2));pb.put(Math.round(x)+1,Math.round(y),col('#a86a2a'));pb.put(Math.round(x),Math.round(y)-1,col('#d89a4a',.25));}   // ingots
+      if(v===1){const[x,y]=P(12,1);pb.ell(x,y,1.6,()=>col('#d8b050',.25));pb.ell(x+3,y-1,1.6,()=>col('#c9a040',.1));}
+      if(v===2){const[x,y]=P(14,8);firewood(pb,x-2,y,4);}},
+      (cx,cy)=>{const P=P1(cx,cy),f=P(3,10),m=P(7,3);return{em:[[f[0],f[1]-18,'smoke']],lights:[[f[0]-1,f[1]-2],[m[0],m[1]-1]]};}));
 
     /* ---- early modern ---- */
     const brick=(hex,t)=>(a,b)=>col(hex,t+((((b|0)%2===0)&&(((a|0)+(((b|0)%4)?0:2))%4===0))?-.15:0));
