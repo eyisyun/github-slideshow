@@ -4496,7 +4496,7 @@ function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='g
   if(k==='hunter'){const st=((o.ph/(o.st==='sneak'?.42:o.st==='carry'?.3:.26))|0)%2;return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?(st?'carry1':'carry0'):st?'walk1':'walk0';}
   if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
   return o.look&&((o.ph/2.2)|0)%3!==2?'look':((o.ph/3.1)|0)%4===3?'look':'graze';}
-const drawFaunaObj=(c,o)=>(o.k==='stall'||o.k==='band'?drawJangObj:o.k==='pabal'?drawPabal:o.k==='cart'||o.k==='farmer'?drawOxObj:o.k==='dolmen'?drawDolObj:o.k==='jc'?drawJcObj:drawHuntObj)(c,o);
+const drawFaunaObj=(c,o)=>(o.k==='stall'||o.k==='band'?drawJangObj:o.k==='pabal'?drawPabal:o.k==='cart'||o.k==='farmer'?drawOxObj:o.k==='dolm'?(c,o)=>o.draw(c):o.k==='jcAll'?drawJcAll:drawHuntObj)(c,o);
 function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=o.k==='hunter'?fr[(o.up?2:0)+(o.face>0?0:1)]:fr[o.face>0?0:1];
   drawSpr(c,sp,Math.round((o.fx-o.fy)*16-X0),Math.round((o.fx+o.fy)*8-Y0));
 }
@@ -4893,18 +4893,20 @@ function jcSetup(){const free=(x,y)=>inb(x,y)&&!W.kind[idx(x,y)]&&W.terrain[idx(
   for(let r=0;r<28;r++)for(let y=gy-r;y<=gy+r;y++)for(let x=gx-r;x<=gx+r;x++){if(Math.max(Math.abs(x-gx),Math.abs(y-gy))!==r||!ok(x,y))continue;
     for(let a=-5;a<=5;a++)for(let b=-5;b<=5;b++){if((a+b)&1)continue;const tx=x+(a+b)/2,ty=y+(b-a)/2;if(inb(tx,ty)&&!W.kind[idx(tx,ty)])W.trees[idx(tx,ty)]=0;}   // clear the trees round the ground so they don't hide the dancers
     const fx0=x+.5,fy0=y+.5,o=(t,dx,dy,ex)=>{const[a,b]=jcT(dx,dy);return Object.assign({k:'jc',t,fx:fx0+a,fy:fy0+b,dx,dy},ex||{});},objs=[];
-    objs.push(o('fire',0,0),o('altar',-2,-22));JC_POLES.forEach(([dx,dy],k)=>objs.push(o('pole',dx,dy,{n:k})));
+    objs.push(o('fire',0,0),o('altar',-2,-31));   // the altar stands just outside the ring, behind the fireJC_POLES.forEach(([dx,dy],k)=>objs.push(o('pole',dx,dy,{n:k})));
     for(const[dx,dy]of[[-66,10],[66,10],[-40,30],[40,30]])objs.push(o('torch',dx,dy));
     for(let k=0;k<12;k++)objs.push(o('dancer',0,0,{n:k}));
     objs.push(o('shaman',14,16),o('drum',-36,22,{n:0}),o('drum',-26,27,{n:1}),o('gong',-14,30),o('flute',30,28),o('chief',44,22),o('pot',62,10));
     [[-62,16],[-54,21],[52,4]].forEach(([dx,dy],k)=>objs.push(o('sit',dx,dy,{n:k})));objs.push(o('kid',8,36));
-    const st={ok:true,x,y,fx0,fy0,objs,rot:0,spin:0,blessed:false,cheered:false};jcPlace(st);return st;}
+    const st={ok:true,x,y,fx0,fy0,objs,rot:0,spin:0,blessed:false,cheered:false,proxy:{k:'jcAll',fx:fx0,fy:fy0}};jcPlace(st);return st;}
   return{ok:false};}
 function jcPlace(st){for(const o of st.objs)if(o.t==='dancer'){const a=o.n/12*6.283+st.rot,dx=Math.cos(a)*34,dy=-2+Math.sin(a)*17,[p,q]=jcT(dx,dy);o.fx=st.fx0+p;o.fy=st.fy0+q;o.a=a;o.dx=dx;o.dy=dy;}}
 function stepJecheon(dt){if(!jcActive()){if(jc)jc=null;return;}
   if(!jc){jc=jcSetup();if(jc.ok&&jcFocus){cam.x=(jc.fx0-jc.fy0)*16;cam.y=(jc.fx0+jc.fy0)*8;}jcFocus=false;}
   if(!jc.ok||!dt)return;jc.spin=Math.max(0,jc.spin-dt);jc.rot+=dt*.35*(jc.spin>0?3:1);jcPlace(jc);}
 function jcGround(c){if(!jc||!jc.ok)return;const S=jcSprites(),X=Math.round((jc.fx0-jc.fy0)*16-X0),Y=Math.round((jc.fx0+jc.fy0)*8-Y0);c.drawImage(S.ground,X-64,Y-4-32);}
+// the festival ground is open, so everything on it is drawn in one pass, back to front, so the altar never covers the dancers
+function drawJcAll(c){if(!jc||!jc.ok)return;for(const o of jc.objs.slice().sort((p,q)=>(p.fx+p.fy)-(q.fx+q.fy)))drawJcObj(c,o);}
 function drawJcObj(c,o){const S=jcSprites(),X=Math.round((o.fx-o.fy)*16-X0),Y=Math.round((o.fx+o.fy)*8-Y0),T=now/1000,nf=nightF*.8,day=clockT>=6&&clockT<21;
   const P=(x,y,cl,w=1,h=1)=>{c.fillStyle=nightCss(cl,nf);c.fillRect(Math.round(x),Math.round(y),w,h);},glow=(x,y,r,a)=>{if(nightF<.05)return;const R=22*r,g=c.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,`rgba(255,160,70,${(nightF*a*.6).toFixed(3)})`);g.addColorStop(.5,`rgba(255,130,50,${(nightF*a*.22).toFixed(3)})`);g.addColorStop(1,'rgba(255,120,40,0)');
     c.save();c.globalCompositeOperation='lighter';c.translate(x,y);c.scale(1,.55);c.translate(-x,-y);c.fillStyle=g;c.fillRect(x-R,y-R,2*R,2*R);c.restore();};
@@ -4976,22 +4978,25 @@ function dolTap(e){const o=dolEv;if(!o||o.done!=null||W.era!==1)return false;con
 function dolTest(){if(W.era!==1){toast(L2('고인돌 행렬은 청동기 시대에서 볼 수 있어요. 청동기 게임에서 눌러 주세요.','The dolmen procession belongs to the Bronze Age. Try this in a Bronze Age game.'),'info');return;}
   const o=dolStart(true);if(!o){toast(L2('행렬이 지나갈 길과 고인돌을 세울 빈 땅을 화면 근처에서 찾지 못했어요.','Could not find a road with open ground beside it near the screen.'),'info');return;}
   dolEv=o;cam.x=(o.fx-o.fy)*16;cam.y=(o.fx+o.fy)*8;toast(L2('🪨 고인돌 덮개돌을 옮기기 시작했어요! 눌러서 힘을 보태 주세요.','🪨 The capstone is on the move! Tap it to lend a hand.'),'info');}
-function drawDolObj(c,o){const S=dolSprites(),scr=(x,y)=>[Math.round((x-y)*16-X0),Math.round((x+y)*8-Y0)];
-  if(o.done!=null){const[ex,ey]=o.end,hop=((now/180)|0)%2;[[-.45,.1],[.1,.5],[.5,-.05],[-.1,-.5],[.45,.4],[-.5,-.35]].forEach(([dx,dy],k)=>{const set=k===4?S.CH:S.W[k%3],[X,Y]=scr(ex+.5+dx,ey+.5+dy);drawSpr(c,set[1],X,Y-((hop+k)%2?2:0));});return;}
-  const[dx,dy]=DIRS[o.d],lx=-dy,ly=dx,fast=o.boost>0,step=((o.ph/(fast?.16:.3))|0)%2,items=[];
-  const add=(x,y,fn)=>items.push([x+y,fn]);
+// every member of the procession is its own object on its own tile, so houses and traffic overlap them in the right order
+function dolItems(o){const S=dolSprites(),scr=(x,y)=>[Math.round((x-y)*16-X0),Math.round((x+y)*8-Y0)],out=[];let c=null;
+  const add=(x,y,fn)=>out.push({k:'dolm',fx:x,fy:y,draw:cc=>{c=cc;fn();}});
+  if(o.done!=null){const[ex,ey]=o.end,hop=((now/180)|0)%2;[[-.45,.1],[.1,.5],[.5,-.05],[-.1,-.5],[.45,.4],[-.5,-.35]].forEach(([dx,dy],k)=>{const set=k===4?S.CH:S.W[k%3],x=ex+.5+dx,y=ey+.5+dy;add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,set[1],X,Y-((hop+k)%2?2:0));});});return out;}
+  const[dx,dy]=DIRS[o.d],lx=-dy,ly=dx,fast=o.boost>0,step=((o.ph/(fast?.16:.3))|0)%2;
   const F=[o.fx+dx*.42,o.fy+dy*.42];
   for(let k=1;k<=5;k++)for(const sd of[-1,1]){const x=F[0]+dx*k*.27+lx*sd*.13,y=F[1]+dy*k*.27+ly*sd*.13,set=S.W[(k+(sd>0?1:0))%3];add(x,y,()=>{const[X,Y]=scr(x,y),f=set[o.d];drawSpr(c,(step+k)%2&&f.alt?f.alt:f,X,Y);});}
   for(const sd of[-1,0,1]){const x=o.fx-dx*.55+lx*sd*.16,y=o.fy-dy*.55+ly*sd*.16,set=S.W[(sd+1)%3];add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,set[o.d],X,Y);c.fillStyle=nightCss('#7a5233',nightF*.8);
     const[FX,FY]=scr(o.fx-dx*.3,o.fy-dy*.3);for(let q=0;q<=5;q++){c.fillRect(Math.round(X+(FX-X)*q/5),Math.round(Y-6+(FY-3-(Y-6))*q/5),1,1);}});}
   {const x=F[0]+dx*.9-lx*.38,y=F[1]+dy*.9-ly*.38,f=S.W[1][o.d];add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,step&&f.alt?f.alt:f,X,Y);c.fillStyle=nightCss('#8a6238',nightF*.8);for(let q=-4;q<=4;q++)c.fillRect(X+q,Y-8+Math.round(q*(dx-dy)*.25),1,2);});}
-  {const side=(lx+ly)>0?1:-1,x=o.fx+lx*side*.62,y=o.fy+ly*side*.62;add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,S.DR[1],X,Y);const hit=((o.ph/(fast?.25:.5))|0)%2;c.fillStyle=nightCss('#b0402e',nightF*.8);c.fillRect(X+2,Y-6-hit,4,4);c.fillStyle=nightCss('#e8d8b8',nightF*.8);c.fillRect(X+2,Y-6-hit,4,1);});}
-  {const side=(lx+ly)>0?-1:1,x=F[0]+dx*.4+lx*side*.6,y=F[1]+dy*.4+ly*side*.6;add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,S.CH[1],X,Y);c.fillStyle=nightCss('#6a4428',nightF*.8);for(let q=0;q<12;q++)c.fillRect(X+3,Y-q,1,1);c.fillStyle=nightCss('#e8c060',nightF*.8);c.fillRect(X+2,Y-12,3,2);});}
+  {const side=(lx+ly)>0?1:-1,x=o.fx+lx*side*.4,y=o.fy+ly*side*.4;add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,S.DR[1],X,Y);const hit=((o.ph/(fast?.25:.5))|0)%2;c.fillStyle=nightCss('#b0402e',nightF*.8);c.fillRect(X+2,Y-6-hit,4,4);c.fillStyle=nightCss('#e8d8b8',nightF*.8);c.fillRect(X+2,Y-6-hit,4,1);});}
+  {const side=(lx+ly)>0?-1:1,x=F[0]+dx*.4+lx*side*.38,y=F[1]+dy*.4+ly*side*.38;add(x,y,()=>{const[X,Y]=scr(x,y);drawSpr(c,S.CH[1],X,Y);c.fillStyle=nightCss('#6a4428',nightF*.8);for(let q=0;q<12;q++)c.fillRect(X+3,Y-q,1,1);c.fillStyle=nightCss('#e8c060',nightF*.8);c.fillRect(X+2,Y-12,3,2);});}
   add(o.fx,o.fy,()=>{const[X,Y]=scr(o.fx,o.fy),cap=S.cap[o.d];drawSpr(c,((o.ph/(fast?.2:.45))|0)%2?cap.alt:cap,X,Y);
     c.strokeStyle=nightCss('#d8c08a',nightF*.8);c.lineWidth=1;const[FX,FY]=scr(F[0],F[1]);for(const sd of[-1,1]){const[TX,TY]=scr(F[0]+dx*5*.27+lx*sd*.13,F[1]+dy*5*.27+ly*sd*.13);c.beginPath();c.moveTo(FX+.5,FY-3.5);c.lineTo(TX+.5,TY-4.5);c.stroke();}
-    if(!o.shout){const bob=((now/400)|0)%2,t=L2('영차! 힘 보태기','Heave! Lend a hand');c.font='bold 7px sans-serif';const tw=c.measureText(t).width+6;
+});
+  // the call to help floats behind the stone, away from the pullers, and is drawn last so nothing covers it
+  if(!o.shout)out.push({k:'dolm',fx:o.fx+999,fy:o.fy,draw:c=>{const[X0s,Y0s]=scr(o.fx-dx*.9,o.fy-dy*.9),bob=((now/400)|0)%2,t=L2('영차! 힘 보태기','Heave! Lend a hand');c.font='bold 7px sans-serif';const tw=c.measureText(t).width+6,X=X0s,Y=Y0s-12;
       c.fillStyle='rgba(255,246,208,.92)';c.fillRect(Math.round(X-tw/2),Y-30-bob,Math.ceil(tw),10);c.fillStyle='#6a4428';c.fillRect(Math.round(X-tw/2),Y-20-bob,Math.ceil(tw),1);c.fillStyle='#3a2a1a';c.fillText(t,Math.round(X-tw/2+3),Y-22-bob);}});
-  items.sort((p,q)=>p[0]-q[0]).forEach(it=>it[1]());}
+  return out;}
 function jangTap(e){if(!jang||W.era!==2||jangNight())return false;const[wx,wy]=toWorld(e.clientX,e.clientY);
   for(const s of jang.stalls){const sx=(s.fx-s.fy)*16,sy=(s.fx+s.fy)*8-(s.small?6:14),r=s.small?8:12;if(Math.abs(wx-sx)<r&&Math.abs(wy-sy)<r){
       if(s.done){toast(L2('이 좌판과는 오늘 이미 흥정했어요.','You already haggled at this stall today.'),'info');return true;}s.done=true;
@@ -5486,7 +5491,7 @@ function render(){seasonGrass();
   // objects, back to front
   const tbk=new Map();for(const tr of trains)for(const tc of trainCars(tr)){const k=idx(Math.floor(tc.gx),Math.floor(tc.gy));let a=tbk.get(k);if(!a)tbk.set(k,a=[]);a.push(tc);}
   const bbk=new Map();for(const b of boats){if(b.fx==null)continue;const k=idx(Math.floor(b.fx),Math.floor(b.fy));let a=bbk.get(k);if(!a)bbk.set(k,a=[]);a.push(b);}
-  const fbk=new Map();for(const o of fauna)put2(fbk,o);for(const o of hunters)if(o.st!=='home')put2(fbk,o);for(const o of oxCarts)if(o.fx!=null)put2(fbk,o);for(const o of couriers)if(o.fx!=null&&!o.rest)put2(fbk,o);if(jang&&!jangNight()){for(const o of jang.stalls)put2(fbk,o);for(const o of jang.people)put2(fbk,o);}for(const o of farmers)put2(fbk,o);if(dolEv)put2(fbk,dolEv);if(jc&&jc.ok)for(const o of jc.objs)put2(fbk,o);
+  const fbk=new Map();for(const o of fauna)put2(fbk,o);for(const o of hunters)if(o.st!=='home')put2(fbk,o);for(const o of oxCarts)if(o.fx!=null)put2(fbk,o);for(const o of couriers)if(o.fx!=null&&!o.rest)put2(fbk,o);if(jang&&!jangNight()){for(const o of jang.stalls)put2(fbk,o);for(const o of jang.people)put2(fbk,o);}for(const o of farmers)put2(fbk,o);if(jc&&jc.ok)put2(fbk,jc.proxy);
   const bucket=new Map();for(const car of cars){const gx=car.x+.5+DIRS[car.d][0]*car.t,gy=car.y+.5+DIRS[car.d][1]*car.t;const k=idx(Math.floor(gx),Math.floor(gy));let a=bucket.get(k);if(!a)bucket.set(k,a=[]);a.push(car);}
   const oa=overlay?.28:1;c.globalAlpha=oa;{const t=Math.max(0,Math.min(1,((W.snow||0)-.25)/.5));capA=overlay?0:t*t*(3-2*t)*(1-nightF*.45);}const blinkOn=(now/520|0)%2===0;castSh=!overlay;shA=.28*(1-nightF)*(1-.4*duskF);sunB=sunOf(clockT);
   if(castSh&&shA>.01&&shRec.length){const key=shHash+'|'+X0+'|'+Y0+'|'+lw+'|'+lh+'|'+sunB;
@@ -5547,6 +5552,7 @@ function render(){seasonGrass();
     c.fillStyle='#1a1404';c.fillRect(bx-3,by-9,7,11);
     if(o.type==='med'){c.fillStyle=on?'#ffffff':'#ffd8d8';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#e0302a';c.fillRect(bx,by-7,1,7);c.fillRect(bx-2,by-4,5,1);}
     else{c.fillStyle=on?'#ff3a3a':'#3a7dff';c.fillRect(bx-2,by-8,5,9);c.fillStyle='#ffffff';c.fillRect(bx,by-7,1,4);c.fillRect(bx,by-2,1,1);}}
+  if(dolEv){for(const m of dolItems(dolEv).sort((p,q)=>(p.fx+p.fy)-(q.fx+q.fy)))m.draw(c);}   // the procession is drawn over the town so houses never hide it
   funFx(c);drawHuntTop(c);xmasLights(c,lh);scoutFx(c);festFx(c,lw,lh);drawPlanes(c);sky(c,lw,lh);weatherFx(c,lw,lh);
   // the picked tile's edge and pin go on top of trees and buildings
   if(target){const[x,y]=target.g,ok=validAt(tl,x,y)&&costAt(tl,x,y)<=W.funds,sz=tl.size||1;
