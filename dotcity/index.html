@@ -5018,6 +5018,11 @@ function drawDnAll(c){if(!dn||!dn.ok)return;const S=dnSprites(),cx=Math.round((d
     for(let k=0;k<6;k++){P(x-5+k*2,y-2+(k%2),'#4a8a3a');P(x-4+k*2,y-2+(k%2),'#7ac25a');}D(V[7][0],x+10,y+2);for(let k=0;k<6;k++)P(x+6-k*.4,y-6+k,'#2a1d14');D(V[8][1],x-12,y+3);});
   if(day){for(const[x,y,k]of[[cx-78,cy+14,2],[cx+72,cy+30,5],[cx+48,cy+42,3],[cx+12,cy-18,1],[cx-8,cy-24,4]])add(y,()=>{const f=V[k][k%2];D(((T*2+k)|0)%2&&f.alt?f.alt:f,x,y);});
     add(cy+22,()=>{const x=cx-30,y=cy+22,sp=((T*8)|0)%2;D(V[3][0],x,y);P(x+3+sp,y-12,'#e04a3a');P(x+4,y-13+sp,'#f2c140');P(x+5-sp,y-12,'#3a6fa0');P(x+4,y-11-sp,'#ffffff');for(let k=0;k<4;k++)P(x+4,y-10+k,'#6a4428');});}
+  // torches round the ground: lit all day, they glow and light the grass once night falls
+  for(const[x,y,n]of[[rx-44,ry+6,0],[rx+44,ry+6,1],[rx+6,ry+30,2],[cx-68,cy+20,3],[cx-14,cy+54,4],[cx-60,cy-14,5],[rx+24,ry-22,6]])add(y,()=>{for(let k=0;k<13;k++)P(x,y-k,'#5a3a22');P(x,y-13,'#3a2414');P(x+1,y-13,'#2a1a10');
+    const q=T*9+n*1.7,h=Math.sin(q)+Math.sin(q*2.3)*.6;c.fillStyle=nightF>.3?'#ffd27a':'#f2a040';c.fillRect(x+(Math.sin(q*.7)>0?1:0),y-16-(h>.4?1:0),1,2);c.fillStyle='#ff7a2a';c.fillRect(x,y-14,2,1);c.fillStyle='#ffb04a';c.fillRect(x+(h>0?0:1),y-15,1,1);
+    if(nightF>.05){const R=26,g=c.createRadialGradient(x,y-12,0,x,y-12,R);g.addColorStop(0,`rgba(255,160,70,${(nightF*.38).toFixed(3)})`);g.addColorStop(.5,`rgba(255,130,50,${(nightF*.13).toFixed(3)})`);g.addColorStop(1,'rgba(255,120,40,0)');
+      c.save();c.globalCompositeOperation='lighter';c.translate(x,y-8);c.scale(1,.6);c.translate(-x,-(y-8));c.fillStyle=g;c.fillRect(x-R,y-12-R,2*R,2*R);c.restore();}});
   items.sort((a,b)=>a[0]-b[0]).forEach(i=>i[1]());}
 function dnTap(e){if(!dn||!dn.ok)return false;const[wx,wy]=toWorld(e.clientX,e.clientY),cx=(dn.fx0-dn.fy0)*16,cy=(dn.fx0+dn.fy0)*8;
   if(Math.abs(wx-(cx+30))<12&&Math.abs(wy-(cy+6))<10){if(dn.bout>0)return true;if(dn.bouts>=3){toast(L2('오늘 씨름판은 다 끝났어요. 내년 단오를 기다려 주세요.','The day\'s bouts are over. Come back next Dano.'),'info');return true;}
