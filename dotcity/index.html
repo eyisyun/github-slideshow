@@ -4947,7 +4947,7 @@ function jcTest(){if(W.era!==1){toast(L2('제천 축제는 청동기 시대에�
 // ropes in front, three with levers behind, a man carrying the freed roller forward, a drummer and the chief. Tapping it ("영차!")
 // puts everyone's backs into it for a moment; at the end of the road a dolmen stands on open ground nearby, raising the land
 // around it, and the more you helped the bigger the reward. It goes on its own if left alone, only slowly. Nothing here is saved.
-let dolEv=null,dolAcc=0;const DOL_GAP=420;
+let dolEv=null,dolAcc=0,dolGap=960+Math.random()*360;   // about every 15-20 minutes at normal speed
 function dolSprites(){if(SP.dolP)return SP.dolP;const ST='#9e998e';
   const parts=ph=>{const P=[],B=(b,c,f)=>P.push({box:b,c,f});
     B([-7,7,-5,5,2.2,6.2],ST,(nm,a,b)=>col(ST,(nm==='top'?.16:0)+(nm==='top'&&(a<.07||a>.93||b<.07||b>.93)?-.08:0)+(hash(a*30|0,b*30|0,7)<.2?-.1:hash(a*30|0,b*30|0,9)<.1?.08:0)));
@@ -4971,7 +4971,7 @@ function dolFinish(o){const[x,y]=o.end,i=idx(x,y);if(!dolFree(x,y)){dolEv=null;r
   toast(L2(`고인돌을 세웠어요! 마을 사람들이 기뻐해요. 주변 땅값이 올라요. +${money(g)}${o.taps?` (힘 보탠 횟수 ${o.taps}번)`:''}`,`The dolmen stands! The village cheers and the land around it rises in value. +${money(g)}${o.taps?` (you helped ${o.taps} times)`:''}`),'good');
   o.done=4;save();}
 function stepDolmen(dt){if(W.era!==1){dolEv=null;return;}if(!dt)return;
-  if(!dolEv){dolAcc+=dt;if(dolAcc>DOL_GAP&&clockT>=8&&clockT<16){dolAcc=0;dolEv=dolStart(false);if(dolEv)toast(L2('🪨 마을 사람들이 고인돌 덮개돌을 옮기기 시작했어요! 눌러서 힘을 보태 주세요.','🪨 The villagers are hauling a dolmen capstone! Tap it to lend a hand.'),'info');}return;}
+  if(!dolEv){dolAcc+=dt;if(dolAcc>dolGap&&clockT>=8&&clockT<16){dolAcc=0;dolGap=960+Math.random()*360;dolEv=dolStart(false);if(dolEv)toast(L2('🪨 마을 사람들이 고인돌 덮개돌을 옮기기 시작했어요! 눌러서 힘을 보태 주세요.','🪨 The villagers are hauling a dolmen capstone! Tap it to lend a hand.'),'info');}return;}
   const o=dolEv;o.ph+=dt;o.shout=Math.max(0,o.shout-dt);if(o.done!=null){if((o.done-=dt)<=0)dolEv=null;return;}
   if(!o.path.every(i=>W.kind[i]===K.ROAD)){dolEv=null;return;}
   o.boost=Math.max(0,o.boost-dt);o.t+=dt*(.14+(o.boost>0?.5:0));while(o.t>=1&&o.i<o.path.length-1){o.t-=1;o.i++;}
