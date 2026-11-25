@@ -1129,18 +1129,35 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
     if(e<.075)return Math.floor((u+v)*7)%2===0?col(hex):col(mixHex(PAL.g1,hex,.3),-.15);
     const h=hash(x,y,17);if(h<.05)return col(mixHex(PAL.g2,hex,.2));return col(mixHex(PAL.g1,hex,.16),.04);});
   SP.zone={[K.RES]:zoneG(PAL.zR),[K.COM]:zoneG(PAL.zC),[K.IND]:zoneG(PAL.zI)};
+  // paving laid on the tile's own grid: a dark joint, a lit near edge and a shaded far edge per stone, each stone its own shade,
+  // weathering blotches, hairline cracks and a fleck or two of grit. bond 1 staggers alternate rows (running bond)
+  const paver=(base,n,seed,o={})=>(u,w,x,y)=>{const gv=w*n,row=Math.floor(gv),gu=u*n+(o.bond&&row%2?.5:0),cu=Math.floor(gu),fu=gu-cu,fv=gv-row,j=o.joint||.1;
+      if(fu<j||fv<j)return col(o.jc||base,o.jc?0:-.22);
+      const st=(hash(cu,row,seed)-.5)*(o.var||.08),m=smN(x/5,y/2.5,seed+1),h=hash(x,y,seed+2);
+      let t=st+(fu<j+.14||fv<j+.14?.06:fu>.86||fv>.86?-.06:0)+(m>.7?-.05:0)+(h<.05?-.05:h>.97?.05:0);
+      if(o.crack&&hash(cu,row,seed+3)<.12&&Math.abs(fu-fv*.7-.2)<.05)t-=.16;return col(o.alt&&hash(cu,row,seed+4)<o.alt[1]?o.alt[0]:base,t);};
+  const lawnTex=(x,y,v,base='#5fa844')=>{const tf=tuft(x,y,v+11,0,6,4,.5,base);if(tf)return tf;const m=smN(x/6+v,y/3,90+v),h=hash(x,y,v+91),lv=m+((x+y)%2?.04:-.04);
+      return col(base,(lv>.64?.06:lv<.34?-.07:0)+(h<.05?.06:h>.96?-.06:0));};
   SP.lot={
-    [K.RES]:[0,1].map(v=>G((u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.05)return col('#9a8f7a',.1);
-      if(v&&Math.abs(u-.62)<.07&&w>.55)return col('#cbbd9c');return col(PAL.g2,(Math.floor(u*7)%2)?-.06:.02);})),
-    [K.COM]:[0,1].map(v=>G((u,w,x,y)=>{if((u*7)%1<.12||(w*7)%1<.12)return col('#a9a293');return col(v?'#cfc8b8':'#c6c9cc',hash(x,y,4)<.08?-.05:0);})),
+    // a front lawn behind a low kerb, mown in faint stripes, with a stepping-stone path (v1) or a flower bed in the corner (v0)
+    [K.RES]:[0,1].map(v=>G((u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.05)return col('#b8b0a0',(x+y)%3?.04:-.06);if(e<.075)return col('#7a7262',.05);
+      if(v){const k=Math.floor((w-.5)*7);if(w>.5&&k>=0&&k<4){const cu=.62,cw=.5+(k+.5)/7;if(Math.hypot((u-cu)*1.6,(w-cw)*2.2)<.13)return col('#cbbd9c',(Math.abs(u-cu)>.05?-.1:.04)+hash(x,y,9)*.04);}}
+      else if(u<.3&&w>.7){const h=hash(x,y,12);if(u<.1||w>.92)return col('#7a5a3a',.05);return h<.3?col(['#ff6a8a','#ffd84a','#ffffff','#c070ff'][(h*13|0)%4]):col('#3f7e34',h>.8?.1:0);}
+      const tf=tuft(x,y,v+21,0,7,4,.35,PAL.g2);if(tf)return tf;return col(PAL.g2,((Math.floor(u*7)%2)?-.05:.02)+(smN(x/6,y/3,95)>.66?-.04:0));})),
+    // shop forecourts: square concrete pavers (v0) or warm sandstone flags in running bond (v1)
+    [K.COM]:[0,1].map(v=>G(paver(v?'#cfc8b8':'#c6c9cc',v?5:4,140+v,{bond:v,crack:1,var:.1,jc:'#a9a293',joint:.07}))),
+    // yards: concrete slabs with expansion joints, oil stains and tyre scuffs inside a hazard-striped kerb
     [K.IND]:[0,1].map(v=>G((u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);if(e<.07)return Math.floor((u+w)*9)%2?col('#e8b53a'):col('#2e2b33');
-      return col('#9d978b',hash(x>>1,y,v+8)<.1?-.18:hash(x,y,6)<.1?.06:0);}))
+      const m=smN(x/4+v*3,y/2,150+v);if(m>.8)return col('#6a665e',(m-.8)*-1.5+(hash(x,y,151)<.2?.05:0));
+      if(Math.abs(((u+w*.3+v*.2)*5)%1-.5)<.04&&hash(Math.floor(x/3),Math.floor(y/2),152)<.5)return col('#7a756c');
+      return paver('#9d978b',3,153+v,{joint:.03,crack:1,var:.06})(u,w,x,y);}))
   };
   ;yield;
-  SP.parkG=G((u,v,x,y)=>{const d=Math.hypot(u-.5,v-.5);if(Math.abs(d-.3)<.055)return col('#dccb98',hash(x,y,2)<.2?-.1:0);
-    const h=hash(x,y,31);if(h<.03)return col('#ff9fbf');if(h<.05)return col('#fff1a8');if(h<.065)return col('#ffffff');return col('#69b14a',h>.9?-.1:0);});
+  // park lawn: a gravel ring path with a darker edging, lawn with tufts and mottling, clusters of pink, yellow and white flowers
+  SP.parkG=G((u,v,x,y)=>{const d=Math.hypot(u-.5,v-.5),r=Math.abs(d-.3);if(r<.055)return col('#dccb98',(r>.04?-.14:0)+(hash(x,y,2)<.2?-.1:hash(x,y,3)<.08?.08:0));
+    const fc=hash(Math.floor(x/3),Math.floor(y/2),32),h=hash(x,y,31);if(fc<.12&&h<.5)return col(['#ff9fbf','#fff1a8','#ffffff'][(fc*25|0)%3]);return lawnTex(x,y,3,'#69b14a');});
   SP.dirt=G((u,v,x,y)=>{const h=hash(x,y,44);return col('#8d6b45',h<.12?-.2:h>.9?.1:0);});
-  SP.plaza=G((u,v,x,y)=>((Math.floor(u*4)+Math.floor(v*4))&1)?col('#c9c3b5'):col('#bdb6a6'));
+  SP.plaza=G(paver('#c9c3b5',4,160,{bond:1,var:.12,crack:1,alt:['#b4ad9e',.35]}));   // square flags in running bond, two stone tones
   // lips where land meets water, and the diorama slab on the map's front edges
   const face=(isL,h,fn)=>{const pb=new PB(32,16+h);pb.box({cx:16,cy:8+h,hw:16,h,[isL?'L':'R']:(a,b)=>fn(a,b,isL)});return mk(pb,-16,0,false);};
   ;yield;
@@ -1468,7 +1485,7 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
   // (SP.parkGV, with a mirrored copy for flipped parks); the sprite holds what stands on it: big trees, benches, a lamp, swings,
   // a slide, a pavilion. 1: strolling park with a winding gravel path and flower beds; 2: playground with a soft play mat,
   // swings, a slide and a sandpit; 3: pond park with a stone-rimmed pond, lily pads, ducks and a pavilion.
-  { const sw=(fn,m)=>m?(u,v,x,y)=>fn(v,u,x,y):fn,lawn=(x,y)=>{const h=hash(x,y,501);return col(h<.5?'#5fa844':'#57a23f',h>.93?.12:h<.05?-.12:0);},
+  { const sw=(fn,m)=>m?(u,v,x,y)=>fn(v,u,x,y):fn,lawn=(x,y)=>lawnTex(x,y,7),
       gravel=(x,y,e)=>col('#d8c9a0',hash(x,y,502)<.25?-.12:e?-.08:.04),fl=['#ff6a8a','#ffd84a','#ffffff','#c070ff','#ff9a4a'];
     const G1=(u,v,x,y)=>{const pv=.5+.11*Math.sin(u*Math.PI*2),d1=Math.abs(v-pv),d2=v>pv?Math.abs(u-.55-.05*Math.sin(v*7)):9;
       if(d1<.075||d2<.07)return gravel(x,y,d1>.055&&d2>.05);
