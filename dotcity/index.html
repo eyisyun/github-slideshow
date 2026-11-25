@@ -4394,7 +4394,7 @@ function spawnCar(){for(let t=0;t<40;t++){const i=(Math.random()*N*N)|0;if(W.kin
 // fire engines: each burning building gets one, sent from the nearest fire station along the roads (shortest path)
 const fightSet=new Set(),fireTry=new Map();let dispAcc=0,dispMsg=0;
 // shortest road route from any road next to a station of kind `src` to a road within 2 tiles of tile `ti` (BFS), or null
-function roadPath(src,ti){const w=W,fx=ti%N,fy=ti/N|0,prev=new Int32Array(N*N).fill(-2),q=[];
+function stationPath(src,ti){const w=W,fx=ti%N,fy=ti/N|0,prev=new Int32Array(N*N).fill(-2),q=[];
   for(let j=0;j<N*N;j++){if(w.kind[j]!==src)continue;const x=j%N,y=j/N|0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(isRoad(xx,yy)){const k=idx(xx,yy);if(prev[k]===-2){prev[k]=-1;q.push(k);}}}}
   for(let h=0;h<q.length;h++){const j=q[h],x=j%N,y=j/N|0;if(Math.max(Math.abs(x-fx),Math.abs(y-fy))<=2){const path=[];for(let k=j;k>=0;k=prev[k])path.unshift(k);return path;}
     for(const[dx,dy]of DIRS){const xx=x+dx,yy=y+dy;if(!isRoad(xx,yy))continue;const k=idx(xx,yy);if(prev[k]!==-2)continue;prev[k]=j;q.push(k);}}
@@ -4403,7 +4403,7 @@ function sendCar(path,em,extra){const x0=path[0]%N,y0=path[0]/N|0,nx=path.length
   cars.push(Object.assign({x:x0,y:y0,e:W.era,d:Math.max(0,d),t:0,c:0,em,sp:em===2?2.6:2.8,path,pi:0,st:path.length>1?'go':'work',wt:0},extra));}
 function dispatchFire(){const w=W;if(w.era<3||!w.st.fires)return;const assigned=new Set(cars.filter(c=>c.fire!=null&&c.st!=='ret').map(c=>c.fire));
   for(let i=0;i<N*N;i++){if(!w.fire[i]||assigned.has(i)||(fireTry.get(i)||0)>now)continue;
-    const path=roadPath(K.FIRE,i);if(!path){fireTry.set(i,now+5000);continue;}sendCar(path,2,{fire:i});assigned.add(i);
+    const path=stationPath(K.FIRE,i);if(!path){fireTry.set(i,now+5000);continue;}sendCar(path,2,{fire:i});assigned.add(i);
     if(now>dispMsg){dispMsg=now+8000;toast(`🚒 소방차가 출동했어요! (${i%N}, ${i/N|0})`,'info');}}}
 // police: now and then a theft happens at a building (more where crime is high); a patrol car from the nearest police station
 // drives there, stays a few seconds with its lights on and solves it. Unanswered cases go cold after a while.
@@ -4417,7 +4417,7 @@ function maybeIncident(){const w=W,S=w.st;if(w.era<3||S.pop<300||incidents.lengt
     incidents.push({i,t:0,done:false,type});if(!S[INC[type].cnt])toast(`${type==='med'?'🚑':'🚨'} (${i%N}, ${i/N|0}) ${INC[type].none}`,'warn');return;}}
 function dispatchPolice(dt){const w=W;for(let n=incidents.length-1;n>=0;n--){const o=incidents[n],I=INC[o.type||'theft'];o.t+=dt;if(o.done||!w.kind[o.i]){incidents.splice(n,1);continue;}
     const has=cars.some(c=>c.inc===o);if(!has&&o.t>40){incidents.splice(n,1);toast(I.lost,'warn');continue;}
-    if(has||!w.st[I.cnt]||w.era<3||(o.retry||0)>now)continue;const path=roadPath(I.src,o.i);if(!path){o.retry=now+5000;continue;}
+    if(has||!w.st[I.cnt]||w.era<3||(o.retry||0)>now)continue;const path=stationPath(I.src,o.i);if(!path){o.retry=now+5000;continue;}
     sendCar(path,I.em,{inc:o});if(now>polMsg){polMsg=now+6000;toast(`${I.call} (${o.i%N}, ${o.i/N|0})`,'info');}}}
 // after the job a vehicle switches its lights off and drives back the way it came, at an easy pace, and goes in at its station
 function goHome(c){const p=c.path?c.path.slice(0,c.pi+1).reverse():null;if(!p||p.length<2){c.gone=true;return;}
