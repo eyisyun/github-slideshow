@@ -4927,6 +4927,7 @@ function drawJangObj(c,o){const S=jangSprites(),X=Math.round((o.fx-o.fy)*16-X0),
 // water and strollers. Tap the wrestlers for a bout (a prize, up to three a festival), tap the swing to send it higher (the town
 // grows faster for a while). Nothing here is saved.
 let dn=null,dnFocus=false;
+const DN_PANTS=['#8a7a62','#6a5236','#5a4a3a','#7a5a3a','#8a6a44','#6a5a4a','#c0392b','#3a6fa0','#e86a8a'];   // the crowd's trousers and skirts, in the order of the walker sets
 const dnActive=()=>{const f=W.ev&&W.ev.fest;return W.era===2&&!!(f&&!f.done&&f.k==='dano');};
 function dnSprites(){if(SP.dnS)return SP.dnS;
   const tree=(()=>{const pb=new PB(90,92),cx=38,cy=86;
@@ -4999,7 +5000,8 @@ function drawDnAll(c){if(!dn||!dn.ok)return;const S=dnSprites(),cx=Math.round((d
   add(ry+1,()=>{const j=bout?((T*10)|0)%2:((T*2.5)|0)%2;D(S.wr[j],rx+(bout?(Math.sin(T*18)>0?1:-1):0),ry+2);});
   add(ry+5,()=>{D(V[0][0],rx-14,ry+5);const f=((T*(bout?6:1.5))|0)%2;for(let k=0;k<4;k++)P(rx-18+k,ry-4-k*.5-(f?1:0),k%2?'#e0c060':'#f2e090');});
   for(let k=0;k<18;k++){const a=k/18*6.283,x=rx+Math.cos(a)*38,y=ry+Math.sin(a)*19,front=Math.sin(a)>.2,set=V[k%V.length],hop=bout&&((T*6+k)|0)%2;
-    add(y,()=>{if(front){P(x-4,y-1,'#c9a45a',8,1);P(x-4,y,'#c9a45a',8,1);const f=set[1];c.drawImage(nightF>.3&&f.n?f.n:f.c,0,0,f.w,f.h-3,Math.round(x+f.ox),Math.round(y+f.oy+3-hop),f.w,f.h-3);}
+    add(y,()=>{if(front){P(x-5,y-1,'#c9a45a',10,1);P(x-5,y,'#b8944e',10,1);const f=set[1];c.drawImage(nightF>.3&&f.n?f.n:f.c,0,0,f.w,f.h-3,Math.round(x+f.ox),Math.round(y+f.oy+1-hop),f.w,f.h-3);
+        const pc=DN_PANTS[k%DN_PANTS.length],lx=Math.round(x+f.ox),ly=Math.round(y+f.oy+1-hop+f.h-3);P(lx-1,ly,pc,f.w+2,1);P(lx-1,ly+1,pc,f.w+2,1);P(lx-1,ly+1,'#2a1d14');P(lx+f.w,ly+1,'#2a1d14');}   // sitting cross-legged on a mat
       else{D(set[0],x,y-hop);if(k%3===0||bout){P(x-3,y-9-hop,'#e0aa7e');P(x-3,y-10-hop,'#e0aa7e');}}});}
   add(ry-18,()=>{const x=rx-30,y=ry-18,h=((T*4)|0)%2;D(V[4][1],x,y);P(x+3,y-6,'#c0392b',6,3);P(x+3,y-6,'#f2ede0',1,3);P(x+8,y-6,'#f2ede0',1,3);P(x+1,y-8-h,'#6a4428');P(x+10,y-8-(1-h),'#6a4428');});
   add(ry-16,()=>{const x=rx+46,y=ry-16;for(let k=0;k<12;k++)P(x+13,y-k,'#6a4428');D(S.ox,x,y);P(x+12,y-8,'#c9a45a',2,1);P(x+9+(Math.sin(T*3)>.6?1:0),y-6,'#6a3a1a');
