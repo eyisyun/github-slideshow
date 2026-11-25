@@ -766,8 +766,23 @@ function carHover(c,glow,sir){const g=[col(glow),col(glow,.4)];return vehModel([
 // built in slices (generator) so the loading screen can paint its progress between them
 function* buildSpritesGen(){
   /* ground ---------------------------------------------------- */
-  SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const h=hash(x,y,v*31+7),t=p?.035:0;
-    if(h<.055)return col(PAL.g2,t);if(h>.955)return col(PAL.g0,t);if(h<.07)return col(PAL.g3);return col(PAL.g1,t);}));
+  // grass: soft mottling with dithered edges, tufts (a lit tip over a shaded root, some with two or three blades), little clusters
+  // of white and yellow wildflowers and the odd pebble. The meadow's slow light and dark drifts across many tiles are drawn on top
+  // in the ground pass (meadowTint)
+  const smN=(x,y,k)=>{const x0=Math.floor(x),y0=Math.floor(y),fx=x-x0,fy=y-y0,f=t=>t*t*(3-2*t),a=hash(x0,y0,k),b=hash(x0+1,y0,k),c=hash(x0,y0+1,k),d=hash(x0+1,y0+1,k);
+    return(a+(b-a)*f(fx))*(1-f(fy))+(c+(d-c)*f(fx))*f(fy);};
+  const tuft=(x,y,v,t,cw=7,ch=4,dens=.55,G1=PAL.g1)=>{for(let oy=0;oy<=1;oy++)for(let ox=0;ox<=1;ox++){const cx=Math.floor(x/cw)-ox,cy=Math.floor(y/ch)-oy,hc=hash(cx,cy,v*17+3);if(hc>=dens)continue;
+      const ax=cx*cw+Math.floor(hash(cx,cy,v+9)*(cw-2)),ay=cy*ch+1+Math.floor(hash(cx,cy,v+19)*2),two=hc<dens*.55;
+      if(two&&y===ay-1&&x===ax+1)return col(PAL.g3,t-.04);
+      if(y===ay&&(x===ax||two&&x===ax+2))return col(two?PAL.g2:(hc<dens*.27?PAL.g3:PAL.g2),t+(two?-.04:0));
+      if(y===ay+1&&x>=ax-1&&x<=ax+(two?3:1))return(x===ax-1||x===ax+(two?3:1))?col(PAL.g0,t+.08):col(G1,t-.15);}return null;};
+  SP.grass=[];for(let v=0;v<4;v++)for(let p=0;p<2;p++)SP.grass.push(G((u,w,x,y)=>{const t=p?.02:0,m=smN(x/6+v*3.1,y/3+v*1.7,40+v),dth=(x+y)%2;
+    const tf=tuft(x,y,v,t);if(tf!=null)return tf;
+    const h=hash(x,y,v*31+7),fc=hash(Math.floor(x/3),Math.floor(y/2),v+300);
+    if(fc<.035&&h<.45)return col(fc<.018?'#f2eee0':'#ecc94a');if(h>.996)return col('#a39b8a');
+    const lv=m+(dth?.04:-.04);if(lv>.64)return col(PAL.g2,t-.1);if(lv<.34)return col(PAL.g1,t-.09);return col(PAL.g1,t+(h<.06?.05:0));}));
+  SP.grass.forEach(sp=>sp.mg=1);
+  SP.meadow=[G(()=>col('#24481c')),G(()=>col('#b8d468'))];
   // weather on the ground: snow lying in 4 depths (patchy -> full), wet sheen and puddles after rain
   const sm=(x,y,k)=>{const gx=x/7,gy=y/3.5,x0=Math.floor(gx),y0=Math.floor(gy),fx=gx-x0,fy=gy-y0,f=t=>t*t*(3-2*t),a=hash(x0,y0,k),b=hash(x0+1,y0,k),c=hash(x0,y0+1,k),d=hash(x0+1,y0+1,k);
     return(a+(b-a)*f(fx))*(1-f(fy))+(c+(d-c)*f(fx))*f(fy);};   // smooth blobs, so snow lies in drifts instead of static
@@ -778,7 +793,8 @@ function* buildSpritesGen(){
   SP.wetG=G(()=>col('#1c2a48',0,46));
   SP.puddle=[0,1,2].map(k=>G((u,w,x,y)=>{const cu=[.42,.6,.35][k],cv=[.5,.38,.62][k],r=[.2,.16,.14][k],d=Math.hypot((u-cu)/r,(w-cv)/(r*.8))+hash(x,y,k+3)*.18;
     if(d>1)return null;return col(d<.35&&hash(x,y,k)<.5?'#c8dcf0':d>.8?'#3c5272':'#5d7aa0',0,d>.8?150:185);}));
-  SP.sand=[0,1].map(v=>G((u,w,x,y)=>{const h=hash(x,y,v+50);return h<.1?col(PAL.sand2):h>.96?col('#f1e3b3'):col(PAL.sand);}));
+  SP.sand=[0,1].map(v=>G((u,w,x,y)=>{const r=Math.sin((x*.5+y*1.1)+smN(x/6,y/3,60+v)*4),h=hash(x,y,v+50);if(h<.006)return col('#f4ece0');if(h<.01)return col('#e8a890');   // wind ripples, a shell, a pink pebble
+    return col(PAL.sand,(r>.75?.07:r<-.8?-.06:0)+(h<.08?-.05:h>.97?.06:0));}));
   SP.water=[];for(let f=0;f<4;f++){SP.water[f]=[];for(let m=0;m<16;m++)SP.water[f][m]=G((u,v,x,y)=>{
     const fm=((m&1)&&u>.87)||((m&2)&&v>.87)||((m&4)&&u<.13)||((m&8)&&v<.13);
     if(fm)return hash(x,y,f+20)<.55?col(PAL.foam):col(PAL.w3);
@@ -2475,10 +2491,20 @@ BT.push(['수상 비행정',boat(1,.12,P=>{for(const sg of[-1,1])P.cylS(-.35,.35
       (cx,cy)=>({lights:[[cx-13,cy+1],[cx+5,cy+1],[cx-4,cy-28],[cx-26,cy-5],[cx+4,cy+2],[cx+18,cy-4]]}));
 
     /* ---- shared: old-style lots, roads, scaffolding, vehicles, icons ---- */
-    SP.lotOld={[R]:[0,1].map(v=>G((u,w,x,y)=>{const h=hash(x,y,v+70);return h<.08?col('#8a6a44'):col(PAL.g2,h>.9?-.1:.03);})),
-      [C]:[0,1].map(v=>G((u,w,x,y)=>col('#b0905e',hash(x,y,v+71)<.12?-.15:hash(x,y,v+72)<.06?.1:0))),
+    // packed earth: mottled in two tones with dithered edges, worn darker patches, pebbles that catch the light over a shadow,
+    // the odd crack, and grass creeping back in round the edges of the lot
+    const earth=(base,v,seed,grassEdge)=>(u,w,x,y)=>{const e=Math.min(u,w,1-u,1-w);
+        if(grassEdge&&e<.1&&hash(x,y,seed+5)<(.1-e)*9){const tf=tuft(x,y,v+5,0,5,3,.8);return tf||col(PAL.g1,hash(x,y,seed+6)<.2?-.06:0);}
+        const m=smN(x/5+v*2.3,y/2.5+v*1.1,seed),dth=(x+y)%2,lv=m+(dth?.05:-.05),h=hash(x,y,seed+1);
+        const px=Math.floor(x/4),py=Math.floor(y/3),hp=hash(px,py,seed+2),qx=px*4+1+Math.floor(hash(px,py,seed+3)*2),qy=py*3+1;
+        if(hp<.16){if(x===qx&&y===qy)return col('#d8d0c0',hp<.06?.06:-.04);if(x===qx&&y===qy+1)return col(base,-.3);if(x===qx+1&&y===qy)return col('#b8b0a0',-.08);}
+        if(hash(Math.floor(x/9),Math.floor(y/5),seed+4)<.12&&Math.abs((x%9)-(y%5)*1.6-2)<.6)return col(base,-.24);
+        return col(base,(lv>.66?.07:lv<.3?-.1:0)+(h<.1?-.06:h>.95?.06:0));};
+    SP.lotOld={[R]:[0,1].map(v=>G((u,w,x,y)=>{const m=smN(x/5+v*2,y/2.5,77+v);if(m>.6&&(m-.6)*6>hash(x,y,v+70))return earth('#9a7a50',v,170,false)(u,w,x,y);
+        const tf=tuft(x,y,v+2,0);if(tf)return tf;const h=hash(x,y,v+71);return col(PAL.g2,h>.9?-.1:(x+y)%2?.03:0);})),
+      [C]:[0,1].map(v=>G(earth('#b0905e',v,171,true))),
       farm:[0,1].map(v=>G((u,w,x,y)=>{const r2=Math.floor((v?u:w)*7)%2;return r2?col('#7aa84a',hash(x,y,73)<.15?.15:0):col('#8a6a44',hash(x,y,74)<.1?-.1:0);})),
-      dirt:[0,1].map(v=>G((u,w,x,y)=>col('#9a7a50',hash(x,y,v+75)<.12?-.15:0)))};
+      dirt:[0,1].map(v=>G(earth('#9a7a50',v,175,true)))};
     const roadSet=fn=>{const out=[];for(let m=0;m<16;m++){const inB=(u,v,w)=>{const du=Math.abs(u-.5),dv=Math.abs(v-.5);return(dv<=w&&((du<=w)||((m&1)&&u>.5)||((m&4)&&u<.5)))||(du<=w&&((dv<=w)||((m&2)&&v>.5)||((m&8)&&v<.5)));};out.push(G((u,v,x,y)=>fn(inB,u,v,x,y)));}return out;};
     const dirtRoad=(base,edge,w0)=>roadSet((inB,u,v,x,y)=>{if(inB(u,v,w0))return col(base,hash(x,y,81)<.15?-.12:hash(x,y,82)<.06?.12:0);if(inB(u,v,w0+.08))return col(edge,hash(x,y,83)<.4?0:-.1);return col(PAL.g1,hash(x,y,84)<.06?.1:0);});
     ;yield;
@@ -5032,6 +5058,11 @@ function capOf(sp){let cp=capCache.get(sp);if(cp!==undefined)return cp;cp=null;
       const L=(x*7+y*3)%5===0?3:2;for(let k=0;k<L&&op(x,y+k);k++){const j=((y+k)*w+x)*4,sh=k===L-1;o[j]=sh?214:246;o[j+1]=sh?224:249;o[j+2]=sh?238:253;o[j+3]=sh?190:250;any=true;}}
     if(any){cx.putImageData(out,0,0);cp=cv;}}
   capCache.set(sp,cp);return cp;}
+// the meadow drifts from deep green to a sunny yellow-green over a few tiles, so open grass never reads as one flat colour
+let meadowT=null;
+function meadowTint(c,x,y,sx,sy){if(!meadowT||meadowT.length!==N*N){meadowT=new Float32Array(N*N);const sm=(x,y,k)=>{const x0=Math.floor(x),y0=Math.floor(y),fx=x-x0,fy=y-y0,f=t=>t*t*(3-2*t),a=hash(x0,y0,k),b=hash(x0+1,y0,k),c2=hash(x0,y0+1,k),d=hash(x0+1,y0+1,k);return(a+(b-a)*f(fx))*(1-f(fy))+(c2+(d-c2)*f(fx))*f(fy);};
+    for(let yy=0;yy<N;yy++)for(let xx=0;xx<N;xx++)meadowT[yy*N+xx]=sm(xx/4.5,yy/4.5,77)*.75+sm(xx/1.7,yy/1.7,78)*.25-.5;}
+  const n=meadowT[y*N+x],a=Math.min(.14,Math.abs(n)*.35);if(a<.01)return;const ga=c.globalAlpha;c.globalAlpha=ga*a;c.drawImage(SP.meadow[n<0?0:1].c,sx-16,sy);c.globalAlpha=ga;}
 function groundOf(i,x,y,lo){const w=W,k=w.kind[i],e=Math.min(5,w.te[i]),v=w.vari[i]&1;
   if(k===K.RAIL)return(HD===2&&!lo?SP.railH:SP.rail)[Math.max(3,e)][railMask(x,y)];
   if(k===K.ROAD){if(roadArea(x,y))return SP.lotR[e][roadMask(x,y)];return(w.level[i]&&e>=3?(e>=5?SP.aveF:SP.ave):e>=5?SP.roadF:e>=4?SP.road:SP.roadE[e])[roadDrawMask(x,y)];}
@@ -5213,7 +5244,7 @@ function render(){seasonGrass();
       c.fillStyle=nightF>.5?`rgba(200,220,255,${a})`:`rgba(235,248,255,${a})`;c.fillRect(gx,gy,L,1);if(L>2){c.fillStyle=nightF>.5?`rgba(200,220,255,${a*.4})`:`rgba(235,248,255,${a*.4})`;c.fillRect(gx+1,gy-1,L-2,1);}}if(x===N-1)c.drawImage(SP.slab.w[1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab.w[0].c,sx-16,sy);}
   seaFx(c);c.globalAlpha=1;
   for(let n=0;n<visN;n+=3){const i=visBuf[n],sx=visBuf[n+1],sy=visBuf[n+2];if(sy>lh||w.terrain[i]===1)continue;const x=i%N,y=i/N|0;
-    {const gs=groundOf(i,x,y);if(gs.hd)c.drawImage(gs.c,sx-16,sy,32,16);else c.drawImage(gs.c,sx-16,sy);}if(w.rail[i]&&w.kind[i]===K.ROAD){const re=Math.max(3,Math.min(5,w.te[i])),ro=(railMask(x,y)&5)?0:1;if(HD===2&&SP.railXH[re])c.drawImage(SP.railXH[re][ro].c,sx-16,sy,32,16);else c.drawImage(SP.railX[re][ro].c,sx-16,sy);}const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
+    {const gs=groundOf(i,x,y);if(gs.hd)c.drawImage(gs.c,sx-16,sy,32,16);else c.drawImage(gs.c,sx-16,sy);if(gs.mg)meadowTint(c,x,y,sx,sy);}if(w.rail[i]&&w.kind[i]===K.ROAD){const re=Math.max(3,Math.min(5,w.te[i])),ro=(railMask(x,y)&5)?0:1;if(HD===2&&SP.railXH[re])c.drawImage(SP.railXH[re][ro].c,sx-16,sy,32,16);else c.drawImage(SP.railX[re][ro].c,sx-16,sy);}const m=w.wmask[i];if(m&1)c.drawImage(SP.lipR.c,sx-16,sy);if(m&2)c.drawImage(SP.lipL.c,sx-16,sy);
     const t=w.terrain[i]===2?'s':'g';if(x===N-1)c.drawImage(SP.slab[t][1].c,sx-16,sy);if(y===N-1)c.drawImage(SP.slab[t][0].c,sx-16,sy);}
   // railway bridge decks lie level with the banks, so they go down with the ground and every train runs over them
   for(let n=0;n<visN;n+=3){const i=visBuf[n];if(w.terrain[i]!==1||w.kind[i]!==K.RAIL)continue;const x=i%N,y=i/N|0;drawSpr(c,SP.railBr[Math.max(3,Math.min(5,w.te[i]))][railBridgeKey(x,y)],visBuf[n+1],visBuf[n+2]);}
