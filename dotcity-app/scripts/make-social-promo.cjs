@@ -52,7 +52,7 @@ const VIDEOS = {
   // 1.1.1: Korean history comes alive, Stone Age to Dynasty. 't:<test>:<seed>' scenes start a fresh game of that era from a fixed seed
   // and run the feature's own test, which places it and turns the camera to it
   history: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', flash: 1, scenes: [
-    [2, 1, 'b:landmarkTest', ko ? '한국사를 따라 키우는<br>나만의 픽셀 도시' : 'Build a pixel city<br>through Korean history', 3, 3, 4.6, [0, -30], [0, -12]],
+    [2, 1, 'b:landmarkTest', ko ? '한국사를 따라 키우는<br>나만의 픽셀 도시' : 'Build a pixel city<br>through Korean history', 3, 7.2, 5.6, [0, -10], [0, -16]],
     [0, 0, 't:huntTest:11', ko ? '석기시대 사슴 사냥부터' : 'From deer hunts in the Stone Age', 2.4, 6.2, 5.4, [0, 0], [0, -6]],
     [1, 0, 't:oxTest:21', ko ? '황금 논길을 달리는<br>청동기 소달구지' : 'Bronze Age ox carts<br>past golden paddies', 2.6, 6.4, 5.6, [-8, 0], [8, -6]],
     [1, 0, 't:dolTest:31', ko ? '다 같이 영차!<br>고인돌 세우기' : 'All together, heave!<br>Raise a dolmen', 2.8, 7, 6.2, [0, -4], [0, -8]],
@@ -61,7 +61,7 @@ const VIDEOS = {
     [2, 0, 't:dnTest:61', ko ? '단오엔 그네 타고<br>씨름 한판!' : 'Swings and wrestling<br>at the Dano festival', 2.8, 5.6, 4.8, [0, -6], [0, -12]],
     [2, 0, 't:naruTest:23757', ko ? '나룻배 타고 강 건너기 ⛵' : 'Ferry across the river ⛵', 2.8, 6.2, 5.4, [0, 0], [0, -8]],
     [2, 0, 't:discTest:81', ko ? '발견할 때마다<br>새 작업장이 열려요' : 'Every discovery<br>opens a new workshop', 2.8, 5, 4.2, [-30, 0], [30, -6]],
-    [2, 1, 'b:landmarkTest', ko ? '횃불 밝힌 궁궐까지!' : 'All the way to a palace by torchlight!', 3.2, 5.2, 3.2, [0, -14], [0, -6]]],
+    [2, 1, 'b:landmarkTest', ko ? '횃불 밝힌 궁궐까지!' : 'All the way to a palace by torchlight!', 3.4, 6.4, 3.4, [0, -12], [0, -2]]],
     end: ko ? ['석기시대부터 왕조까지\n살아 숨 쉬는 픽셀 마을', 'App Store에서 무료'] : ['From the Stone Age to the Dynasty\na pixel town that lives', 'Free on the App Store'] },
   preview: { badge: '', scenes: [   // App Store app preview: the most striking things first, quick cuts, no prices or store names
     [4, 0, 'dusk', ko ? '해가 지면<br>불이 하나씩 켜지는 도시' : 'A city where the lights<br>come on one by one', 3.4, 3.4, 3, [0, -6], [0, -18]],
