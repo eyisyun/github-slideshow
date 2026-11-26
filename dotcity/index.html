@@ -4727,9 +4727,9 @@ function stepOx(dt){if(W.era!==1){if(oxCarts.length||farmers.length){oxCarts=[];
   for(const f of farmers){f.ph+=dt;if(f.pose==='sheaf'){f.fx+=f.dir*dt*.12;if(f.fx<f.i%N+.15||f.fx>f.i%N+.85){f.dir=-f.dir;}f.face=f.dir;}}}
 const isRoadI=i=>W.kind[i]===K.ROAD;
 function drawOxObj(c,o){const S=oxSprites(),X=Math.round((o.fx-o.fy)*16-X0),Y=Math.round((o.fx+o.fy)*8-Y0);
-  if(o.k==='cart'){const set=o.load?S.F:S.E,base=set[o.d],moving=o.wait<=0&&!(o.yield&&Math.abs(o.lat)>.6*Math.abs(o.side||0)),sp=moving&&((o.ph/.28)|0)%2?base.alt:base,w=S.drv[o.d],ws=moving&&((o.ph/.28)|0)%2?w.alt:w;
-    const back=base.drv[1]<0,dr=()=>drawSpr(c,ws,X+base.drv[0],Y+base.drv[1]);if(back)dr();drawSpr(c,sp,X,Y);if(!back)dr();return;}
-  const fr=S.fm[o.pose==='sheaf'?'sheaf':o.pose]||S.fm.walk,sp=fr[((o.ph/(o.pose==='plant'?.7:o.pose==='reap'?.35:.3))|0)%2];drawSpr(c,sp,X,Y);}
+  if(o.k==='cart'){const set=o.load?S.F:S.E,base=set[o.d];if(!base)return;const moving=o.wait<=0&&!(o.yield&&Math.abs(o.lat)>.6*Math.abs(o.side||0)),sp=moving&&((o.ph/.28)|0)%2?base.alt||base:base,w=S.drv[o.d],ws=w&&moving&&((o.ph/.28)|0)%2?w.alt||w:w;
+    const back=base.drv[1]<0,dr=()=>{if(ws)drawSpr(c,ws,X+base.drv[0],Y+base.drv[1]);};if(back)dr();drawSpr(c,sp,X,Y);if(!back)dr();return;}
+  const fr=S.fm[o.pose==='sheaf'?'sheaf':o.pose]||S.fm.walk,sp=fr[((o.ph/(o.pose==='plant'?.7:o.pose==='reap'?.35:.3))|0)%2]||fr[0];if(sp)drawSpr(c,sp,X,Y);}
 // test button: start a fast run through the farming year (a season every few seconds) and send two carts out at once
 function oxTest(){if(W.era!==1){toast(L2('소달구지와 논은 청동기 시대에서 볼 수 있어요. 청동기 게임에서 눌러 주세요.','Ox carts and paddies belong to the Bronze Age. Try this in a Bronze Age game.'),'info');return;}
   seasonPreview={t0:now,len:48};farmStageLast=-1;farmers=[];oxAcc=99;
@@ -6792,7 +6792,7 @@ function fireTest(){newGame('era4');closeEra();if(typeof closeMenu==='function')
   if(best<0){toast('불낼 건물을 찾지 못했어요.','warn');return;}W.fire[best]=14;fireTry.clear();
   const bx=best%N,by=best/N|0,sx2=st%N,sy2=st/N|0;cam.s=Math.max(cam.s,3);cam.x=((bx+sx2)/2-(by+sy2)/2)*16;cam.y=((bx+sx2)/2+(by+sy2)/2)*8;setSpeed(1);updateHud(true);
   toast(`🔥 (${bx}, ${by}) 건물에 불이 났어요! 소방서에서 소방차가 출동해요.`,'warn');}
-function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];boats=[];trains=[];naru=[];incidents.length=0;selected=null;$('#info').hidden=true;
+function newGame(mode){W=blankWorld((Math.random()*1e9)|0);genTerrain(W);cars=[];parts=[];boats=[];trains=[];naru=[];oxCarts=[];farmers=[];dolEv=null;incidents.length=0;selected=null;$('#info').hidden=true;
   if(mode==='stone'||mode==='era0')starterStone();else if(mode==='modern')starter();else if(mode.startsWith('era'))starterEra(+mode.slice(3));else{W.funds=300;recompute();}
   buildTools();setTool('inspect');$('#cityName').value=W.name;centerCam();save();updateHud(true);
   if(mode==='modern')toast('현대 도시 샌드박스입니다.','info');else showEra(false);

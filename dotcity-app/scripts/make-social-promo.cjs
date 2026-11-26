@@ -1,6 +1,6 @@
 // Short 9:16 promo videos for TikTok / Instagram Reels / YouTube Shorts, rendered from the built app (www/) with a manual clock and
 // encoded with ffmpeg (silent: pick a trending track in the app when posting).
-//   node scripts/make-social-promo.cjs <eras|festivals|life|watch|seasons> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
+//   node scripts/make-social-promo.cjs <eras|festivals|life|watch|seasons|history> [ko|en]   ->   store/promo/dotcity-<video>-<lang>.mp4
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 // PREVIEW=iphone|ipad renders an App Store app preview instead: 886x1920 / 1200x1600 portrait, 30 fps, with a silent stereo track
@@ -49,6 +49,20 @@ const VIDEOS = {
     [4, 0, 'autumn', ko ? '가을엔 단풍이<br>하나둘 물들어요 🍁' : 'Autumn colours<br>creep across town 🍁', 5, 3.4, 3, [0, 0], [0, -14]],
     [4, 1, 'winter', ko ? '겨울밤엔 눈이 내려요 ❄' : 'Snow falls on winter nights ❄', 3.8, 3.8, 3.4, [0, -4], [0, -16]]],
     end: ko ? ['하루가 흐르고 계절이 바뀌는\n살아 있는 픽셀 도시', 'App Store에서 무료'] : ['Days pass and seasons turn\nin a pixel city that lives', 'Free on the App Store'] },
+  // 1.1.1: Korean history comes alive, Stone Age to Dynasty. 't:<test>:<seed>' scenes start a fresh game of that era from a fixed seed
+  // and run the feature's own test, which places it and turns the camera to it
+  history: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', flash: 1, scenes: [
+    [2, 1, 'b:landmarkTest', ko ? '한국사를 따라 키우는<br>나만의 픽셀 도시' : 'Build a pixel city<br>through Korean history', 3, 3, 4.6, [0, -30], [0, -12]],
+    [0, 0, 't:huntTest:11', ko ? '석기시대 사슴 사냥부터' : 'From deer hunts in the Stone Age', 2.4, 6.2, 5.4, [0, 0], [0, -6]],
+    [1, 0, 'b:oxTest', ko ? '황금 논길을 달리는<br>청동기 소달구지' : 'Bronze Age ox carts<br>past golden paddies', 2.6, 6.4, 5.6, [-8, 0], [8, -6]],
+    [1, 0, 'b:dolTest', ko ? '다 같이 영차!<br>고인돌 세우기' : 'All together, heave!<br>Raise a dolmen', 2.8, 7, 6.2, [0, -4], [0, -8]],
+    [1, 1, 't:jcTest:41', ko ? '불꽃 아래 제천 축제' : 'A harvest festival by firelight', 2.6, 6, 5.2, [0, -8], [0, -14]],
+    [2, 0, 'b:jangTest', ko ? '장날엔 흥정 한판' : 'Haggle on market day', 2.6, 7, 6.2, [0, -2], [0, -8]],
+    [2, 0, 't:dnTest:61', ko ? '단오엔 그네 타고<br>씨름 한판!' : 'Swings and wrestling<br>at the Dano festival', 2.8, 5.6, 4.8, [0, -6], [0, -12]],
+    [2, 0, 't:naruTest:23757', ko ? '나룻배 타고 강 건너기 ⛵' : 'Ferry across the river ⛵', 2.8, 6.2, 5.4, [0, 0], [0, -8]],
+    [2, 0, 't:discTest:81', ko ? '발견할 때마다<br>새 작업장이 열려요' : 'Every discovery<br>opens a new workshop', 2.8, 5, 4.2, [-30, 0], [30, -6]],
+    [2, 1, 'b:landmarkTest', ko ? '횃불 밝힌 궁궐까지!' : 'All the way to a palace by torchlight!', 3.2, 5.2, 3.2, [0, -14], [0, -6]]],
+    end: ko ? ['석기시대부터 왕조까지\n살아 숨 쉬는 픽셀 마을', 'App Store에서 무료'] : ['From the Stone Age to the Dynasty\na pixel town that lives', 'Free on the App Store'] },
   preview: { badge: '', scenes: [   // App Store app preview: the most striking things first, quick cuts, no prices or store names
     [4, 0, 'dusk', ko ? '해가 지면<br>불이 하나씩 켜지는 도시' : 'A city where the lights<br>come on one by one', 3.4, 3.4, 3, [0, -6], [0, -18]],
     [0, 0, '', ko ? '움집 몇 채에서 시작해' : 'Start with a few huts', 1.7, 5, 4.6, [0, 10], [0, 2]],
@@ -69,7 +83,7 @@ const VIDEOS = {
   await p.evaluate(() => { window.requestAnimationFrame = () => 0; simDay = () => {};   // a frozen town: no growth, outages or fires, just the life on it
     const st = document.createElement('style');
     st.textContent = `body>*:not(#view):not(#vig):not(#cap):not(#endc):not(#pcard){visibility:hidden!important}
- #cap{position:fixed;left:0;right:0;top:96px;text-align:center;z-index:99;font:30px/1.25 "Do Hyeon",sans-serif;color:#fff;
+ #cap{position:fixed;left:0;right:0;top:96px;text-align:center;z-index:99;font:34px/1.22 "Do Hyeon",sans-serif;color:#fff;
   text-shadow:0 3px 0 #141a30,0 -2px 0 #141a30,3px 0 0 #141a30,-3px 0 0 #141a30,0 6px 16px rgba(0,0,0,.55);padding:0 18px}
  #cap b{display:inline-block;margin-bottom:8px;font:18px "Do Hyeon",sans-serif;color:#1a1404;background:#ffcc4d;padding:4px 12px;border-radius:10px;text-shadow:none;box-shadow:0 3px 0 #a37a1a}
  #pcard{position:fixed;left:8%;right:8%;top:24%;z-index:98;opacity:0}#pcard img{width:100%;display:block;box-shadow:0 18px 40px rgba(0,0,0,.6);border-radius:4px}
@@ -79,11 +93,16 @@ const VIDEOS = {
  #endc .c{margin-top:14px;font-size:22px;background:#ffcc4d;color:#1a1404;padding:12px 26px;border-radius:14px;box-shadow:0 5px 0 #a37a1a}`;
     document.head.append(st); const c = document.createElement('div'); c.id = 'cap'; document.body.append(c); });
   const icon = 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '..', 'ios', 'App', 'App', 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png')).toString('base64');
-  let n = 0, t = 1000; const shot = async () => { await p.screenshot({ path: `${OUT}/${String(n++).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92 }); };
+  let n = 0, t = 1000, tapAt = null, tapF = -99; const shot = async () => { await p.screenshot({ path: `${OUT}/${String(n++).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92 }); };
   for (let k = 0; k < VIDEOS.scenes.length; k++) { if (process.env.ONLY && !process.env.ONLY.split(',').includes(String(k))) continue;   // ONLY=1,3 renders just those scenes (for checking)
     const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1], evOff = 0] = VIDEOS.scenes[k];
     await p.evaluate(([era, night, setup]) => {   // the same town builder as the store screenshots, plus the scene's setup
-      closeEra(); try { localStorage.clear(); } catch (e) {}
+      closeEra(); try { localStorage.clear(); } catch (e) {} oxCarts = []; farmers = []; dolEv = null;
+      if (setup.startsWith('t:')) { const [, fn, sd0] = setup.split(':'), R0 = Math.random; let sd = +sd0;
+        Math.random = () => ((sd = (sd * 1103515245 + 12345) & 0x7fffffff) / 0x80000000); newGame('era' + era); Math.random = R0; closeEra();
+        document.querySelectorAll('.modal').forEach(m => m.hidden = true); W.wx = 0; W.wxEnd = Date.now() + 1e9; W.snow = 0; W.cm = fn === 'jcTest' ? 8 : 5; W.ct = 10; boats = []; naru = []; incidents.length = 0; setTool('inspect'); setSpeed(1);
+        dayMode = night ? 'night' : 'day'; W.tod = night ? 22 : 11; cam.s = 4; window[fn](); for (let i = 0; i < 140; i++) frame(performance.now() + i * 50);
+        document.querySelectorAll('.toast').forEach(t => t.remove()); return; }
       W = blankWorld(77); genTerrain(W); W.era = era; W.cm = 5; W.ct = 10;   // early summer unless the scene sets a season
       for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < 14) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
       const road = (x, y) => { if (inb(x, y) && W.terrain[idx(x, y)] !== 1 && W.kind[idx(x, y)] !== K.ROAD) placeRaw(K.ROAD, x, y); };
@@ -115,6 +134,8 @@ const VIDEOS = {
       if (setup === 'dusk' || setup === 'rush') { dayMode = 'auto'; W.tod = setup === 'dusk' ? 17.2 : 19.6; }
       if (setup === 'autumn') { W.cm = 9; W.ct = 0; }
       for (let i = 0; i < 30; i++) frame(performance.now() + i * 40);
+      if (setup.startsWith('b:')) { oxCarts = []; farmers = []; dolEv = null; naru = []; boats = []; if (setup === 'b:oxTest') { W.cm = 8; W.ct = 0; } cam.s = 4; cam.x = 0; cam.y = 32 * 16 + 20; frame(performance.now()); if (setup === 'b:jangTest' || setup === 'b:dolTest') for (let i = 0; i < N * N; i++) { const x = i % N, y = i / N | 0, d = Math.max(Math.abs(x - 32), Math.abs(y - 32)); if (W.kind[i] === K.RES && d >= 2 && d <= 7 && hash(x, y, 13) < .3) clearTile(x, y); }
+        recompute(); window[setup.slice(2)](); for (let i = 0; i < 140; i++) frame(performance.now() + 1200 + i * 50); document.querySelectorAll('.toast').forEach(t => t.remove()); }
     }, [era, night, setup]);
     if (setup === 'postcard') {   // the postcard itself, made from a night view of the town, slides in over it
       const url = await p.evaluate(async () => { cam.s = 3; cam.x = 0; cam.y = 32 * 16 + 20; frame(performance.now()); const bl = await makePostcard();
@@ -122,6 +143,7 @@ const VIDEOS = {
       await p.evaluate(url => { const d = document.createElement('div'); d.id = 'pcard'; d.innerHTML = `<img src="${url}">`; document.body.append(d); }, url);
     }
     let F = Math.round(sec * FPS), cx0 = 0, cy0 = 32 * 16 + 20;
+    if (setup.startsWith('t:') || setup.startsWith('b:')) [cx0, cy0] = await p.evaluate(() => [cam.x, cam.y]);
     if (setup === 'scout' || setup === 'squid' || setup === 'whale') {   // start the sky / sea visitor part-way through, and centre the camera on it
       const at = await p.evaluate(([setup, t, off, cx, cy]) => { seaNext = scoutNext = 1e15; seaEv = null; scoutEv = null; cam.s = 3; cam.x = cx; cam.y = cy; frame(t);
         if (setup === 'scout') { scoutSpawn(true); scoutEv.t0 = t - off * 1000; scoutEv.last = t; return [(scoutEv.x - scoutEv.y) * 16, (scoutEv.x + scoutEv.y) * 8]; }
@@ -143,7 +165,18 @@ const VIDEOS = {
       if (setup === 'quake' && f === Math.round(F * .3)) await p.evaluate(() => { const ev = W.ev; ev.dis = { k: 'quake', ph: 'hit', t: 0, tiles: [], n: 0 }; disTick(ev.dis, ev); shakeT = 2.2; W.powered.fill(1); W.road.fill(1); });
       if (setup === 'rebuild' && f > F * .35 && f % 6 === 0) await p.evaluate(() => { const l = []; for (let i = 0; i < N * N; i++) if (W.build[i] > 9000) l.push(i); const i = l[(Math.random() * l.length) | 0];
         if (i != null) { W.build[i] = 0; dust(i % N + .5, (i / N | 0) + .5, '#d8cfc0'); } });
-      await p.evaluate(([cx, cy, s, t, txt, a, pc]) => { cam.s = s; cam.x = cx; cam.y = cy; frame(t); const c = document.getElementById('cap'); c.innerHTML = txt; c.style.opacity = a; c.style.transform = `translateY(${(1 - a) * 10}px)`;
+      if (f === Math.round(F * .42) && ['b:dolTest', 'b:jangTest', 't:naruTest:23757'].includes(setup)) tapAt = await p.evaluate(setup => {
+          let fx, fy, txt;if (setup === 'b:dolTest' && dolEv) { fx = dolEv.fx; fy = dolEv.fy; dolEv.boost = 4; dolEv.taps++; dolEv.shout = 1; txt = L2('영차!', 'Heave!'); }
+          else if (setup === 'b:jangTest' && jang && jang.stalls.length) { const st = jang.stalls[0]; fx = st.fx; fy = st.fy; txt = '+' + money(Math.max(5, Math.round(funGift() * .4))); }
+          else if (naru.length) { const n = naru[0]; [fx, fy] = naruFerry(n); n.fare = false; txt = '+' + money(Math.max(3, Math.round(funGift() * .35))); }
+          if (fx == null) return null; huntFx.push({ fx, fy, t: 0, txt }); for (let k = 0; k < 14; k++) parts.push({ x: (fx - fy) * 16, y: (fx + fy) * 8 - 10, vx: (Math.random() - .5) * 30, vy: -14 - Math.random() * 12, life: 0, max: 1, sz: 1, kind: 'fw', c: '#ffd84a', g: 26 });
+          return [(fx - fy) * 16, (fx + fy) * 8 - 8]; }, setup), tapF = f;
+      if (setup === 't:naruTest:23757' && f === 1) await p.evaluate(() => { if (naru.length) naru[0].fare = true; });
+      await p.evaluate(([tp, fl]) => { window.__tap = tp; window.__fl = fl; }, [tapAt && f - tapF < 14 && f >= tapF ? [tapAt[0], tapAt[1], (f - tapF) / 14] : null, VIDEOS.flash ? Math.max(0, 1 - f / 4) * .85 : 0]);
+      await p.evaluate(([cx, cy, s, t, txt, a, pc]) => { cam.s = s; cam.x = cx; cam.y = cy; frame(t); const c = document.getElementById('cap'); c.innerHTML = txt; c.style.opacity = a; c.style.transform = `translateY(${(1 - a) * 10}px) scale(${.9 + .1 * Math.min(1, a * 1.4)})`;
+        { let r = document.getElementById('tapr'); if (!r) { r = document.createElement('div'); r.id = 'tapr'; r.style.cssText = 'position:fixed;z-index:97;pointer-events:none;width:0;height:0'; r.innerHTML = '<i style="position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 3px rgba(20,26,48,.5)"></i><b style="position:absolute;left:4px;top:6px;font:44px sans-serif">👆</b>'; document.body.append(r); }
+          const tp = window.__tap; if (tp) { r.style.display = 'block'; r.style.left = ((tp[0] - cam.x) * cam.s / DPR + innerWidth / 2) + 'px'; r.style.top = ((tp[1] - cam.y) * cam.s / DPR + innerHeight / 2) + 'px'; const k = tp[2]; r.firstChild.style.transform = `scale(${.4 + k * 1.2})`; r.firstChild.style.opacity = 1 - k; r.lastChild.style.transform = `translate(${(1 - Math.min(1, k * 3)) * 10}px,${(1 - Math.min(1, k * 3)) * 14}px)`; } else r.style.display = 'none'; }
+        { let fl = document.getElementById('flash'); if (!fl) { fl = document.createElement('div'); fl.id = 'flash'; fl.style.cssText = 'position:fixed;inset:0;z-index:96;background:#fff;pointer-events:none'; document.body.append(fl); } fl.style.opacity = window.__fl || 0; }
         const d = document.getElementById('pcard'); if (d) { d.style.opacity = pc; d.style.transform = `translateY(${(1 - pc) * 60}px) rotate(${-3 + pc * 1.5}deg)`; } },
         [cx0 + x0 + (x1 - x0) * e, cy0 + y0 + (y1 - y0) * e, setup === 'postcard' ? 3 : z0 + (z1 - z0) * e, t, (k === 0 && VIDEOS.badge ? `<b>${VIDEOS.badge}</b><br>` : '') + cap, Math.min(1, f / 6, (F - f) / 5), Math.min(1, f / 10)]);
       await shot(); }
