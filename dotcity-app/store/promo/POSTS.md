@@ -305,3 +305,39 @@ Made solo. Which season is your favourite? 👇
 Free on the App Store · search "Dot City"
 #DotCity #pixelart #cozygames #indiegame #citybuilder #isometric
 ```
+
+## 1.1.1 한국사 편 (`dotcity-history-ko.mp4` / `dotcity-history-en.mp4`)
+
+`node scripts/make-social-promo.cjs history [ko|en]` · 1080×1920, 약 30초, 무음. 국악풍 비트, 신나는 칩튠, 사극 OST 느낌 음악이 잘 어울려요.
+횃불 밝힌 궁궐 → 석기시대 사슴 사냥 → 청동기 소달구지 → 고인돌 행렬(영차!) → 제천 축제 → 왕조 장날 흥정(+엽전) → 단오 그네와 씨름 → 나룻배 뱃삯(+엽전) → 금빛 깃발 발견 작업장 → 궁궐에서 도시 전체로.
+
+**틱톡 · 유튜브 쇼츠**
+```
+석기시대 움집에서 궁궐까지 🏯
+고인돌도 세우고, 장날엔 흥정하고, 단오엔 씨름 한판!
+혼자 만든 한국사 픽셀 도시 게임이에요. 어느 시대가 제일 재밌어 보여요? 👇
+#도트시티 #픽셀아트 #한국사 #인디게임 #게임추천 #힐링게임 #도시건설 #1인개발 #fyp
+```
+
+**인스타그램 (릴스)**
+```
+한국사를 따라 키우는 나만의 픽셀 도시 🏯✨
+🏹 석기시대 사슴 사냥
+🐂 청동기 소달구지와 고인돌 행렬
+🔥 제천 축제와 단오 씨름
+⛵ 나룻배 타고 강 건너기
+🏮 횃불 밝힌 궁궐까지
+화면을 누르면 마을 사람들이 반응해요.
+
+📱 도트시티 | App Store에서 무료 (프로필 링크)
+#도트시티 #픽셀아트 #도트그래픽 #한국사 #한옥 #인디게임 #1인개발 #모바일게임 #힐링게임 #도시건설 #pixelart #indiegame #citybuilder
+```
+
+**TikTok / Reels / Shorts (English)**
+```
+From Stone Age huts to a palace by torchlight 🏯
+Raise a dolmen, haggle on market day, wrestle at the Dano festival, ride the ferry ⛵
+A pixel city game set in Korean history, made solo. Which age would you play first? 👇
+Free on the App Store · search "Dot City"
+#DotCity #pixelart #koreanhistory #indiegame #citybuilder #cozygames #isometric #gamedev
+```
