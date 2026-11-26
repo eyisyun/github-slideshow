@@ -93,7 +93,7 @@ cd android
 결과 파일: `android/app/build/outputs/bundle/release/app-release.aab`
 (Android Studio에서 하려면 `npm run android` → **Build → Generate Signed App Bundle or APK → Android App Bundle → release**)
 
-☐ 버전: `android/app/build.gradle`의 `versionCode`(매 업로드마다 +1)와 `versionName`. 지금 `versionCode 12`, `versionName "1.1.0"`.
+☐ 버전: `android/app/build.gradle`의 `versionCode`(매 업로드마다 +1)와 `versionName`. 지금 `versionCode 13`, `versionName "1.1.1"`.
 
 ## 4. 내 폰에서 먼저 실행
 
