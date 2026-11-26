@@ -4575,7 +4575,10 @@ function huntFrame(o){const k=o.k,run=o.st==='run',walk=o.st==='walk'||o.st==='g
   if(k==='hunter'){const st=((o.ph/(o.st==='sneak'?.42:o.st==='carry'?.3:.26))|0)%2;return o.st==='throw'||o.st==='wait'?'throw':o.st==='carry'?(st?'carry1':'carry0'):st?'walk1':'walk0';}
   if(o.st==='fall')return'fall';if(run)return((o.ph/.12)|0)%2?'run1':'run0';if(walk)return((o.ph/.25)|0)%2?'walk1':'walk0';
   return o.look&&((o.ph/2.2)|0)%3!==2?'look':((o.ph/3.1)|0)%4===3?'look':'graze';}
-const drawFaunaObj=(c,o)=>(o.k==='stall'||o.k==='band'?drawJangObj:o.k==='pabal'?drawPabal:o.k==='cart'||o.k==='farmer'?drawOxObj:o.k==='dolm'?(c,o)=>o.draw(c):o.k==='jcAll'?drawJcAll:o.k==='dnAll'?drawDnAll:drawHuntObj)(c,o);
+// how far a point on a road bridge sits above the water, so anything walking or rolling over it rides on the deck
+function bridgeRise(gx,gy){const tx=Math.floor(gx),ty=Math.floor(gy);if(!isBridge(tx,ty))return 0;const bk=bridgeKey(tx,ty),ax=bk>=9?1:0,r=bk%9;return Math.round(bridgeLift(Math.min(5,W.te[idx(tx,ty)]),r/3|0,r%3,ax?gy-ty:gx-tx));}
+const drawFaunaObj=(c,o)=>{const up=o.fx!=null&&o.k!=='dolm'&&o.k!=='jcAll'&&o.k!=='dnAll'&&o.k!=='stall'?bridgeRise(o.fx,o.fy):0;if(up){c.save();c.translate(0,-up);}drawFaunaObj0(c,o);if(up)c.restore();};
+const drawFaunaObj0=(c,o)=>(o.k==='stall'||o.k==='band'?drawJangObj:o.k==='pabal'?drawPabal:o.k==='cart'||o.k==='farmer'?drawOxObj:o.k==='dolm'?(c,o)=>o.draw(c):o.k==='jcAll'?drawJcAll:o.k==='dnAll'?drawDnAll:drawHuntObj)(c,o);
 function drawHuntObj(c,o){const S=huntSprites(),set=S[o.k];if(!set)return;const fr=set[huntFrame(o)]||set.walk0,sp=o.k==='hunter'?fr[(o.up?2:0)+(o.face>0?0:1)]:fr[o.face>0?0:1];
   drawSpr(c,sp,Math.round((o.fx-o.fy)*16-X0),Math.round((o.fx+o.fy)*8-Y0));
 }
@@ -5716,7 +5719,10 @@ function render(){seasonGrass();
       for(const[dx,dy]of[[0,0],[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRailBr(xx,yy)||(dx||dy)&&!ts)continue;const f=SP.railBr[Math.max(3,Math.min(5,w.te[idx(xx,yy)]))][railBridgeKey(xx,yy)].front;
         if(f)drawSpr(c,f,sx+(dx-dy)*16,sy+(dx+dy)*8);}c.globalAlpha=ga;}
     if(k===K.RAIL)continue;
-    if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;}
+    if(k===K.ROAD){if(w.terrain[i]===1){const e=Math.min(5,w.te[i]),ga=c.globalAlpha;c.globalAlpha=1;drawSpr(c,(w.level[i]?SP.bridgeA[Math.max(3,e)]:SP.bridge[e])[bridgeKey(x,y)],sx,sy);c.globalAlpha=ga;
+        // a bridge deck is raised, so it would cover the front of a cart or walker still on the road tile behind it: draw those again on top
+        for(const[dx,dy]of[[-1,0],[0,-1]]){const xx=x+dx,yy=y+dy;if(!isRoad(xx,yy))continue;const j=idx(xx,yy),cb=bucket.get(j),fb=fbk.get(j),all=[];
+          if(cb)for(const car of cb)all.push([carDepth(car),car,0]);if(fb)for(const o of fb)all.push([o.fx+o.fy,o,1]);all.sort((p,q)=>p[0]-q[0]);for(const[,o,f]of all)f?drawFaunaObj(c,o):drawCar(c,o);}}
       const cs=bucket.get(i);if(fs){const all=[];if(cs)for(const car of cs)all.push([carDepth(car),car,0]);for(const o of fs)all.push([o.fx+o.fy,o,1]);all.sort((p,q)=>p[0]-q[0]);for(const[,o,f]of all)f?drawFaunaObj(c,o):drawCar(c,o);}
       else if(cs)for(const car of cs)drawCar(c,car);if(hasSignal(x,y))drawSignals(c,x,y,sx,sy);if(w.rail[i])drawGates(c,i,x,y,sx,sy,1);continue;}
     if(k===K.NONE){const t=w.trees[i];if(t){const pts=[];for(let j=0;j<t;j++)pts.push([.2+.6*hash(x,y,j*3+1),.2+.6*hash(x,y,j*3+2),(hash(x,y,j+40)*SP.tree.length)|0]);
