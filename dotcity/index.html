@@ -5258,8 +5258,7 @@ function naruObjs(){const out=[];for(const n of naru){const[dx,dy]=DIRS[n.d];
 function drawNaru(c,o){const S=naruSprites(),n=o.n,[dx,dy]=DIRS[n.d],t=now/1000,night=nightF>.3,scr=(x,y)=>[Math.round((x-y)*16-X0),Math.round((x+y)*8-Y0)];
   const P=(x,y,cl,w=1,h=1)=>{c.fillStyle=cl[0]==='#'&&cl!=='#ffd070'?nightCss(cl,nightF*.8):cl;c.fillRect(x,y,w,h);},rip=(x,y,w)=>P(x,y,nightCss('#ebf8ff',nightF*.7,.7),w,1);
   const lantern=(x,y,r)=>{P(x,y,'#3a2418',3,1);P(x,y+1,night?'#ffd070':'#e8d8b0',3,3);P(x,y+4,'#3a2418',3,1);
-    if(night){const g=c.createRadialGradient(x+1,y+2,0,x+1,y+2,r);g.addColorStop(0,'rgba(255,200,110,.5)');g.addColorStop(1,'rgba(255,200,110,0)');c.fillStyle=g;c.fillRect(x+1-r,y+2-r,r*2,r*2);
-      for(let k=0;k<5;k++)P(x-1+Math.round(Math.sin(t*3+k)*1.5),y+r+2+k*2,'rgba(255,210,120,'+(.55-k*.09)+')',3,1);}};
+    if(night){const g=c.createRadialGradient(x+1,y+2,0,x+1,y+2,r);g.addColorStop(0,'rgba(255,200,110,.5)');g.addColorStop(1,'rgba(255,200,110,0)');c.fillStyle=g;c.fillRect(x+1-r,y+2-r,r*2,r*2);}};
   const refl=(sp,a,b,al)=>{c.save();c.globalAlpha=al*.7*(1-nightF*.5);for(let r=0;r<sp.h;r+=2){const sy=sp.h-1-r,off=Math.round(Math.sin(t*2.4+r*.7)*1.2);c.drawImage(night&&sp.n?sp.n:sp.c,0,sy,sp.w,2,a+sp.ox+off,b-sp.oy-sy-1,sp.w,2);}c.restore();};
   const walker=(set,d,x,y,step)=>{const f=set[d];drawSpr(c,step&&f.alt?f.alt:f,x,y);};
   const hat=(x,y,man)=>{if(man){P(x-4,y-11,'#1a1a1e',9,1);P(x-1,y-13,'#1a1a1e',3,2);}else P(x-2,y-12,'#f2ede0',5,2);};
@@ -5302,8 +5301,7 @@ function drawSailExtras(c,b,sx,sy,q){const S=naruSprites(),t=now/1000,night=nigh
   const sw=Math.sin(t*1.8+b.ph)*1.6,o0=A(-7.8,0,4),o1=A(-12.5,sw,-.5);c.strokeStyle=nightCss('#6a4428',nightF*.8);c.lineWidth=1;c.beginPath();c.moveTo(o0[0]+.5,o0[1]+.5);c.lineTo(o1[0]+.5,o1[1]+.5);c.stroke();
   P(o1[0]-1,o1[1]+1,nightCss('#ebf8ff',nightF*.7,.7),3,1);
   const ln=A(-7.8,1.4,7.4);P(ln[0],ln[1]-6,'#4a3020',1,5);P(ln[0]-1,ln[1]-1,'#3a2418',3,1);P(ln[0]-1,ln[1],night?'#ffd070':'#e8d8b0',3,3);
-  if(night){const g=c.createRadialGradient(ln[0],ln[1]+1,0,ln[0],ln[1]+1,11);g.addColorStop(0,'rgba(255,200,110,.5)');g.addColorStop(1,'rgba(255,200,110,0)');c.fillStyle=g;c.fillRect(ln[0]-11,ln[1]-10,22,22);
-    for(let k=0;k<5;k++)P(ln[0]-1+Math.round(Math.sin(t*3+k)*1.5),ln[1]+14+k*2,'rgba(255,210,120,'+(.55-k*.09)+')',3,1);}}
+  if(night){const g=c.createRadialGradient(ln[0],ln[1]+1,0,ln[0],ln[1]+1,11);g.addColorStop(0,'rgba(255,200,110,.5)');g.addColorStop(1,'rgba(255,200,110,0)');c.fillStyle=g;c.fillRect(ln[0]-11,ln[1]-10,22,22);}}
 function naruTest(){if(W.era!==2){toast(L2('나루와 돛단배는 왕조 시대에서 볼 수 있어요. 왕조 게임에서 눌러 주세요.','Ferry landings and sailboats belong to the Dynasty age. Try this in a Dynasty game.'),'info');return;}
   const[gx,gy]=toGrid(innerWidth/2,innerHeight/2);let best=null;
   for(let y=2;y<N-2;y++)for(let x=2;x<N-2;x++){if(W.terrain[idx(x,y)]===1||W.kind[idx(x,y)]&&W.kind[idx(x,y)]!==K.ROAD)continue;
