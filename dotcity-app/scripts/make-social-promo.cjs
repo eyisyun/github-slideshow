@@ -54,8 +54,8 @@ const VIDEOS = {
   history: { badge: ko ? 'NEW 업데이트' : 'NEW UPDATE', flash: 1, scenes: [
     [2, 1, 'b:landmarkTest', ko ? '한국사를 따라 키우는<br>나만의 픽셀 도시' : 'Build a pixel city<br>through Korean history', 3, 3, 4.6, [0, -30], [0, -12]],
     [0, 0, 't:huntTest:11', ko ? '석기시대 사슴 사냥부터' : 'From deer hunts in the Stone Age', 2.4, 6.2, 5.4, [0, 0], [0, -6]],
-    [1, 0, 'b:oxTest', ko ? '황금 논길을 달리는<br>청동기 소달구지' : 'Bronze Age ox carts<br>past golden paddies', 2.6, 6.4, 5.6, [-8, 0], [8, -6]],
-    [1, 0, 'b:dolTest', ko ? '다 같이 영차!<br>고인돌 세우기' : 'All together, heave!<br>Raise a dolmen', 2.8, 7, 6.2, [0, -4], [0, -8]],
+    [1, 0, 't:oxTest:21', ko ? '황금 논길을 달리는<br>청동기 소달구지' : 'Bronze Age ox carts<br>past golden paddies', 2.6, 6.4, 5.6, [-8, 0], [8, -6]],
+    [1, 0, 't:dolTest:31', ko ? '다 같이 영차!<br>고인돌 세우기' : 'All together, heave!<br>Raise a dolmen', 2.8, 7, 6.2, [0, -4], [0, -8]],
     [1, 1, 't:jcTest:41', ko ? '불꽃 아래 제천 축제' : 'A harvest festival by firelight', 2.6, 6, 5.2, [0, -8], [0, -14]],
     [2, 0, 'b:jangTest', ko ? '장날엔 흥정 한판' : 'Haggle on market day', 2.6, 7, 6.2, [0, -2], [0, -8]],
     [2, 0, 't:dnTest:61', ko ? '단오엔 그네 타고<br>씨름 한판!' : 'Swings and wrestling<br>at the Dano festival', 2.8, 5.6, 4.8, [0, -6], [0, -12]],
@@ -97,11 +97,12 @@ const VIDEOS = {
   for (let k = 0; k < VIDEOS.scenes.length; k++) { if (process.env.ONLY && !process.env.ONLY.split(',').includes(String(k))) continue;   // ONLY=1,3 renders just those scenes (for checking)
     const [era, night, setup, cap, sec, z0, z1, [x0, y0], [x1, y1], evOff = 0] = VIDEOS.scenes[k];
     await p.evaluate(([era, night, setup]) => {   // the same town builder as the store screenshots, plus the scene's setup
-      closeEra(); try { localStorage.clear(); } catch (e) {} oxCarts = []; farmers = []; dolEv = null;
+      closeEra(); try { localStorage.clear(); } catch (e) {} window.__season = null; oxCarts = []; farmers = []; dolEv = null;
       if (setup.startsWith('t:')) { const [, fn, sd0] = setup.split(':'), R0 = Math.random; let sd = +sd0;
         Math.random = () => ((sd = (sd * 1103515245 + 12345) & 0x7fffffff) / 0x80000000); newGame('era' + era); Math.random = R0; closeEra();
-        document.querySelectorAll('.modal').forEach(m => m.hidden = true); W.wx = 0; W.wxEnd = Date.now() + 1e9; W.snow = 0; W.cm = fn === 'jcTest' ? 8 : 5; W.ct = 10; boats = []; naru = []; incidents.length = 0; setTool('inspect'); setSpeed(1);
-        dayMode = night ? 'night' : 'day'; W.tod = night ? 22 : 11; cam.s = 4; window[fn](); for (let i = 0; i < 140; i++) frame(performance.now() + i * 50);
+        document.querySelectorAll('.modal').forEach(m => m.hidden = true); W.wx = 0; W.wxEnd = Date.now() + 1e9; W.snow = 0; W.cm = fn === 'jcTest' ? 8 : fn === 'oxTest' ? 9 : 5; W.ct = fn === 'oxTest' ? Math.round(CAL_T * .5) : 10; window.__season = [W.cm, W.ct]; W.month = W.cm; W.snow = 0; boats = []; naru = []; incidents.length = 0; setTool('inspect'); setSpeed(1);
+        dayMode = night ? 'night' : 'day'; W.tod = night ? 22 : 11; { const mx = ERAS[era].maxL; for (let i = 0; i < N * N; i++) { const k = W.kind[i]; if (k >= K.RES && k <= K.IND) { W.level[i] = Math.max(1, (mx[k] || 1) - ((i * 7) % 3 === 0 ? 1 : 0)); W.build[i] = 0; } } recompute(); }
+        cam.s = 4; window[fn](); const warm = fn === 'dolTest' || fn === 'oxTest' ? 24 : 140; for (let i = 0; i < warm; i++) frame(performance.now() + i * 50); W.snow = 0; [W.cm, W.ct] = window.__season; W.powered.fill(1); W.road.fill(1);
         document.querySelectorAll('.toast').forEach(t => t.remove()); return; }
       W = blankWorld(77); genTerrain(W); W.era = era; W.cm = 5; W.ct = 10;   // early summer unless the scene sets a season
       for (let i = 0; i < N * N; i++) if (Math.hypot(i % N - 32, (i / N | 0) - 32) < 14) { W.terrain[i] = 0; W.trees[i] = 0; } derive(W);
@@ -134,8 +135,8 @@ const VIDEOS = {
       if (setup === 'dusk' || setup === 'rush') { dayMode = 'auto'; W.tod = setup === 'dusk' ? 17.2 : 19.6; }
       if (setup === 'autumn') { W.cm = 9; W.ct = 0; }
       for (let i = 0; i < 30; i++) frame(performance.now() + i * 40);
-      if (setup.startsWith('b:')) { oxCarts = []; farmers = []; dolEv = null; naru = []; boats = []; if (setup === 'b:oxTest') { W.cm = 8; W.ct = 0; } cam.s = 4; cam.x = 0; cam.y = 32 * 16 + 20; frame(performance.now()); if (setup === 'b:jangTest' || setup === 'b:dolTest') for (let i = 0; i < N * N; i++) { const x = i % N, y = i / N | 0, d = Math.max(Math.abs(x - 32), Math.abs(y - 32)); if (W.kind[i] === K.RES && d >= 2 && d <= 7 && hash(x, y, 13) < .3) clearTile(x, y); }
-        recompute(); window[setup.slice(2)](); for (let i = 0; i < 140; i++) frame(performance.now() + 1200 + i * 50); document.querySelectorAll('.toast').forEach(t => t.remove()); }
+      if (setup.startsWith('b:')) { oxCarts = []; farmers = []; dolEv = null; naru = []; boats = []; window.__season = [W.cm, W.ct]; cam.s = 4; cam.x = 0; cam.y = 32 * 16 + 20; frame(performance.now()); if (setup === 'b:jangTest' || setup === 'b:dolTest') for (let i = 0; i < N * N; i++) { const x = i % N, y = i / N | 0, d = Math.max(Math.abs(x - 32), Math.abs(y - 32)); if (W.kind[i] === K.RES && d >= 2 && d <= 7 && hash(x, y, 13) < .3) clearTile(x, y); }
+        recompute(); window[setup.slice(2)](); for (let i = 0; i < 140; i++) frame(performance.now() + 1200 + i * 50); W.powered.fill(1); W.grid.fill(1); W.road.fill(1); document.querySelectorAll('.toast').forEach(t => t.remove()); }
     }, [era, night, setup]);
     if (setup === 'postcard') {   // the postcard itself, made from a night view of the town, slides in over it
       const url = await p.evaluate(async () => { cam.s = 3; cam.x = 0; cam.y = 32 * 16 + 20; frame(performance.now()); const bl = await makePostcard();
@@ -143,7 +144,8 @@ const VIDEOS = {
       await p.evaluate(url => { const d = document.createElement('div'); d.id = 'pcard'; d.innerHTML = `<img src="${url}">`; document.body.append(d); }, url);
     }
     let F = Math.round(sec * FPS), cx0 = 0, cy0 = 32 * 16 + 20;
-    if (setup.startsWith('t:') || setup.startsWith('b:')) [cx0, cy0] = await p.evaluate(() => [cam.x, cam.y]);
+    if (setup.startsWith('t:') || setup.startsWith('b:')) { [cx0, cy0] = await p.evaluate(() => [cam.x, cam.y]); t = await p.evaluate(() => performance.now() + 9000); }   // keep the scene's clock running forward from its warm-up
+    if (process.env.DBG) console.log(setup, await p.evaluate(() => JSON.stringify({ ox: oxCarts.length, farm: farmers.length, dol: !!dolEv, cm: W.cm, ct: W.ct, snow: W.snow, wx: W.wx, month: W.month, jang: jang ? jang.stalls.length : -1, cam: [cam.x | 0, cam.y | 0] })));
     if (setup === 'scout' || setup === 'squid' || setup === 'whale') {   // start the sky / sea visitor part-way through, and centre the camera on it
       const at = await p.evaluate(([setup, t, off, cx, cy]) => { seaNext = scoutNext = 1e15; seaEv = null; scoutEv = null; cam.s = 3; cam.x = cx; cam.y = cy; frame(t);
         if (setup === 'scout') { scoutSpawn(true); scoutEv.t0 = t - off * 1000; scoutEv.last = t; return [(scoutEv.x - scoutEv.y) * 16, (scoutEv.x + scoutEv.y) * 8]; }
@@ -172,7 +174,9 @@ const VIDEOS = {
           if (fx == null) return null; huntFx.push({ fx, fy, t: 0, txt }); for (let k = 0; k < 14; k++) parts.push({ x: (fx - fy) * 16, y: (fx + fy) * 8 - 10, vx: (Math.random() - .5) * 30, vy: -14 - Math.random() * 12, life: 0, max: 1, sz: 1, kind: 'fw', c: '#ffd84a', g: 26 });
           return [(fx - fy) * 16, (fx + fy) * 8 - 8]; }, setup), tapF = f;
       if (setup === 't:naruTest:23757' && f === 1) await p.evaluate(() => { if (naru.length) naru[0].fare = true; });
-      await p.evaluate(([tp, fl]) => { window.__tap = tp; window.__fl = fl; }, [tapAt && f - tapF < 14 && f >= tapF ? [tapAt[0], tapAt[1], (f - tapF) / 14] : null, VIDEOS.flash ? Math.max(0, 1 - f / 4) * .85 : 0]);
+      if (setup === 't:dolTest:31' || setup === 't:oxTest:21') { const q = await p.evaluate(setup => { let o = null; if (setup === 't:dolTest:31') o = dolEv; else { o = oxCarts.filter(c => c.fx != null).sort((a, b) => Math.hypot(a.fx - 32, a.fy - 32) - Math.hypot(b.fx - 32, b.fy - 32))[0]; }
+          return o ? [(o.fx - o.fy) * 16, (o.fx + o.fy) * 8] : null; }, setup); if (q) { if (f === 0) [cx0, cy0] = q; else { cx0 += (q[0] - cx0) * .2; cy0 += (q[1] - cy0) * .2; } } }
+      await p.evaluate(([tp, fl]) => { window.__tap = tp; window.__fl = fl; if (window.__season) { [W.cm, W.ct] = window.__season; W.snow = 0; } }, [tapAt && f - tapF < 14 && f >= tapF ? [tapAt[0], tapAt[1], (f - tapF) / 14] : null, VIDEOS.flash ? Math.max(0, 1 - f / 4) * .85 : 0]);
       await p.evaluate(([cx, cy, s, t, txt, a, pc]) => { cam.s = s; cam.x = cx; cam.y = cy; frame(t); const c = document.getElementById('cap'); c.innerHTML = txt; c.style.opacity = a; c.style.transform = `translateY(${(1 - a) * 10}px) scale(${.9 + .1 * Math.min(1, a * 1.4)})`;
         { let r = document.getElementById('tapr'); if (!r) { r = document.createElement('div'); r.id = 'tapr'; r.style.cssText = 'position:fixed;z-index:97;pointer-events:none;width:0;height:0'; r.innerHTML = '<i style="position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 3px rgba(20,26,48,.5)"></i><b style="position:absolute;left:4px;top:6px;font:44px sans-serif">👆</b>'; document.body.append(r); }
           const tp = window.__tap; if (tp) { r.style.display = 'block'; r.style.left = ((tp[0] - cam.x) * cam.s / DPR + innerWidth / 2) + 'px'; r.style.top = ((tp[1] - cam.y) * cam.s / DPR + innerHeight / 2) + 'px'; const k = tp[2]; r.firstChild.style.transform = `scale(${.4 + k * 1.2})`; r.firstChild.style.opacity = 1 - k; r.lastChild.style.transform = `translate(${(1 - Math.min(1, k * 3)) * 10}px,${(1 - Math.min(1, k * 3)) * 14}px)`; } else r.style.display = 'none'; }
